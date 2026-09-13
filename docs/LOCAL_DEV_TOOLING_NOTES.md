@@ -124,17 +124,38 @@ This section is the canonical index for every env var the project reads.
 See [`docs/COCKPIT_QUICKSTART.md`](COCKPIT_QUICKSTART.md) for the
 operator-facing walkthrough and [`docs/ARCHITECTURE.md` §6.5](ARCHITECTURE.md#65-cockpit-websocket-security-contract-post-code_reviewmd-sweep-2026-05) for the WebSocket security contract.
 
+### Installer workflow variables (build only)
+
+`installers.yml` sets `TAURI_CLI_VERSION=2.11.4` for its pinned prebuilt npm
+CLI. Its Python build steps read `STUDIO_WINDOWS`, supplied by the boolean
+`studio_windows` dispatch input (default false). When true, the workflow builds
+only the Windows portable Cockpit and identifies its window/artifact by commit.
+Neither variable is read by the shipped application or changes MIDI authority.
+See [Building installers](BUILDING_INSTALLERS.md#identified-windows-cockpit-studio-copy).
+
 ### 7a. Cockpit sidecar / desktop shell (runtime)
 
 | Env var | Default | Purpose |
 |---|---|---|
-| `RYTM_RAND_WS_PORT` | `4317` | Loopback port the cockpit WebSocket binds. |
+| `RYTM_RAND_WS_PORT` | `4317` | Loopback port the Cockpit WebSocket binds. The Tauri shell passes the selected port to the frontend through per-launch bootstrap; the frontend must use that port for its connection. |
 | `RYTM_RAND_WS_TOKEN_FILE` | `~/.rytm-randomizer/cockpit-ws-token` | Path the sidecar writes the per-launch HMAC handshake token to (`0o600`). The Tauri shell sets this to a path under its app-data dir and reads the token back to seed the first WS frame. PR 1 (C1) of the CODE_REVIEW.md sweep. |
 | `RYTM_RAND_WS_MAX_MESSAGE_BYTES` | `1048576` (1 MiB) | Per-message size cap for WebSocket frames; oversize frames are rejected before `json.loads`. PR 1 (SX1). |
 | `WIZARD_SOURCE_ROOTS` | `~/.rytm-randomizer/wizard-sources` | `os.pathsep`-separated allow-list of root dirs the wizard's `WizardPathPolicy` will accept as `InspirationSource.location` values. Empty value falls back to the default so a typo never disables the policy. PR 2 (C2). |
 | `RYTM_RAND_SIDECAR_BIN` | unset | Absolute path to a sidecar executable, read by the Tauri shell (`desktop/shell/src/sidecar.rs`). Highest-priority entry in the launch-resolution order: this override → bundled binary next to the executable / in the resource dir → a `python` on `PATH`. That last fallback is a **development** affordance (`cargo run` against a source checkout); a shipped bundle finds its bundled binary and never reaches it. |
 | `RYTM_RAND_MIDI_BACKEND` | `auto` | `off` (case-insensitive) forces the `NullPortEnumerator`, so the cockpit boots with zero MIDI ports and the connection phase pinned at `searching`. Any other value behaves as `auto`. The deterministic escape hatch for CI / headless hosts and for a wedged OS MIDI service — python-rtmidi 1.5.8 can abort the whole process from its C++ layer when the OS MIDI client cannot be created (seen on macOS as `MidiInCore::initialize ... (-304)`), which no Python `except` can catch. Turning the backend off keeps the cockpit alive so the Connection Doctor can explain the situation. |
 | `GITHUB_ACTIONS` | unset / false outside GitHub-hosted CI | Standard external-runner signal read only by the native A4 audio integration test. On Windows GitHub Actions the test skips the real decoder-plus-subprocess proof because the hosted runner cannot guarantee a stable native decoder process; unit coverage and crash-containment checks still run. Unset is the safe local and non-GitHub-runner default, and this variable never enables MIDI or hardware access. |
+
+The frontend resolves its default WebSocket target on each dial, rather than
+freezing it when the client is constructed. It first checks the shell-injected
+`window.__RYTM_RAND_WS_PORT__`, then the `rytm-rand-ws-port` storage entry. A port
+must be an integer from 1 through 65535, supplied as a number or a digits-only
+string; invalid values cannot inject a host or path. If no injected port is valid
+and storage supplies no valid port or cannot be read, the default is
+`ws://127.0.0.1:4317/ws`. Discovered
+ports always use `ws://127.0.0.1:<port>/ws`. These bootstrap/storage values are
+not new environment variables. An explicit `CockpitClientOptions.url` wins
+over discovery. `getUrl()` reports the actual target while a socket exists and
+the next dial's resolved target while disconnected.
 
 ### 7b. Test / gate tooling (never set in production)
 

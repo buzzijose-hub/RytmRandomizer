@@ -4,6 +4,7 @@ import type {
   LiveGuiPerformanceConsoleModelDict,
   PanelSpecDict,
 } from '../../types/live_gui_protocol';
+import { ShowKitForgePanel } from '../showKitForge/ShowKitForgePanel';
 import { analyzerPanelSpec } from './analyzerPanel';
 import { ConnectionDoctorPanel } from './ConnectionDoctorPanel';
 import { KitMorphPanel } from './KitMorphPanel';
@@ -83,6 +84,12 @@ export const PANEL_REGISTRY: ReadonlyArray<PanelManifestEntry> = [
   { kind: 'store-slice', id: 'kit-morph', region: 'bottom', component: KitMorphPanel },
   // Bottom region, beside the Connection Doctor (spec §7).
   { kind: 'store-slice', id: 'updates', region: 'bottom', component: UpdatePanel },
+  {
+    kind: 'store-slice',
+    id: 'show-kit-forge',
+    region: 'bottom',
+    component: ShowKitForgePanel,
+  },
 ];
 
 export function panelsForRegion(region: PanelRegion): ReadonlyArray<PanelManifestEntry> {

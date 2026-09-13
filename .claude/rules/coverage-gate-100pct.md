@@ -5,7 +5,7 @@
 
 ## The rule
 
-New or modified production code reaches 100% **branch** coverage (not line coverage) on the set of files the WS actually touched. The ratcheted whole-package floor in `.coveragerc` (currently `fail_under = 98`) is a separate, weaker gate; this gate is stricter and per-WS.
+New or modified production code reaches 100% **branch** coverage (not line coverage) on the set of files the WS actually touched. The ratcheted whole-package floor in `.coveragerc` (currently `fail_under = 99`) is a separate, weaker gate; this gate is stricter and per-WS.
 
 ## How to compute and run
 
@@ -45,6 +45,8 @@ Two related traps if you measure a single file ad hoc: pass
 keep the test files out of the measured set or `--fail-under` scores the
 tests instead of the code.
 
+If `--cov-fail-under=100` fails, the orchestrator re-dispatches `tdd-guide` with the missing-branch output. Max 2 retries before escalating to `architect`.
+
 ## Why branch coverage, not line coverage
 
 Branch coverage catches the corner cases the duck-typed boundaries currently let slip:
@@ -68,5 +70,5 @@ Without the justification, the architecture test `tests/architecture/test_no_unj
 
 - `docs/PLAN_REQUIREMENTS.md` Gate 1 — canonical rule definition.
 - `docs/COVERAGE_POLICY.md` — whole-package ratchet policy.
-- `.coveragerc` — the ratcheted package-wide floor (currently 98%; `scripts/coverage_ratchet.py` only ever moves it up).
+- `.coveragerc` — the ratcheted package-wide floor (currently 99%; `scripts/coverage_ratchet.py` only ever moves it up).
 - `.claude/skills/learned/coverage-py-blended-vs-pure-branch/` — why pure-branch and blended numbers disagree.

@@ -8,7 +8,8 @@ Covers:
 * **Depth scaling** — larger depth produces larger deltas on average.
 * **Bias effect** — a pad with a profile mapping gets larger scale than a
   pad without one.
-* **Range clamping** — output stays in ``[0, 127]`` even at depth ceiling.
+* **Range clamping** — output stays in each manual-backed parameter domain,
+  with ``[0, 127]`` retained for unmapped fields.
 * **Safety status thresholds** — exclusive lower bound, inclusive upper.
 * **`changed_keys` correctness** — only keys whose value actually changed
   appear; the proposed_params dict has every input key.
@@ -147,6 +148,39 @@ def test_mutate_explicit_targets_return_only_selected_pad_deltas() -> None:
     assert {delta.pad_id for delta in targeted.pad_deltas} == {2}
     assert targeted.pad_deltas[0] == all_scope.pad_deltas[1]
     assert targeted.estimated_midi_msgs == len(targeted.pad_deltas[0].changed_keys)
+
+
+def test_mutate_applies_locks_after_explicit_or_default_targets() -> None:
+    snap = _snapshot()
+    prof = _profile()
+
+    all_minus_lock = mutate(
+        snap,
+        prof,
+        depth=0.5,
+        seed=42,
+        locked_pad_ids=frozenset({1}),
+    )
+    selected_minus_lock = mutate(
+        snap,
+        prof,
+        depth=0.5,
+        seed=42,
+        target_pad_ids=frozenset({1, 2}),
+        locked_pad_ids=frozenset({2}),
+    )
+    all_locked = mutate(
+        snap,
+        prof,
+        depth=0.5,
+        seed=42,
+        locked_pad_ids=frozenset({1, 2}),
+    )
+
+    assert {delta.pad_id for delta in all_minus_lock.pad_deltas} == {2}
+    assert {delta.pad_id for delta in selected_minus_lock.pad_deltas} == {1}
+    assert all_locked.pad_deltas == ()
+    assert all_locked.estimated_midi_msgs == 0
 
 
 # ---------------------------------------------------------------------------
@@ -306,6 +340,43 @@ def test_mutate_clamps_to_cc_range() -> None:
         for pd in c.pad_deltas:
             for k, v in pd.proposed_params.items():
                 assert 0 <= v <= 127, f"seed={seed} pad={pd.pad_id} key={k} value={v} out of range"
+
+
+def test_mutate_clamps_manual_backed_selectors_to_semantic_domains() -> None:
+    """Known selectors never acquire an invalid raw MIDI-byte value."""
+
+    pads = (
+        PadState(
+            pad_id=1,
+            machine="bd_classic",
+            params={
+                "filter_type": 3,
+                "lfo_mult": 12,
+                "lfo_trig": 2,
+                "lfo_wave": 3,
+                "wav": 1,
+            },
+        ),
+        PadState(
+            pad_id=2,
+            machine="sy_raw",
+            params={"wave": 3, "wave_2": 1},
+        ),
+    )
+    snap = _snapshot(pads=pads)
+    prof = _profile()
+
+    for seed in range(1, 30):
+        candidate = mutate(snap, prof, depth=0.9, seed=seed)
+        pad_1 = candidate.pad_deltas[0].proposed_params
+        pad_2 = candidate.pad_deltas[1].proposed_params
+        assert 0 <= pad_1["filter_type"] <= 6
+        assert 0 <= pad_1["lfo_mult"] <= 23
+        assert 0 <= pad_1["lfo_trig"] <= 4
+        assert 0 <= pad_1["lfo_wave"] <= 6
+        assert 0 <= pad_1["wav"] <= 2
+        assert 0 <= pad_2["wave"] <= 6
+        assert 0 <= pad_2["wave_2"] <= 1
 
 
 def test_mutate_clamps_at_lower_bound() -> None:

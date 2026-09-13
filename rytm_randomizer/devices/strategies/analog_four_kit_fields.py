@@ -15,9 +15,13 @@ from typing import Final
 
 from ...data.analog_four_kit_fields import (
     A4_BIPOLAR_FIELDS,
+    A4_FIXED_8_8_RAW_MAX,
+    A4_FIXED_8_8_SCALE,
     A4_MOD_DEPTH_FIELDS,
+    A4_SOUND_FORMAT_MARKER,
     A4_SOUND_NAME_LENGTH,
     A4_SOUND_NAME_OFFSET,
+    A4_SOUND_SIGNATURE,
     A4_TRACK_OFFSETS,
     A4_TWO_BYTE_FIELDS,
 )
@@ -362,7 +366,8 @@ class A4Destination(IntEnum):
 class A4Sound:
     _data: bytearray
 
-    SIGNATURE = bytes.fromhex("be ef ba ba")
+    SIGNATURE = A4_SOUND_SIGNATURE
+    FORMAT_MARKER = A4_SOUND_FORMAT_MARKER
     NAME_OFFSET = A4_SOUND_NAME_OFFSET
     NAME_LENGTH = A4_SOUND_NAME_LENGTH
 
@@ -371,7 +376,7 @@ class A4Sound:
             raise ElektronKitFieldError(f"A4 sound block must be {A4_SOUND_SIZE} bytes")
         if bytes(self._data[:4]) != self.SIGNATURE:
             raise ElektronKitFieldError(f"Unexpected A4 track signature {self._data[:4].hex(' ')}")
-        if bytes(self._data[4:8]) != bytes.fromhex("00 00 00 06"):
+        if bytes(self._data[4:8]) != self.FORMAT_MARKER:
             raise ElektronKitFieldError(
                 f"Unexpected A4 track format marker {self._data[4:8].hex(' ')}"
             )
@@ -501,10 +506,30 @@ class A4Sound:
         return decode_a4_pitch_semitones(self.get_oscillator_pitch_raw(oscillator))
 
     def get_fixed_8_8(self, field: str) -> float:
+        return self.get_fixed_8_8_raw(field) / A4_FIXED_8_8_SCALE
+
+    def get_fixed_8_8_raw(self, field: str) -> int:
+        """Read the exact native word underlying a mapped Q8.8 field."""
+
         if field not in A4_TWO_BYTE_FIELDS:
             raise ElektronKitFieldError(f"{field!r} is not a mapped 8.8 fixed-point field")
         offset = self.offset(field)
-        return self._data[offset] + self._data[offset + 1] / 256.0
+        return (self._data[offset] << 8) | self._data[offset + 1]
+
+    def set_fixed_8_8_raw(self, field: str, raw: object) -> None:
+        """Set a strict native word without quantizing or touching adjacent bytes."""
+
+        if field not in A4_TWO_BYTE_FIELDS:
+            raise ElektronKitFieldError(f"{field!r} is not a mapped 8.8 fixed-point field")
+        if (
+            isinstance(raw, bool)
+            or not isinstance(raw, int)
+            or not 0 <= raw <= A4_FIXED_8_8_RAW_MAX
+        ):
+            raise ElektronKitFieldError("raw Q8.8 value must be an integer in 0x0000..0x7FFF")
+        offset = self.offset(field)
+        self._data[offset] = (raw >> 8) & 0xFF
+        self._data[offset + 1] = raw & 0xFF
 
     def set_fixed_8_8(self, field: str, value: float) -> None:
         if field not in A4_TWO_BYTE_FIELDS:
@@ -515,9 +540,7 @@ class A4Sound:
         # The validated maximum is exactly 0x7FFF after 8.8 conversion.
         if scaled > 0x7FFF:  # pragma: no cover - roundoff backstop at the validated 8.8 maximum
             scaled = 0x7FFF
-        offset = self.offset(field)
-        self._data[offset] = (scaled >> 8) & 0xFF
-        self._data[offset + 1] = scaled & 0xFF
+        self.set_fixed_8_8_raw(field, scaled)
 
     def set_destination(self, field: str, destination: A4Destination | int) -> None:
         self.set_u7(field, int(A4Destination(destination)))

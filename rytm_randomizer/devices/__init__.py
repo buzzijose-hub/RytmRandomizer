@@ -20,6 +20,12 @@ from __future__ import annotations
 # of the box. Side-effect import is the documented registry pattern.
 from . import analog_four  # pyright: ignore[reportUnusedImport]  # noqa: F401 - registration
 from . import analog_rytm  # pyright: ignore[reportUnusedImport]  # noqa: F401 - registration
+from .analog_four import (
+    AnalogFourFilter1FrequencyCandidateCapability,
+    AnalogFourFilter1FrequencyCandidateMutation,
+    AnalogFourFilter1FrequencyCandidateResult,
+    get_analog_four_filter1_frequency_candidate_capability,
+)
 from .base import Device, MessageRenderer, MidiOutbox, MutationPlanner, SnapshotDecoder
 from .registry import all_devices, get_device, register_device
 from .saved_kit_capture import (
@@ -37,6 +43,9 @@ from .strategies import (
 
 __all__ = [
     "Device",
+    "AnalogFourFilter1FrequencyCandidateCapability",
+    "AnalogFourFilter1FrequencyCandidateMutation",
+    "AnalogFourFilter1FrequencyCandidateResult",
     "AnalogFourKitSnapshot",
     "MessageRenderer",
     "MidiOutbox",
@@ -49,6 +58,7 @@ __all__ = [
     "all_devices",
     "analog_four_snapshot_payload_fingerprint",
     "get_device",
+    "get_analog_four_filter1_frequency_candidate_capability",
     "register_device",
     "resolve_saved_kit_capture_capability",
     "rytm_snapshot_payload_fingerprint",

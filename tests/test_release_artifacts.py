@@ -379,7 +379,7 @@ def test_desktop_workflow_configures_target_and_cleans_cached_bundles_before_bui
     )
     assert "--shell-root desktop/shell" in cleanup["run"]
     cache = next(step for step in steps if "actions/cache" in step.get("uses", ""))
-    build = next(step for step in steps if step.get("run") == "cargo tauri build")
+    build = next(step for step in steps if step.get("name") == "Build Tauri bundle")
     collect = next(step for step in steps if "release_artifacts.py collect" in step.get("run", ""))
     assert steps.index(cache) < steps.index(cleanup) < steps.index(build) < steps.index(collect)
 

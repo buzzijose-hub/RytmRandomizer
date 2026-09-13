@@ -2,7 +2,7 @@
  * Typed WebSocket client for the cockpit ↔ Python sidecar protocol.
  *
  * Responsibilities:
- * - Connect to the sidecar (default `ws://127.0.0.1:4317/ws`).
+ * - Connect to the shell-selected loopback sidecar port (fallback `ws://127.0.0.1:4317/ws`).
  * - Parse incoming JSON; dispatch Events to subscribers and Acks to their pending promises.
  * - Send Commands wrapped in an envelope with a generated `request_id`; return a Promise
  *   that resolves with the ack.
@@ -66,6 +66,8 @@ export interface ClientLogger {
 declare global {
   interface Window {
     __RYTM_RAND_WS_TOKEN__?: string;
+    /** Per-launch loopback port injected with the WS token by the Tauri shell. */
+    __RYTM_RAND_WS_PORT__?: string | number;
     /**
      * Per-launch ARM secret, injected by the Tauri shell.
      *
@@ -81,7 +83,7 @@ declare global {
 }
 
 export interface CockpitClientOptions {
-  /** Full WebSocket URL. Default: `ws://127.0.0.1:4317/ws`. */
+  /** Full URL override. Otherwise resolve the shell's loopback port on every dial. */
   url?: string;
   /** Inject a custom WebSocket factory (used by tests). */
   webSocketFactory?: WebSocketFactory;
@@ -126,11 +128,14 @@ export const DEFAULT_WS_URL = 'ws://127.0.0.1:4317/ws';
 export const WS_SUBPROTOCOL = 'rytm-rand-cockpit-v1';
 export const HELLO_FRAME_TYPE = 'hello';
 export const WS_AUTH_TOKEN_STORAGE_KEY = 'rytm-rand-ws-token';
+/** Storage key the Tauri shell writes the selected loopback port to. */
+export const WS_PORT_STORAGE_KEY = 'rytm-rand-ws-port';
 /** Storage key the Tauri shell writes the per-launch ARM secret to. */
 export const ARM_SECRET_STORAGE_KEY = 'rytm-rand-arm-secret';
 const DEFAULT_INITIAL_RECONNECT_DELAY_MS = 500;
 const DEFAULT_MAX_RECONNECT_DELAY_MS = 10_000;
 const DEFAULT_ACK_TIMEOUT_MS = 5_000;
+const MAX_WS_PORT = 65_535;
 
 // ---------- Helpers ----------
 
@@ -143,6 +148,28 @@ function defaultRequestIdGenerator(): string {
   // Sufficient uniqueness for in-process correlation. We don't need crypto-quality randomness.
   const rand = Math.random().toString(36).slice(2, 10);
   return `req_${Date.now().toString(36)}_${rand}`;
+}
+
+function validatedWebSocketPort(value: unknown): number | null {
+  if (typeof value !== 'number' && (typeof value !== 'string' || !/^[0-9]+$/.test(value))) {
+    return null;
+  }
+  const port = Number(value);
+  return Number.isInteger(port) && port > 0 && port <= MAX_WS_PORT ? port : null;
+}
+
+function defaultWebSocketUrl(): string {
+  if (typeof window === 'undefined') return DEFAULT_WS_URL;
+  let port = validatedWebSocketPort(window.__RYTM_RAND_WS_PORT__);
+  if (port === null) {
+    try {
+      port = validatedWebSocketPort(window.localStorage.getItem(WS_PORT_STORAGE_KEY));
+    } catch {
+      return DEFAULT_WS_URL;
+    }
+  }
+  // Bootstrap data may select only a port, never a remote host or a different path.
+  return port === null ? DEFAULT_WS_URL : `ws://127.0.0.1:${port}/ws`;
 }
 
 function defaultAuthTokenResolver(): string | null {
@@ -190,7 +217,8 @@ function isHandshakeAck(msg: unknown): msg is { ok: boolean; code?: string } {
 // ---------- Client ----------
 
 export class CockpitClient {
-  private readonly url: string;
+  private readonly explicitUrl: string | undefined;
+  private url: string;
   private readonly webSocketFactory: WebSocketFactory;
   private readonly authToken: string | null | undefined;
   private readonly authTokenResolver: AuthTokenResolver;
@@ -223,6 +251,7 @@ export class CockpitClient {
   private readonly onClose = (ev: CloseEvent_): void => this.handleClose(ev);
 
   constructor(opts: CockpitClientOptions = {}) {
+    this.explicitUrl = opts.url;
     this.url = opts.url ?? DEFAULT_WS_URL;
     this.webSocketFactory = opts.webSocketFactory ?? defaultWebSocketFactory;
     this.authToken = opts.authToken;
@@ -273,9 +302,9 @@ export class CockpitClient {
     return this.status;
   }
 
-  /** The WebSocket URL this client dials (surfaced by the offline shell). */
+  /** Existing socket target, or the next dial's current target when disconnected. */
   getUrl(): string {
-    return this.url;
+    return this.socket === null ? this.resolveUrl() : this.url;
   }
 
   /** Current reconnect visibility snapshot (see {@link ReconnectState}). */
@@ -374,7 +403,13 @@ export class CockpitClient {
 
   // ----- Internal: socket lifecycle -----
 
+  private resolveUrl(): string {
+    return this.explicitUrl ?? defaultWebSocketUrl();
+  }
+
   private openSocket(): void {
+    // The shell may inject bootstrap data after startup or choose a new port on restart.
+    this.url = this.resolveUrl();
     this.setStatus(this.reconnectAttempt === 0 ? 'connecting' : 'reconnecting');
     const sock = this.webSocketFactory(this.url, WS_SUBPROTOCOL);
     this.socket = sock;

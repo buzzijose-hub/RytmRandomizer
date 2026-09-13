@@ -3,7 +3,7 @@
 **Status:** Phase 1 normative — must be implemented byte-identically by every reference implementation (Python today; C99 / Rust on the Phase 4 hardware runtime).
 **Authority:** This document. The Python implementation in `mutate.py` + `prng.py` conforms to this spec; the JSON conformance corpus under `tests/cockpit/fixtures/engine_conformance/` is the byte-frozen reference output.
 
-This file is the **single source of truth** for how `mutate(snapshot, profile, depth, seed, target_pad_ids=()) → MutationCandidate` produces its output. Any disagreement between this file and a reference implementation is a spec defect (file an issue and reconcile in this document first; the implementation follows).
+This file is the **single source of truth** for how `mutate(snapshot, profile, depth, seed, target_pad_ids=(), locked_pad_ids=()) → MutationCandidate` produces its output. Any disagreement between this file and a reference implementation is a spec defect (file an issue and reconcile in this document first; the implementation follows).
 
 A C99 or Rust port that satisfies the entire conformance corpus (`tests/cockpit/test_engine_conformance.py`) is *by construction* conformant.
 
@@ -14,7 +14,7 @@ A C99 or Rust port that satisfies the entire conformance corpus (`tests/cockpit/
 The mutation engine is a pure function:
 
 ```text
-mutate : (Snapshot, ProfileModel, depth: float, seed: uint32, target_pad_ids: Set<pad_id> = {}) → MutationCandidate
+mutate : (Snapshot, ProfileModel, depth: float, seed: uint32, target_pad_ids: Set<pad_id> = {}, locked_pad_ids: Set<pad_id> = {}) → MutationCandidate
 ```
 
 | Input | Type | Constraints |
@@ -24,6 +24,7 @@ mutate : (Snapshot, ProfileModel, depth: float, seed: uint32, target_pad_ids: Se
 | `depth` | IEEE-754 double | `0.10 ≤ depth ≤ 0.90` (UI-snapped range). |
 | `seed` | uint32 | Any 32-bit unsigned value. `0` is a documented special case (see §3). |
 | `target_pad_ids` | set of uint8 | Optional explicit include-list in `1..12`. Empty means all snapshot pads, preserving the original behavior. |
+| `locked_pad_ids` | set of uint8 | Optional deny-list in `1..12`, applied after targets. Empty means no locks. |
 
 Every dataclass field used by the engine is round-trip-serializable; see `rytm_randomizer/cockpit/data/`.
 
@@ -40,7 +41,7 @@ The engine produces a `MutationCandidate` with:
 | `profile_id` | Copied from `profile.profile_id`. |
 | `depth` | Copied from input. |
 | `seed` | Copied from input (the raw value the caller passed — the engine's internal PRNG normalisation in §3 is invisible). |
-| `pad_deltas` | One `PadDelta` per targeted pad, or per snapshot pad when the include-list is empty, in `pad_id` order; see §6. |
+| `pad_deltas` | One `PadDelta` per effective pad (`(targets or all) - locks`) in `pad_id` order; see §6. |
 | `safety_status` | Derived from `depth`; see §7. |
 | `estimated_midi_msgs` | Sum of `len(pd.changed_keys)` across all pad deltas. |
 
@@ -107,12 +108,13 @@ Determinism requires every reference implementation to traverse the inputs in th
 
 Within each pad, **one** `xorshift32` value is drawn per parameter. The PRNG state threads through the entire candidate — every draw uses the state left behind by the previous draw. There is no per-pad re-seeding.
 
-Target filtering happens **after** every pad's parameter draws are consumed.
-An untargeted pad is omitted from `pad_deltas` and from
+Scope filtering happens **after** every pad's parameter draws are consumed.
+The effective set is `(target_pad_ids or all snapshot pad ids) - locked_pad_ids`.
+An out-of-scope pad is omitted from `pad_deltas` and from
 `estimated_midi_msgs`, but it advances the PRNG exactly as it would in the
 default all-pad call. Therefore a selected pad's proposed values are identical
 for the same snapshot/profile/depth/seed regardless of which neighboring pads
-are included.
+are included or locked.
 
 ---
 
@@ -142,12 +144,17 @@ raw, state = xorshift32(state)
 r          = raw / 2^32                         # half-open [0.0, 1.0)
 scale      = depth * 127.0 * (0.5 + bias)       # scaled by depth and bias
 delta      = (r - 0.5) * 2.0 * scale
-new_value  = clamp(0, current + round_half_away_from_zero(delta), 127)
+(low, high) = manual_backed_domain(machine, key) # fallback: (0, 127)
+new_value  = clamp(low, current + round_half_away_from_zero(delta), high)
 ```
 
 * **Float type:** IEEE-754 double precision (Python `float`, C `double`). The reordering of operations matters — the spec'd expression `(r - 0.5) * 2.0 * scale` avoids `r * 2 * scale - scale` (which can lose precision when `scale` dominates).
 * **Rounding:** `round_half_away_from_zero` (C's `round()` behavior, NOT Python's banker's rounding). The Python implementation provides this explicitly because `round(0.5) == 0` in Python but `1` in C. See §6a "Rounding & Negative Zero" for the boundary contract and IEEE-754 caveats that govern every reference implementation.
-* **Clamping:** standard min/max to `[0, 127]`.
+* **Clamping:** standard min/max to the manual-backed parameter domain when
+  the shared Analog Rytm catalog maps the field; otherwise `[0, 127]`.
+  This keeps selectors such as Filter Mode, LFO Waveform, and LFO Trig Mode
+  in their normalized saved-KIT domains while preserving the historical
+  behavior for unmapped, preview-only fields.
 
 ---
 

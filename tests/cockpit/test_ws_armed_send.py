@@ -714,3 +714,76 @@ def test_explicit_disarm_clears_intent_so_mock_send_resumes(tmp_path: Path) -> N
 
     assert ack["ok"] is True
     assert "new_snapshot_id" in ack
+
+
+@dataclass
+class _ShowBankAuditionMarker:
+    """Minimal local-catalog seam used after a successful fake hardware send."""
+
+    outcome: str
+    calls: list[str] = field(default_factory=list)
+
+    def require_rytm_audition_source(
+        self,
+        candidate_id: str,
+        captures: object,
+        *,
+        manually_reloaded: bool,
+        source_snapshot_id: str | None = None,
+    ) -> None:
+        """The existing generic-send fixture does not belong to a show bank."""
+
+    def revoke_hardware_evidence(self) -> bool:
+        return False
+
+    def record_live_rytm_audition(self, candidate_id: str) -> object | None:
+        self.calls.append(candidate_id)
+        if self.outcome == "error":
+            raise ValueError("mock catalog write failed")
+        if self.outcome == "missing":
+            return None
+        return object()
+
+    def state_dict(self) -> dict[str, object]:
+        return {"revision": 1, "marker": "live_unsaved_hardware"}
+
+
+@pytest.mark.parametrize(
+    ("outcome", "expects_event", "expects_journal_entry"),
+    (
+        ("recorded", True, False),
+        ("missing", False, False),
+        ("error", False, True),
+    ),
+)
+def test_successful_armed_send_updates_local_audition_marker_without_retrying_bytes(
+    tmp_path: Path,
+    outcome: str,
+    expects_event: bool,
+    expects_journal_entry: bool,
+) -> None:
+    """Catalog bookkeeping follows the send and can never redefine wire success."""
+
+    session = _make_session(tmp_path)
+    provider = _FakeProvider()
+    session.arm_port_provider = provider
+    assert _arm(session)["ok"] is True
+    plan = _stage_send(session)
+    marker = _ShowBankAuditionMarker(outcome)
+    session.show_kit_forge = marker  # type: ignore[assignment]
+
+    ack = _dispatch(
+        session,
+        {"type": "send", "confirm": True, "send_plan_id": plan.plan_id},
+    )
+
+    assert ack["ok"] is True
+    assert provider.port.sent == [(0, 16, 42), (0, 17, 90)]
+    assert marker.calls == [plan.candidate_id]
+    event_types = [event["type"] for event in session.pending_events]
+    assert ("show_bank_changed" in event_types) is expects_event
+    journal = session.error_journal.entries
+    assert bool(journal) is expects_journal_entry
+    if expects_journal_entry:
+        assert journal[-1].fingerprint == "show_kit_forge.live_audition_record_failed"
+        assert journal[-1].context == {"candidate_id": plan.candidate_id}

@@ -87,6 +87,9 @@ from .device.midi_monitor import MidiInputOpener, MidiMonitorSupervisor
 from .history import HistoryStore
 from .library import LibraryStore, default_captures_dir, default_library_dir
 from .profiles import ProfileRegistry, default_profiles_dir
+from .show_bank.export import ShowPackService
+from .show_bank.store import ShowBankStore, default_show_bank_dir
+from .show_bank.workspace import ShowKitForgeWorkspace
 from .ws.handlers import (
     build_armed_watchdog,
     build_connection_changed,
@@ -564,6 +567,12 @@ def run(
     session.library_store = LibraryStore(
         default_library_dir(),
         captures_dir=default_captures_dir(),
+    )
+    show_bank_store = ShowBankStore(default_show_bank_dir())
+    session.show_kit_forge = ShowKitForgeWorkspace(show_bank_store)
+    session.show_pack_service = ShowPackService(
+        default_show_bank_dir().parent / "show-packs",
+        store=show_bank_store,
     )
     token = _provision_token()
     # The transmit capability gets its OWN server-minted secret. Without

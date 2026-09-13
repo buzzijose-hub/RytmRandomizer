@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
 from types import MappingProxyType
 from typing import Final
 
@@ -126,7 +127,52 @@ A4_TRACK_OFFSETS: Final[MappingProxyType[str, int]] = MappingProxyType(
     {name: wire_address_to_track_raw_offset(address) for name, address in A4_WIRE_ADDRESSES.items()}
 )
 
+A4_SOUND_SIGNATURE: Final[bytes] = bytes.fromhex("be ef ba ba")
+A4_SOUND_FORMAT_MARKER: Final[bytes] = bytes.fromhex("00 00 00 06")
 A4_TWO_BYTE_FIELDS: Final[frozenset[str]] = frozenset({"filter1_frequency", "filter2_frequency"})
+A4_FIXED_8_8_ENCODING: Final[str] = "unsigned-big-endian-q8.8"
+A4_FIXED_8_8_WIDTH: Final[int] = 2
+A4_FIXED_8_8_SCALE: Final[int] = 0x100
+A4_FIXED_8_8_RAW_MAX: Final[int] = 0x7FFF
+
+
+def format_a4_fixed_8_8(
+    raw: object, *, minimum: int = 0, maximum: int = A4_FIXED_8_8_RAW_MAX
+) -> str:
+    """Format an exact native Q8.8 value independently of Decimal context."""
+
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        raise TypeError("Q8.8 value must be an integer")
+    if not minimum <= raw <= maximum:
+        raise ValueError(f"Q8.8 value must be in 0x{minimum:04X}..0x{maximum:04X}")
+    integer, fraction = divmod(raw, A4_FIXED_8_8_SCALE)
+    decimal_fraction = fraction * (10**8 // A4_FIXED_8_8_SCALE)
+    return f"{integer}.{decimal_fraction:08d}".rstrip("0").rstrip(".")
+
+
+def parse_a4_fixed_8_8(
+    screen_value: object, *, minimum: int = 0, maximum: int = A4_FIXED_8_8_RAW_MAX
+) -> int:
+    """Parse exact Q8.8 text without rounding or constructing unbounded ratios."""
+
+    try:
+        if not isinstance(screen_value, str):
+            raise TypeError("screen value must be text")
+        parsed = Decimal(screen_value)
+    except (InvalidOperation, TypeError, ValueError) as exc:
+        raise ValueError(f"unsupported screen value {screen_value!r} for unsigned Q8.8") from exc
+    lower = Decimal(format_a4_fixed_8_8(minimum))
+    upper = Decimal(format_a4_fixed_8_8(maximum))
+    smallest = Decimal("0.00390625")
+    if not parsed.is_finite() or parsed < lower or parsed > upper or 0 < parsed < smallest:
+        raise ValueError(f"unsupported screen value {screen_value!r} for unsigned Q8.8")
+    numerator, denominator = parsed.as_integer_ratio()
+    raw, remainder = divmod(numerator * A4_FIXED_8_8_SCALE, denominator)
+    if remainder:
+        raise ValueError(f"unsupported screen value {screen_value!r} for unsigned Q8.8")
+    return raw
+
+
 A4_BIPOLAR_FIELDS: Final[frozenset[str]] = frozenset(
     {
         "osc1_detune",
@@ -164,10 +210,18 @@ A4_MOD_DEPTH_FIELDS: Final[MappingProxyType[str, str]] = MappingProxyType(
 
 __all__ = [
     "A4_BIPOLAR_FIELDS",
+    "A4_FIXED_8_8_ENCODING",
+    "A4_FIXED_8_8_RAW_MAX",
+    "A4_FIXED_8_8_SCALE",
+    "A4_FIXED_8_8_WIDTH",
     "A4_MOD_DEPTH_FIELDS",
     "A4_SOUND_NAME_LENGTH",
     "A4_SOUND_NAME_OFFSET",
+    "A4_SOUND_SIGNATURE",
+    "A4_SOUND_FORMAT_MARKER",
     "A4_TRACK_OFFSETS",
     "A4_TWO_BYTE_FIELDS",
     "A4_WIRE_ADDRESSES",
+    "format_a4_fixed_8_8",
+    "parse_a4_fixed_8_8",
 ]

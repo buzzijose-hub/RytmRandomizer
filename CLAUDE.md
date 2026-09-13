@@ -16,6 +16,25 @@
 6. **[`.claude/rules/`](.claude/rules/)** — mandatory rules (architecture, autonomous execution, cascade bundling, codex contribution, coverage, Device/strategy, hardware pins, live-but-passive MIDI, parallel-agent composition, parallelization, parity, PR-body conformance, README freshness, skill routing, and targeted-mutation safety).
 7. **[`.claude/skills/`](.claude/skills/)** — repo-specific and learned task skills, invokable via `/<skill-name>`.
 
+## Current Show Kit Forge handoff
+
+Start with the
+[`plan`](docs/superpowers/plans/2026-09-04-show-kit-forge.md),
+[`resumable state`](docs/superpowers/plans/2026-09-04-show-kit-forge_STATE.json),
+[`run report`](docs/superpowers/plans/2026-09-04-show-kit-forge_RUN_REPORT.md),
+and dated [`run log`](docs/2026-09-04-show-kit-forge_RUN_LOG.md). Resume through
+the existing [`AUTONOMOUS_RUN_PLAYBOOK.md`](docs/AUTONOMOUS_RUN_PLAYBOOK.md)
+and record physical work only in the
+[`studio checklist`](docs/hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md).
+Future mutation and evidence work must also follow the updated
+[`targeted-mutation-safety` rule](.claude/rules/targeted-mutation-safety.md)
+and [`targeted-live-kit-mutation` skill](.claude/skills/learned/targeted-live-kit-mutation/SKILL.md).
+
+The current authority boundary is hardware-blocked by design: Analog Four
+Filter 1 Frequency is an offline saved-KIT artifact only, there is no A4 SEND,
+and the Rytm one-pad audition/restoration plus favorite save, recapture, and
+fresh paired preflight still require operator-present evidence.
+
 ## Operational guardrails — apply on every task
 
 ### Hard rules (never bend without explicit user approval)
