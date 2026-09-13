@@ -45,7 +45,12 @@ from ...snapshot.mutation_scope import MutationScope, registered_mutation_ids
 from .mutation_candidate import MutationCandidate, MutationCandidateDict, PadDelta
 from .stage import ANALOG_FOUR_DEVICE_ID as A4_SHOW_KIT_DEVICE_ID
 from .stage import ANALOG_RYTM_DEVICE_ID as RYTM_SHOW_KIT_DEVICE_ID
-from .stage import STAGE_DEVICE_IDS, StageDeviceId
+from .stage import (
+    STAGE_DEVICE_IDS,
+    StageDeviceId,
+    is_analog_four_stage_slot,
+    is_rytm_stage_slot,
+)
 from .types import narrow_status, safe_repr
 
 SHOW_BANK_SCHEMA_VERSION: Final[str] = "show-bank-v1"
@@ -647,9 +652,9 @@ class ShowKitRecipe:
             raise ValueError(f"depth must be in [{_MIN_DEPTH}, {_MAX_DEPTH}]")
         if type(self.seed) is not int or not 0 <= self.seed <= _MAX_SEED:
             raise ValueError("seed must be an integer in the supported range")
-        if self.rytm_scope.device_id != RYTM_SHOW_KIT_DEVICE_ID:
+        if not is_rytm_stage_slot(self.rytm_scope.device_id):
             raise ValueError("rytm_scope must target the Analog Rytm lane")
-        if self.analog_four_scope.device_id != A4_SHOW_KIT_DEVICE_ID:
+        if not is_analog_four_stage_slot(self.analog_four_scope.device_id):
             raise ValueError("analog_four_scope must target the Analog Four lane")
 
     def to_dict(self) -> ShowKitRecipeDict:
@@ -1524,9 +1529,9 @@ class ShowBankEntry:
         self._validate_show_preflight()
 
     def _validate_sources(self) -> None:
-        if self.rytm_source.device_id != RYTM_SHOW_KIT_DEVICE_ID:
+        if not is_rytm_stage_slot(self.rytm_source.device_id):
             raise ValueError("rytm_source must be an Analog Rytm capture")
-        if self.analog_four_source.device_id != A4_SHOW_KIT_DEVICE_ID:
+        if not is_analog_four_stage_slot(self.analog_four_source.device_id):
             raise ValueError("analog_four_source must be an Analog Four capture")
         for label, source in (
             ("Rytm source", self.rytm_source),
@@ -1629,17 +1634,16 @@ class ShowBankEntry:
                 )
 
     def _validate_device_evidence(self, candidates_by_id: Mapping[str, ShowKitCandidate]) -> None:
-        for device_id, save, recapture in (
+        slots: tuple[
+            tuple[ShowKitDeviceId, HardwareSaveAttestation | None, FavoriteRecapture | None], ...
+        ] = (
             (RYTM_SHOW_KIT_DEVICE_ID, self.rytm_hardware_save, self.rytm_recapture),
             (A4_SHOW_KIT_DEVICE_ID, self.analog_four_hardware_save, self.analog_four_recapture),
-        ):
+        )
+        for device_id, save, recapture in slots:
             if save is not None and save.device_id != device_id:
                 raise ValueError("hardware-save attestation is attached to the wrong device")
-            source = (
-                self.rytm_source
-                if device_id == RYTM_SHOW_KIT_DEVICE_ID
-                else self.analog_four_source
-            )
+            source = self.rytm_source if is_rytm_stage_slot(device_id) else self.analog_four_source
             if save is not None and save.hardware_slot == source.hardware_slot:
                 raise ValueError(
                     "favorite hardware slot must not overwrite an immutable source slot"

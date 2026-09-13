@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from ..commands import COMMANDS, PROFILE_WORKFLOW_COMMANDS
+from ._result_fields import empty_metadata
 
 PACKET_10A_SELECTED_PROFILE_KEYS = ("P",)
 PACKET_10B_SELECTED_PROFILE_KEYS = ("M",)
@@ -50,14 +51,14 @@ class SelectedProfileBehaviorResult:
     opens_ports: bool = False
     hardware_required: bool = False
     active_behavior: bool = False
-    metadata: Mapping[str, object] = field(default_factory=dict)
+    metadata: Mapping[str, object] = field(default_factory=empty_metadata)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         object.__setattr__(self, "display_lines", tuple(self.display_lines))
         object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
 
 
-def evaluate_selected_profile_behavior(command_key):
+def evaluate_selected_profile_behavior(command_key: str) -> SelectedProfileBehaviorResult:
     """Return a passive Packet 10 behavior result for selected-profile workflow."""
 
     key = str(command_key)
@@ -79,11 +80,11 @@ def evaluate_selected_profile_behavior(command_key):
     )
 
 
-def _accepted_p_result():
+def _accepted_p_result() -> SelectedProfileBehaviorResult:
     metadata = PROFILE_WORKFLOW_COMMANDS["P"]
-    label = metadata["label"]
+    label = str(metadata["label"])
     behavior_family = "selected-profile-workflow/profile-selection"
-    source_scope = metadata["scope"]
+    source_scope = str(metadata["scope"])
     workflow_action = "describe_profile_selection_machine_change_intent"
     intent_kind = "profile_machine_selection"
 
@@ -144,11 +145,11 @@ def _accepted_p_result():
     )
 
 
-def _accepted_m_result():
+def _accepted_m_result() -> SelectedProfileBehaviorResult:
     metadata = PROFILE_WORKFLOW_COMMANDS["M"]
-    label = metadata["label"]
+    label = str(metadata["label"])
     behavior_family = "selected-profile-workflow/selected-profile-anchor-load"
-    source_scope = metadata["scope"]
+    source_scope = str(metadata["scope"])
     workflow_action = "describe_selected_profile_anchor_load_intent"
     intent_kind = "selected_profile_anchor_load"
     selected_profile_dependency = "current_selected_profile_state"
@@ -214,7 +215,7 @@ def _accepted_m_result():
     )
 
 
-def _unsupported_result(command_key):
+def _unsupported_result(command_key: str) -> SelectedProfileBehaviorResult:
     return SelectedProfileBehaviorResult(
         command_key=command_key,
         accepted=False,
@@ -223,7 +224,7 @@ def _unsupported_result(command_key):
     )
 
 
-def _safe_failure_metadata(source):
+def _safe_failure_metadata(source: str) -> dict[str, object]:
     return {
         "source": source,
         "mock_only": True,

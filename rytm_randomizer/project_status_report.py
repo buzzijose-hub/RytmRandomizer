@@ -16,11 +16,26 @@ the package stays inert. The report module itself remains passive; only what it
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping, Sequence
 from copy import deepcopy
+from typing import Final, TypeAlias, cast
 
 from .reports.formatter import safety_section_lines
 
-PASSIVE_CLI_COMMANDS = (
+#: One node in the status report tree. The tree mixes leaf scalars with
+#: nested sections and tuples of commands, so ``object`` is the honest
+#: element type: callers read a value and render or compare it, never
+#: dereference it structurally. (Gate 6 bans bare ``Any``; ``object`` is the
+#: typed alternative — it forces a narrowing check before use.)
+StatusValue: TypeAlias = object
+
+#: A section of the report, or the whole report: string keys to mixed values.
+StatusSection: TypeAlias = dict[str, StatusValue]
+
+#: A read-only view of a section, for parameters that never mutate.
+StatusSectionView: TypeAlias = Mapping[str, StatusValue]
+
+PASSIVE_CLI_COMMANDS: Final[tuple[str, ...]] = (
     "report",
     "project-status-report",
     "mock-mapper-report",
@@ -44,7 +59,7 @@ PASSIVE_CLI_COMMANDS = (
     "preview-group-profile",
 )
 
-PROJECT_PHASE = {
+PROJECT_PHASE: Final[StatusSection] = {
     "name": "Convergence Phase (armed behind --arm flag)",
     "technical_name": "RytmRandomizer",
     "creative_identity_candidate": "KitForge",
@@ -52,10 +67,10 @@ PROJECT_PHASE = {
     "package_name": "rytm_randomizer",
 }
 
-CLOSEOUT_STATUS = {
+CLOSEOUT_STATUS: Final[StatusSection] = {
     "closeout_contract": "present",
     "failure_propagation": "guarded",
-    "closeout_script": "Scripts/closeout_check.ps1",
+    "closeout_script": "scripts/closeout_check.ps1",
 }
 
 # Convergence status values intentionally describe the *package* as it stands
@@ -69,7 +84,7 @@ CLOSEOUT_STATUS = {
 # describe the post-WS-H convergence reality consistently with the rest of
 # this module. ``Docs/`` paths likewise updated to lowercase ``docs/``.
 
-PUBLIC_API_HARDENING_STATUS = {
+PUBLIC_API_HARDENING_STATUS: Final[StatusSection] = {
     "status": "checkpointed",
     "module_count": 3,
     "exports_documented": True,
@@ -83,7 +98,7 @@ PUBLIC_API_HARDENING_STATUS = {
     "active_behavior": "absent",
 }
 
-COLLABORATOR_REVIEW_INTAKE_STATUS = {
+COLLABORATOR_REVIEW_INTAKE_STATUS: Final[StatusSection] = {
     "status": "checkpointed",
     "collaborator": "Eddie",
     "review_source": "external_ai_assisted_review",
@@ -106,7 +121,7 @@ COLLABORATOR_REVIEW_INTAKE_STATUS = {
     "package_metadata_changes": "requires_explicit_approval",
 }
 
-COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_STATUS = {
+COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_STATUS: Final[StatusSection] = {
     "status": "accepted",
     "template_path": "docs/archive/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE.md",
     "review_gate_path": "docs/archive/COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_REVIEW.md",
@@ -121,7 +136,7 @@ COLLABORATOR_REVIEW_TRIAGE_TEMPLATE_STATUS = {
     "package_metadata_changes": "requires_explicit_approval",
 }
 
-PROJECT_STATUS_SAFETY = {
+PROJECT_STATUS_SAFETY: Final[StatusSection] = {
     "real_midi": "present_behind_arm_flag",
     "port_opening": "present_behind_arm_flag",
     "active_execution": "present_behind_arm_flag",
@@ -145,7 +160,7 @@ PROJECT_STATUS_SAFETY = {
 # ``rytm_randomizer.app``). The V1.34 monolith is retained on disk only as a
 # frozen byte-parity reference for the test suite. The package therefore owns
 # the interactive runtime end-to-end: ``interactive_logic_converged`` is True.
-CONVERGENCE_STATUS = {
+CONVERGENCE_STATUS: Final[StatusSection] = {
     "active_execution": "present",
     "active_execution_gate": "--arm flag",
     "entry_point": "rytm_randomizer.app",
@@ -158,7 +173,7 @@ CONVERGENCE_STATUS = {
     "interactive_logic_converged": True,
 }
 
-PROJECT_STATUS_CHECKS = (
+PROJECT_STATUS_CHECKS: Final[tuple[tuple[str, StatusValue], ...]] = (
     ("safety.real_midi", "present_behind_arm_flag"),
     ("safety.port_opening", "present_behind_arm_flag"),
     ("safety.active_execution", "present_behind_arm_flag"),
@@ -209,14 +224,50 @@ PROJECT_STATUS_CHECKS = (
 )
 
 
-def _get_nested_value(data, path):
-    current = data
+def _section(value: StatusValue, *, context: str) -> StatusSectionView:
+    """Narrow a report value to a nested section, or fail with the key path.
+
+    The report tree is ``dict[str, object]``, so reading a subsection back
+    out needs an explicit narrowing step. Failing loudly here (rather than
+    letting an ``object`` subscript blow up somewhere downstream) keeps a
+    malformed report diagnosable.
+    """
+
+    if not isinstance(value, Mapping):
+        raise TypeError(f"project status report section {context!r} is not a mapping")
+    mapping = cast("Mapping[object, StatusValue]", value)
+    narrowed: StatusSection = {str(key): item for key, item in mapping.items()}
+    return narrowed
+
+
+def _render(value: StatusValue) -> str:
+    """Render a status-report leaf for line output."""
+
+    return str(value)
+
+
+def _rows(value: StatusValue, *, context: str) -> tuple[StatusValue, ...]:
+    """Narrow a report value to a tuple of rows."""
+
+    if isinstance(value, (str, bytes)) or not isinstance(value, (list, tuple)):
+        raise TypeError(f"project status collection {context!r} is not a sequence")
+    return tuple(cast("Sequence[StatusValue]", value))
+
+
+def _joined(value: StatusValue, *, context: str) -> str:
+    """Render a report collection as a comma-separated string."""
+
+    return ", ".join(_render(item) for item in _rows(value, context=context))
+
+
+def _get_nested_value(data: StatusSectionView, path: str) -> StatusValue:
+    current: StatusValue = data
     for part in path.split("."):
-        current = current[part]
+        current = _section(current, context=path)[part]
     return current
 
 
-def build_project_status_report():
+def build_project_status_report() -> StatusSection:
     """Return copied, in-memory data about the current project status."""
 
     from .reports import (
@@ -226,7 +277,7 @@ def build_project_status_report():
         summarize_runtime_plan_report,
     )
 
-    report = {
+    report: StatusSection = {
         "title": "RytmRandomizer Project Status Report",
         "phase": PROJECT_PHASE,
         "passive_cli_commands": PASSIVE_CLI_COMMANDS,
@@ -249,12 +300,12 @@ def build_project_status_report():
     return deepcopy(report)
 
 
-def check_project_status_report(report=None):
+def check_project_status_report(report: StatusSection | None = None) -> StatusSection:
     """Return deterministic safety check results for project status data."""
 
     source_report = build_project_status_report() if report is None else report
-    checked = {}
-    failures = []
+    checked: StatusSection = {}
+    failures: list[StatusSection] = []
 
     for path, expected in PROJECT_STATUS_CHECKS:
         actual = _get_nested_value(source_report, path)
@@ -271,42 +322,57 @@ def check_project_status_report(report=None):
     }
 
 
-def summarize_project_status_report(report=None):
+def summarize_project_status_report(report: StatusSection | None = None) -> StatusSection:
     """Return a compact copied summary of the project status report."""
 
     source_report = build_project_status_report() if report is None else report
+    phase = _section(source_report["phase"], context="phase")
+    behavior = _section(source_report["behavior_parity"], context="behavior_parity")
+    runtime = _section(source_report["runtime_plan"], context="runtime_plan")
+    active = _section(source_report["active_boundary"], context="active_boundary")
+    bridge = _section(
+        source_report["mock_runtime_active_bridge"], context="mock_runtime_active_bridge"
+    )
+    api = _section(source_report["public_api_hardening"], context="public_api_hardening")
+    collaborator = _section(
+        source_report["collaborator_review_intake"], context="collaborator_review_intake"
+    )
+    triage_template = _section(
+        source_report["collaborator_review_triage_template"],
+        context="collaborator_review_triage_template",
+    )
+    safety = _section(source_report["safety"], context="safety")
+    convergence = _section(source_report["convergence"], context="convergence")
+    commands = source_report["passive_cli_commands"]
+
     return {
         "title": source_report["title"],
-        "phase_name": source_report["phase"]["name"],
-        "creative_identity_candidate": source_report["phase"]["creative_identity_candidate"],
-        "passive_cli_command_count": len(source_report["passive_cli_commands"]),
-        "accepted_packet_count": source_report["behavior_parity"]["accepted_packet_count"],
-        "pad_lane_command_count": source_report["behavior_parity"]["pad_lane_command_count"],
-        "runtime_supported_count": source_report["runtime_plan"]["supported_count"],
-        "active_boundary_candidate": source_report["active_boundary"]["supported_candidate"],
-        "mock_bridge_candidate": source_report["mock_runtime_active_bridge"]["accepted_source_key"],
-        "public_api_hardening": source_report["public_api_hardening"]["status"],
-        "public_api_module_count": source_report["public_api_hardening"]["module_count"],
-        "collaborator_review_intake": source_report["collaborator_review_intake"]["status"],
-        "external_review_findings_received": source_report["collaborator_review_intake"][
-            "findings_received"
-        ],
-        "collaborator_review_triage_template": source_report["collaborator_review_triage_template"][
-            "status"
-        ],
-        "real_midi": source_report["safety"]["real_midi"],
-        "port_opening": source_report["safety"]["port_opening"],
-        "active_execution": source_report["safety"]["active_execution"],
-        "default_mode": source_report["safety"]["default_mode"],
-        "hardware_required": source_report["safety"]["hardware_required"],
-        "v134_reference": source_report["safety"]["v134_reference"],
-        "active_execution_gate": source_report["convergence"]["active_execution_gate"],
-        "active_modes_present": source_report["convergence"]["active_modes_present"],
-        "total_modes": source_report["convergence"]["total_modes"],
+        "phase_name": phase["name"],
+        "creative_identity_candidate": phase["creative_identity_candidate"],
+        "passive_cli_command_count": len(_rows(commands, context="passive_cli_commands")),
+        "accepted_packet_count": behavior["accepted_packet_count"],
+        "pad_lane_command_count": behavior["pad_lane_command_count"],
+        "runtime_supported_count": runtime["supported_count"],
+        "active_boundary_candidate": active["supported_candidate"],
+        "mock_bridge_candidate": bridge["accepted_source_key"],
+        "public_api_hardening": api["status"],
+        "public_api_module_count": api["module_count"],
+        "collaborator_review_intake": collaborator["status"],
+        "external_review_findings_received": collaborator["findings_received"],
+        "collaborator_review_triage_template": triage_template["status"],
+        "real_midi": safety["real_midi"],
+        "port_opening": safety["port_opening"],
+        "active_execution": safety["active_execution"],
+        "default_mode": safety["default_mode"],
+        "hardware_required": safety["hardware_required"],
+        "v134_reference": safety["v134_reference"],
+        "active_execution_gate": convergence["active_execution_gate"],
+        "active_modes_present": convergence["active_modes_present"],
+        "total_modes": convergence["total_modes"],
     }
 
 
-def format_project_status_summary(report=None):
+def format_project_status_summary(report: StatusSection | None = None) -> list[str]:
     """Return deterministic compact project status summary lines."""
 
     summary = summarize_project_status_report(report)
@@ -340,46 +406,56 @@ def format_project_status_summary(report=None):
     ]
 
 
-def format_project_status_check(report=None):
+def format_project_status_check(report: StatusSection | None = None) -> list[str]:
     """Return deterministic project status safety check lines."""
 
     check = check_project_status_report(report)
-    lines = [
-        check["title"],
+    lines: list[str] = [
+        _render(check["title"]),
         f"- ok: {check['ok']}",
         f"- failure_count: {check['failure_count']}",
     ]
 
+    checked = _section(check["checked"], context="check.checked")
     for path, _expected in PROJECT_STATUS_CHECKS:
-        lines.append(f"- {path}: {check['checked'][path]}")
+        lines.append(f"- {path}: {_render(checked[path])}")
 
-    if check["failures"]:
+    failures = check["failures"]
+    if failures:
         lines.append("Failures:")
-        for failure in check["failures"]:
+        for failure in _rows(failures, context="check.failures"):
+            row = _section(failure, context="check.failures[]")
             lines.append(
                 "- "
-                f"{failure['path']}: expected {failure['expected']}, "
-                f"actual {failure['actual']}"
+                f"{_render(row['path'])}: expected {_render(row['expected'])}, "
+                f"actual {_render(row['actual'])}"
             )
 
     return lines
 
 
-def format_project_status_report(report=None):
+def format_project_status_report(report: StatusSection | None = None) -> list[str]:
     """Return deterministic human-readable project status report lines."""
 
     source_report = build_project_status_report() if report is None else report
-    phase = source_report["phase"]
-    behavior = source_report["behavior_parity"]
-    runtime = source_report["runtime_plan"]
-    active = source_report["active_boundary"]
-    bridge = source_report["mock_runtime_active_bridge"]
-    api = source_report["public_api_hardening"]
-    collaborator = source_report["collaborator_review_intake"]
-    triage_template = source_report["collaborator_review_triage_template"]
+    phase = _section(source_report["phase"], context="phase")
+    behavior = _section(source_report["behavior_parity"], context="behavior_parity")
+    runtime = _section(source_report["runtime_plan"], context="runtime_plan")
+    active = _section(source_report["active_boundary"], context="active_boundary")
+    bridge = _section(
+        source_report["mock_runtime_active_bridge"], context="mock_runtime_active_bridge"
+    )
+    api = _section(source_report["public_api_hardening"], context="public_api_hardening")
+    collaborator = _section(
+        source_report["collaborator_review_intake"], context="collaborator_review_intake"
+    )
+    triage_template = _section(
+        source_report["collaborator_review_triage_template"],
+        context="collaborator_review_triage_template",
+    )
 
     lines = [
-        source_report["title"],
+        _render(source_report["title"]),
         "Phase:",
         f"- name: {phase['name']}",
         f"- technical_name: {phase['technical_name']}",
@@ -387,8 +463,8 @@ def format_project_status_report(report=None):
         "Passive CLI Visibility:",
     ]
 
-    for command in source_report["passive_cli_commands"]:
-        lines.append(f"- {command}")
+    for command in _rows(source_report["passive_cli_commands"], context="passive_cli_commands"):
+        lines.append(f"- {_render(command)}")
 
     lines.extend(
         [
@@ -412,7 +488,8 @@ def format_project_status_report(report=None):
             f"- runtime_execution: {runtime['runtime_execution']}",
             "Active Boundary:",
             f"- supported_candidate: {active['supported_candidate']}",
-            f"- unsupported_keys: {', '.join(active['unsupported_keys'])}",
+            f"- unsupported_keys: "
+            f"{_joined(active['unsupported_keys'], context='unsupported_keys')}",
             f"- active_cli_behavior: {active['active_cli_behavior']}",
             "Mock Runtime Active Bridge:",
             f"- accepted_source_key: {bridge['accepted_source_key']}",
@@ -423,7 +500,7 @@ def format_project_status_report(report=None):
             f"- status: {api['status']}",
             f"- module_count: {api['module_count']}",
             f"- exports_documented: {api['exports_documented']}",
-            "- modules: " + ", ".join(api["modules"]),
+            "- modules: " + _joined(api["modules"], context="modules"),
             f"- real_midi: {api['real_midi']}",
             f"- port_opening: {api['port_opening']}",
             f"- active_behavior: {api['active_behavior']}",
@@ -434,7 +511,8 @@ def format_project_status_report(report=None):
             f"- findings_received: {collaborator['findings_received']}",
             f"- required_format: {collaborator['required_format']}",
             f"- implementation_policy: {collaborator['implementation_policy']}",
-            "- triage_categories: " + ", ".join(collaborator["triage_categories"]),
+            "- triage_categories: "
+            + _joined(collaborator["triage_categories"], context="triage_categories"),
             f"- real_midi: {collaborator['real_midi']}",
             f"- port_opening: {collaborator['port_opening']}",
             f"- active_behavior: {collaborator['active_behavior']}",
@@ -457,28 +535,39 @@ def format_project_status_report(report=None):
         ]
     )
 
-    for key, value in source_report["closeout"].items():
-        lines.append(f"- {key}: {value}")
+    closeout = _section(source_report["closeout"], context="closeout")
+    for key in closeout:
+        lines.append(f"- {key}: {_render(closeout[key])}")
 
     lines.append("Convergence:")
-    for key, value in source_report["convergence"].items():
-        if isinstance(value, tuple):
-            value = ", ".join(str(item) for item in value)
-        lines.append(f"- {key}: {value}")
+    convergence = _section(source_report["convergence"], context="convergence")
+    for key in convergence:
+        entry = convergence[key]
+        # ``_joined`` does its own sequence narrowing, so the value is passed
+        # unnarrowed rather than through an isinstance check that would only
+        # widen the element type back to Unknown.
+        rendered = (
+            _joined(convergence[key], context=str(key))
+            if isinstance(entry, tuple)
+            else _render(entry)
+        )
+        lines.append(f"- {key}: {rendered}")
 
-    lines.extend(safety_section_lines(source_report["safety"]))
+    lines.extend(safety_section_lines(_section(source_report["safety"], context="safety")))
+
+    source_block = _section(source_report["source"], context="source")
 
     lines.extend(
         [
             "Source:",
-            f"- in_memory_only: {source_report['source']['in_memory_only']}",
-            f"- writes_files: {source_report['source']['writes_files']}",
+            f"- in_memory_only: {_render(source_block['in_memory_only'])}",
+            f"- writes_files: {_render(source_block['writes_files'])}",
         ]
     )
     return lines
 
 
-def format_project_status_report_json(report=None):
+def format_project_status_report_json(report: StatusSection | None = None) -> str:
     """Return deterministic JSON for the copied project status report."""
 
     source_report = build_project_status_report() if report is None else report

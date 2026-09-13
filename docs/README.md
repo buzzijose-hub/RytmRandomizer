@@ -30,7 +30,7 @@ lives under `docs/archive/` and is historical — safe to skip on first pass.
 - **[OBSERVABILITY.md](OBSERVABILITY.md)** — logging, error taxonomy, tracing guide.
 
 ### Ops references (exempt from the 12-cap)
-- **[BRANCH_PROTECTION.md](BRANCH_PROTECTION.md)** — branch-protection ruleset; referenced by `Scripts/apply-branch-protection.sh` and `.github/workflows/test.yml`.
+- **[BRANCH_PROTECTION.md](BRANCH_PROTECTION.md)** — branch-protection ruleset; referenced by `scripts/apply-branch-protection.sh` and `.github/workflows/test.yml`.
 - **[BUILDING_INSTALLERS.md](BUILDING_INSTALLERS.md)** — release-engineer workflow for native installers.
 - **[MANUAL_HARDWARE_VALIDATION.md](MANUAL_HARDWARE_VALIDATION.md)** — pre-release human checklist against real Rytm MK2; referenced from `.github/workflows/release.yml`.
 - **[LOCAL_DEV_TOOLING_NOTES.md](LOCAL_DEV_TOOLING_NOTES.md)** — env-var documentation home per `PLAN_REQUIREMENTS.md` Gate 13.

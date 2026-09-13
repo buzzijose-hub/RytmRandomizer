@@ -1,10 +1,10 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-09-07. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-09-13. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
 
-Show Kit Forge is implemented on `codex/show-kit-forge-complete` as one
+Show Kit Forge merged as PR #238 on September 8 after Eddie approved its source as one
 versioned, paired Analog Rytm/Analog Four preparation workflow. It keeps
 `source -> candidate -> favorite -> hardware-saved -> verified -> show-ready`
 as distinct evidence states; selection and a Rytm live audition do not imply a
@@ -59,12 +59,20 @@ The shell and bundled sidecar hashes match the build manifest, and authenticated
 catalog access and the UI refresh succeeded. The
 [software handoff](2026-09-07-show-kit-forge-software-closeout.md) records the
 exact executable, receipts, preserved backups and still-blank physical checklist.
-Source CI passed on Windows, macOS and Linux. Required maintainer review remains
-pending; the
-observed review decision is `CHANGES_REQUESTED`. No hardware validation or merge
+Source CI passed on Windows, macOS and Linux. Eddie approved source `50ceb787`; PR #238 merged as `b1d6ff56`. No hardware validation or merge
 approval is inferred from the software smoke.
 
+Digitakt and Digitakt II are under review in #240. Both are registered passive families with manual-backed CC/NRPN reports, strict 8/16-track domains and synthetic candidate decoding. Hardware saved-project offsets remain unpromoted; mutation plans always refuse and render zero events. September 8 corrections distinguish II Source Sample Select from MISC Sample Slot and preserve Rytm/A4 capture authority. The targeted repair suite passes 459 tests; combined verification is pending.
+
 ## Recent Cleanup
+
+- 2026-09-13: Reconciled the Digitakt review repairs with the author's merged
+  Forge integration. The fixed Rytm/A4 stage now exposes two slot predicates,
+  and Forge consumers use that closed stage domain; Digitakt registration
+  does not expand capture or send authority. The `Device` Protocol owns report
+  roles and ordering, shared family conformance tests pin the clean-process
+  roster, and the guarded AL16 refresh tool maintains source fingerprints.
+  Full combined validation and code-owner review remain pending for #240.
 
 - 2026-09-07: Completed the Show Kit Forge integration in a fresh worktree,
   preserving both the dirty main checkout and the earlier unfinished feature
@@ -79,7 +87,7 @@ approval is inferred from the software smoke.
   strengthen refusal assertions; and add the inert A4 preparation review.
   The renderer remains offline-only. Final local Python, frontend, browser,
   coverage and static checks passed. The identified studio build, actual GUI
-  smoke and source CI also passed; required review remains pending. The dated studio
+  smoke and source CI also passed; the maintainer approved the source and #238 merged. The dated studio
   checklist retains every outstanding physical observation.
 - 2026-08-27: Integrated the targeted dual-machine live-performance Cockpit
   bundle on the latest `modularize-v1.34` base.

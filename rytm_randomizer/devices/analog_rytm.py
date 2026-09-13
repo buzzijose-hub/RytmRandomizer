@@ -42,6 +42,8 @@ _ELEKTRON_MFR_ID: Final[bytes] = bytes([0x00, 0x20, 0x3C])
 
 #: Operator-facing report header line for guarded / hardware sends.
 _REPORT_HEADER: Final[str] = "RytmRandomizer Analog Rytm MK2 Guarded Send"
+_ROLE_SUMMARY: Final[str] = "12-pad drum and sample performance surface"
+_DISPLAY_ORDER: Final[int] = 0
 _DEVICE_ID: Final[str] = "analog_rytm_mk2"
 _DISPLAY_NAME: Final[str] = "Elektron Analog Rytm MKII"
 _DEFAULT_MIDI_CHANNEL: Final[int] = 0
@@ -104,6 +106,8 @@ class AnalogRytmDevice:
     track_count: int = _TRACK_COUNT
     sysex_manufacturer_id: bytes = _ELEKTRON_MFR_ID
     report_header: str = _REPORT_HEADER
+    role_summary: str = _ROLE_SUMMARY
+    display_order: int = _DISPLAY_ORDER
 
     def __init__(self) -> None:
         """Compose the three capability strategies on this device instance."""

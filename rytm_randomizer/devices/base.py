@@ -129,6 +129,14 @@ class Device(Protocol):
     * ``report_header`` -- the operator-facing header line for guarded
       and hardware send reports (e.g.
       ``"RytmRandomizer passive Snapshot Essence Guarded Send"``).
+    * ``role_summary`` -- one-line operator-facing description of what
+      the machine *is* (``"12-pad drum and sample performance surface"``).
+      The device declares this itself: a consumer cannot infer it from
+      ``track_count`` without encoding device knowledge outside this seam
+      (a 12-track Syntakt is not a 12-pad Rytm).
+    * ``display_order`` -- sort key for operator-facing device listings.
+      Lower sorts first; ties break on ``device_id``. Owning the key here
+      keeps per-device ordering tables out of the reports layer.
 
     Method contract (convenience wrappers that delegate to the strategies;
     they remain on the Protocol so the WS-S5 surface is byte-stable for
@@ -183,6 +191,14 @@ class Device(Protocol):
     @property
     @abstractmethod
     def report_header(self) -> str: ...
+
+    @property
+    @abstractmethod
+    def role_summary(self) -> str: ...
+
+    @property
+    @abstractmethod
+    def display_order(self) -> int: ...
 
     @abstractmethod
     def decode_snapshot(self, raw: bytes, slot: int) -> object: ...

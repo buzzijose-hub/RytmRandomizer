@@ -210,7 +210,7 @@ def test_runtime_adjacent_b_imports_no_real_midi_and_exposes_no_active_names():
 
 
 def test_closeout_includes_runtime_adjacent_b_label():
-    closeout_text = (PROJECT_ROOT / "Scripts" / "closeout_check.ps1").read_text()
+    closeout_text = (PROJECT_ROOT / "scripts" / "closeout_check.ps1").read_text()
 
     assert "=== Test: Runtime-Adjacent Mock-Only B ===" in closeout_text
     assert "test_runtime_adjacent_mock_only_b.py" in closeout_text

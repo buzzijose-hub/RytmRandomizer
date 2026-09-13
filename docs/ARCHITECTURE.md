@@ -95,6 +95,8 @@ on one line for an existing module, you probably need a new module instead.
 | --------------------- | ------------------------------------------------------------------------------- |
 | `data/param_maps.py`  | Per-machine CC maps, anchors, safe ranges, deltas, zones. Pure data.            |
 | `data/analog_four_midi.py` | Manual-backed Analog Four CC mappings from Appendix D. Pure data.        |
+| `data/digitakt_midi.py` | Separate manual-backed Digitakt MK1 and II CC/NRPN mappings and audio-capable track-count limits. Pure data; no hardware or saved-project authority. |
+| `data/digitakt_saved_kit_layout.py` | Synthetic candidate Digitakt family/name-layout facts and an explicit unpromoted-offset posture; not a verified hardware dump layout. |
 | `data/analog_four_display.py` | Analog Four front-panel scales, labels, and CC/NRPN-ready patch-value metadata. Pure data. |
 | `data/midi_event_kinds.py` | Canonical typed CC/NRPN event kinds and manual skip-code vocabulary. Pure data. |
 | `data/analog_four_sysex_calibration.py` | Operator-captured Analog Four SysEx field/native-encoding metadata and immutable hardware-write validation evidence; pure schema-agreement and exact value checks. |
@@ -151,6 +153,12 @@ on one line for an existing module, you probably need a new module instead.
 | `snapshot/sysex_file.py` | Passive local SysEx frame extraction and trusted-file reading helpers; no MIDI enumeration, port access, or transmission. |
 | `snapshot/mutation_scope.py` | Device-neutral immutable include-target/deny-lock scope and lazily registry-derived mutation domains; empty targets mean the full device domain before locks are subtracted. |
 | `devices/saved_kit_capture.py` | Optional registry-resolved saved-KIT capture capability and canonical round-trip frame DTO; keeps Cockpit from importing concrete family codecs. |
+| `devices/digitakt.py` | Registry composition for passive Digitakt MK1 and II devices; no saved-KIT capture capability or Cockpit listener. |
+| `devices/strategies/digitakt_snapshot_decoder.py` | Pure synthetic candidate prefix/name intake with strict slot and family checks; does not validate a real saved-project dump. |
+| `devices/strategies/digitakt_mutation_planner.py` | Validates generation, depth, targets, and locks, then returns a zero-event, not-ready plan for every accepted request. |
+| `devices/strategies/digitakt_message_renderer.py` | Inert mock-message and CC-triple formatting seam; the Digitakt planner produces no events. |
+| `devices/strategies/digitakt_track_domain.py` | Digitakt generation constants and specialization of the shared one-based track domain. |
+| `devices/strategies/elektron_track_domain.py` | Shared strict track-count and track-ID validation used by Analog Four and Digitakt strategies. |
 | `devices/strategies/analog_four_saved_kit_codec.py` | Shared A4 saved-kit payload validator/encoder used by decoder and writer; owns checksum/trailer handling. |
 | `devices/strategies/analog_four_saved_kit_writer.py` | Pure legacy A4 saved-kit mutator/renderer for the hardware-write-validated Filter 2 Resonance path; no filesystem or MIDI I/O. |
 | `devices/strategies/analog_four_saved_kit_candidate.py` | Pure calibrated saved-KIT candidate rendering through the canonical A4 field codec; revalidates calibration/field agreement, exact values, track bounds, roundtrip and byte isolation, with offline-only output authority. |
@@ -193,6 +201,7 @@ on one line for an existing module, you probably need a new module instead.
 | `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm style shell; `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send` runs the all-12-pad current-kit snapshot shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --rytm-cc-observe` opens only Rytm input and may read or receive a snapshot for labels; `--arm --a4-soft-capture` opens only A4 input and reconstructs CC/NRPN state; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe; `--arm --a4-patch-send-plan --batch-manifest "<path>" --batch-manifest-sha256 "<reviewed digest>" --candidate N --confirm-a4-patch-send-plan --a4-output-port "<exact configured name>"` verifies the reviewed manifest and sends one committed generated A4 patch candidate. |
 | `reports/`            | Passive in-memory report package + shared formatter/helper layer, including the manual feedback packet report, the reference-style blueprint and bounded reference-audio atlas reports, the Analog Four initialized-baseline, patch genome, patch learning, patch corpus, and patch send-plan reports, the Analog Four OXI macro set planner report, the controller-brain mapping catalog and rehearsal/export reports, the style-performance arc chain through the live render bundle, live cue sheet, live runbook, reference match, snapshot preview, stage packet, stage snapshot-routing handoff, stage rehearsal-state packet, live set cockpit dashboard, live show export packet, live transition timeline, live command deck, live state packet, live analyzer handoff/targets, GUI readiness/session, capture queue/review, sidecar session packets, GUI screen-contract packets, GUI render-tree packets, GUI analyzer-overlay packets, GUI analyzer-frame packets, GUI interaction-script packets, GUI action-reducer packets, GUI controller-state packets, GUI playback-transcript packets, GUI playback-validation packets, GUI test-harness contract/readiness packets, GUI implementation-bridge/desktop-blueprint/desktop-app-plan/desktop-component-contract/desktop-view-model/desktop-render-contract/desktop-render-harness/cockpit-boundary-readiness packets, cockpit send-plan operator-readiness packets, cockpit send-plan rehearsal-surface packets, and the live GUI performance-console chain through live-kit capture workbench, package audition, and operator package, operator review ledger, and payload helpers under `reports/performance_console/`. Static manual feedback facts stay in `data/manual_feedback_packet.py`; static A4 patch-template facts stay in `data/analog_four_patch_templates.py`; static A4 patch-corpus facts stay in `data/analog_four_patch_corpus.py`; static A4 learning facts stay in `data/analog_four_learning.py`; static A4 SysEx calibration facts stay in `data/analog_four_sysex_calibration.py`; static GUI contract facts stay in `data/live_gui_contracts.py`; static controller-brain profiles stay in `data/controller_mapping_profiles.py`; static controller-brain rehearsal scenarios stay in `data/controller_rehearsal_scenarios.py`; repeated report CLI helpers stay in `reports/live_gui_common.py`. |
 | `inspection.py`       | Consolidated passive command-metadata inspection + preview + audit.             |
+| `reports/_core/` | Focused passive anchor/profile, behavior parity, runtime-plan, mock-mapper, active-boundary, bridge, and registry report builders re-exported through the existing `reports/__init__.py` facade. |
 | `cockpit/export/file_export_contracts.py` | Shared bounded, phase-aware failure vocabulary and basename-only context for passive local-file exports. |
 | `cockpit/export/analog_four_export_contracts.py` | A4-specific failure aliases and domain contracts built on the shared local-file export vocabulary. |
 | `cockpit/export/analog_four_kit.py` | Hardware-validation-gated A4 `.syx` file adapter; reuses canonical `atomic_write` and never sends MIDI. |
@@ -389,7 +398,7 @@ and the parity tests run the extracted engines/runners against those goldens.
 | Add a new state domain               | A new module under `state/` (frozen + transitions).    | (architecture review)     |
 | Add input-only live observation       | Pure state reducer under `state/`, formatter under `reports/`, explicit armed app path. | (architecture review) |
 | Add gated generated patch send        | Pure compiler under `style_analysis/`, passive preview under `reports/`, reusable transport helpers under `senders/`, explicit `app.py --arm` path with a confirmation flag. | (architecture review) |
-| **Add a new Elektron device family** (Analog Four, Digitakt, ...) | One module at `devices/<family>.py` registering a `Device` instance + three Strategy modules under `devices/strategies/`. See §6.1. | (architecture review)     |
+| **Add a new Elektron device family** (Digitone, Syntakt, Octatrack, ...) | One module at `devices/<family>.py` registering a `Device` instance + three Strategy modules under `devices/strategies/`. See §6.1. | (architecture review)     |
 | Music-analysis or guardrail change   | See `.claude/skills/MusicLibraryGuardrails/SKILL.md`. | `MusicLibraryGuardrails`  |
 
 The `controller_brain_live_*` report family is an explicit passive
@@ -406,9 +415,17 @@ snapshot seams.
 ## 6.1 Device Protocol + Strategy seam (WS-S5 + Strategy)
 
 The `rytm_randomizer.devices.Device` Protocol is the single cross-machine
-boundary. Every Elektron device family - Rytm and Analog Four today -
-exposes exactly one registered `Device` instance and routes its behavior
-through three Strategy sub-Protocols.
+boundary. Every Elektron device family - Rytm, Analog Four, and both
+Digitakt generations today - exposes exactly one registered `Device`
+instance and routes its behavior through three Strategy sub-Protocols.
+
+Not every registered device has send authority. The two Digitakt entries
+are **passive-only**: they decode snapshots but plan zero-event,
+`ready=False` mutations, because their saved-project byte offsets have
+never been validated against hardware (see
+`.claude/rules/targeted-mutation-safety.md` #6). Registration is what makes
+a machine visible to the rig; readiness is a separate, evidence-gated
+question.
 
 **Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md) has six mermaid diagrams that illustrate this section in detail — [§3 Device + Strategy Capability Stack](ARCHITECTURE_DIAGRAMS.md#3-device--strategy-capability-stack-ws-s5--strategy) (class diagram), [§4 Snapshot → Plan → Render Lifecycle](ARCHITECTURE_DIAGRAMS.md#4-snapshot--plan--render-lifecycle-one-rytm-cc) (sequence), [§5 Composition vs Stub](ARCHITECTURE_DIAGRAMS.md#5-device--strategy-composition-vs-old-stub-shape) (before/after), [§9 Snapshot Subpackage](ARCHITECTURE_DIAGRAMS.md#9-snapshot-subpackage-ws-s6-envelope--protocols) (WS-S6 helpers), [§18 Future Codex PR Shape](ARCHITECTURE_DIAGRAMS.md#18-future-codex-pr-shape-post-pr-43-dual-machine-redo) (where the next dual-machine work plugs in), and [§19 Registry Fan-Out](ARCHITECTURE_DIAGRAMS.md#19-registry-fan-out-dual-machine-orchestration-via-mappingstr-device).
 
@@ -425,6 +442,8 @@ through three Strategy sub-Protocols.
 | `mutation_planner`          | `snapshot.MutationPlanner` Protocol                   | `plan(snapshot, depth, *, scope=...)` → device-specific plan constrained to effective target-minus-lock scope |
 | `message_renderer`          | `devices.MessageRenderer` Protocol                    | `to_mock_message(event, plan)` + `to_cc_triple(event, plan)` |
 | `report_header`             | `str`                                                 | Header line for guarded / hardware send reports |
+| `role_summary`              | `str`                                                 | Operator-facing one-liner describing what the machine *is* (`"12-pad drum and sample performance surface"`). Declared by the device — consumers must never infer a role from `track_count` (a 12-track Syntakt is not a 12-pad Rytm) |
+| `display_order`             | `int`                                                 | Sort key for operator-facing device listings; ties break on `device_id`. Keeps per-device ordering tables out of the reports layer |
 
 The Protocol's four legacy convenience methods (`decode_snapshot`,
 `plan_mutation`, `to_mock_messages`, `to_cc_messages`) remain for
@@ -1478,6 +1497,12 @@ The rules above are mechanically enforced by:
   private imports; `dual_machine/` consumes only the registry; only one
   device registry exists; every registered Device satisfies the Protocol;
   Protocol surface is pinned against accidental drift — see §6.1)
+* `tests/architecture/test_no_device_identity_branching.py` (shared consumers
+  dispatch through device capabilities rather than hard-coded family identities)
+* `tests/architecture/test_tests_do_not_mutate_tracked_files.py` (tests use
+  isolated temporary outputs rather than mutating tracked repository artifacts)
+* `tests/architecture/test_tripwires_actually_fire.py` (negative-control fixtures
+  prove the architecture guards reject representative violations)
 * `tests/architecture/test_cockpit_runtime_dependencies.py` (cockpit GUI /
   analyzer extras stay optional and do not become passive import-time
   dependencies)

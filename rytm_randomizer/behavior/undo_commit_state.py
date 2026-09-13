@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from types import MappingProxyType
 
 from ..commands import COMMANDS, STATE_UTILITY_COMMANDS
+from ._result_fields import empty_metadata
 
 PACKET_9A_UNDO_COMMIT_STATE_KEYS = ("B",)
 PACKET_9B_UNDO_COMMIT_STATE_KEYS = ("E",)
@@ -49,14 +50,14 @@ class UndoCommitStateBehaviorResult:
     opens_ports: bool = False
     hardware_required: bool = False
     active_behavior: bool = False
-    metadata: Mapping[str, object] = field(default_factory=dict)
+    metadata: Mapping[str, object] = field(default_factory=empty_metadata)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         object.__setattr__(self, "display_lines", tuple(self.display_lines))
         object.__setattr__(self, "metadata", MappingProxyType(dict(self.metadata)))
 
 
-def evaluate_undo_commit_state_behavior(command_key):
+def evaluate_undo_commit_state_behavior(command_key: str) -> UndoCommitStateBehaviorResult:
     """Return a passive Packet 9 behavior result for a state utility key."""
 
     key = str(command_key)
@@ -88,9 +89,9 @@ def evaluate_undo_commit_state_behavior(command_key):
     )
 
 
-def _accepted_b_result():
+def _accepted_b_result() -> UndoCommitStateBehaviorResult:
     metadata = STATE_UTILITY_COMMANDS["B"]
-    label = metadata["label"]
+    label = str(metadata["label"])
     state_action = "describe_current_anchor_return_intent"
     anchor_concept = "current anchor"
 
@@ -140,9 +141,9 @@ def _accepted_b_result():
     )
 
 
-def _accepted_e_result():
+def _accepted_e_result() -> UndoCommitStateBehaviorResult:
     metadata = STATE_UTILITY_COMMANDS["E"]
-    label = metadata["label"]
+    label = str(metadata["label"])
     behavior_family = "undo-commit-state/current-state-anchor-commit"
     target_scope = "current_anchor_state"
     state_action = "describe_current_state_anchor_commit_intent"
@@ -201,9 +202,9 @@ def _accepted_e_result():
     )
 
 
-def _accepted_w_result():
+def _accepted_w_result() -> UndoCommitStateBehaviorResult:
     metadata = STATE_UTILITY_COMMANDS["W"]
-    label = metadata["label"]
+    label = str(metadata["label"])
     behavior_family = "undo-commit-state/waveform-exploration"
     target_scope = "waveform_exploration"
     state_action = "describe_waveform_exploration_intent"
@@ -263,9 +264,9 @@ def _accepted_w_result():
     )
 
 
-def _accepted_u_result():
+def _accepted_u_result() -> UndoCommitStateBehaviorResult:
     metadata = STATE_UTILITY_COMMANDS["U"]
-    label = metadata["label"]
+    label = str(metadata["label"])
     behavior_family = "undo-commit-state/script-generated-state-undo"
     target_scope = "script_generated_state_history"
     state_action = "describe_previous_script_generated_state_undo_intent"
@@ -326,7 +327,7 @@ def _accepted_u_result():
     )
 
 
-def _unsupported_result(command_key):
+def _unsupported_result(command_key: str) -> UndoCommitStateBehaviorResult:
     return UndoCommitStateBehaviorResult(
         command_key=command_key,
         accepted=False,

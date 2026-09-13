@@ -4,7 +4,7 @@
 
 # RytmRandomizer
 
-**A live-but-passive performance cockpit for the Elektron Analog Rytm MK2 and Analog Four MK2.**
+**A live-but-passive performance cockpit for the Elektron Analog Rytm MK2 and Analog Four MK2, with passive Digitakt and Digitakt II support.**
 **Double-click to launch · see your devices immediately · nothing transmits until you arm.**
 
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-orange.svg)](LICENSE)
@@ -175,6 +175,8 @@ The cockpit targets **WCAG 2.2 AA** and enforces it in CI: an axe audit runs aga
 **Live-set sound design.** Three hours into a warehouse set, you need the kit to evolve without losing the bones. The app is already listening to the Rytm; capture the kit you are playing, morph or scope-randomize around it, watch the ghost preview, lock the kick, arm, confirm, send. What goes out is live-dial CC into working memory — your saved kit on the device is untouched, so reloading it is the way back.
 
 **Dual-machine rigs.** If you run an Analog Four MK2 alongside the Rytm, the same surface can capture both machines and manage separate targets, locks, and stage state. Captured-A4 semantic planning is deliberately zero-event and unsendable until saved-KIT offsets, encodings, track stride, round trips, and physical behavior are proven; this Cockpit flow has no A4 output authority.
+
+**Digitakt passive groundwork.** Both generations are registered for passive device inventory and reports: `digitakt_mk1` has eight audio tracks, while `digitakt_ii` has sixteen tracks that can each use an audio or MIDI machine. The decoder accepts synthetic candidate envelopes and reads their name field; it is not a verified Digitakt dump codec. The Cockpit currently has no Digitakt device lane, live listener, or saved-KIT capture capability. Mutation planning is **zero-event and unsendable**: every accepted request returns `ready=False` with a reason. Saved-project offsets, encodings, track modes, and stride remain unvalidated. The [manual-backed MIDI tables and review record](docs/superpowers/plans/2026-09-08-digitakt-review-repairs.md) describe working-RAM controls and establish no stored-project layout or hardware output authority.
 
 **Studio profile authoring.** Drop a folder of reference tracks into the wizard, review the trait bars, save as `kind="user"`. You get a deployable model that captures *that sound* — a reference, not a copy.
 
@@ -435,7 +437,7 @@ just check                # lint + strict production typing + arch + tests + cov
 |---|---|
 | `rytm_randomizer/cockpit/` | Cockpit runtime · data · engine · profiles · history · device (connection manager, live monitor) · diagnostics · library · ws · export · wizard |
 | `rytm_randomizer/senders/` | The ArmedApply seam — the only outbound-MIDI path in the repo |
-| `rytm_randomizer/devices/` | Cross-machine `Device` Protocol + registry (Analog Rytm MK2 + Analog Four MK2) |
+| `rytm_randomizer/devices/` | Cross-machine `Device` Protocol + registry (Analog Rytm MK2, Analog Four MK2, Digitakt, Digitakt II) |
 | `rytm_randomizer/behavior/` | Pure behavior helpers, incl. kit morphing (`morph.py`) + scoped randomization (`scope.py`) |
 | `rytm_randomizer/reports/`, `local_ai/` | Passive CLI reports (ReportSpec platform) — no MIDI side effects |
 | `rytm_randomizer/engines/`, `group_runner.py`, `scene_runner.py` | V1.34 Analog Rytm orchestration (byte-frozen reference) |
@@ -453,7 +455,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow (plan → TDD → code
 
 **Free for personal and noncommercial use. Commercial license available.**
 
-RytmRandomizer is an independent, unofficial open-source project. It is not affiliated with, sponsored by, or endorsed by Elektron. Elektron, Analog Four, and Analog Rytm are trademarks of their respective owner.
+RytmRandomizer is an independent, unofficial open-source project. It is not affiliated with, sponsored by, or endorsed by Elektron. Elektron, Analog Four, Analog Rytm, and Digitakt are trademarks of their respective owner.
 RytmRandomizer is licensed under the [PolyForm Noncommercial License
 1.0.0](LICENSE) — a [source-available](https://en.wikipedia.org/wiki/Source-available_software)
 license that lets anyone clone, run, modify, share, and contribute to the
@@ -475,7 +477,7 @@ and Edward Rosado ([@edward-rosado](https://github.com/edward-rosado)).
 
 <div align="center">
 
-**Made for the Analog Rytm MK2 and Analog Four MK2. Listening by default, armed by choice.**
+**Made for the Analog Rytm MK2 and Analog Four MK2, with passive Digitakt registry and report support. Listening by default, armed by choice.**
 
 [Docs](docs/) · [Status](docs/STATUS.md) · [Cockpit Quickstart](docs/COCKPIT_QUICKSTART.md) · [Architecture](docs/ARCHITECTURE.md) · [Accessibility](docs/ACCESSIBILITY.md) · [Contributing](CONTRIBUTING.md)
 

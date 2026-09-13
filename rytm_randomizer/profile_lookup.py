@@ -1,11 +1,15 @@
 """Passive lookup helpers for existing V1.34 group profile metadata."""
 
+from collections.abc import Mapping
 from copy import deepcopy
 
 from .profiles import GROUP_PROFILE_METADATA
 
 
-def describe_group_profile(profile_key, group_profiles=GROUP_PROFILE_METADATA):
+def describe_group_profile(
+    profile_key: object,
+    group_profiles: Mapping[str, Mapping[str, object]] = GROUP_PROFILE_METADATA,
+) -> dict[str, object]:
     """Return a passive copied description for a known group profile key."""
     normalized_key = str(profile_key)
     metadata = group_profiles.get(normalized_key)

@@ -72,6 +72,13 @@ def test_machine_cc_is_15_everywhere():
     assert pkg_constants.MACHINE_CC == 15
 
 
+def test_digitakt_manual_corrections_are_visible_through_the_canonical_data_exports() -> None:
+    assert data.DIGITAKT_MK1_TRACK_CC["Delay Send"].cc_msb == 82
+    assert data.DIGITAKT_II_TRACK_CC["Delay Send"].cc_msb == 84
+    assert data.DIGITAKT_II_TRACK_CC["Sample Select"].cc_msb is None
+    assert data.DIGITAKT_OFFSETS_PROMOTED is False
+
+
 def test_a4_sysex_calibration_tracks_filter2_resonance_capture():
     calibration = data.ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS["Filter2 Resonance"]
 
