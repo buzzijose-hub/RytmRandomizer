@@ -30,6 +30,54 @@ def test_importing_project_status_report_prints_nothing():
     assert result.stderr == ""
 
 
+def test_project_status_summary_rejects_malformed_section_with_its_path() -> None:
+    from rytm_randomizer.project_status_report import (
+        build_project_status_report,
+        summarize_project_status_report,
+    )
+
+    report = build_project_status_report()
+    report["phase"] = "corrupt section"
+
+    with pytest.raises(TypeError, match="section 'phase' is not a mapping"):
+        summarize_project_status_report(report)
+
+
+@pytest.mark.parametrize("invalid_commands", ("one command", b"one command", 7, {}))
+def test_project_status_summary_refuses_scalar_and_mapping_command_collections(
+    invalid_commands: object,
+) -> None:
+    from rytm_randomizer.project_status_report import (
+        build_project_status_report,
+        summarize_project_status_report,
+    )
+
+    report = build_project_status_report()
+    report["passive_cli_commands"] = invalid_commands
+
+    with pytest.raises(TypeError, match="collection 'passive_cli_commands' is not a sequence"):
+        summarize_project_status_report(report)
+
+
+def test_project_status_check_renders_each_failed_safety_condition() -> None:
+    from rytm_randomizer.project_status_report import (
+        build_project_status_report,
+        format_project_status_check,
+    )
+
+    report = build_project_status_report()
+    report["safety"]["default_mode"] = "armed"
+    report["safety"]["hardware_required"] = True
+
+    lines = format_project_status_check(report)
+
+    assert "- ok: False" in lines
+    assert "- failure_count: 2" in lines
+    assert "Failures:" in lines
+    assert "- safety.default_mode: expected passive, actual armed" in lines
+    assert "- safety.hardware_required: expected False, actual True" in lines
+
+
 def test_project_status_report_summarizes_current_project_state():
     from rytm_randomizer.project_status_report import build_project_status_report
 

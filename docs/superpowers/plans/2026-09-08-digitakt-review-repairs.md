@@ -55,6 +55,20 @@ the NRPN-only II row and the distinct effect pages. Device tests cover both
 generations, the shared track domain, candidate decoding, and absent capture
 capability. Existing synthetic tests are software contract evidence only.
 
+## September 13 integration follow-up
+
+Merge `3a6a58e4` preserves the author's `502c74db` Forge integration alongside
+these repairs. Stage identity is defined once by the closed Rytm/A4 slot
+predicates; Forge consumers no longer repeat device-id comparisons. The new
+plan's lifecycle header uses the existing parser's accepted plain syntax.
+
+The author's Linux suite passed 9,079 tests, but its touched-file coverage gate
+failed on nine report/behavior modules. Added regression cases exercise
+withdrawn-command refusal, known commands outside utility packet scope,
+immutable default metadata, unknown profile reports, malformed status sections
+and collections, and actionable formatting of failed safety conditions. These
+new tests are pending root validation; they do not change production authority.
+
 ## Execution and acceptance
 
 One agent owns this isolated Digitakt worktree. The root orchestrator owns all
