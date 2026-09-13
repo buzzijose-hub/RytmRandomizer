@@ -1,43 +1,11 @@
 /**
- * Mock update-manifest server + update-journal reader for the auto-update
- * E2E specs (plan PR-C / agent C-e2e; spec §4, §5, §5.1, §6, §8).
- *
- * ## Why a fixture and not `page.route(...)`
- *
- * The update client is the **Rust shell**, not the web page. Intercepting
- * `fetch` inside Chromium would only exercise a browser-side stub — exactly
- * the class of false-green the handshake_token spec was written to prevent
- * (Python unit tests + web unit tests both passed while the real integration
- * was broken). A real HTTP server pointed at by `RYTM_RAND_UPDATE_MANIFEST_URL`
- * is the seam the shell actually reads, so the same fixture drives the
- * dev-loop page today and the bundled shell later with no spec edits.
- *
- * ## Port discipline (spec §9.5)
- *
- * The server binds port **0** and reports the OS-assigned port. Nothing here
- * hardcodes a port: 4317 is the sidecar's (see `wizard_fixture.ts`) and 5173
- * is Vite's, and both are already contended under `workers: 1`. A third
- * hardcoded port would reintroduce exactly the race the single-worker config
- * exists to avoid — and unlike those two, this server is per-test, so an
- * ephemeral port is strictly correct rather than merely polite.
- *
- * ## Request accounting is the point, not a convenience
- *
- * Every inbound request is recorded in `requests`. The freeze-mode spec
- * (§8) asserts **zero** manifest requests — provable network silence. A
- * hidden chip is not evidence of silence: a client could check, bucket
- * itself out, and hide the chip while still phoning home every four hours.
- * Only a server-side request log can tell those two states apart, which is
- * why the counter lives here and not in the page.
- *
- * The ping asset (§6, `beacon-<version>-<target>.txt`) is served from the
- * same server and counted separately, so the ping-independence spec can
- * fail the ping while proving the manifest check still completes.
+ * Schema fixtures and an ephemeral HTTP server for manifest contract tests.
+ * Native acceptance uses native_update_fixture for real shell traffic,
+ * signature verification, isolated configuration and journal evidence.
  */
 
-import { mkdtempSync, readFileSync, rmSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import * as http from 'node:http';
-import { tmpdir } from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -319,112 +287,4 @@ export async function startMockManifestServer(
       return new Promise<void>((resolve) => server.close(() => resolve()));
     },
   };
-}
-
-/* ------------------------------------------------------------------ */
-/* I8 — update journal                                                  */
-/* ------------------------------------------------------------------ */
-
-/**
- * The closed §5.1 event vocabulary. Specs assert against these constants
- * rather than string literals so a rename in the contract breaks
- * compilation here once instead of silently passing a never-emitted name
- * in each spec.
- */
-export const UPDATE_JOURNAL_EVENTS = [
-  'check_started',
-  'check_ok',
-  'check_failed',
-  'manifest_rejected',
-  'bucket_excluded',
-  'download_started',
-  'download_ok',
-  'stage_failed',
-  'signature_rejected',
-  'consent_granted',
-  'install_started',
-  'install_ok',
-  'install_failed',
-  'skip_recorded',
-  'freeze_suppressed',
-  'ping_ok',
-  'ping_failed',
-] as const;
-
-export type UpdateJournalEvent = (typeof UPDATE_JOURNAL_EVENTS)[number];
-
-/** One I8 row: `{ts, event, version, detail}`. */
-export interface UpdateJournalRow {
-  ts: string;
-  event: UpdateJournalEvent;
-  version: string | null;
-  detail: Record<string, string | number | boolean>;
-}
-
-/** File name of the journal in the config dir (I8). */
-export const UPDATE_JOURNAL_FILENAME = 'update-journal.jsonl';
-
-/**
- * Read + parse the update journal from a config root.
- *
- * Returns `[]` when the file does not exist yet: "the updater has not
- * journaled anything" is a legitimate state (freeze mode before any
- * transition), and distinguishing it from "empty file" is not something
- * any spec needs — whereas throwing would make the freeze spec's
- * zero-rows assertion impossible to express.
- */
-export function readUpdateJournal(configRoot: string): UpdateJournalRow[] {
-  const journalPath = path.join(configRoot, UPDATE_JOURNAL_FILENAME);
-  if (!existsSync(journalPath)) return [];
-  return readFileSync(journalPath, 'utf8')
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line !== '')
-    .map((line) => JSON.parse(line) as UpdateJournalRow);
-}
-
-/** The `event` field of every journal row, in order. */
-export function journalEvents(rows: readonly UpdateJournalRow[]): UpdateJournalEvent[] {
-  return rows.map((row) => row.event);
-}
-
-/**
- * Assert the §5.1 detail-hygiene floor on every row: no absolute paths and
- * no raw error-string passthrough. This is the #224/#238 standard, and it
- * is asserted centrally rather than per-spec because a leak in ANY event's
- * detail is a defect regardless of which spec happened to trigger it.
- *
- * Returns the offending descriptions so the caller can assert on an empty
- * array (Playwright prints the array, which names the bad key directly).
- */
-export function journalHygieneViolations(rows: readonly UpdateJournalRow[]): string[] {
-  const violations: string[] = [];
-  // POSIX absolute (`/Users/...`), Windows drive (`C:\...`), and UNC paths.
-  const absolutePath = /(^|[\s"'(=])(\/[A-Za-z0-9._-]+\/|[A-Za-z]:\\|\\\\)/;
-  for (const row of rows) {
-    for (const [key, value] of Object.entries(row.detail ?? {})) {
-      if (typeof value !== 'string') continue;
-      if (absolutePath.test(value)) {
-        violations.push(`${row.event}.detail.${key} contains an absolute path: ${value}`);
-      }
-      // A typed reason code is a short snake_case token; a raw `str(err)`
-      // is long and prose-shaped. 80 chars separates the two comfortably.
-      if (value.length > 80) {
-        violations.push(
-          `${row.event}.detail.${key} looks like raw error text (${value.length} chars)`,
-        );
-      }
-    }
-  }
-  return violations;
-}
-
-/**
- * Create an isolated config root for one spec, mirroring the sidecar
- * fixture's `XDG_CONFIG_HOME` / `APPDATA` isolation so the journal, the
- * skip-version record, and the install id never leak between tests.
- */
-export function makeUpdateConfigRoot(): { root: string; cleanup: () => void } {
-  const root = mkdtempSync(path.join(tmpdir(), 'rytm-update-e2e-'));
-  return { root, cleanup: () => rmSync(root, { recursive: true, force: true }) };
 }
