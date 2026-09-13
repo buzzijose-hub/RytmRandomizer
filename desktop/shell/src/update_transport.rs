@@ -107,17 +107,14 @@ pub trait Transport: Send + Sync + 'static {
     fn shutdown(&self) {}
 }
 
-/// A transport that performs no I/O and reports a typed failure.
-///
-/// This is what runs when no public key is configured: the client can still
-/// check state, journal, and render, but it can never download or install
-/// something it cannot verify. Being explicit beats a silently absent
-/// transport, which is what the pre-wiring code did — every check logged
-/// "not yet wired" and the panel showed a spinner that never resolved.
-pub struct DisabledTransport {
+/// No-I/O fixture for exercising typed transport failures.
+/// Production keyless discovery uses the real plugin and policy refusal.
+#[cfg(test)]
+struct DisabledTransport {
     reason: ErrorCode,
 }
 
+#[cfg(test)]
 impl DisabledTransport {
     /// A transport disabled for `reason`.
     pub fn new(reason: ErrorCode) -> Self {
@@ -125,6 +122,7 @@ impl DisabledTransport {
     }
 }
 
+#[cfg(test)]
 impl Transport for DisabledTransport {
     fn fetch_manifest(&self, _channel: &str, report: Box<dyn FnOnce(TransportOutcome) + Send>) {
         report(TransportOutcome::ManifestFailed { code: self.reason });

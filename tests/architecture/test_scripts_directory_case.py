@@ -1,9 +1,11 @@
 """Guard the ``scripts/`` vs ``Scripts/`` case convention.
 
-The repo intentionally tracks two directory spellings (``CONTRIBUTING.md``
-§ "When writing scripts"): lowercase ``scripts/`` holds cross-platform
-Python tooling, and capitalised ``Scripts/`` holds two legacy
-PowerShell-only duplicates kept for Windows operator convenience.
+Lowercase ``scripts/`` is the canonical location for repo tooling. Older
+branches may still carry two legacy PowerShell files under ``Scripts/``.
+This compatibility guard permits only those historic capitalised paths and
+requires each legacy tool at exactly one of its original or lowercase paths.
+The root-perimeter guard can enforce the stricter all-lowercase convention
+on migrated branches.
 
 On a case-insensitive filesystem (macOS default, Windows) those two
 spellings collapse into **one physical directory**. A new file written to
@@ -19,8 +21,9 @@ wrote new Python tooling to ``scripts/`` and had it staged as
 ``git update-index --cacheinfo``; the others did not.
 
 The rule this test enforces: ``Scripts/`` (capitalised) contains
-**only** the two grandfathered ``.ps1`` files. Every other script —
-and every new one — belongs in lowercase ``scripts/``.
+**at most** the two grandfathered ``.ps1`` files. Each legacy tool remains
+tracked exactly once, allowing a move to lowercase without permitting deletion
+or duplicate casing. Every other script belongs in lowercase ``scripts/``.
 """
 
 from __future__ import annotations
@@ -31,9 +34,10 @@ from typing import Final
 
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 
-# The only two files allowed under the capitalised spelling. This set is
-# frozen and may only shrink: the convention is that new tooling is
-# cross-platform Python under lowercase ``scripts/``.
+# The only two files allowed under the capitalised spelling. Each tool must
+# remain tracked at exactly one of its original or lowercase paths, so a
+# casing migration cannot silently delete it or introduce duplicate copies.
+# New tooling is cross-platform Python under lowercase ``scripts/``.
 _GRANDFATHERED_CAPITALISED: Final[frozenset[str]] = frozenset(
     {
         "Scripts/closeout_check.ps1",
@@ -73,13 +77,18 @@ def test_capitalised_scripts_dir_holds_only_grandfathered_powershell_files() -> 
     )
 
 
-def test_grandfathered_capitalised_files_still_exist() -> None:
-    # Keeps the allowlist honest: if a legacy .ps1 is ever deleted or
-    # migrated to Python, this fails and the allowlist shrinks with it.
-    tracked = {p for p in _tracked_paths() if p.startswith("Scripts/")}
-    missing = _GRANDFATHERED_CAPITALISED - tracked
+def test_legacy_powershell_tools_have_exactly_one_tracked_location() -> None:
+    tracked = set(_tracked_paths())
+    invalid: dict[str, list[str]] = {}
+    for original in sorted(_GRANDFATHERED_CAPITALISED):
+        lowercase = "scripts/" + original.partition("/")[2]
+        present = sorted(tracked & {original, lowercase})
+        if len(present) != 1:
+            invalid[original] = present
 
-    assert not missing, (
-        f"Grandfathered capitalised script(s) no longer tracked: {sorted(missing)}. "
-        "Remove them from _GRANDFATHERED_CAPITALISED — the allowlist may only shrink."
+    assert not invalid, (
+        "Each legacy PowerShell tool must remain tracked at exactly one of "
+        "its original Scripts/ path or its lowercase scripts/ path. "
+        "Missing tools and duplicate casing are forbidden. "
+        f"Invalid tracked locations: {invalid}."
     )

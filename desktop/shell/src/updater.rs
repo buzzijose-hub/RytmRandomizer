@@ -434,6 +434,34 @@ pub fn write_journal_row(journal: &UpdateJournal, record: &JournalRecord) {
     }
 }
 
+/// Confirm a pending installation only when the requested version is running.
+/// Windows installer launch exits the old process without returning; its launch
+/// alone cannot establish installation success. Call before scheduling checks.
+/// This diagnostic never restores consent or retries an installation.
+pub fn confirm_running_installation(journal: &UpdateJournal, current_version: &str) {
+    use crate::update_policy::JournalEvent;
+
+    let rows = journal.recent_rows(50);
+    let last_install = rows.iter().rev().find(|row| {
+        [
+            JournalEvent::InstallStarted,
+            JournalEvent::InstallOk,
+            JournalEvent::InstallFailed,
+        ]
+        .iter()
+        .any(|event| row["event"].as_str() == Some(event.as_str()))
+    });
+    if last_install.is_some_and(|row| {
+        row["event"].as_str() == Some(JournalEvent::InstallStarted.as_str())
+            && row["version"].as_str() == Some(current_version)
+    }) {
+        write_journal_row(
+            journal,
+            &JournalRecord::new(JournalEvent::InstallOk, Some(current_version.to_string())),
+        );
+    }
+}
+
 /// Filename of the persisted rollout-bucketing identifier.
 pub const INSTALL_ID_FILE_NAME: &str = "install-id";
 
@@ -1216,6 +1244,55 @@ mod tests {
     }
 
     // -- install id (spec §5) ---------------------------------------------
+
+    #[test]
+    fn startup_confirms_only_the_running_pending_version_once_without_retrying() {
+        let dir = scratch_dir("startup-confirm");
+        let journal = UpdateJournal::new(dir.clone());
+        confirm_running_installation(&journal, "1.34.0");
+        assert!(journal.recent_rows(50).is_empty());
+        write_journal_row(
+            &journal,
+            &JournalRecord::new(JournalEvent::InstallStarted, Some("1.35.0".into())),
+        );
+        write_journal_row(
+            &journal,
+            &JournalRecord::new(JournalEvent::PingOk, Some("1.34.0".into())),
+        );
+        confirm_running_installation(&journal, "1.34.0");
+        assert!(!journal
+            .recent_rows(50)
+            .iter()
+            .any(|row| row["event"] == "install_ok"));
+        confirm_running_installation(&journal, "1.35.0");
+        confirm_running_installation(&journal, "1.35.0");
+        assert_eq!(
+            journal
+                .recent_rows(50)
+                .iter()
+                .filter(|row| row["event"] == "install_ok")
+                .count(),
+            1
+        );
+        write_journal_row(
+            &journal,
+            &JournalRecord::new(JournalEvent::InstallStarted, Some("1.36.0".into())),
+        );
+        write_journal_row(
+            &journal,
+            &JournalRecord::new(JournalEvent::InstallFailed, Some("1.36.0".into())),
+        );
+        confirm_running_installation(&journal, "1.36.0");
+        assert_eq!(
+            journal
+                .recent_rows(50)
+                .iter()
+                .filter(|row| row["event"] == "install_ok")
+                .count(),
+            1
+        );
+        std::fs::remove_dir_all(dir).unwrap();
+    }
 
     fn scratch_dir(tag: &str) -> std::path::PathBuf {
         let dir = std::env::temp_dir().join(format!(

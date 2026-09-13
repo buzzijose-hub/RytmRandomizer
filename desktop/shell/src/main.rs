@@ -434,12 +434,15 @@ fn update_check_now(state: tauri::State<'_, UpdateCommands>) -> bool {
 struct UpdateShutdown(Arc<dyn Fn() + Send + Sync>);
 
 #[tauri::command]
-fn update_snapshot(state: tauri::State<'_, UpdateCommands>) -> serde_json::Value {
+fn update_snapshot(
+    state: tauri::State<'_, UpdateCommands>,
+    journal: tauri::State<'_, UpdateJournal>,
+) -> serde_json::Value {
     serde_json::json!({
         "state": state.driver.payload(),
         "channel": state.driver.config().channel,
         "frozen": !state.driver.config().updates_enabled,
-        "journal": UpdateJournal::with_default_dir().recent_rows(50),
+        "journal": journal.recent_rows(50),
     })
 }
 
@@ -480,9 +483,8 @@ fn update_confirm_choice(
 // startup, not runtime state. Adding a command to flip it would mean the
 // policy's freeze short-circuit could change mid-flight — so a check already
 // in the air could complete after the operator froze updates, which is
-// exactly the guarantee freeze exists to make. The panel's checkbox is a
-// client-side rendering of the env var (spec §7), and making it a real
-// toggle is a design change, not a wiring gap.
+// exactly the guarantee freeze exists to make. The panel displays the
+// resolved setting and explains that changing it requires restarting.
 
 fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
@@ -518,6 +520,7 @@ fn main() {
         update_config.install_permitted()
     );
     let update_sink = Arc::new(ShellSink::new(UpdateJournal::new(update_config_dir)));
+    updater::confirm_running_installation(&update_sink.journal, APP_VERSION);
     let updater_driver = Updater::new(update_config, Arc::clone(&update_sink));
 
     let teardown_done = Arc::new(Mutex::new(false));
@@ -612,6 +615,7 @@ fn main() {
         // the driver. Same class of defect as the IPC/DOM mismatch, one layer
         // up — everything looked wired and nothing was.
         .manage(UpdateCommands::new(updater_driver.clone()))
+        .manage(update_sink.journal.clone())
         .manage(UpdateShutdown(Arc::new(teardown.clone())))
         .invoke_handler(command_handler!())
         .setup(move |app| {
@@ -698,12 +702,9 @@ fn main() {
                 // dev-loop) from first paint instead of an empty panel.
                 update_sink.attach_window(window.clone());
 
-                // Attach the network half. Without a public key the plugin
-                // cannot verify — and therefore must not download or install
-                // — anything, so the transport is explicitly DISABLED rather
-                // than absent: a disabled transport reports a typed failure
-                // the panel can show, where an absent one left the check
-                // spinning forever.
+                // Attach the network half. Keyless builds can discover release
+                // metadata; policy reports the missing key before any download
+                // or consent, and the same transport enforces that boundary.
                 #[cfg(not(feature = "native-test"))]
                 let transport: SharedTransport = Arc::new(PluginTransport::new(
                     app.handle().clone(), updater::signing_key_present(),
