@@ -96,7 +96,7 @@ the updater bundle and Forge PR; no stacked PR or automatic merge bypass.
 - [x] Gate 6 — Explicit types and existing Device/Strategy contracts are retained.
 - [x] Gate 7 — Existing structured refusal log and metric are preserved.
 - [x] Gate 8 — New assertions use independent official facts and real refusal scenarios; no skip or blanket exclusion is added.
-- [x] Gate 9 — All work stays in existing data/device/strategy/test locations.
+- [ ] Gate 9 — Work stays in existing data/device/strategy/test locations, but the imported author change adds a narrow `cockpit/data/stage.py` exemption to `test_no_device_identity_branching`. Its closed stage-discriminator rationale is documented; explicit owner approval of this requested exception is still pending under the codex contribution guide. Passing architecture tests does not supply that approval.
 - [x] Gate 10 — No new string-based production dispatch is introduced.
 - [x] Gate 11 — Existing local candidate fixtures are reused; manual fact expectations remain independent.
 - [x] Gate 12 — Immutable dataclasses, MappingProxyType, and Final facts are retained.
