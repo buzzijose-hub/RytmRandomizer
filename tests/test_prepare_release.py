@@ -387,9 +387,8 @@ def propagating_package_logger(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(logging.getLogger("rytm_randomizer"), "propagate", True)
 
 
-def test_prepare_release_logs_a_structured_record(
-    caplog: pytest.LogCaptureFixture, propagating_package_logger: None
-) -> None:
+@pytest.mark.usefixtures("propagating_package_logger")
+def test_prepare_release_logs_a_structured_record(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.INFO, logger=prepare_release_mod.LOGGER_NAME):
         prepare_release_mod.prepare_release(
             "feat: x", current_version=_v("1.0.0"), release_date=DATE
@@ -544,9 +543,8 @@ def test_base_error_carries_the_placeholder_fingerprint() -> None:
     assert error.detail == "boom"
 
 
-def test_failure_emits_a_structured_error_log(
-    caplog: pytest.LogCaptureFixture, propagating_package_logger: None
-) -> None:
+@pytest.mark.usefixtures("propagating_package_logger")
+def test_failure_emits_a_structured_error_log(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.ERROR, logger=prepare_release_mod.LOGGER_NAME):
         with pytest.raises(prepare_release_mod.CommitLogEmptyError):
             prepare_release_mod.classify_commits("")
