@@ -37,6 +37,7 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Final, cast
 
+from ...data.persisted_state import PERSISTED_STATE_REFUSAL_METRIC_CODES as _REFUSAL_METRIC_CODES
 from ...data.persisted_state import (
     PERSISTED_STATE_VERSION_FIELD,
     classify_payload,
@@ -44,7 +45,7 @@ from ...data.persisted_state import (
 )
 from ...devices import all_devices
 from ...observability.errors import PersistedStateVersionError
-from ...observability.metrics import PersistedStateRefusalCode, get_metrics
+from ...observability.metrics import get_metrics
 from ...snapshot.sysex_file import extract_sysex_payloads
 from ..export.writer import atomic_write
 from ..profiles.paths import default_profiles_dir
@@ -68,15 +69,6 @@ LIBRARY_STORE_SCHEMA_VERSION: Final[int] = require_schema_version(LIBRARY_STORE_
 Never re-typed here: the registry is the single declaration, so bumping
 it in one place is the only way to change what this store writes.
 """
-
-_REFUSAL_METRIC_CODES: Final[Mapping[str, PersistedStateRefusalCode]] = {
-    "persisted_state.unreadable": "unreadable",
-    "persisted_state.unknown_shape": "unknown_shape",
-    "persisted_state.unknown_store": "unknown_store",
-    "persisted_state.schema_newer_than_app": "schema_newer_than_app",
-    "persisted_state.migration_failed": "migration_failed",
-}
-"""Registry refusal code -> the bounded metrics label (no free-form strings)."""
 
 _LIBRARY_LEAF: Final[str] = "library"
 _RECORD_SUFFIX: Final[str] = ".json"

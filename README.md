@@ -390,10 +390,9 @@ recording, and ranking commands for one bounded session.
                                           morphing + scoped randomization,
                                           WCAG 2.2 AA gate.
 
-🔮 Auto-updates                           Pull-only, consent-gated updates with
-   designed (spec complete)               channels, staged rollout, and a fleet
-                                          dashboard — zero operated servers.
-                                          Drift guards already enforce the spec.
+🚧 Auto-updates                           Shell/client and verified release tooling;
+   software closeout                     native acceptance and production key
+                                          provisioning remain pending.
 
 🔮 Phase 4 · Hardware Runtime             Dedicated device that loads .rymp
    next                                   from flash, runs an embedded C port
@@ -403,39 +402,44 @@ recording, and ranking commands for one bounded session.
 
 See [`docs/STATUS.md`](docs/STATUS.md) for the dated snapshot and the per-phase implementation plans indexed at [`docs/superpowers/plans/INDEX.md`](docs/superpowers/plans/INDEX.md).
 
-### How updates will work
+### Desktop updates
 
-The update system is fully specified (and its first drift guards already
-run in CI); implementation is the next program. The design commitments,
-because they shape the product you install:
+The desktop shell checks at launch and every four hours while running;
+“Check now” requests another check. The Updates panel reads native state and
+accepts a per-version choice only after the shell acknowledges it. Channel
+and freeze are launch settings: set `RYTM_RAND_UPDATE_CHANNEL=stable` or
+`beta`, or `RYTM_RAND_UPDATES=off`, then restart. The browser development
+loop has no native updater.
 
-- **Updates are pulled, never pushed — and there is no update server.**
-  The app polls a ~1 KB static manifest on GitHub's CDN, stages the
-  download in the background, and installs **only on your explicit
-  consent** — "install now", "install on next launch", or "skip this
-  version". This is the Live-but-Passive rule applied to updates:
-  checking and downloading are free, installing is an armed action.
-- **A stage machine can freeze updates entirely** — one toggle (or
-  `RYTM_RAND_UPDATES=off`): no check, no download, no chip. An update
-  will never restart the app mid-set.
-- **Updates that touch MIDI wire behavior warn you first.** Releases
-  whose changes reach the hardware-facing surfaces carry a
-  hardware-revalidation flag, derived automatically and surfaced
-  loudly before you consent.
-- **Channels and staged rollout** (stable/beta, percentage steps) are
-  plain files in this repository — promoting or rolling back a release
-  is a reviewable Git commit, not a server operation.
-- **Fleet visibility without surveillance.** Version check-ins are
-  anonymous downloads of a public one-byte release asset — no
-  identifier ever leaves your machine — and a public
-  [fleet dashboard](docs/superpowers/plans/2026-08-03-autoupdate-distribution.md)
-  charts versions and rollout adoption over time. Opt out of even the
-  anonymous ping with `RYTM_RAND_UPDATE_BEACON=off`.
+With a configured verification key, eligible artifacts are downloaded and
+signature-verified before a choice to install now, install when quitting,
+or skip. Installation waits for the bundled backend to exit. Consent and
+skip state currently last for the process; restarting requires a new choice.
+Hardware-revalidation warnings and rollout percentages survive manifest
+validation. These controls do not authorize MIDI output or hardware saving.
 
-The full specification — manifest schema, consent state machine,
-pipeline integration, and the zero-operational-cost constraint every
-piece satisfies — lives in
-[`docs/superpowers/plans/2026-08-03-autoupdate-distribution.md`](docs/superpowers/plans/2026-08-03-autoupdate-distribution.md).
+The checked-in public key is empty. This build can display eligible release
+metadata and its hardware warning, but explains that downloading and
+installing are unavailable. Release tooling now verifies actual signatures,
+artifact hashes, source/version and the complete target set before assembly;
+a genuine Minisign vector and modified-byte control passed. All 32 native Wry/WebView2 cases passed in 53.9 seconds using the real plugin
+verifier and inert terminal installation/restart recording.
+Production credentials, platform installation/restart validation and final
+combined checks remain pending. This closeout publishes no production update.
+
+The optional check-in is a separate GitHub release-asset request for the
+running version/platform. `RYTM_RAND_UPDATE_BEACON=off` disables it while
+retaining checks; freeze disables both. No application installation identifier
+or MIDI data is included; ordinary HTTP connection metadata reaches the host.
+Fleet graphs estimate activity from download counters. Opt-outs can undercount
+and repeated/public requests can overcount; these are not unique-device counts
+and never authorize an update. Production beacon completion diagnostics remain
+a documented limitation.
+
+See [the closeout plan](docs/superpowers/plans/2026-09-08-release-closeout.md),
+[verification checkpoint](docs/superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md),
+[environment reference](docs/LOCAL_DEV_TOOLING_NOTES.md) and
+[verified release assembly](docs/BUILDING_INSTALLERS.md#verified-updater-release-assembly).
 
 ---
 

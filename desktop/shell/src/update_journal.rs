@@ -18,12 +18,22 @@
 //! refactor away from leaking.
 
 use std::fs;
-use std::io::Write as _;
+use std::io::{Read as _, Write as _};
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 use serde_json::{Map, Value};
 
 use crate::update_policy::{DetailValue, ErrorCode, JournalRecord};
+
+/// A persisted row is decoded through the same closed vocabulary as the writer.
+#[derive(serde::Deserialize)]
+struct StoredRow {
+    ts: u64,
+    event: crate::update_policy::JournalEvent,
+    version: Option<String>,
+    detail: crate::update_policy::Detail,
+}
 
 /// Journal filename inside the config directory.
 pub const JOURNAL_FILE_NAME: &str = "update-journal.jsonl";
@@ -111,12 +121,16 @@ pub fn render_row(record: &JournalRecord, ts_ms: u64) -> Value {
 #[derive(Debug, Clone)]
 pub struct UpdateJournal {
     config_dir: PathBuf,
+    writer: Arc<Mutex<()>>,
 }
 
 impl UpdateJournal {
     /// Bind a journal to `config_dir`. No I/O happens until [`Self::append`].
     pub fn new(config_dir: PathBuf) -> Self {
-        Self { config_dir }
+        Self {
+            config_dir,
+            writer: Arc::new(Mutex::new(())),
+        }
     }
 
     /// Bind a journal to [`default_config_dir`].
@@ -134,6 +148,55 @@ impl UpdateJournal {
         rotated_path(&self.config_dir)
     }
 
+    /// Read the bounded current/rotated journal for the operator panel.
+    /// Corrupt rows and free-form injected details never cross this boundary.
+    pub fn recent_rows(&self, limit: usize) -> Vec<Value> {
+        let Ok(_guard) = self.writer.lock() else {
+            return Vec::new();
+        };
+        let mut rows = Vec::new();
+        for path in [self.rotated(), self.path()] {
+            let Ok(file) = fs::File::open(path) else {
+                continue;
+            };
+            let mut text = String::new();
+            if file
+                .take(MAX_JOURNAL_BYTES + 8192)
+                .read_to_string(&mut text)
+                .is_err()
+            {
+                continue;
+            }
+            for line in text.lines() {
+                let Ok(row) = serde_json::from_str::<StoredRow>(line) else {
+                    continue;
+                };
+                let Ok(stamp) =
+                    time::OffsetDateTime::from_unix_timestamp_nanos(i128::from(row.ts) * 1_000_000)
+                else {
+                    continue;
+                };
+                let Ok(ts) = stamp.format(&time::format_description::well_known::Rfc3339) else {
+                    continue;
+                };
+                let record = JournalRecord {
+                    event: row.event,
+                    version: row.version,
+                    detail: row.detail,
+                };
+                let safe = render_row(&record, row.ts);
+                rows.push(serde_json::json!({
+                    "ts": ts,
+                    "event": row.event.as_str(),
+                    "version": safe["version"].as_str().unwrap_or(""),
+                    "detail": safe["detail"].to_string(),
+                }));
+            }
+        }
+        rows.drain(..rows.len().saturating_sub(limit));
+        rows
+    }
+
     /// Append one row, rotating first if the file has reached the cap.
     ///
     /// Returns a typed [`ErrorCode`] on failure — never the underlying
@@ -141,6 +204,10 @@ impl UpdateJournal {
     /// (the driver) logs the code; the failure is deliberately non-fatal
     /// because losing an observability row must never break an update.
     pub fn append(&self, record: &JournalRecord, ts_ms: u64) -> Result<(), ErrorCode> {
+        let _guard = self
+            .writer
+            .lock()
+            .map_err(|_| ErrorCode::JournalWriteFailed)?;
         fs::create_dir_all(&self.config_dir).map_err(|_| ErrorCode::JournalWriteFailed)?;
         let path = self.path();
         self.rotate_if_needed(&path)?;
@@ -183,6 +250,81 @@ impl UpdateJournal {
 mod tests {
     use super::*;
     use crate::update_policy::{DetailKey, JournalEvent};
+
+    #[test]
+    fn concurrent_callbacks_rotate_once_and_retain_each_complete_row() {
+        let dir = TempDir::new("concurrent-rotation");
+        let journal = UpdateJournal::new(dir.path.clone());
+        fs::create_dir_all(&dir.path).unwrap();
+        let previous = vec![b' '; MAX_JOURNAL_BYTES as usize];
+        fs::write(journal.path(), &previous).unwrap();
+        let start = Arc::new(std::sync::Barrier::new(8));
+        let workers: Vec<_> = (0..8)
+            .map(|index| {
+                let journal = journal.clone();
+                let start = Arc::clone(&start);
+                std::thread::spawn(move || {
+                    start.wait();
+                    journal
+                        .append(
+                            &JournalRecord::new(
+                                JournalEvent::PingOk,
+                                Some(format!("1.35.{index}")),
+                            ),
+                            1000 + index,
+                        )
+                        .unwrap();
+                })
+            })
+            .collect();
+        for worker in workers {
+            worker.join().unwrap();
+        }
+        assert_eq!(fs::read(journal.rotated()).unwrap(), previous);
+        let rows = journal.recent_rows(50);
+        let versions: std::collections::BTreeSet<_> = rows
+            .iter()
+            .map(|row| row["version"].as_str().unwrap())
+            .collect();
+        assert_eq!(rows.len(), 8);
+        assert_eq!(versions.len(), 8);
+    }
+
+    #[test]
+    fn recent_rows_restore_history_with_typed_iso_fields_and_reject_injection() {
+        let dir = TempDir::new("recent-wire");
+        let journal = UpdateJournal::new(dir.path.clone());
+        assert!(journal.recent_rows(50).is_empty());
+        journal
+            .append(
+                &JournalRecord::new(JournalEvent::CheckOk, Some("1.35.0".into())),
+                1000,
+            )
+            .unwrap();
+        journal
+            .append(
+                &JournalRecord::new(JournalEvent::InstallFailed, Some("1.35.0".into()))
+                    .with(DetailKey::Reason, ErrorCode::InstallFailed),
+                2000,
+            )
+            .unwrap();
+        let mut file = fs::OpenOptions::new()
+            .append(true)
+            .open(journal.path())
+            .unwrap();
+        writeln!(file, "{{\"ts\":3000,\"event\":\"check_failed\",\"version\":null,\"detail\":{{\"reason\":\"C:/private/file\"}}}}").unwrap();
+        let rows = journal.recent_rows(1);
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0]["ts"], "1970-01-01T00:00:02Z");
+        assert_eq!(rows[0]["event"], "install_failed");
+        assert_eq!(rows[0]["version"], "1.35.0");
+        assert!(rows[0]["detail"]
+            .as_str()
+            .unwrap()
+            .contains("install_failed"));
+        assert!(!serde_json::to_string(&rows).unwrap().contains("private"));
+        assert!(journal.recent_rows(0).is_empty());
+    }
 
     struct TempDir {
         path: PathBuf,

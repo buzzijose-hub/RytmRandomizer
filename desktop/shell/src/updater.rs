@@ -105,9 +105,17 @@ pub fn resolve_manifest_base_url(raw: Option<&str>) -> String {
     if candidate.is_empty() {
         return DEFAULT_MANIFEST_BASE_URL.to_string();
     }
-    let is_loopback =
-        candidate.starts_with("http://127.0.0.1") || candidate.starts_with("http://localhost");
-    if candidate.starts_with("https://") || is_loopback {
+    let Ok(url) = reqwest::Url::parse(candidate) else {
+        return DEFAULT_MANIFEST_BASE_URL.to_string();
+    };
+    let is_loopback = url.scheme() == "http"
+        && matches!(url.host_str(), Some("127.0.0.1" | "localhost" | "[::1]"));
+    if (url.scheme() == "https" || is_loopback)
+        && url.username().is_empty()
+        && url.password().is_none()
+        && url.query().is_none()
+        && url.fragment().is_none()
+    {
         candidate.trim_end_matches('/').to_string()
     } else {
         DEFAULT_MANIFEST_BASE_URL.to_string()
@@ -140,7 +148,35 @@ pub fn current_target() -> String {
 /// supplied through `tauri.conf.json`'s `plugins.updater.pubkey`, and the
 /// build script sets `RYTM_RAND_UPDATER_PUBKEY` so this returns `true`.
 pub fn signing_key_present() -> bool {
-    option_env!("RYTM_RAND_UPDATER_PUBKEY").is_some_and(|key| !key.trim().is_empty())
+    serde_json::from_str::<serde_json::Value>(include_str!("../tauri.conf.json"))
+        .ok()
+        .and_then(|config| {
+            config
+                .pointer("/plugins/updater/pubkey")
+                .and_then(|v| v.as_str())
+                .map(|s| !s.trim().is_empty())
+        })
+        .unwrap_or(false)
+}
+
+/// Launch plus four-hour checks, without catch-up bursts after suspension.
+pub const CHECK_INTERVAL: std::time::Duration = std::time::Duration::from_secs(4 * 60 * 60);
+
+/// Monotonic schedule shared by the shell loop and deterministic tests.
+#[derive(Default)]
+pub struct CheckSchedule {
+    next: std::time::Duration,
+}
+
+impl CheckSchedule {
+    /// Return true once at launch and once per interval while running.
+    pub fn due(&mut self, elapsed: std::time::Duration) -> bool {
+        if elapsed < self.next {
+            return false;
+        }
+        self.next = elapsed.saturating_add(CHECK_INTERVAL);
+        true
+    }
 }
 
 /// Resolve the whole §7 surface from explicit inputs.
@@ -290,6 +326,32 @@ impl<S: EffectSink> Updater<S> {
         self.locked_state().payload()
     }
 
+    /// Accept only a current staged choice and report whether policy accepted it.
+    pub fn confirm_choice(&self, version: &str, choice: &str) -> bool {
+        let Some(event) = crate::update_commands::prompt_event(version, choice) else {
+            return false;
+        };
+        let effects = {
+            let mut guard = self.locked_state();
+            if !self.config.updates_enabled
+                || !guard.is_staged()
+                || guard.version() != Some(version)
+                || guard.pending_quit_install().is_some()
+                || (!self.config.install_permitted() && choice != "skip_this_version")
+            {
+                return false;
+            }
+            let current = std::mem::replace(&mut *guard, UpdateState::initial(&self.config));
+            let transition = update_policy::step(current, event, &self.config);
+            *guard = transition.state;
+            transition.effects
+        };
+        for effect in &effects {
+            self.perform(effect);
+        }
+        true
+    }
+
     fn locked_state(&self) -> std::sync::MutexGuard<'_, UpdateState> {
         self.state
             .lock()
@@ -304,6 +366,23 @@ impl<S: EffectSink> Updater<S> {
     pub fn handle(&self, event: UpdateEvent) {
         let effects = {
             let mut guard = self.locked_state();
+            // A callback belongs only to its active operation. Late failures
+            // must not erase a staged artifact or a newer user decision.
+            match &event {
+                UpdateEvent::ManifestFetched { .. } | UpdateEvent::ManifestFetchFailed { .. }
+                    if guard.kind() != update_policy::StateKind::Checking =>
+                {
+                    return
+                }
+                UpdateEvent::DownloadStaged { .. }
+                | UpdateEvent::DownloadFailed { .. }
+                | UpdateEvent::SignatureRejected { .. }
+                    if guard.kind() != update_policy::StateKind::Downloading =>
+                {
+                    return
+                }
+                _ => {}
+            }
             // The state is *moved* through the policy and moved back, never
             // cloned: `UpdateState` may hold a `ConsentToken`, and a clone
             // would be a second authorisation for the same consent. The
@@ -333,7 +412,9 @@ impl<S: EffectSink> Updater<S> {
             }
             Effect::SendBeacon { version, target } => self.sink.send_beacon(version, target),
             Effect::Journal(record) => self.sink.journal(record),
-            Effect::EmitState(payload) => self.sink.emit_state(payload),
+            // A synchronous callback may already have advanced state while
+            // performing FetchManifest. Never publish its stale predecessor.
+            Effect::EmitState(_) => self.sink.emit_state(&self.payload()),
         }
     }
 }
@@ -764,6 +845,94 @@ mod tests {
         );
     }
 
+    #[test]
+    fn launch_and_four_hour_schedule_does_not_burst_after_resume() {
+        use std::time::Duration;
+        let mut schedule = CheckSchedule::default();
+        assert!(schedule.due(Duration::ZERO));
+        assert!(!schedule.due(Duration::ZERO));
+        assert!(!schedule.due(CHECK_INTERVAL - Duration::from_secs(1)));
+        assert!(schedule.due(CHECK_INTERVAL));
+        assert!(schedule.due(CHECK_INTERVAL * 20));
+        assert!(!schedule.due(CHECK_INTERVAL * 20));
+        assert!(!schedule.due(CHECK_INTERVAL * 20 + Duration::from_secs(1)));
+    }
+
+    #[test]
+    fn lookalike_loopback_hosts_and_credentials_cannot_enable_http() {
+        for url in [
+            "http://127.0.0.1.evil.test/x",
+            "http://localhost.evil.test/x",
+            "http://localhost@evil.test/x",
+            "https://user:secret@example.test/x",
+            "https://example.test/x?q=1",
+            "https://example.test/x#anchor",
+            "https://",
+        ] {
+            assert_eq!(
+                resolve_manifest_base_url(Some(url)),
+                DEFAULT_MANIFEST_BASE_URL,
+                "{url}"
+            );
+        }
+    }
+
+    #[test]
+    fn command_consent_refuses_unstaged_stale_and_duplicate_decisions() {
+        let (updater, recorder) = driver(enabled_config());
+        assert!(!updater.confirm_choice("1.35.0", "install_now"));
+        updater.handle(UpdateEvent::CheckRequested);
+        updater.handle(UpdateEvent::ManifestFetched {
+            body: manifest_body("1.35.0"),
+            duration_ms: 1,
+        });
+        updater.handle(UpdateEvent::DownloadStaged {
+            version: "1.35.0".into(),
+            bytes: 1,
+            duration_ms: 1,
+        });
+        assert!(!updater.confirm_choice("1.35.1", "install_now"));
+        assert!(!updater.confirm_choice("1.35.0", "unknown"));
+        assert!(updater.confirm_choice("1.35.0", "install_on_quit"));
+        assert!(!updater.confirm_choice("1.35.0", "install_now"));
+        assert!(recorder.installs.lock().unwrap().is_empty());
+        updater.handle(UpdateEvent::SidecarExited);
+        assert_eq!(recorder.installs.lock().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn checks_are_single_flight_and_late_callbacks_cannot_replace_staged_bytes() {
+        let (updater, recorder) = driver(enabled_config());
+        updater.handle(UpdateEvent::CheckRequested);
+        updater.handle(UpdateEvent::CheckRequested);
+        assert_eq!(recorder.fetches.lock().unwrap().len(), 1);
+        updater.handle(UpdateEvent::ManifestFetched {
+            body: manifest_body("1.35.0"),
+            duration_ms: 1,
+        });
+        updater.handle(UpdateEvent::CheckRequested);
+        assert_eq!(recorder.fetches.lock().unwrap().len(), 1);
+        updater.handle(UpdateEvent::DownloadStaged {
+            version: "1.35.0".into(),
+            bytes: 1,
+            duration_ms: 1,
+        });
+        assert!(updater.confirm_choice("1.35.0", "install_on_quit"));
+        updater.handle(UpdateEvent::ManifestFetched {
+            body: manifest_body("1.36.0"),
+            duration_ms: 1,
+        });
+        updater.handle(UpdateEvent::DownloadFailed {
+            version: "1.35.0".into(),
+            code: ErrorCode::DownloadFailed,
+        });
+        assert_eq!(updater.payload().version.as_deref(), Some("1.35.0"));
+        assert_eq!(updater.payload().state, StateKind::Staged);
+        updater.handle(UpdateEvent::QuitWithoutSidecarExit);
+        updater.handle(UpdateEvent::SidecarExited);
+        assert!(recorder.installs.lock().unwrap().is_empty());
+    }
+
     // -- driver sequencing ------------------------------------------------
 
     #[test]
@@ -945,6 +1114,13 @@ mod tests {
             .lock()
             .unwrap()
             .contains(&JournalEvent::SignatureRejected));
+        // Start a separate attempt: a late failure after a terminal signature
+        // rejection is intentionally ignored by the production driver.
+        updater.handle(UpdateEvent::CheckRequested);
+        updater.handle(UpdateEvent::ManifestFetched {
+            body: manifest_body("1.35.0"),
+            duration_ms: 1,
+        });
         updater.handle(UpdateEvent::DownloadFailed {
             version: "1.35.0".into(),
             code: ErrorCode::StageWriteFailed,

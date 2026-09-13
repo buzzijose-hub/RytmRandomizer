@@ -33,7 +33,7 @@ agent C-dash) is required to restate them next to every derived figure:
 3. **Partial by construction.** Anything that is not a public asset GET is
    invisible: clients on a pre-beacon version, clients with
    ``RYTM_RAND_UPDATE_BEACON=off``, and clients with updates frozen entirely
-   never appear. Counts are a lower bound on the fleet, never a census.
+   never appear. Check-ins are not a census or a guaranteed lower bound on devices.
    Caches and proxies can also swallow a GET, pushing the number lower still.
 
 Every row carries this meaning inline in its ``estimator`` block so a consumer
@@ -156,7 +156,9 @@ ESTIMATOR_MEANING: Final[str] = (
     "between consecutive snapshots describes an interval, and dividing that "
     "delta by the expected cadence yields an ESTIMATE of devices. Clients on "
     "pre-beacon versions, with RYTM_RAND_UPDATE_BEACON=off, or with updates "
-    "frozen never appear, so every figure is a lower bound."
+    "frozen never appear. Repeated launches, manual checks and public asset GETs "
+    "can inflate the estimate; it is not a guaranteed lower bound or a count "
+    "of unique devices."
 )
 
 # The OS vocabulary lives in _BEACON_ASSET_RE's alternation and nowhere else:
@@ -522,7 +524,6 @@ def fetch_releases(repo: str, token: str | None) -> list[object]:
             never reach the log.
     """
 
-    url = f"https://api.github.com/repos/{repo}/releases?per_page=100"
     headers = {
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
@@ -530,21 +531,26 @@ def fetch_releases(repo: str, token: str | None) -> list[object]:
     }
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    request = urllib.request.Request(url, headers=headers)  # noqa: S310 - https literal above
-    try:
-        with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
-            payload = json.loads(response.read().decode("utf-8"))
-    except (urllib.error.URLError, OSError, ValueError) as err:
-        raise FleetSnapshotError(
-            "fleet.releases.fetch_failed",
-            {"reason": type(err).__name__},
-        ) from err
-    if not isinstance(payload, list):
-        raise FleetSnapshotError(
-            "fleet.releases.malformed_payload",
-            {"reason": "top_level_not_list"},
-        )
-    return payload
+    releases: list[object] = []
+    page = 1
+    while True:
+        url = f"https://api.github.com/repos/{repo}/releases?per_page=100&page={page}"
+        request = urllib.request.Request(url, headers=headers)  # noqa: S310 - fixed API origin
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
+                payload = json.loads(response.read().decode("utf-8"))
+        except (urllib.error.URLError, OSError, ValueError) as err:
+            raise FleetSnapshotError(
+                "fleet.releases.fetch_failed", {"reason": type(err).__name__}
+            ) from err
+        if not isinstance(payload, list):
+            raise FleetSnapshotError(
+                "fleet.releases.malformed_payload", {"reason": "top_level_not_list"}
+            )
+        releases.extend(payload)
+        if len(payload) < 100:
+            return releases
+        page += 1
 
 
 def load_releases_payload(path: Path) -> list[object]:

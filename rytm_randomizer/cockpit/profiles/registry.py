@@ -52,17 +52,17 @@ import logging
 from pathlib import Path
 from typing import ClassVar, Final, cast
 
-from rytm_randomizer.cockpit.data import ProfileModel
-from rytm_randomizer.cockpit.data.profile_model import ProfileModelDict
-from rytm_randomizer.cockpit.export.writer import atomic_write
-from rytm_randomizer.data.persisted_state import (
+from ...data.persisted_state import PERSISTED_STATE_REFUSAL_METRIC_CODES as _REFUSAL_METRIC_CODES
+from ...data.persisted_state import (
     PERSISTED_STATE_VERSION_FIELD,
     classify_payload,
     require_schema_version,
 )
-from rytm_randomizer.observability.errors import DataError, PersistedStateVersionError
-from rytm_randomizer.observability.metrics import PersistedStateRefusalCode, get_metrics
-
+from ...observability.errors import DataError, PersistedStateVersionError
+from ...observability.metrics import get_metrics
+from ..data import ProfileModel
+from ..data.profile_model import ProfileModelDict
+from ..export.writer import atomic_write
 from .builtin import BUILTIN_SCENES
 
 _logger: Final[logging.Logger] = logging.getLogger(__name__)
@@ -84,15 +84,6 @@ Deliberately not re-typed here: the registry holds the single
 declaration, so the only way to change what this store writes is to bump
 it (and add the matching migration) in one place.
 """
-
-_REFUSAL_METRIC_CODES: Final[dict[str, PersistedStateRefusalCode]] = {
-    "persisted_state.unreadable": "unreadable",
-    "persisted_state.unknown_shape": "unknown_shape",
-    "persisted_state.unknown_store": "unknown_store",
-    "persisted_state.schema_newer_than_app": "schema_newer_than_app",
-    "persisted_state.migration_failed": "migration_failed",
-}
-"""Registry refusal code -> bounded metrics label (no free-form strings)."""
 
 
 # ---------------------------------------------------------------------------

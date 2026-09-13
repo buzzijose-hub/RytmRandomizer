@@ -48,6 +48,30 @@ function row(over: Partial<UpdateJournalRow> = {}): UpdateJournalRow {
 }
 
 describe('§7.1 normative copy', () => {
+  it.each([false, true])('shows a discovered keyless update without claiming it was staged (hardware warning: %s)', (warning) => {
+    const spec = updatePanelSpec(slice({ state: state({
+      state: 'failed', error_code: 'signature_key_missing',
+      notes: warning ? 'Review the hardware changes.' : '', hardware_revalidation: warning,
+    }) }), '1.34.0');
+    const text = JSON.stringify(spec);
+    expect(text).toContain('Update 1.35.1 found.');
+    expect(text).toContain('downloading and installing are unavailable');
+    expect(text).not.toContain('Update ready');
+    expect(text.includes(UPDATE_COPY.hardwareWarning)).toBe(warning);
+    expect(text).toContain(warning ? 'Review the hardware changes.' : UPDATE_COPY.noNotes);
+  });
+
+  it.each(['download_failed', null])('renders an actual native failure and preserves its reason (%s)', (reason) => {
+    const spec = updatePanelSpec(slice({ state: state({ state: 'failed', error_code: reason }) }), '1.34.0');
+    expect(JSON.stringify(spec)).toContain(`Update could not complete (${reason ?? 'unknown_reason'}).`);
+  });
+
+  it('renders native skip state without offering installation', () => {
+    const text = JSON.stringify(updatePanelSpec(slice({ state: state({ state: 'skipped' }) }), '1.34.0'));
+    expect(text).toContain('Update 1.35.1 was skipped for this session.');
+    expect(text).not.toContain('Update ready');
+  });
+
   it('pins the three consent labels in order', () => {
     expect(CONSENT_LABELS.install_on_quit).toBe('When I quit the app');
     expect(CONSENT_LABELS.install_now).toBe('Now — restart RytmRandomizer immediately');

@@ -104,6 +104,8 @@ class _Collector(HTMLParser):
         self.text_by_id: dict[str, str] = {}
         self.attrs_by_tag: dict[str, list[dict[str, str]]] = {}
         self._open_ids: list[str | None] = []
+        self.inline_scripts: list[str] = []
+        self._in_inline_script = False
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         mapping = {key: (value or "") for key, value in attrs}
@@ -119,6 +121,9 @@ class _Collector(HTMLParser):
                 self.external_urls.append(value)
         if tag == "script" and mapping.get("src"):
             self.script_srcs.append(mapping["src"])
+        if tag == "script" and not mapping.get("src"):
+            self._in_inline_script = True
+            self.inline_scripts.append("")
 
         # Void elements never close, so they must not push a capture frame.
         if tag in _VOID_ELEMENTS:
@@ -140,10 +145,14 @@ class _Collector(HTMLParser):
                 self.external_urls.append(value)
 
     def handle_endtag(self, tag: str) -> None:
+        if tag == "script":
+            self._in_inline_script = False
         if self._open_ids:
             self._open_ids.pop()
 
     def handle_data(self, data: str) -> None:
+        if self._in_inline_script:
+            self.inline_scripts[-1] += data
         for element_id in self._open_ids:
             if element_id:
                 self.text_by_id[element_id] = self.text_by_id.get(element_id, "") + data
@@ -243,7 +252,7 @@ def test_page_agrees_with_the_d2_cadence(page_source: str) -> None:
 
 def test_page_hardcodes_no_version_string(page_source: str) -> None:
     """Series must be derived from the data, never enumerated in the page."""
-    script_only = "\n".join(re.findall(r"<script>(.*?)</script>", page_source, flags=re.DOTALL))
+    script_only = "\n".join(_parse(page_source).inline_scripts)
     assert script_only, "expected an inline <script> block"
     assert re.search(r"\b\d+\.\d+\.\d+\b", script_only) is None, (
         "the dashboard script contains a literal SemVer string; versions must "
@@ -379,9 +388,15 @@ _NODE: Final[str | None] = shutil.which("node")
 
 
 def _extract_module(page_source: str) -> str:
-    blocks = re.findall(r"<script>(.*?)</script>", page_source, flags=re.DOTALL)
+    blocks = _parse(page_source).inline_scripts
     assert len(blocks) == 1, "expected exactly one inline script block"
     return blocks[0]
+
+
+def test_inline_script_extraction_accepts_html_case_and_attributes() -> None:
+    markup = '<SCRIPT type="text/javascript">const value = "<tag>";</SCRIPT>'
+    assert _extract_module(markup) == 'const value = "<tag>";'
+    assert _parse('<script src="external.js"></script>').inline_scripts == []
 
 
 def _render(tmp_path: Path, page_source: str, history: object) -> dict[str, str]:
@@ -405,6 +420,7 @@ def _render(tmp_path: Path, page_source: str, history: object) -> dict[str, str]
         [_NODE, str(driver_path), json.dumps(history)],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=60,
         check=False,
     )

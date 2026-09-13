@@ -719,38 +719,16 @@ fn is_acceptable_version(version: &str) -> bool {
     })
 }
 
-/// Compare two dotted numeric-prefixed versions.
-///
-/// Deliberately small: it orders the numeric release triple and treats any
-/// pre-release suffix as *lower* than the same triple without one, which is
-/// the SemVer rule the update decision needs. It never panics on malformed
-/// input — non-numeric components sort as zero — because validation has
-/// already bounded the character set.
+/// Compare SemVer precedence, including numeric prerelease identifiers.
+/// Build metadata never changes update ordering; invalid versions refuse.
 pub fn version_is_newer(candidate: &str, current: &str) -> bool {
-    numeric_release(candidate) > numeric_release(current)
-        || (numeric_release(candidate) == numeric_release(current)
-            && prerelease_rank(candidate) > prerelease_rank(current))
-}
-
-fn numeric_release(version: &str) -> [u64; 3] {
-    let core = version
-        .split_once('-')
-        .map_or(version, |(core, _)| core)
-        .split_once('+')
-        .map_or_else(
-            || version.split_once('-').map_or(version, |(core, _)| core),
-            |(core, _)| core,
-        );
-    let mut out = [0_u64; 3];
-    for (slot, part) in out.iter_mut().zip(core.split('.')) {
-        *slot = part.parse::<u64>().unwrap_or(0);
+    match (
+        semver::Version::parse(candidate),
+        semver::Version::parse(current),
+    ) {
+        (Ok(candidate), Ok(current)) => candidate.cmp_precedence(&current).is_gt(),
+        _ => false,
     }
-    out
-}
-
-/// A release (no `-suffix`) outranks any pre-release of the same triple.
-fn prerelease_rank(version: &str) -> u8 {
-    u8::from(!version.contains('-'))
 }
 
 // ---------------------------------------------------------------------------
@@ -1222,6 +1200,14 @@ pub fn step(state: UpdateState, event: UpdateEvent, config: &Config) -> Transiti
 }
 
 fn step_check_requested(mut state: UpdateState, config: &Config) -> Transition {
+    // Exactly one manifest/download operation may be in flight. Rechecking
+    // could otherwise replace the bytes behind a same-version consent.
+    if matches!(
+        state.kind,
+        StateKind::Checking | StateKind::Downloading | StateKind::Installing
+    ) {
+        return finish(state, Vec::new());
+    }
     // A staged artifact awaiting consent is not re-checked out from under
     // the operator: re-entering `Checking` would blank the chip they are
     // looking at, and a newer manifest could silently replace the version
@@ -1344,6 +1330,24 @@ fn step_manifest_fetched(
         state.notes = None;
         state.hardware_revalidation = false;
         state.error_code = None;
+        return finish(state, effects);
+    }
+
+    if !config.signing_key_present {
+        // Discovery remains available before a key is configured. No bytes
+        // can be staged and no install consent can be obtained in this mode.
+        state.kind = StateKind::Failed;
+        state.version = Some(manifest.version().to_string());
+        state.notes = Some(manifest.notes().to_string());
+        state.hardware_revalidation = manifest.hardware_revalidation();
+        state.error_code = Some(ErrorCode::SignatureKeyMissing);
+        effects.push(Effect::Journal(
+            JournalRecord::new(
+                JournalEvent::CheckFailed,
+                Some(manifest.version().to_string()),
+            )
+            .with(DetailKey::Reason, ErrorCode::SignatureKeyMissing),
+        ));
         return finish(state, effects);
     }
 
@@ -1559,6 +1563,7 @@ fn step_quit_without_exit(mut state: UpdateState) -> Transition {
     // The install NEVER runs concurrently with a live sidecar. The pending
     // install survives (the next launch will re-offer it), but nothing is
     // swapped underneath a running process.
+    state.pending_install = None;
     state.kind = StateKind::Failed;
     state.error_code = Some(ErrorCode::SidecarStillRunning);
     finish(
@@ -1612,6 +1617,17 @@ fn step_beacon_completed(state: UpdateState, ok: bool) -> Transition {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn beta_versions_and_build_metadata_follow_semver_precedence() {
+        assert!(version_is_newer("1.35.0-beta.2", "1.35.0-beta.1"));
+        assert!(version_is_newer("1.35.0-beta.10", "1.35.0-beta.9"));
+        assert!(version_is_newer("1.35.0", "1.35.0-rc.1"));
+        assert!(!version_is_newer("1.35.0-beta.9", "1.35.0-beta.10"));
+        assert!(!version_is_newer("1.35.0+build-with-dash", "1.35.0"));
+        assert!(!version_is_newer("1.35.0", "1.35.0+build-with-dash"));
+        assert!(!version_is_newer("invalid", "1.0.0"));
+    }
 
     const TARGET: &str = "darwin-aarch64";
 
@@ -3060,11 +3076,47 @@ mod tests {
     // -- no compiled-in key: check-and-notify only -------------------------
 
     #[test]
+    fn missing_key_discovers_a_release_without_downloading_or_claiming_bad_signature() {
+        let mut cfg = config();
+        cfg.signing_key_present = false;
+        let transition = step(
+            checking_state(&cfg),
+            UpdateEvent::ManifestFetched {
+                body: manifest_json("1.35.0", 100),
+                duration_ms: 1,
+            },
+            &cfg,
+        );
+        assert_eq!(
+            transition.state.payload().version.as_deref(),
+            Some("1.35.0")
+        );
+        assert_eq!(
+            transition.state.payload().notes.as_deref(),
+            Some("notes for 1.35.0")
+        );
+        assert_eq!(
+            transition.state.payload().error_code,
+            Some(ErrorCode::SignatureKeyMissing)
+        );
+        assert!(!transition
+            .effects
+            .iter()
+            .any(|effect| matches!(effect, Effect::DownloadArtifact { .. })));
+        assert!(!transition.effects.iter().any(|effect| matches!(effect, Effect::Journal(row) if matches!(row.event, JournalEvent::DownloadStarted | JournalEvent::SignatureRejected))));
+        assert!(transition.effects.iter().any(|effect| matches!(effect,
+            Effect::Journal(row) if row.event == JournalEvent::CheckFailed
+                && row.detail.get(&DetailKey::Reason)
+                    == Some(&DetailValue::Reason(ErrorCode::SignatureKeyMissing)))));
+    }
+
+    #[test]
     fn without_a_signing_key_no_consent_path_can_install() {
         let mut cfg = config();
         cfg.signing_key_present = false;
         assert!(!cfg.install_permitted());
-        let staged = staged_state(&cfg, "1.35.0");
+        // Even an already staged state cannot install if a key disappears.
+        let staged = staged_state(&config(), "1.35.0");
         assert_eq!(staged.kind(), StateKind::Staged);
         let consented = step(
             staged,

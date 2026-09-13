@@ -43,7 +43,7 @@ PACKAGE_ROOT = PROJECT_ROOT / "rytm_randomizer"
 _ALLOWED_TOP_LEVEL: Final[frozenset[str]] = frozenset(
     {
         "__init__.py",
-        # Architect sign-off: contract I7 of docs/superpowers/plans/
+        # Requested exception (owner approval pending): contract I7 of docs/superpowers/plans/
         # 2026-09-07-autoupdate-implementation.md freezes the import path
         # ``rytm_randomizer._version.__version__``. It must be a top-level
         # leaf: every layer (including data/ and state/) may read it, so

@@ -5,6 +5,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { clearMocks, mockIPC } from '@tauri-apps/api/mocks';
 
 import { ConnectionDoctorPanel } from '../../../src/cockpit/panels/ConnectionDoctorPanel';
 import { connectionDoctorPanelSpec } from '../../../src/cockpit/panels/connectionDoctorPanelSpec';
@@ -120,6 +121,7 @@ describe('ConnectionDoctorPanel (interactive)', () => {
       useCockpitStore.getState().reset();
     });
     vi.unstubAllGlobals();
+    clearMocks();
   });
 
   it('refresh sends the diagnostics command and stores the returned packet', async () => {
@@ -172,10 +174,64 @@ describe('ConnectionDoctorPanel (interactive)', () => {
     vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
     fireEvent.click(screen.getByTestId('doctor-export'));
     expect(await screen.findByText('diagnostics copied')).toBeInTheDocument();
-    expect(writeText).toHaveBeenCalledWith(JSON.stringify(diagnosticsHealthy, null, 2));
+    expect(writeText).toHaveBeenCalledWith(
+      JSON.stringify({ ...diagnosticsHealthy, update_journal: null }, null, 2),
+    );
 
     writeText.mockRejectedValueOnce(new Error('denied'));
     fireEvent.click(screen.getByTestId('doctor-export'));
     expect(await screen.findByText('copy failed')).toBeInTheDocument();
+  });
+
+  it('exports a fresh bounded native journal without mounting the update panel', async () => {
+    act(() => useCockpitStore.getState().setDiagnostics(diagnosticsHealthy));
+    const journal = Array.from({ length: 55 }, (_, index) => ({
+      ts: `2026-09-13T12:00:${String(index).padStart(2, '0')}Z`,
+      event: 'check_failed',
+      version: '1.35.1',
+      detail: '{"reason":"network_unavailable"}',
+    }));
+    const command = vi.fn(() => ({
+      state: {
+        state: 'failed', version: '1.35.1', notes: 'not part of diagnostic export',
+        hardware_revalidation: false, error_code: 'network_unavailable',
+      },
+      channel: 'stable', frozen: false,
+      journal: journal.map((row) => ({ ...row, untrusted_extra_field: 'not exported' })),
+    }));
+    mockIPC(command);
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
+    const fake = new FakeCockpitClient();
+    renderPanel(fake);
+    expect(command).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId('doctor-export'));
+
+    expect(await screen.findByText('diagnostics copied')).toBeInTheDocument();
+    expect(writeText).toHaveBeenCalledWith(
+      JSON.stringify({ ...diagnosticsHealthy, update_journal: journal.slice(-50) }, null, 2),
+    );
+    expect(command.mock.calls).toEqual([['update_snapshot', {}]]);
+    expect(fake.sent).toEqual([]);
+    expect(useCockpitStore.getState().update.state).toBeNull();
+  });
+
+  it.each(['invalid snapshot', 'shell failure'])('keeps diagnostics export usable after %s', async (outcome) => {
+    act(() => useCockpitStore.getState().setDiagnostics(diagnosticsHealthy));
+    mockIPC(() => {
+      if (outcome === 'shell failure') throw new Error('unavailable');
+      return { journal: [{ detail: 'unrecognised data' }] };
+    });
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal('navigator', { ...navigator, clipboard: { writeText } });
+    renderPanel(new FakeCockpitClient());
+
+    fireEvent.click(screen.getByTestId('doctor-export'));
+
+    expect(await screen.findByText('diagnostics copied')).toBeInTheDocument();
+    expect(writeText).toHaveBeenCalledWith(
+      JSON.stringify({ ...diagnosticsHealthy, update_journal: null }, null, 2),
+    );
   });
 });

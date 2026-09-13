@@ -19,7 +19,8 @@
 //!    identifying data — a check-in that fails is simply a check-in that did
 //!    not happen, and must never affect the update flow.
 
-use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 
 use crate::update_policy::ErrorCode;
 
@@ -61,6 +62,11 @@ pub enum TransportOutcome {
         /// Version attempted.
         version: String,
     },
+    /// Local diagnostic only; never changes update eligibility or state.
+    BeaconCompleted {
+        /// Whether the GET returned a successful HTTP status.
+        ok: bool,
+    },
 }
 
 /// The network operations the driver needs.
@@ -85,8 +91,20 @@ pub trait Transport: Send + Sync + 'static {
     /// running app intact.
     fn install(&self, version: &str) -> Result<(), ErrorCode>;
 
-    /// Fire-and-forget check-in. No result, by design.
-    fn beacon(&self, asset_url: &str);
+    /// Apply the operator's restart preference to the already staged bytes.
+    fn install_with_choice(
+        &self,
+        version: &str,
+        _choice: crate::update_policy::ConsentChoice,
+    ) -> Result<(), ErrorCode> {
+        self.install(version)
+    }
+
+    /// Independent check-in; report only a local diagnostic, without retry.
+    fn beacon(&self, asset_url: &str, report: Box<dyn FnOnce(TransportOutcome) + Send>);
+
+    /// Cancel owned network work after the final shutdown/install outcome.
+    fn shutdown(&self) {}
 }
 
 /// A transport that performs no I/O and reports a typed failure.
@@ -129,7 +147,9 @@ impl Transport for DisabledTransport {
         Err(self.reason)
     }
 
-    fn beacon(&self, _asset_url: &str) {}
+    fn beacon(&self, _asset_url: &str, report: Box<dyn FnOnce(TransportOutcome) + Send>) {
+        report(TransportOutcome::BeaconCompleted { ok: false });
+    }
 }
 
 /// Shared handle so the sink, the tray and the timer all use one transport.
@@ -175,7 +195,12 @@ mod tests {
     fn a_disabled_transport_beacon_is_a_silent_no_op() {
         // The beacon must never fail loudly: a check-in that cannot happen is
         // not an update problem.
-        DisabledTransport::new(ErrorCode::NetworkUnavailable).beacon("https://example.invalid/x");
+        DisabledTransport::new(ErrorCode::NetworkUnavailable).beacon(
+            "https://example.invalid/x",
+            Box::new(|outcome| {
+                assert_eq!(outcome, TransportOutcome::BeaconCompleted { ok: false });
+            }),
+        );
     }
 
     #[test]
@@ -215,11 +240,81 @@ mod tests {
 /// The verified artifact held between download and install: the version it
 /// was staged for, the plugin's `Update` handle, and the bytes that actually
 /// passed signature verification.
-#[cfg(not(test))]
 type StagedSlot =
     std::sync::Arc<std::sync::Mutex<Option<(String, tauri_plugin_updater::Update, Vec<u8>)>>>;
 
-#[cfg(not(test))]
+/// At most one task per operation; completed handles remain bounded too.
+#[derive(Default)]
+struct Operations {
+    closed: AtomicBool,
+    tasks: Mutex<[Option<tauri::async_runtime::JoinHandle<()>>; 3]>,
+}
+
+impl Operations {
+    fn spawn(&self, slot: usize, task: impl std::future::Future<Output = ()> + Send + 'static) {
+        let mut tasks = self.tasks.lock().expect("operation tasks poisoned");
+        if self.closed.load(Ordering::SeqCst) {
+            return;
+        }
+        if let Some(previous) = tasks[slot].take() {
+            previous.abort();
+        }
+        tasks[slot] = Some(tauri::async_runtime::spawn(task));
+    }
+
+    fn close(&self) {
+        self.closed.store(true, Ordering::SeqCst);
+        for task in self
+            .tasks
+            .lock()
+            .expect("operation tasks poisoned")
+            .iter_mut()
+        {
+            if let Some(task) = task.take() {
+                task.abort();
+            }
+        }
+    }
+}
+
+/// The initial artifact is policy-validated separately. Redirects must retain
+/// HTTPS and the same exact host allowlist, including on the plugin download.
+fn artifact_redirect_allowed(url: &reqwest::Url) -> bool {
+    url.scheme() == "https"
+        && url.username().is_empty()
+        && url.password().is_none()
+        && url.port_or_known_default() == Some(443)
+        && url
+            .host_str()
+            .is_some_and(|host| crate::update_policy::ALLOWED_ARTIFACT_HOSTS.contains(&host))
+}
+
+fn redirect_policy(endpoint: reqwest::Url) -> reqwest::redirect::Policy {
+    reqwest::redirect::Policy::custom(move |attempt| {
+        if attempt.previous().len() >= 5 {
+            return attempt.error("updater redirect limit");
+        }
+        let first = attempt.previous().first();
+        let is_manifest = first == Some(&endpoint);
+        #[cfg(feature = "native-test")]
+        let is_manifest = is_manifest || first.is_some_and(|url| url.origin() == endpoint.origin());
+        let allowed = if is_manifest {
+            // An explicitly local fixture may redirect only within its own
+            // origin. A configured manifest cannot redirect to another host.
+            attempt.url().origin() == endpoint.origin()
+                && attempt.url().username().is_empty()
+                && attempt.url().password().is_none()
+        } else {
+            artifact_redirect_allowed(attempt.url())
+        };
+        if allowed {
+            attempt.follow()
+        } else {
+            attempt.error("updater redirect refused")
+        }
+    })
+}
+
 pub struct PluginTransport<R: tauri::Runtime> {
     app: tauri::AppHandle<R>,
     /// The verified bytes from the last successful download.
@@ -229,34 +324,71 @@ pub struct PluginTransport<R: tauri::Runtime> {
     /// would then be installed WITHOUT the verification the operator
     /// consented on the strength of.
     staged_handle: StagedSlot,
+    /// The exact release whose unmodified manifest the policy validated.
+    checked_handle: Arc<std::sync::Mutex<Option<tauri_plugin_updater::Update>>>,
     /// False until the operator lands the Ed25519 public key. The plugin
     /// refuses an unverifiable artifact itself; this makes the refusal happen
     /// at the seam, where the journal entry is legible.
     signing_key_present: bool,
+    operations: Arc<Operations>,
+    #[cfg(feature = "native-test")]
+    fixture: Option<Arc<crate::native_fixture::NativeFixture>>,
 }
 
-#[cfg(not(test))]
 impl<R: tauri::Runtime> PluginTransport<R> {
     /// Wrap an app handle.
     pub fn new(app: tauri::AppHandle<R>, signing_key_present: bool) -> Self {
         Self {
             app,
             staged_handle: std::sync::Arc::new(std::sync::Mutex::new(None)),
+            checked_handle: Arc::new(std::sync::Mutex::new(None)),
             signing_key_present,
+            operations: Arc::new(Operations::default()),
+            #[cfg(feature = "native-test")]
+            fixture: None,
         }
+    }
+
+    #[cfg(feature = "native-test")]
+    pub fn with_native_fixture(
+        app: tauri::AppHandle<R>,
+        fixture: Arc<crate::native_fixture::NativeFixture>,
+    ) -> Self {
+        let mut transport = Self::new(app, fixture.signing_key_present());
+        transport.fixture = Some(fixture);
+        transport
     }
 }
 
-#[cfg(not(test))]
 impl<R: tauri::Runtime> Transport for PluginTransport<R> {
     fn fetch_manifest(&self, channel: &str, report: Box<dyn FnOnce(TransportOutcome) + Send>) {
         use tauri_plugin_updater::UpdaterExt as _;
 
         let app = self.app.clone();
         let channel = channel.to_string();
-        tauri::async_runtime::spawn(async move {
+        let checked_slot = Arc::clone(&self.checked_handle);
+        let operations = Arc::clone(&self.operations);
+        self.operations.spawn(0, async move {
             let started = std::time::Instant::now();
-            let builder = match app.updater_builder().build() {
+            let base = crate::updater::resolve_manifest_base_url(
+                std::env::var(crate::updater::MANIFEST_URL_ENV_VAR)
+                    .ok()
+                    .as_deref(),
+            );
+            let endpoint = crate::updater::manifest_url(&base, &channel);
+            let endpoint: reqwest::Url = endpoint.parse().expect("resolved manifest URL");
+            let redirect_endpoint = endpoint.clone();
+            let builder = match app
+                .updater_builder()
+                .target(crate::updater::current_target())
+                .version_comparator(|_, _| true)
+                .timeout(std::time::Duration::from_secs(30))
+                .configure_client(move |client| {
+                    client.redirect(redirect_policy(redirect_endpoint.clone()))
+                })
+                .endpoints(vec![endpoint])
+                .and_then(|builder| builder.build())
+            {
                 Ok(builder) => builder,
                 Err(_) => {
                     // A misconfigured updater (bad endpoint, absent pubkey) is
@@ -268,34 +400,31 @@ impl<R: tauri::Runtime> Transport for PluginTransport<R> {
                     return;
                 }
             };
-            match builder.check().await {
+            let result = builder.check().await;
+            if operations.closed.load(Ordering::SeqCst) {
+                return;
+            }
+            match result {
                 Ok(Some(update)) => {
-                    let body = serde_json::json!({
-                        "schema_version": 1,
-                        "channel": channel,
-                        "version": update.version,
-                        "notes": update.body.unwrap_or_default(),
-                        "pub_date": update.date.map(|d| d.to_string()).unwrap_or_default(),
-                        "hardware_revalidation": false,
-                        "rollout_percent": 100,
-                        "platforms": {
-                            update.target.clone(): {
-                                "signature": update.signature,
-                                "url": update.download_url.to_string(),
-                            }
+                    // Preserve rollout, hardware warnings, channel and every
+                    // platform exactly as published. The policy validates them.
+                    let body = update.raw_json.to_string();
+                    {
+                        let mut slot = checked_slot.lock().expect("checked slot poisoned");
+                        if operations.closed.load(Ordering::SeqCst) {
+                            return;
                         }
-                    });
+                        *slot = Some(update);
+                    }
                     report(TransportOutcome::Manifest {
-                        body: body.to_string(),
+                        body,
                         duration_ms: started.elapsed().as_millis() as u64,
                     });
                 }
-                // No update is not a failure: the policy has an `up_to_date`
-                // state and journals `check_ok`. Reporting an error here would
-                // show the operator a problem where there is none.
-                Ok(None) => report(TransportOutcome::Manifest {
-                    body: String::new(),
-                    duration_ms: started.elapsed().as_millis() as u64,
+                // Static manifests must contain a release, including when it
+                // equals the running version. The policy compares versions.
+                Ok(None) => report(TransportOutcome::ManifestFailed {
+                    code: ErrorCode::ManifestMalformed,
                 }),
                 Err(_) => report(TransportOutcome::ManifestFailed {
                     code: ErrorCode::NetworkUnavailable,
@@ -307,53 +436,73 @@ impl<R: tauri::Runtime> Transport for PluginTransport<R> {
     fn download(
         &self,
         version: &str,
-        _url: &str,
-        _signature: &str,
+        url: &str,
+        signature: &str,
         report: Box<dyn FnOnce(TransportOutcome) + Send>,
     ) {
-        use tauri_plugin_updater::UpdaterExt as _;
-
         if !self.signing_key_present {
             report(TransportOutcome::DownloadFailed {
                 version: version.to_string(),
-                code: ErrorCode::SignatureRejected,
+                code: ErrorCode::SignatureKeyMissing,
             });
             return;
         }
 
-        let app = self.app.clone();
+        let checked = self
+            .checked_handle
+            .lock()
+            .expect("checked slot poisoned")
+            .take();
+        let Some(mut update) = checked.filter(|update| {
+            artifact_identity_matches(
+                version,
+                url,
+                signature,
+                &update.version,
+                update.download_url.as_str(),
+                &update.signature,
+            )
+        }) else {
+            report(TransportOutcome::SignatureRejected {
+                version: version.to_string(),
+            });
+            return;
+        };
+        update.timeout = Some(std::time::Duration::from_secs(300));
+        #[cfg(feature = "native-test")]
+        if let Some(fixture) = &self.fixture {
+            // Identity was checked against the canonical manifest above.
+            // Only fixture I/O routing changes: the REAL plugin still verifies
+            // these local bytes with the signature and public key it parsed.
+            update.download_url = fixture.artifact_url();
+            update.no_proxy = true;
+            update.timeout = Some(std::time::Duration::from_secs(10));
+        }
         let version = version.to_string();
         let staged_slot = std::sync::Arc::clone(&self.staged_handle);
-        tauri::async_runtime::spawn(async move {
+        let operations = Arc::clone(&self.operations);
+        self.operations.spawn(1, async move {
             let started = std::time::Instant::now();
-            let Ok(builder) = app.updater_builder().build() else {
-                report(TransportOutcome::DownloadFailed {
-                    version,
-                    code: ErrorCode::ManifestMalformed,
-                });
-                return;
-            };
-            let update = match builder.check().await {
-                Ok(Some(update)) => update,
-                Ok(None) | Err(_) => {
-                    report(TransportOutcome::DownloadFailed {
-                        version,
-                        code: ErrorCode::NetworkUnavailable,
-                    });
-                    return;
-                }
-            };
             // The plugin verifies the signature DURING download and fails the
             // future when it does not match — which is exactly the case the
             // operator must be able to distinguish from a network error, so it
             // gets its own outcome rather than a generic failure.
-            match update.download(|_, _| {}, || {}).await {
+            let result = update.download(|_, _| {}, || {}).await;
+            if operations.closed.load(Ordering::SeqCst) {
+                return;
+            }
+            match result {
                 Ok(bytes) => {
                     let byte_count = bytes.len() as u64;
                     // Keep exactly the bytes that verified. install() swaps
                     // these and nothing else.
-                    *staged_slot.lock().expect("staged slot poisoned") =
-                        Some((version.clone(), update, bytes));
+                    {
+                        let mut slot = staged_slot.lock().expect("staged slot poisoned");
+                        if operations.closed.load(Ordering::SeqCst) {
+                            return;
+                        }
+                        *slot = Some((version.clone(), update, bytes));
+                    }
                     report(TransportOutcome::Staged {
                         version,
                         bytes: byte_count,
@@ -367,6 +516,7 @@ impl<R: tauri::Runtime> Transport for PluginTransport<R> {
                 // a network failure — so both map to SignatureRejected.
                 Err(
                     tauri_plugin_updater::Error::Minisign(_)
+                    | tauri_plugin_updater::Error::Base64(_)
                     | tauri_plugin_updater::Error::SignatureUtf8(_),
                 ) => report(TransportOutcome::SignatureRejected { version }),
                 Err(_) => report(TransportOutcome::DownloadFailed {
@@ -378,6 +528,14 @@ impl<R: tauri::Runtime> Transport for PluginTransport<R> {
     }
 
     fn install(&self, version: &str) -> Result<(), ErrorCode> {
+        self.install_with_choice(version, crate::update_policy::ConsentChoice::InstallOnQuit)
+    }
+
+    fn install_with_choice(
+        &self,
+        version: &str,
+        choice: crate::update_policy::ConsentChoice,
+    ) -> Result<(), ErrorCode> {
         if !self.signing_key_present {
             return Err(ErrorCode::SignatureRejected);
         }
@@ -394,34 +552,123 @@ impl<R: tauri::Runtime> Transport for PluginTransport<R> {
         if staged_version != version {
             return Err(ErrorCode::SignatureRejected);
         }
-        update.install(bytes).map_err(|_| ErrorCode::DownloadFailed)
+        #[cfg(feature = "native-test")]
+        if let Some(fixture) = &self.fixture {
+            return fixture.record_install(version, choice, &bytes);
+        }
+        update
+            .restart_after_install(choice == crate::update_policy::ConsentChoice::RestartAndInstall)
+            .install(bytes)
+            .map_err(|_| ErrorCode::InstallFailed)
     }
 
-    fn beacon(&self, asset_url: &str) {
-        // Fire and forget, and that is a design commitment rather than
-        // laziness: the check-in's whole signal is the asset's DOWNLOAD COUNT
-        // on the Releases API, so the response body is discarded and a failure
-        // is simply a data point that did not happen. It must never journal an
-        // error, retry, or delay the update flow.
+    fn beacon(&self, asset_url: &str, report: Box<dyn FnOnce(TransportOutcome) + Send>) {
+        // The response contributes only a bounded local journal diagnostic.
+        // Discard its body; never retry, delay updates, or surface a UI error.
         //
         // It also carries nothing: no install_id, no headers we add, no body.
         // The privacy claim in spec §6 is only true if this stays a bare GET.
         let url = asset_url.to_string();
-        tauri::async_runtime::spawn(async move {
+        #[cfg(feature = "native-test")]
+        let url = self
+            .fixture
+            .as_ref()
+            .map_or(url, |fixture| fixture.beacon_url());
+        self.operations.spawn(2, async move {
+            #[cfg(feature = "native-test")]
+            let redirects = redirect_policy(url.parse().expect("generated beacon URL"));
+            #[cfg(not(feature = "native-test"))]
+            let redirects = reqwest::redirect::Policy::custom(|attempt| {
+                if attempt.previous().len() < 5 && artifact_redirect_allowed(attempt.url()) {
+                    attempt.follow()
+                } else {
+                    attempt.error("beacon redirect refused")
+                }
+            });
             let Ok(client) = reqwest::Client::builder()
                 .timeout(std::time::Duration::from_secs(10))
+                .redirect(redirects)
                 .build()
             else {
+                report(TransportOutcome::BeaconCompleted { ok: false });
                 return;
             };
-            let _ = client.get(url).send().await;
+            let ok = client
+                .get(url)
+                .send()
+                .await
+                .is_ok_and(|response| response.status().is_success());
+            report(TransportOutcome::BeaconCompleted { ok });
         });
     }
+
+    fn shutdown(&self) {
+        self.operations.close();
+        self.checked_handle
+            .lock()
+            .expect("checked slot poisoned")
+            .take();
+        self.staged_handle
+            .lock()
+            .expect("staged slot poisoned")
+            .take();
+    }
+}
+
+/// Bind all policy-validated artifact fields before any download begins.
+pub fn artifact_identity_matches(
+    version: &str,
+    url: &str,
+    signature: &str,
+    checked_version: &str,
+    checked_url: &str,
+    checked_signature: &str,
+) -> bool {
+    version == checked_version && url == checked_url && signature == checked_signature
 }
 
 #[cfg(test)]
 mod transport_contract_tests {
     use super::*;
+
+    #[test]
+    fn redirects_cannot_leave_the_artifact_allowlist_or_downgrade_https() {
+        for allowed in crate::update_policy::ALLOWED_ARTIFACT_HOSTS {
+            assert!(artifact_redirect_allowed(
+                &format!("https://{allowed}/asset").parse().unwrap()
+            ));
+        }
+        for refused in [
+            "http://github.com/asset",
+            "https://github.com.evil.invalid/asset",
+            "https://user@github.com/asset",
+            "https://github.com:444/asset",
+            "http://127.0.0.1/asset",
+        ] {
+            assert!(!artifact_redirect_allowed(&refused.parse().unwrap()));
+        }
+    }
+
+    #[test]
+    fn a_republished_release_cannot_change_the_consented_artifact() {
+        let original = (
+            "1.35.0",
+            "https://github.com/o/r/releases/download/v1.35.0/a",
+            "signed-a",
+        );
+        assert!(artifact_identity_matches(
+            original.0, original.1, original.2, original.0, original.1, original.2
+        ));
+        for changed in [
+            ("1.36.0", original.1, original.2),
+            (original.0, "https://evil.invalid/a", original.2),
+            (original.0, original.1, "signed-b"),
+        ] {
+            assert!(!artifact_identity_matches(
+                original.0, original.1, original.2, changed.0, changed.1, changed.2
+            ));
+        }
+    }
 
     /// The beacon URL is built from a compile-time constant, so configuration
     /// cannot redirect it. Spec §6's privacy claim — "the install_id never
@@ -472,10 +719,11 @@ mod transport_contract_tests {
             TransportOutcome::SignatureRejected {
                 version: "1.0.0".to_string(),
             },
+            TransportOutcome::BeaconCompleted { ok: true },
         ];
         // Exhaustiveness is the assertion: adding a variant without deciding
         // which UpdateEvent it becomes should not compile in main.rs's
         // `report`, and this pins the count that mapping must cover.
-        assert_eq!(outcomes.len(), 5);
+        assert_eq!(outcomes.len(), 6);
     }
 }

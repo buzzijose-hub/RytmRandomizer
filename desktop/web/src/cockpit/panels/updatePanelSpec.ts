@@ -104,7 +104,7 @@ function updateBadge(slice: UpdateSlice): BadgeDict {
   const state = slice.state;
   if (state === null) return { label: 'dev loop', tone: 'neutral', icon: '•' };
   if (state.state === 'staged') return { label: 'update ready', tone: 'ok', icon: '⬆' };
-  if (state.state === 'check_failed' || state.state === 'stage_failed') {
+  if (state.state === 'failed' || state.state === 'check_failed' || state.state === 'stage_failed') {
     return { label: state.state, tone: 'warn', icon: '!' };
   }
   if (state.state === 'up_to_date') return { label: 'up to date', tone: 'ok', icon: '✓' };
@@ -139,6 +139,16 @@ export function bodySections(
   if (state === null) {
     return [rowsSection('Status', [UPDATE_COPY.devLoopBody])];
   }
+  if (state.state === 'failed' && state.error_code === 'signature_key_missing') {
+    return [
+      rowsSection('Status', [`Update ${state.version} found. This build has no update signing key; downloading and installing are unavailable.`]),
+      rowsSection(UPDATE_COPY.whatsNew, state.notes === '' ? [UPDATE_COPY.noNotes] : notesLines(state.notes)),
+      ...(state.hardware_revalidation ? [rowsSection('Hardware revalidation', [UPDATE_COPY.hardwareWarning, UPDATE_COPY.hardwareDoc])] : []),
+    ];
+  }
+  if (state.state === 'failed') {
+    return [rowsSection('Status', [`Update could not complete (${state.error_code ?? 'unknown_reason'}). Check again to retry.`])];
+  }
   if (state.state === 'check_failed' || state.state === 'stage_failed') {
     return [rowsSection('Status', [checkFailedLine(state.error_code ?? 'unknown_reason')])];
   }
@@ -164,6 +174,7 @@ export function bodySections(
     idle: 'Waiting for the first update check.',
     checking: 'Checking for updates.',
     update_available: 'An update is available. Waiting to download and verify it.',
+    skipped: `Update ${state.version} was skipped for this session.`,
     downloading: 'Downloading and verifying the update.',
     installing: 'Installing the update after the backend exits.',
     frozen: UPDATE_COPY.frozenBody,

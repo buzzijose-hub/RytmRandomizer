@@ -33,6 +33,8 @@ export const UPDATE_STATES = [
   'downloading',
   'staged',
   'stage_failed',
+  'failed',
+  'skipped',
   'installing',
   'frozen',
   'dev_loop',
@@ -152,6 +154,9 @@ export interface UpdateSlice {
 /** Journal tail bound — the panel shows recent activity, not history. */
 export const UPDATE_JOURNAL_LIMIT = 8;
 
+/** Native snapshot/diagnostic tail bound, independent of the short panel list. */
+export const UPDATE_SNAPSHOT_JOURNAL_LIMIT = 50;
+
 // ---------- Pure predicates over the contract shapes ----------
 
 /** Type guard for a value claiming to be an `UpdateState`. */
@@ -212,12 +217,27 @@ export function parseUpdateSnapshot(payload: unknown): UpdateSnapshot | null {
   const state = parseUpdateStateEvent(raw.state);
   if (state === null) return null;
   const journal: UpdateJournalRow[] = [];
-  for (const value of raw.journal) {
+  for (const value of raw.journal.slice(-UPDATE_SNAPSHOT_JOURNAL_LIMIT)) {
     const row = parseUpdateJournalRow(value);
     if (row === null) return null;
     journal.push(row);
   }
   return { state, journal, channel: raw.channel, frozen: raw.frozen };
+}
+
+/**
+ * Read the current local shell posture and sanitized journal without checking
+ * for updates or subscribing. Connection Doctor uses this even if the update
+ * panel has never mounted. The native journal owns detail-code sanitation;
+ * parsing projects only I8 fields and bounds the number of exported rows.
+ */
+export async function readUpdateSnapshot(): Promise<UpdateSnapshot | null> {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    return parseUpdateSnapshot(await invoke('update_snapshot'));
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -392,16 +412,11 @@ export function subscribeUpdateState(
   const refresh = async (): Promise<void> => {
     if (onSnapshot === undefined) return;
     const requestedGeneration = ++generation;
-    try {
-      const { invoke } = await import('@tauri-apps/api/core');
-      const snapshot = parseUpdateSnapshot(await invoke('update_snapshot'));
-      // A newer event/request supersedes an older snapshot response. An
-      // unmounted panel must not overwrite the next panel's state either.
-      if (!cancelled && requestedGeneration === generation && snapshot !== null) {
-        onSnapshot(snapshot);
-      }
-    } catch {
-      // No shell in the browser dev loop; keep the last evidenced state.
+    const snapshot = await readUpdateSnapshot();
+    // A newer event/request supersedes an older snapshot response. An
+    // unmounted panel must not overwrite the next panel's state either.
+    if (!cancelled && requestedGeneration === generation && snapshot !== null) {
+      onSnapshot(snapshot);
     }
   };
 

@@ -94,6 +94,9 @@ pub enum SidecarLaunch {
     Bundled(PathBuf),
     /// Cockpit composition with input-only capture enabled (dev fallback).
     DevPython(String),
+    /// Run the generated production entry stub without PyInstaller in the native harness.
+    #[cfg(feature = "native-test")]
+    NativeFixturePython { python: PathBuf, entry: PathBuf },
 }
 
 impl SidecarLaunch {
@@ -106,6 +109,10 @@ impl SidecarLaunch {
                     "`{python} -m rytm_randomizer.app --arm \
                      --cockpit-kit-capture-sidecar` (dev fallback)"
                 )
+            }
+            #[cfg(feature = "native-test")]
+            SidecarLaunch::NativeFixturePython { .. } => {
+                "native fixture: generated sidecar entry".into()
             }
         }
     }
@@ -367,6 +374,12 @@ pub fn sidecar_command(
                 "--cockpit-kit-capture-sidecar",
             ]);
             dev
+        }
+        #[cfg(feature = "native-test")]
+        SidecarLaunch::NativeFixturePython { python, entry } => {
+            let mut command = Command::new(python);
+            command.arg(entry);
+            command
         }
     };
     command
@@ -817,7 +830,15 @@ mod tests {
 
     #[test]
     fn a_sidecar_that_exits_within_the_grace_window_reports_exited() {
-        let mut child = std::process::Command::new("true")
+        #[cfg(windows)]
+        let mut command = {
+            let mut command = std::process::Command::new("cmd.exe");
+            command.args(["/D", "/C", "exit 0"]);
+            command
+        };
+        #[cfg(not(windows))]
+        let mut command = std::process::Command::new("true");
+        let mut child = command
             .stdin(std::process::Stdio::piped())
             .spawn()
             .expect("spawn a trivially-exiting child");

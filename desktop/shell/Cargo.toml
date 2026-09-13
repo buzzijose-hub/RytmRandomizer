@@ -17,6 +17,10 @@ path = "src/main.rs"
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
+[features]
+# Explicit debug-only native acceptance harness. Never enabled by installers.
+native-test = []
+
 [dependencies]
 tauri = { version = "2", features = ["tray-icon"] }
 tauri-plugin-shell = "2"
@@ -37,6 +41,7 @@ env_logger = "0.11"
 #                           no keys.
 tauri-plugin-updater = "2"
 sha2 = "0.10"
+semver = "1"
 # Already compiled into the binary via tauri-plugin-updater; declared so the
 # beacon's one-byte GET does not depend on a TRANSITIVE dependency that a
 # plugin bump could remove. Minimal features: the check-in needs a GET and

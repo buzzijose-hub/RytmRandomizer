@@ -202,7 +202,8 @@ def test_row_carries_the_estimator_meaning_inline(tmp_path: Path) -> None:
     meaning = estimator["meaning"]
     assert "not devices" in meaning
     assert "ESTIMATE" in meaning
-    assert "lower bound" in meaning
+    assert "not a guaranteed lower bound" in meaning
+    assert "can inflate" in meaning
 
 
 def test_script_header_states_the_estimator_meaning() -> None:
@@ -1072,3 +1073,20 @@ def test_the_channel_manifest_fixtures_pass_the_real_validator() -> None:
         assert release_lib.manifest_is_acceptable(
             violations
         ), f"fleet fixture {channel}.json would be refused by the pipeline: {blocking}"
+
+
+def test_fetch_releases_keeps_old_versions_after_the_first_hundred(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    urls: list[str] = []
+
+    def fetch(request: fleet_snapshot.urllib.request.Request, timeout: int = 0) -> _FakeResponse:
+        urls.append(request.full_url)
+        page = [{"tag_name": "v2.0.0"}] * 100 if len(urls) == 1 else [{"tag_name": "v1.0.0"}]
+        return _FakeResponse(json.dumps(page).encode())
+
+    monkeypatch.setattr(fleet_snapshot.urllib.request, "urlopen", fetch)
+    releases = fleet_snapshot.fetch_releases("owner/repo", None)
+    assert len(releases) == 101
+    assert releases[-1] == {"tag_name": "v1.0.0"}
+    assert [url.rsplit("=", 1)[1] for url in urls] == ["1", "2"]

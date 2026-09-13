@@ -18,3 +18,9 @@ pub mod update_journal;
 pub mod update_policy;
 pub mod update_transport;
 pub mod updater;
+
+#[cfg(all(feature = "native-test", not(debug_assertions)))]
+compile_error!("native-test is an isolated debug harness and cannot enter a release build");
+
+#[cfg(feature = "native-test")]
+pub mod native_fixture;

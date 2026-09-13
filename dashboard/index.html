@@ -153,7 +153,9 @@
       <strong>check-in</strong>. When the app checks for an update it also
       fetches a tiny per-version, per-OS marker file from the release, and
       GitHub increments that file&rsquo;s download counter. Nothing else is
-      sent &mdash; no identifier, no machine name, no telemetry payload.
+      added by the app &mdash; no install identifier, machine name, or telemetry
+      payload. GitHub still receives normal connection metadata such as the
+      source IP address.
     </p>
     <p>
       Those counters are <strong>cumulative</strong>, so this page charts the
@@ -169,7 +171,10 @@
       It is <strong>not a count of unique devices</strong>: a machine left
       running all day is indistinguishable from several machines used briefly,
       and a machine that is switched off contributes nothing. It cannot tell
-      you that any particular machine is on any particular version. The raw
+      you that any particular machine is on any particular version. Repeated
+      launches, manual checks, and public downloads can inflate the estimate;
+      offline use and opt-outs reduce it. It is not a guaranteed lower bound.
+      The raw
       check-in totals are the ground truth and are shown beside every estimate
       on this page.
     </p>

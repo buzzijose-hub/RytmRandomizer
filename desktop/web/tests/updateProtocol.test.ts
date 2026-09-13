@@ -65,6 +65,8 @@ describe('closed vocabularies', () => {
       'downloading',
       'staged',
       'stage_failed',
+      'failed',
+      'skipped',
       'installing',
       'frozen',
       'dev_loop',

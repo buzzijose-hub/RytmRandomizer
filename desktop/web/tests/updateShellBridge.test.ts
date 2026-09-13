@@ -47,6 +47,13 @@ describe('read-only snapshot contract', () => {
 });
 
 describe('Tauri event and snapshot composition', () => {
+  it.each(['failed', 'skipped'] as const)('accepts the actual Rust %s state without losing journal reasons', (state) => {
+    const payload = { ...snapshot(), state: { ...snapshot().state, state, error_code: 'signature_key_missing' },
+      journal: [{ ts: '2026-09-08T15:00:00Z', event: 'check_failed', version: '1.35.1', detail: '{"reason":"signature_key_missing"}' }],
+    };
+    expect(parseUpdateSnapshot(payload)).toEqual(payload);
+  });
+
   it('replays state emitted before mount without starting an update check', async () => {
     const command = vi.fn(() => snapshot());
     installTauriEventBridge(command);

@@ -85,6 +85,7 @@ from typing import Final, Literal, TypeAlias, cast
 
 __all__ = [
     "PERSISTED_STATE_CODES",
+    "PERSISTED_STATE_REFUSAL_METRIC_CODES",
     "PERSISTED_STATE_STORES",
     "PERSISTED_STATE_VERSION_FIELD",
     "PersistedStateCode",
@@ -105,6 +106,28 @@ __all__ = [
 
 PERSISTED_STATE_VERSION_FIELD: Final[str] = "schema_version"
 """Envelope key every persisted operator-state payload carries."""
+
+PERSISTED_STATE_REFUSAL_METRIC_CODES: Final[
+    Mapping[
+        str,
+        Literal[
+            "unreadable",
+            "unknown_shape",
+            "unknown_store",
+            "schema_newer_than_app",
+            "migration_failed",
+        ],
+    ]
+] = MappingProxyType(
+    {
+        "persisted_state.unreadable": "unreadable",
+        "persisted_state.unknown_shape": "unknown_shape",
+        "persisted_state.unknown_store": "unknown_store",
+        "persisted_state.schema_newer_than_app": "schema_newer_than_app",
+        "persisted_state.migration_failed": "migration_failed",
+    }
+)
+"""Shared conversion from policy refusal codes to bounded metric labels."""
 
 _IMPLICIT_FIRST_VERSION: Final[int] = 1
 """Version assumed for a payload that predates the envelope (rule 3).
