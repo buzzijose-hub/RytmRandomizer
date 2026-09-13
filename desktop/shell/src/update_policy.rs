@@ -690,33 +690,7 @@ fn is_rfc3339_utc(value: &str) -> bool {
 }
 
 fn is_acceptable_version(version: &str) -> bool {
-    if version.is_empty() || version.len() > MAX_VERSION_BYTES {
-        return false;
-    }
-    if !version
-        .chars()
-        .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '+'))
-    {
-        return false;
-    }
-    // Must start with a digit: `v1.2.3` and `-beta` are both rejected so the
-    // comparison below never has to guess.
-    if !version.starts_with(|c: char| c.is_ascii_digit()) {
-        return false;
-    }
-    // ...and must be a full MAJOR.MINOR.PATCH triple. A character-class check
-    // alone accepted "1.35", which the Python validator rejects — the two
-    // consumers of one schema disagreeing on what a version IS. The corpus
-    // fixture `version_not_semver.json` pins this.
-    let core = version.split(['-', '+']).next().unwrap_or_default();
-    let mut parts = core.split('.');
-    let triple = [parts.next(), parts.next(), parts.next()];
-    if parts.next().is_some() {
-        return false;
-    }
-    triple.iter().all(|part| {
-        part.is_some_and(|value| !value.is_empty() && value.chars().all(|c| c.is_ascii_digit()))
-    })
+    version.len() <= MAX_VERSION_BYTES && semver::Version::parse(version).is_ok()
 }
 
 /// Compare SemVer precedence, including numeric prerelease identifiers.
@@ -2136,6 +2110,32 @@ mod tests {
                 "url {url} should be rejected"
             );
         }
+    }
+
+    #[test]
+    fn manifest_versions_and_minimum_versions_follow_semver() {
+        for invalid in [
+            "1.35.0-",
+            "01.35.0",
+            "1.35.0-beta..1",
+            "1.35.0+",
+            "1.35.0-01",
+        ] {
+            let mut manifest: serde_json::Value =
+                serde_json::from_str(&manifest_json("1.35.0", 100)).unwrap();
+            manifest["version"] = invalid.into();
+            assert!(
+                validate_manifest(&manifest.to_string(), TARGET).is_err(),
+                "{invalid}"
+            );
+            manifest["version"] = "1.35.0".into();
+            manifest["minimum_version"] = invalid.into();
+            assert!(
+                validate_manifest(&manifest.to_string(), TARGET).is_err(),
+                "minimum {invalid}"
+            );
+        }
+        assert!(is_acceptable_version("1.35.0-beta.2+build.7"));
     }
 
     #[test]
