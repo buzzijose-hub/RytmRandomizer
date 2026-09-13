@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-13T16:39:47.023581+00:00",
+  "updated_at": "2026-09-13T16:44:30.8061852+00:00",
   "phase": "review-required",
   "source_checkpoint": "7cc10e929ece79ec2f67b1342c547597529652f0",
   "incoming_author_head": "a270ff114966d51f143b67c51d7dcd52db3954c0",
-  "replacement_pr": null,
+  "replacement_pr": 248,
   "original_updater_prs": [
     239,
     241,
@@ -41,12 +41,12 @@
     },
     {
       "name": "updater",
-      "pr": null,
-      "head": "ae60f111cc05b3f6fffcf54a7569640cdb35833b",
-      "status": "local-gates-passed-publication-hosted-review-pending",
+      "pr": 248,
+      "head": "af43f81820f41345b6fbea46be9892be8a672605",
+      "status": "published-local-gates-passed-protected-review-required",
       "remaining": [
-        "Publish one verified replacement and collect hosted checks",
-        "Resolve original stack mapping",
+        "Follow PR248 for current hosted checks and original-stack closure",
+        "Close superseded originals only after hosted checks pass and latest heads are included",
         "Protected review including explicit architecture-exception approval"
       ]
     },

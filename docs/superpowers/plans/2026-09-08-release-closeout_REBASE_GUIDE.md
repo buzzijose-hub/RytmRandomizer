@@ -1,10 +1,12 @@
 # Updater collaborator migration guide
 
-> Status: in-flight — replacement publication pending
+> Status: in-flight — replacement #248 published; protected review required
 
 Per [PLAN_REQUIREMENTS.md](../../PLAN_REQUIREMENTS.md), Gate 15. The replacement
 branch is `codex/autoupdate-complete-bundle`, based on `modularize-v1.34`.
-No replacement PR number is recorded until GitHub has the verified result.
+The verified replacement is [PR #248](https://github.com/buzzijose-hub/RytmRandomizer/pull/248).
+Its local gates passed and Eddie's review was requested. The linked PR is the
+authority for current hosted-check, review and original-stack closure status.
 
 | Original PR | Scope | Disposition |
 | --- | --- | --- |
@@ -15,8 +17,9 @@ No replacement PR number is recorded until GitHub has the verified result.
 
 The original inspected stack ended at `6d1c6228`; subsequent author snapshots
 included `17891251` and `a270ff11`. Integration uses merges to preserve authorship.
-The original PRs remain open until the root links a verified replacement; only
-then update this mapping and close the superseded stack with the replacement URL.
+All four original PRs map to #248. They may be closed as superseded after the
+replacement's required hosted checks pass and their latest heads are confirmed
+included. Link #248 from each original; do not discard a subsequent author commit.
 
 For a later collaborator change, fetch and compare its exact source revision
 against the replacement before applying it. Do not replay all original commits

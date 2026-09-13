@@ -65,8 +65,9 @@ records the exact artifact and still-blank physical checklist. Eddie approved
 its required review remains pending. Software receipts do not grant hardware
 validation or approval to another source revision.
 
-The updater program from #239/#241/#242/#243 is being consolidated into one
-replacement against `modularize-v1.34`, preserving original authorship. Repairs
+The updater program from #239/#241/#242/#243 is published as
+[PR #248](https://github.com/buzzijose-hub/RytmRandomizer/pull/248) against
+`modularize-v1.34`, preserving original authorship. Repairs
 connect native scheduling, actual manifest policy, verified artifact retention,
 consent/teardown, authoritative frontend snapshots and release verification.
 Final local validation source `7cc10e92` passed 9,922 Python tests with six skips

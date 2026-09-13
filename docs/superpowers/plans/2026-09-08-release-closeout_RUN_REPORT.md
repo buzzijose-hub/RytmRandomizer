@@ -27,11 +27,13 @@ Browser passed 32 tests with two existing skips in 52.6s. Those skips are the
 keyboard skeleton and the armed journey requiring absent virtual MIDI; no
 updater or native case is skipped. Current native units, the 32-case recorder
 matrix and both actual Windows PE handoffs pass. Final Rust format/test/clippy, Ruff/Black/isort, strict Pyright on 51 production
-modules and the required dead-code scan all passed. Updater replacement
-publication, hosted checks and protected review remain pending. Production NSIS/macOS/Linux installer evidence
+modules and the required dead-code scan all passed. The replacement is published
+as [PR #248](https://github.com/buzzijose-hub/RytmRandomizer/pull/248), with Eddie's
+review requested. Use that PR for current hosted checks and protected review.
+Production NSIS/macOS/Linux installer evidence
 also remains outside the verified PE-fixture scope.
 No all-gates PASS is claimed,
-and the old stack remains open until a verified replacement is linked.
+and original-stack closure requires passing hosted checks and latest-head inclusion.
 
 Forge #238 was approved by Eddie at `2026-09-08T14:53:23Z` and merged at
 `14:53:39Z` as `b1d6ff5678f80378176038fb13d6ef78d13c0abc`. Its empty-bank UI
@@ -72,7 +74,7 @@ PR merge or approve its architecture exception.
 | Final browser suite | 32 passed / two existing skips in 52.6s. | Skips: keyboard skeleton and virtual-MIDI-dependent armed journey; no updater/native skips. |
 | Digitakt hosted CI | All checks passed for `15484906`, including push and pull-request `required-checks`. | `REVIEW_REQUIRED`; protected approval is still outstanding. |
 | Final local static/dead-code checks | Ruff, Black (916 files), isort, strict Pyright (51 modules), Rust format/test/clippy and Vulture all passed. | Test-only cleanup `ae60f111` retained fixture execution/assertions; 80 targeted release tests passed in 0.65s. |
-| Replacement publication/hosted checks | Pending. | Local gates do not supply hosted checks, owner exception approval or protected merge. |
+| Replacement publication/hosted checks | #248 published from `af43f818`; Eddie requested. Pre-push passed 855 architecture and 696 non-fast items (including the 685 parity items). | Follow the linked PR for current checks and original-stack closure. Local gates do not supply owner approval or protected merge. |
 
 The new studio package `show-kit-forge-studio-c79597b69d05` identifies full
 source `c79597b69d055c32b8175fd665c77f20c384677c`:

@@ -15,10 +15,10 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 
 | Date | Plan | Status | PR |
 |---|---|---|---|
-| 2026-09-08 | [release-closeout](2026-09-08-release-closeout.md) | in-flight — resumed September 13; final integration/review pending | #238–243; #245 follow-up |
-| 2026-09-08 | [release-closeout learning and replay](2026-09-08-release-closeout_LEARNING_REPORT.md) | in-flight — lessons retained; final clean-tree verification pending | #238–243; #245 follow-up |
-| 2026-09-08 | [release-closeout collaborator guide](2026-09-08-release-closeout_REBASE_GUIDE.md) | in-flight — replacement PR and stack mapping pending | #239, #241–243 |
-| 2026-09-07 | [autoupdate-implementation](2026-09-07-autoupdate-implementation.md) | in-flight — implemented; replacement closeout/review pending | #239, #241–243 |
+| 2026-09-08 | [release-closeout](2026-09-08-release-closeout.md) | in-flight — local verification passed; protected review required | #238–243; #245; replacement #248 |
+| 2026-09-08 | [release-closeout learning and replay](2026-09-08-release-closeout_LEARNING_REPORT.md) | in-flight — lessons and verified replay retained; review required | #238–243; #245; #248 |
+| 2026-09-08 | [release-closeout collaborator guide](2026-09-08-release-closeout_REBASE_GUIDE.md) | in-flight — original updater stack maps to #248 | #239, #241–243; #248 |
+| 2026-09-07 | [autoupdate-implementation](2026-09-07-autoupdate-implementation.md) | in-flight — implemented and locally verified; review at #248 | #239, #241–243; #248 |
 | 2026-09-04 | [show-kit-forge](2026-09-04-show-kit-forge.md) | merged software; hardware observations pending | #238; #245 follow-up |
 | 2026-08-26 | [targeted-live-kit-mutation](2026-08-26-targeted-live-kit-mutation.md) | in-flight — software-complete / hardware-blocked | #237 |
 | 2026-08-26 | [cockpit-live-genome-profile-catalog](2026-08-26-cockpit-live-genome-profile-catalog.md) | superseded by targeted-live-kit-mutation | #237 |

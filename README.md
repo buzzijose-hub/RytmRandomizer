@@ -430,7 +430,9 @@ PE handoff scenarios passed in 8.2 seconds. Combined Python, frontend and browse
 suites also passed. Final local static checks passed; hosted review gates, production keys and
 production NSIS/macOS/Linux installer evidence remain pending; the
 [closeout report](docs/superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md)
-records the exact scope. This closeout publishes no production update.
+records the exact scope. [PR #248](https://github.com/buzzijose-hub/RytmRandomizer/pull/248)
+contains the complete updater replacement and its current review/check status.
+This closeout publishes no production update.
 
 The optional check-in is a separate GitHub release-asset request for the
 running version/platform. `RYTM_RAND_UPDATE_BEACON=off` disables it while
