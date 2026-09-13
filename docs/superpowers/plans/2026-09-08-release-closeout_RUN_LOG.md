@@ -99,6 +99,44 @@ reconstructed as a pass.
   it does not prove production NSIS, macOS or Linux installation. A new combined
   full Python run is in progress; no result is claimed before it finishes.
 
-Pending: final composed full/browser/linter validation, replacement PR and original-stack mapping,
+- 2026-09-13: Repeated full Python at validation
+  `7cc10e929ece79ec2f67b1342c547597529652f0` passed 9,922 tests with six skips
+  and six warnings in 278.98 seconds (`combined-passing-full.log`). The actual
+  touched-coverage gate passed all 51 production files at 100% lines/branches;
+  the ratchet passed 99.46% pure branch against unchanged floor 99%. Version sync
+  confirmed four declarations at 1.34.0. This supersedes the earlier two-failure run.
+- 2026-09-13: Final combined frontend passed 1,010 tests across 71 files in
+  40.58 seconds, with 100% coverage of 3,519 statements, 2,641 branches, 1,203
+  functions and 3,155 lines. ESLint and build passed. Browser passed 32 cases with
+  two existing skips in 52.6 seconds: keyboard skeleton and armed journey needing
+  unavailable virtual MIDI. No updater/native case was skipped. Final Rust
+  format/test/clippy and Python lint/type/dead-code verification remain pending.
+
+- 2026-09-13: Final default Rust tests passed 186 cases (0.12s test runtime,
+  approximately 1m29s compilation); formatting passed. Clippy is still running.
+  Read-only GitHub inspection returned 404 for the releases-branch endpoint;
+  repository Actions variable-name and secret-name listings succeeded and were
+  empty. Owner release configuration remains pending; no secret values were
+  read and no production distribution was activated.
+
+- 2026-09-13: Final Rust formatting, 186 default tests and all-target Clippy
+  with warnings denied all passed (Clippy 1m16s). Validation Cargo resolved its
+  ignored lockfile; native 32+2 receipts used the updater lock, with the same
+  updater-plugin/Tauri versions 2.11.0/2.11.5. Ruff passed. Black/isort, strict
+  touched typing and the required dead-code scan are still pending.
+
+- 2026-09-13: Final Ruff, Black (916 files), isort and strict Pyright on all
+  51 touched production modules passed. Vulture initially identified two unused
+  fixture parameters in test_prepare_release.py; test-only commit `ae60f111`
+  declares those setup fixtures with `pytest.mark.usefixtures`, preserving the
+  helper and all assertions. The 80 focused release tests passed in 0.65 seconds,
+  and the full updater Vulture scan then exited zero with no findings. Local
+  Gates 1–8 and 10–18 are complete; Gate 9 remains pending explicit owner approval.
+
+- 2026-09-13: After merging `ae60f111`, combined Vulture also passed. The
+  validation diff from `7cc10e92` contains no production Python or desktop
+  changes, and frozen fixtures plus `.coveragerc` match the integration baseline.
+
+Pending: replacement publication, hosted checks and original-stack mapping,
 protected reviews/merges, platform installer evidence and operator-present
 studio validation. No production release or real MIDI action occurred.

@@ -1,6 +1,6 @@
 # September 8 release closeout
 
-> Status: in-flight — resumed September 13; final composed validation/review pending
+> Status: in-flight — resumed September 13; local checks passed; owner exceptions/hosted review pending
 
 Jose authorized review, repair, pushes, review requests, and normal protected merges of PRs #238–243. Upcoming Rytm/A4 shows take priority. This plan consolidates #239/#241/#242/#243 into one updater PR against `modularize-v1.34`, preserving original commit authorship. Forge (#238) and passive Digitakt support (#240) remain separate changes. No production release is part of this run.
 
@@ -54,25 +54,25 @@ and handoff without claiming an original pre-code audit occurred.
 
 ## Conformance tracking
 
-Per `docs/PLAN_REQUIREMENTS.md`, all 18 gates remain required. Unchecked items are pending verification, not claims of completion.
+Per `docs/PLAN_REQUIREMENTS.md`, all 18 gates remain required. Final local checks and scoped reviews complete Gates 1–8 and 10–18; Gate 9 requires owner exception approval. Hosted CI and protected review are still required before merge.
 
-- [ ] Gate 1 — touched-file branch coverage and project ratchet verified.
-- [ ] Gate 2 — V1.34 byte-identical; no fixture regeneration.
-- [ ] Gate 3 — lint, format, typing and frontend/Rust gates pass.
-- [ ] Gate 4 — dead code and obsolete placeholders reviewed.
-- [ ] Gate 5 — product/build/operator documentation accurate.
-- [ ] Gate 6 — types, immutable DTOs, passive imports preserved.
-- [ ] Gate 7 — operational decisions emit categorical diagnostics.
-- [ ] Gate 8 — regression tests exercise outcomes and real boundaries.
-- [ ] Gate 9 — existing package and dependency direction reviewed; explicit owner approval remains pending for the inherited `_version.py` top-level/import carve-out and `releases_branch_seed` root-directory exception. Digitakt separately requests approval for its closed stage-discriminator exemption. Passing enforcement tests does not approve these exceptions.
-- [ ] Gate 10 — dispatch vocabularies remain canonical.
-- [ ] Gate 11 — shared fixtures reused.
-- [ ] Gate 12 — constants remain explicitly typed.
-- [ ] Gate 13 — environment controls documented with safe defaults.
-- [ ] Gate 14 — maintainability review completed.
-- [ ] Gate 15 — findings, learning and handoff retained in repo.
-- [ ] Gate 16 — isolated ownership, bounded parallel reviews, single updater PR.
-- [ ] Gate 17 — existing abstractions surveyed and reused.
-- [ ] Gate 18 — architecture prose/diagrams match final implementation.
+- [x] Gate 1 — touched-file branch coverage and project ratchet verified.
+- [x] Gate 2 — V1.34 byte-identical; no fixture regeneration.
+- [x] Gate 3 — lint, format, typing and frontend/Rust gates pass.
+- [x] Gate 4 — dead code and obsolete placeholders reviewed.
+- [x] Gate 5 — product/build/operator documentation accurate.
+- [x] Gate 6 — types, immutable DTOs, passive imports preserved.
+- [x] Gate 7 — operational decisions emit categorical diagnostics.
+- [x] Gate 8 — regression tests exercise outcomes and real boundaries.
+- [ ] Gate 9 — existing package and dependency direction reviewed; explicit owner approval remains pending for the inherited `_version.py` top-level exception, `cockpit.ws -> _version` dependency edge and `releases_branch_seed` root-directory exception. Digitakt separately requests approval for its closed stage-discriminator exemption. Passing enforcement tests does not approve these exceptions.
+- [x] Gate 10 — dispatch vocabularies remain canonical.
+- [x] Gate 11 — shared fixtures reused.
+- [x] Gate 12 — constants remain explicitly typed.
+- [x] Gate 13 — environment controls documented with safe defaults.
+- [x] Gate 14 — maintainability review completed.
+- [x] Gate 15 — findings, learning and handoff retained in repo.
+- [x] Gate 16 — isolated ownership, bounded parallel reviews, single updater PR.
+- [x] Gate 17 — existing abstractions surveyed and reused.
+- [x] Gate 18 — architecture prose/diagrams match final implementation.
 
 Done means software repairs and combined checks pass, a precise studio artifact and ordered handoff exist, and protected merges have completed or the exact external blocker is documented. Hardware save/recapture/audition remains human evidence; favoriting is never recorded as a physical save.

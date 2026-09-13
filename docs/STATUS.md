@@ -69,14 +69,16 @@ The updater program from #239/#241/#242/#243 is being consolidated into one
 replacement against `modularize-v1.34`, preserving original authorship. Repairs
 connect native scheduling, actual manifest policy, verified artifact retention,
 consent/teardown, authoritative frontend snapshots and release verification.
-Before the final author/main merge, 183 Rust unit tests, 885 frontend tests with
-100% configured coverage, and 32 real WebView2/native acceptance cases passed.
-After that merge, 1,009 frontend tests across 71 files passed with all configured
-coverage at 100%, and 695 targeted release/fleet/data/CI/store-registry tests
-passed. The combined full Python and final native/platform gates remain open.
-The acceptance fixture verifies real signatures but records terminal installation
-instead of changing the operating system. Final composed gates, production
-credentials, platform installation evidence and protected review remain separate.
+Final local validation source `7cc10e92` passed 9,922 Python tests with six skips
+in 278.98s; all 51 touched production files have 100% line/branch coverage and
+the 99.46% pure-branch result clears the unchanged 99% floor. Frontend passed
+1,010 tests across 71 files in 40.58s with all configured coverage at 100%; ESLint
+and build passed. Browser passed 32 tests with two existing skips in 52.6s:
+the keyboard skeleton and the armed journey requiring unavailable virtual MIDI.
+No updater or native case is skipped. The 32-case native recorder matrix and
+two actual signed Windows PE handoffs passed. Final local Rust/Python static checks passed. Updater hosted checks, protected
+review, production credentials and production
+NSIS/macOS/Linux installer evidence remain pending. No all-gates closeout is claimed.
 The [plan](superpowers/plans/2026-09-08-release-closeout.md),
 [state](superpowers/plans/2026-09-08-release-closeout_STATE.json) and
 [repair ledger](2026-09-08-updater-repair-ledger.md) identify the current checkpoint.

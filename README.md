@@ -393,8 +393,8 @@ recording, and ranking commands for one bounded session.
                                           WCAG 2.2 AA gate.
 
 🚧 Auto-updates                           Shell/client and verified release tooling;
-   software closeout                     native acceptance and production key
-                                          provisioning remain pending.
+   software closeout                     composed suites and native handoff pass;
+                                          hosted review/owner approval/production key pending.
 
 🔮 Phase 4 · Hardware Runtime             Dedicated device that loads .rymp
    next                                   from flash, runs an embedded C port
@@ -424,10 +424,13 @@ The checked-in public key is empty. This build can display eligible release
 metadata and its hardware warning, but explains that downloading and
 installing are unavailable. Release tooling now verifies actual signatures,
 artifact hashes, source/version and the complete target set before assembly;
-a genuine Minisign vector and modified-byte control passed. All 32 native Wry/WebView2 cases passed in 53.9 seconds using the real plugin
-verifier and inert terminal installation/restart recording.
-Production credentials, platform installation/restart validation and final
-combined checks remain pending. This closeout publishes no production update.
+a genuine Minisign vector and modified-byte control passed. The current 32-case
+native Wry/WebView2 matrix passed in 53.5 seconds, and both actual signed Windows
+PE handoff scenarios passed in 8.2 seconds. Combined Python, frontend and browser
+suites also passed. Final local static checks passed; hosted review gates, production keys and
+production NSIS/macOS/Linux installer evidence remain pending; the
+[closeout report](docs/superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md)
+records the exact scope. This closeout publishes no production update.
 
 The optional check-in is a separate GitHub release-asset request for the
 running version/platform. `RYTM_RAND_UPDATE_BEACON=off` disables it while

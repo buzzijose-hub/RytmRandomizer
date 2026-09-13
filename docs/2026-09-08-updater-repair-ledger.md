@@ -9,17 +9,17 @@ open until one verified replacement exists. No production update is published.
 
 | Finding | Repaired behavior | Evidence and remaining check |
 | --- | --- | --- |
-| Launch/four-hour dispatch missing | Monotonic schedule starts after transport attachment, with no catch-up burst. | 183-unit pre-merge checkpoint; final composed run pending. |
+| Launch/four-hour dispatch missing | Monotonic schedule starts after transport attachment, with no catch-up burst. | Current 186-test default Rust suite and 32-case native matrix passed. |
 | Reconstructed manifest erased rollout/hardware metadata | Pass plugin `raw_json` to policy. | Real native matrix covers eligibility, cohort and hardware warning. |
 | Second check could select a different artifact | Retain checked Update/version/URL/signature and verified bytes through install. | Real plugin verifier and modified-byte/wrong-key native cases passed. |
 | Overlapping checks and late callbacks replaced state | Single-flight operations and stale-callback refusal. | Unit regressions and native in-flight/cancellation cases passed. |
-| Restart choice and sidecar teardown diverged | Accepted exact consent uses shared teardown; wait for supervisor and child exit. | Native quit/now/crash/failure cases passed with recorded installer terminal. Actual OS install remains untested. |
+| Restart choice and sidecar teardown diverged | Accepted exact consent uses shared teardown; wait for supervisor and child exit. | Native quit/now/crash/failure cases passed with recorded installer terminal. Separate actual Windows PE install-on-quit/install-now cases both passed; production installers remain outside that scope. |
 | Failed teardown left reusable consent | Revoke failed/used consent and serialize repeated exits. | Unit/native lifecycle checkpoint passed. |
-| Frontend settings were local-only | Render native launch channel/freeze with restart guidance. | Merged frontend 1,009/71 files, all configured coverage metrics 100%. |
+| Frontend settings were local-only | Render native launch channel/freeze with restart guidance. | Final combined frontend 1,010/71 files, all configured coverage metrics 100%. |
 | Startup event/activity could be missed | Subscribe through actual Tauri IPC, then read snapshot; refuse stale replies. | SDK-level IPC tests and native hydrate/reload/reconnect cases passed. |
 | Consent disappeared before native acceptance | Await explicit boolean acknowledgment for the same version/choice. | Frontend retry/stale-ack and native consent cases passed. |
-| Native failed/skipped states were discarded | Recognize actual native vocabulary and keyless metadata-only discovery. | State regressions included in the merged 1,009-test frontend checkpoint. |
-| Beta versions used incomplete comparison | Use one SemVer parser/precedence path; ignore build metadata for ordering. | Source repaired through `075416ae`; final native/unit regression pending. |
+| Native failed/skipped states were discarded | Recognize actual native vocabulary and keyless metadata-only discovery. | State regressions included in the final 1,010-test frontend checkpoint. |
+| Beta versions used incomplete comparison | Use one SemVer parser/precedence path; ignore build metadata for ordering. | Source repaired through `075416ae`; current 186-test default Rust suite and native matrix passed. |
 | Key detection read an unset compile-time variable | Read the actual bundled `tauri.conf.json`. | Keyless native case confirms no download; production key remains empty. |
 | Loopback override accepted lookalike hosts | Validate parsed host/scheme, credentials/query/fragment and redirects. | Native fixture supplies explicit loopback transport; production signature/host rules remain. |
 | Release signing claimed success from secret presence | Generate actual Tauri signatures and verify collected bytes, source, version and four targets. | Merged 695-test Python suite covers release repairs; genuine Minisign positive/tamper-negative self-test passed earlier. |
@@ -29,30 +29,48 @@ open until one verified replacement exists. No production update is published.
 | “Guaranteed lower bound” misrepresented counters | Explain offline/opt-out undercounts and repeated/public-request inflation. | Dashboard/snapshot assertions passed; no unique-device claim. |
 | Regex HTML extraction tripped CodeQL | Use HTMLParser, including uppercase-tag/attribute cases. | Focused Python tests passed; final hosted CodeQL remains required. |
 | Windows child test assumed Unix `true` | Use platform-native trivial child process. | Native unit checkpoint passed. |
-| Beacon completions never reached history | Asynchronous closed success/failure callback; no retry or update gating. | Source repaired; final native journal regression pending. |
-| Missing signing key had no journal reason | Record existing categorical keyless refusal alongside discovery state. | Source repaired; final native regression pending. |
-| Concurrent rotation could lose journal rows | Share a writer lock across rotation and append, outside policy-state lock. | Source repaired; final concurrent-write regression pending. |
-| Doctor export omitted native activity | Read shared snapshot on export, project at most 50 sanitized rows; unavailable becomes null. | Doctor/SDK outcome tests passed in merged frontend suite: 1,009 tests, all configured coverage 100%. |
+| Beacon completions never reached history | Asynchronous closed success/failure callback; no retry or update gating. | Current 186-test Rust suite and 32-case native matrix passed, including repaired journal behavior. |
+| Missing signing key had no journal reason | Record existing categorical keyless refusal alongside discovery state. | Current 186-test Rust suite and 32-case native matrix passed; keyless discovery remains download-disabled. |
+| Concurrent rotation could lose journal rows | Share a writer lock across rotation and append, outside policy-state lock. | Concurrent-write regression passed in the current 186-test Rust suite. |
+| Doctor export omitted native activity | Read shared snapshot on export, project at most 50 sanitized rows; unavailable becomes null. | Doctor/SDK outcome tests passed in the final combined frontend suite: 1,010 tests, all configured coverage 100%. |
 
 ## Evidence boundary
 
-The September 8 native acceptance run passed **32 actual Wry/WebView2 cases in
-53.9s**, using the real shell, IPC and plugin signature verifier. Terminal OS
-installation/restart was recorded with harmless signed bytes. It does not prove
-an actual updater installation, Apple notarization, Windows publisher signing
-or production GitHub/CDN delivery. Missing native prerequisites fail; retired
-skipped browser placeholders are not counted as passing cases. The existing
-Windows desktop-shell CI job now includes native compilation/typechecking and
-these cases; hosted execution remains evidence to collect.
+Current validation source `7cc10e929ece79ec2f67b1342c547597529652f0`
+passed **9,922 Python tests / six skips in 278.98s**, including the repaired
+architecture checks. All **51 touched production files** passed the actual
+100% line/branch gate; the **99.46%** pure-branch result clears the unchanged
+**99%** floor. Earlier release/fleet/data/CI/store-registry regressions passed
+695 tests. Version sync confirms four declarations at 1.34.0.
 
-The September 13 pre-merge checkpoints were **183 Rust unit tests** and **885
-frontend tests / 67 files**, with all configured frontend coverage at **100%**.
-These precede Doctor and the final author/main merge. The merged frontend then
-passed **1,009 tests / 71 files in 50.72s**, with all configured coverage at
-**100%** (3,519 statements, 2,638 branches, 1,203 functions, 3,155 lines). Merged
-release/fleet/data/CI/store-registry Python tests passed **695 cases in 9.46s**.
-Combined full Python and final native/platform/hosted checks remain required; see the [run report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md)
-and [state](superpowers/plans/2026-09-08-release-closeout_STATE.json).
+Final combined frontend passed **1,010 tests / 71 files in 40.58s**, all configured
+coverage **100%** (3,519 statements, 2,641 branches, 1,203 functions, 3,155 lines).
+ESLint and build passed. Browser passed **32 cases / two existing skips in
+52.6s**: keyboard skeleton and an armed journey requiring unavailable virtual
+MIDI. No updater/native cases are skipped.
+
+The current **32 real Wry/WebView2 cases passed in 53.5s**, using the real shell,
+IPC and plugin signature verifier with recorded terminal operations. Separately,
+**both actual Windows PE handoffs passed in 8.2s**: install on quit and install
+now, with compiled/signed installer and successor processes. The
+[run report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md) identifies
+both SHA-256 hashes and the exact source/input set. This proves actual Windows
+plugin/PE handoff, not production NSIS/MSI, macOS/Linux installation, publisher
+signing/notarization or production GitHub/CDN delivery.
+
+Final default Rust tests passed **186 cases**; formatting and all-target Clippy
+with warnings denied also passed. Ruff, Black, isort, strict Pyright on all 51 production modules and the required
+Vulture scan also passed after test-only fixture cleanup `ae60f111`; the 80
+focused release tests passed in 0.65s with setup and assertions preserved.
+Updater replacement publication, hosted checks and owner approval remain pending. The existing Windows CI job includes native compilation/typechecking
+and acceptance; hosted execution must still be collected.
+
+Read-only GitHub inspection on September 13 returned **404** for the `releases`
+branch endpoint. Repository Actions variable-name and secret-name listings both
+succeeded and were empty. Production distribution activation therefore remains
+an owner release-configuration task; no secret values were inspected and no
+production release was published. See the
+[state](superpowers/plans/2026-09-08-release-closeout_STATE.json) for pending gates.
 
 The current separate Forge studio artifact is `show-kit-forge-studio-c79597b69d05`,
 source `c79597b69d055c32b8175fd665c77f20c384677c`, tree-identical to #245 `38397dbb`.

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-13T16:28:05.957447+00:00",
-  "phase": "integration-and-final-validation",
-  "source_checkpoint": "f256db40f4949ff18ffb9031bd5a38b09667de98",
+  "updated_at": "2026-09-13T16:39:47.023581+00:00",
+  "phase": "review-required",
+  "source_checkpoint": "7cc10e929ece79ec2f67b1342c547597529652f0",
   "incoming_author_head": "a270ff114966d51f143b67c51d7dcd52db3954c0",
   "replacement_pr": null,
   "original_updater_prs": [
@@ -42,23 +42,22 @@
     {
       "name": "updater",
       "pr": null,
-      "head": "f256db40f4949ff18ffb9031bd5a38b09667de98",
-      "status": "final-validation-pending",
+      "head": "ae60f111cc05b3f6fffcf54a7569640cdb35833b",
+      "status": "local-gates-passed-publication-hosted-review-pending",
       "remaining": [
-        "Final full Python/browser/linter gates and hosted checks",
-        "Publish one verified replacement",
+        "Publish one verified replacement and collect hosted checks",
         "Resolve original stack mapping",
-        "Protected review including architecture-exception requests"
+        "Protected review including explicit architecture-exception approval"
       ]
     },
     {
       "name": "combined-validation",
       "pr": null,
-      "head": "54a13ab03b84310b36d12a819cc0cafeb5991a27",
-      "status": "final-checks-running",
+      "head": "7cc10e929ece79ec2f67b1342c547597529652f0",
+      "status": "local-validation-passed",
       "remaining": [
-        "Full Python repeat, browser and linter validation",
-        "Local-only composition; never publish this validation branch as another PR"
+        "Local-only composition; never publish this validation branch as another PR",
+        "Later test-only fixture cleanup ae60f111 passed 80 focused release tests and Vulture; no production behavior changed"
       ]
     }
   ],
@@ -108,13 +107,13 @@
     {
       "boundary": "merged-python-targeted",
       "result": "695 passed in 9.46 seconds",
-      "scope": "Release, fleet, data, CI and persisted-store registry; combined full Python remains pending",
+      "scope": "Release, fleet, data, CI and persisted-store registry; focused checkpoint superseded by final full Python pass",
       "receipt": "release-closeout-evidence/updater-merged-targeted.log"
     },
     {
       "boundary": "first-combined-python",
       "result": "9,919 passed; two architecture failures; six skips in 305.37 seconds",
-      "scope": "At 636e4e4a; data re-export and plan-index failures repaired in a928e0f1; repeated full run pending",
+      "scope": "At 636e4e4a; data re-export and plan-index failures repaired in a928e0f1; superseded by passing 7cc10e92 full run",
       "receipt": "release-closeout-evidence/combined-final-full.log"
     },
     {
@@ -156,8 +155,74 @@
     {
       "boundary": "frontend-build",
       "result": "Merged frontend build passed",
-      "scope": "After 1,009-test merged frontend coverage checkpoint; browser final checks remain pending",
+      "scope": "Earlier build after 1,009-test frontend checkpoint; final combined frontend/browser receipts are recorded separately",
       "receipt": "release-closeout-evidence/frontend-merged-build.log"
+    },
+    {
+      "boundary": "final-combined-python",
+      "result": "9,922 passed; six skipped; six warnings in 278.98 seconds",
+      "scope": "Full suite at validation 7cc10e929ece79ec2f67b1342c547597529652f0, including architecture and frozen parity",
+      "receipt": "release-closeout-evidence/combined-passing-full.log"
+    },
+    {
+      "boundary": "final-touched-coverage-and-version",
+      "result": "Actual touched-file gate passed all 51 production files at 100% line/branch coverage; pure-branch ratchet passed 99.46% versus unchanged floor 99%; four version declarations agree at 1.34.0",
+      "scope": "Final validation 7cc10e92; check_touched_coverage.py, coverage ratchet and sync_version --check passed; project combined coverage 99.69494345669122%",
+      "receipt": "release-closeout-evidence/coverage-combined-passing.json"
+    },
+    {
+      "boundary": "final-combined-frontend",
+      "result": "1,010 passed / 71 files in 40.58 seconds; 3,519 statements, 2,641 branches, 1,203 functions, 3,155 lines all at 100%",
+      "scope": "Final validation source 7cc10e92; no updater cases skipped",
+      "receipt": "release-closeout-evidence/combined-frontend-coverage.log"
+    },
+    {
+      "boundary": "final-frontend-eslint",
+      "result": "Passed with zero allowed warnings",
+      "scope": "Final validation source 7cc10e92",
+      "receipt": "release-closeout-evidence/combined-frontend-lint.log"
+    },
+    {
+      "boundary": "final-frontend-build",
+      "result": "Passed",
+      "scope": "Final validation source 7cc10e92",
+      "receipt": "release-closeout-evidence/combined-frontend-build.log"
+    },
+    {
+      "boundary": "final-browser",
+      "result": "32 passed; two existing skips in 52.6 seconds",
+      "scope": "Keyboard skeleton and armed journey requiring absent virtual MIDI skipped; no updater/native skips; final validation source 7cc10e92",
+      "receipt": "release-closeout-evidence/combined-browser.log"
+    },
+    {
+      "boundary": "final-rust-default-and-format",
+      "result": "186 default Rust tests passed in 0.12 seconds after approximately 1m29s compilation; formatting passed",
+      "scope": "Final coordinator run; Clippy remains running and no combined static-gate completion is claimed",
+      "receipt": "Coordinator September 13 final Rust checkpoint"
+    },
+    {
+      "boundary": "production-distribution-configuration",
+      "result": "Releases-branch endpoint returned 404; repository Actions variable-name and secret-name listings succeeded and were empty",
+      "scope": "Read-only September 13 GitHub inspection; no secret values read; production distribution not activated",
+      "receipt": "Coordinator September 13 live GitHub configuration checkpoint"
+    },
+    {
+      "boundary": "final-rust-complete",
+      "result": "Formatting, 186 default Rust tests and all-target Clippy with warnings denied all passed; Clippy completed in 1m16s",
+      "scope": "Validation Cargo resolved its ignored lockfile; native 32+2 used updater lock, same updater-plugin/Tauri 2.11.0/2.11.5. Ruff also passed; remaining Python static checks pending.",
+      "receipt": "Coordinator September 13 final Rust/static checkpoint"
+    },
+    {
+      "boundary": "final-python-static-and-dead-code",
+      "result": "Ruff, Black (916 files), isort, strict Pyright on all 51 production modules and Vulture passed",
+      "scope": "Two unused test-only fixture parameters changed to pytest.mark.usefixtures in ae60f111 without removing setup/helpers/assertions; 80 focused release tests passed in 0.65s; final Vulture exited zero",
+      "receipt": "release-closeout-evidence/updater-final-vulture.log; release-closeout-evidence/updater-final-log-fixture.log; coordinator combined static logs"
+    },
+    {
+      "boundary": "final-combined-vulture-and-source-continuity",
+      "result": "Combined Vulture passed after ae60f111; no production Python/desktop diff from validated 7cc10e92; fixtures and .coveragerc match integration baseline",
+      "scope": "Test-only fixture cleanup preserves all production behavior and frozen coverage inputs",
+      "receipt": "release-closeout-evidence/combined-final-vulture.log; coordinator final git comparison"
     }
   ],
   "studio": {
@@ -183,13 +248,13 @@
     "free_memory_reserve_gb": 8
   },
   "remaining_limits": [
-    "Final repeated full Python, browser, linter and updater hosted checks are not yet claimed",
+    "All local suite/static/dead-code checks passed; updater replacement publication, hosted checks and protected review remain pending",
     "No production signing credentials or release publication",
     "Actual Windows PE plugin handoff passed; production NSIS, macOS and Linux installation remain unverified",
     "Physical Rytm/A4 observations remain blank",
     "Required human protected approvals cannot be replaced by agent reviews",
-    "The first combined suite failed two architecture checks; source repairs are present but final repeated result is pending",
-    "Explicit owner approval remains pending for _version.py, cockpit.ws -> _version and releases_branch_seed exceptions; Digitakt stage.py approval is separate"
+    "Local Gates 1-8 and 10-18 are complete; Gate 9 still requires explicit owner approval for _version.py, cockpit.ws -> _version and releases_branch_seed; Digitakt stage.py approval is separate",
+    "Production distribution not activated: releases-branch endpoint returned 404 and repository Actions variable-name/secret-name listings were empty; owner release configuration remains required"
   ],
   "recovery": [
     "Read this state and RUN_LOG; refresh GitHub heads/reviews/checks",
