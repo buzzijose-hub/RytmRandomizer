@@ -62,9 +62,7 @@ class DigitaktSnapshotDecoder:
         """
 
         if type(slot) is not int or slot < 0:
-            raise ValueError(
-                "DigitaktSnapshotDecoder.decode: slot must be non-negative integer"
-            )
+            raise ValueError("DigitaktSnapshotDecoder.decode: slot must be non-negative integer")
         if not raw.startswith(ELEKTRON_MFR_ID):
             raise ValueError("DigitaktSnapshotDecoder.decode: missing Elektron manufacturer id")
         if len(raw) <= _FAMILY_BYTE_INDEX:
