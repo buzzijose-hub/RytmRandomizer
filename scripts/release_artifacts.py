@@ -59,8 +59,10 @@ def _write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def configure(config_path: Path, *, updater_requested: bool, public_key: str) -> bool:
-    """Set build-only signing posture; keyless builds retain normal bundles."""
+def configure(config_path: Path, *, target: str, updater_requested: bool, public_key: str) -> bool:
+    """Set build-only signing posture and formats supported by the fleet manifest."""
+    if target not in SUPPORTED_TARGETS:
+        raise ValueError("unsupported release target")
     config = _object(config_path)
     bundle = config.get("bundle")
     plugins = config.get("plugins")
@@ -73,9 +75,30 @@ def configure(config_path: Path, *, updater_requested: bool, public_key: str) ->
     if signing and not public_key.strip():
         raise ValueError("updater signing requires the matching public key")
     bundle["createUpdaterArtifacts"] = signing
+    if target == "linux-x86_64":
+        # One Linux manifest entry cannot route installed Deb/RPM clients to
+        # their own package format. Ship only the AppImage this entry serves.
+        bundle["targets"] = ["appimage"]
     updater["pubkey"] = public_key.strip() if signing else ""
     _write_json(config_path, config)
     return signing
+
+
+def clean_bundle_output(shell_root: Path) -> None:
+    """Remove only the shell's previous bundle output, retaining compiled caches."""
+    shell_root = shell_root.resolve(strict=True)
+    if not all((shell_root / name).is_file() for name in ("Cargo.toml", "tauri.conf.json")):
+        raise ValueError("bundle cleanup requires a Tauri shell directory")
+    bundle_root = shell_root / "target" / "release" / "bundle"
+    # Resolve before deletion: symlinks and Windows junctions must not redirect
+    # this fixed output path into the compilation cache or another directory.
+    for path in (bundle_root.parent.parent, bundle_root.parent, bundle_root):
+        if path.is_symlink() or path.resolve() != path:
+            raise ValueError("bundle output path must not contain links or junctions")
+    if bundle_root.exists():
+        if not bundle_root.is_dir():
+            raise ValueError("bundle output must be a directory")
+        shutil.rmtree(bundle_root)
 
 
 def _copy(source: Path, destination: Path) -> None:
@@ -315,7 +338,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     commands = parser.add_subparsers(dest="command", required=True)
     config = commands.add_parser("configure")
     config.add_argument("--config", type=Path, required=True)
+    config.add_argument("--target", choices=SUPPORTED_TARGETS, required=True)
     config.add_argument("--updater-requested", choices=("true", "false"), required=True)
+    cleanup = commands.add_parser("clean-bundle")
+    cleanup.add_argument("--shell-root", type=Path, required=True)
     collect_parser = commands.add_parser("collect")
     collect_parser.add_argument("--config", type=Path, required=True)
     collect_parser.add_argument("--bundle-root", type=Path, required=True)
@@ -336,9 +362,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.command == "configure":
             configure(
                 args.config,
+                target=args.target,
                 updater_requested=args.updater_requested == "true",
                 public_key=public_key,
             )
+        elif args.command == "clean-bundle":
+            clean_bundle_output(args.shell_root)
         elif args.command == "collect":
             collect(
                 args.bundle_root,

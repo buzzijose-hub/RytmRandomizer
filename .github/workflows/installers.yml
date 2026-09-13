@@ -397,16 +397,21 @@ jobs:
         # Pinning to ^2 follows the workspace Cargo.toml's Tauri major.
         run: cargo install tauri-cli --version "^2"
 
-      - name: Configure updater signing posture
+      - name: Configure updater signing posture and bundle format
         shell: bash
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PUBLIC_KEY: ${{ inputs.updater_public_key }}
           UPDATER_REQUESTED: ${{ inputs.updater_artifacts || false }}
+          RELEASE_TARGET: ${{ matrix.target }}
         run: >-
           python scripts/release_artifacts.py configure
           --config desktop/shell/tauri.conf.json
+          --target "$RELEASE_TARGET"
           --updater-requested "$UPDATER_REQUESTED"
+
+      - name: Clear previous bundle output while retaining compilation cache
+        run: python scripts/release_artifacts.py clean-bundle --shell-root desktop/shell
 
       - name: Build Tauri bundle
         working-directory: desktop/shell

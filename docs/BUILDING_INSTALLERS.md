@@ -73,7 +73,7 @@ Tauri writes per-OS installers under
 |---|---|
 | Windows | `msi/RytmRandomizerCockpit_<version>_x64_en-US.msi` (plus a `nsis/` `.exe` if NSIS is configured) |
 | macOS | `dmg/RytmRandomizerCockpit_<version>_x64.dmg` and `macos/RytmRandomizerCockpit.app` |
-| Linux | `deb/`, `rpm/`, and `appimage/` subdirectories |
+| Linux | CI publishes `appimage/` only; local default builds may also produce `deb/` and `rpm/` |
 
 These are GUI installers (the operator double-clicks the file), unlike
 the CLI-oriented Briefcase artifacts. They embed the web frontend from
@@ -332,6 +332,21 @@ and macOS aarch64. The two Mac builds use separate native runners. Updater
 assets preserve the format Tauri consumes: Windows NSIS `.exe`, Linux
 `.AppImage`, and macOS `.app.tar.gz`. No universal archive extension is
 invented. The release URL is derived from the collected asset's actual name.
+
+The Linux desktop build explicitly selects `bundle.targets=["appimage"]`,
+including keyless rehearsals. The four-target manifest has one Linux URL;
+Tauri's installed Deb/RPM clients require their own package format and cannot
+install that AppImage. Existing desktop Deb/RPM installations therefore need
+a manual migration to the AppImage before using this update train. Briefcase
+CLI packages remain independent and are not updated by the desktop updater.
+
+After restoring the Rust cache and immediately before bundling, the workflow
+runs `release_artifacts.py clean-bundle --shell-root desktop/shell`. It resolves
+and validates the fixed `target/release/bundle` directory, refuses redirected
+paths (including Windows junctions), and removes only old bundle output.
+Compiled dependencies and other `target` files stay cached. This prevents an
+earlier release's installer or signature from entering the current artifact
+index under the new version's name.
 
 The assembly job downloads Python wheel/sdist, all indexed desktop bundles,
 Briefcase installers, and standalone sidecars. It verifies each indexed hash,

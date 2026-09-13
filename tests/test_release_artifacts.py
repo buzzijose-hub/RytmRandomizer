@@ -84,7 +84,10 @@ def test_configure_keyless_disables_updater_artifacts(
 ) -> None:
     monkeypatch.delenv("TAURI_SIGNING_PRIVATE_KEY", raising=False)
     path = _config(tmp_path / "config.json", True)
-    assert artifacts.configure(path, updater_requested=True, public_key=_KEY) is False
+    assert (
+        artifacts.configure(path, target="windows-x86_64", updater_requested=True, public_key=_KEY)
+        is False
+    )
     assert json.loads(path.read_text())["bundle"]["createUpdaterArtifacts"] is False
 
 
@@ -94,9 +97,119 @@ def test_configure_requires_public_key_when_signing(
     monkeypatch.setenv("TAURI_SIGNING_PRIVATE_KEY", "test-only-secret")
     path = _config(tmp_path / "config.json", False)
     with pytest.raises(ValueError, match="matching public key"):
-        artifacts.configure(path, updater_requested=True, public_key="")
-    assert artifacts.configure(path, updater_requested=True, public_key=_KEY) is True
+        artifacts.configure(path, target="windows-x86_64", updater_requested=True, public_key="")
+    assert (
+        artifacts.configure(path, target="windows-x86_64", updater_requested=True, public_key=_KEY)
+        is True
+    )
     assert json.loads(path.read_text())["plugins"]["updater"]["pubkey"] == _KEY
+
+
+@pytest.mark.parametrize("signing", [True, False])
+@pytest.mark.parametrize("target", artifacts.SUPPORTED_TARGETS)
+def test_linux_desktop_only_ships_the_appimage_format_served_by_its_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, signing: bool, target: str
+) -> None:
+    monkeypatch.setenv("TAURI_SIGNING_PRIVATE_KEY", "test-only-secret" if signing else "")
+    path = _config(tmp_path / "config.json", signing)
+    config = json.loads(path.read_text())
+    config["bundle"]["targets"] = "all"
+    path.write_text(json.dumps(config), encoding="utf-8")
+    artifacts.configure(path, target=target, updater_requested=True, public_key=_KEY)
+    bundle = json.loads(path.read_text())["bundle"]
+    assert bundle["targets"] == (["appimage"] if target == "linux-x86_64" else "all")
+    assert bundle["createUpdaterArtifacts"] is signing
+
+
+def test_configuration_refuses_unknown_target_without_rewriting_file(tmp_path: Path) -> None:
+    path = _config(tmp_path / "config.json", False)
+    original = path.read_bytes()
+    with pytest.raises(ValueError, match="unsupported release target"):
+        artifacts.configure(path, target="unknown", updater_requested=True, public_key=_KEY)
+    assert path.read_bytes() == original
+
+
+def _shell(tmp_path: Path) -> Path:
+    shell = tmp_path / "desktop" / "shell"
+    shell.mkdir(parents=True)
+    (shell / "Cargo.toml").write_text("[package]\nname='test'\n", encoding="utf-8")
+    _config(shell / "tauri.conf.json", False)
+    return shell
+
+
+def test_bundle_cleanup_removes_stale_installers_and_preserves_compilation_cache(
+    tmp_path: Path,
+) -> None:
+    shell = _shell(tmp_path)
+    bundle = shell / "target" / "release" / "bundle"
+    for relative in ("old.exe", "old.exe.sig", "subfolder/old.AppImage"):
+        path = bundle / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"previous release")
+    retained = [
+        shell / "target" / directory / "compiled" for directory in ("release/deps", "debug")
+    ]
+    for path in retained:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"cached object")
+
+    artifacts.clean_bundle_output(shell)
+    assert not bundle.exists()
+    assert all(path.read_bytes() == b"cached object" for path in retained)
+    # A cold-cache/no-bundle invocation is a supported no-op.
+    artifacts.clean_bundle_output(shell)
+    bundle.mkdir()
+    (bundle / "current.exe").write_bytes(b"current release")
+    output = tmp_path / "collected"
+    artifacts.collect(
+        bundle,
+        output,
+        target="windows-x86_64",
+        version="1.35.0",
+        source_sha=_SHA,
+        config_path=shell / "tauri.conf.json",
+    )
+    index = json.loads((output / "artifact-index.json").read_text())
+    assert len(index["assets"]) == 1
+    assert (output / index["assets"][0]["name"]).read_bytes() == b"current release"
+
+
+@pytest.mark.parametrize("component", ["target", "target/release", "target/release/bundle"])
+def test_bundle_cleanup_refuses_resolved_links_and_windows_junctions(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, component: str
+) -> None:
+    shell = _shell(tmp_path)
+    bundle = shell / "target" / "release" / "bundle"
+    bundle.mkdir(parents=True)
+    original = bundle / "keep.exe"
+    original.write_bytes(b"preserve")
+    outside = tmp_path / "unrelated"
+    outside.mkdir()
+    private = outside / "keep.txt"
+    private.write_bytes(b"unrelated contents")
+    resolve = Path.resolve
+
+    def resolve_redirect(path: Path, *args, **kwargs) -> Path:
+        # Junctions need no symlink bit: resolved destination is the boundary.
+        return outside if path == shell / component else resolve(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "resolve", resolve_redirect)
+    with pytest.raises(ValueError, match="links or junctions"):
+        artifacts.clean_bundle_output(shell)
+    assert original.read_bytes() == b"preserve"
+    assert private.read_bytes() == b"unrelated contents"
+
+
+def test_bundle_cleanup_refuses_non_shell_or_non_directory_output(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="Tauri shell directory"):
+        artifacts.clean_bundle_output(tmp_path)
+    shell = _shell(tmp_path)
+    bundle = shell / "target" / "release" / "bundle"
+    bundle.parent.mkdir(parents=True)
+    bundle.write_bytes(b"not a directory")
+    with pytest.raises(ValueError, match="must be a directory"):
+        artifacts.clean_bundle_output(shell)
+    assert bundle.read_bytes() == b"not a directory"
 
 
 def test_signed_assembly_verifies_exact_files_before_manifest_and_includes_all_distributions(
@@ -242,3 +355,22 @@ def test_release_workflow_wires_verified_assembly_and_preserves_draft_gates() ->
     assert "dry_run != 'true'" in publish["if"]
     assert "signed == 'true'" in jobs["manifest"]["if"]
     assert any("verify-self-test" in step.get("run", "") for step in steps)
+
+
+def test_desktop_workflow_configures_target_and_cleans_cached_bundles_before_build() -> None:
+    root = Path(__file__).resolve().parents[1]
+    workflow = yaml.safe_load((root / ".github/workflows/installers.yml").read_text())
+    steps = workflow["jobs"]["desktop-bundle"]["steps"]
+    configure = next(
+        step for step in steps if "release_artifacts.py configure" in step.get("run", "")
+    )
+    assert configure["env"]["RELEASE_TARGET"] == "${{ matrix.target }}"
+    assert '--target "$RELEASE_TARGET"' in configure["run"]
+    cleanup = next(
+        step for step in steps if "release_artifacts.py clean-bundle" in step.get("run", "")
+    )
+    assert "--shell-root desktop/shell" in cleanup["run"]
+    cache = next(step for step in steps if "actions/cache" in step.get("uses", ""))
+    build = next(step for step in steps if step.get("run") == "cargo tauri build")
+    collect = next(step for step in steps if "release_artifacts.py collect" in step.get("run", ""))
+    assert steps.index(cache) < steps.index(cleanup) < steps.index(build) < steps.index(collect)
