@@ -16,16 +16,18 @@ if (-not (Test-Path -LiteralPath $nativeFixtureCompiler)) { throw 'Windows .NET 
 $nativeFixtureSuccessor = Join-Path $nativeFixtureOutput 'RytmUpdaterAcceptanceSuccessor.exe'
 $nativeFixtureInstaller = Join-Path $nativeFixtureOutput 'RytmUpdaterAcceptanceInstaller.exe'
 $nativeFixtureCommon = @('/nologo', '/target:winexe', '/platform:x64', '/optimize+', '/reference:System.Web.Extensions.dll',
-    ('/win32manifest:"{0}"' -f (Join-Path $PSScriptRoot 'as-invoker.manifest')),
-    ('"{0}"' -f (Join-Path $PSScriptRoot 'AcceptancePaths.cs')))
+    ('/win32manifest:"{0}"' -f (Join-Path $PSScriptRoot 'as-invoker.manifest')))
 # Framework csc has legacy command-line parsing. Response files keep the quotes
 # around each switch value/source path intact across PowerShell native invocation.
+# Every switch must precede every source: a later /out starts another assembly.
 $nativeFixtureSuccessorArgs = $nativeFixtureCommon + @(
     ('/out:"{0}"' -f $nativeFixtureSuccessor),
+    ('"{0}"' -f (Join-Path $PSScriptRoot 'AcceptancePaths.cs')),
     ('"{0}"' -f (Join-Path $PSScriptRoot 'AcceptanceSuccessor.cs')))
 $nativeFixtureInstallerArgs = $nativeFixtureCommon + @(
     ('/out:"{0}"' -f $nativeFixtureInstaller),
     ('/resource:"{0}",Acceptance.Successor' -f $nativeFixtureSuccessor),
+    ('"{0}"' -f (Join-Path $PSScriptRoot 'AcceptancePaths.cs')),
     ('"{0}"' -f (Join-Path $PSScriptRoot 'AcceptanceInstaller.cs')))
 $nativeFixtureEncoding = [System.Text.UTF8Encoding]::new($false)
 [System.IO.File]::WriteAllLines((Join-Path $nativeFixtureOutput 'successor.rsp'), $nativeFixtureSuccessorArgs, $nativeFixtureEncoding)
