@@ -72,6 +72,33 @@ reconstructed as a pass.
   will combine this checkpoint with Digitakt and #245 for full Python gates;
   native platform verification is still running separately.
 
-Pending: final composed validation, replacement PR and original-stack mapping,
+- 2026-09-13: Digitakt `15484906` was pushed; all hosted checks passed for both
+  push and pull-request events, including `required-checks`. GitHub still reports
+  `REVIEW_REQUIRED`; the architecture-exception request has no owner approval yet.
+- 2026-09-13: First combined Python run at `636e4e4a` finished with 9,919 passes,
+  two architecture failures and six skips in 305.37 seconds. The saved coverage
+  audit confirms all 51 touched production files have zero missing lines or
+  branches. Project pure branch coverage is 99.46183953033268%, and combined
+  coverage is 99.69494345669122%. This is a failed suite result, not a final pass.
+- 2026-09-13: `a928e0f1` removed persisted-state policy types/functions from the
+  fact-only data-package re-export surface and added the two missing learning/
+  collaborator links to the plan index. No tests or allowlists were weakened.
+  Local validation merge `54a13ab0` combines those fixes, current native work,
+  Digitakt `15484906` and Forge `38397dbb`; final composed gates remain pending.
+- 2026-09-13: Current default Rust suite passed 186 tests, including startup and
+  journal regressions. Native build passed in 15.75 seconds, native TypeScript
+  passed, and the current real Wry/WebView2 recorder matrix passed all 32 cases
+  in 53.5 seconds. The separate two-case actual Windows installer fixture is
+  still awaiting compiler setup repair; recorded terminal operations do not
+  count as successful OS installation.
+- 2026-09-13: After fixture compiler repair `f256db40`, actual Windows
+  `install_on_quit` and `install_now` handoffs both passed in 8.2 seconds, using
+  combined frontend/backend `54a13ab0`, native Rust source `70e50605` and signed
+  PE fixtures in `handoff-inputs-20260913c`. Exact installer/successor hashes are
+  recorded in the run report. This is actual Windows plugin/PE handoff evidence;
+  it does not prove production NSIS, macOS or Linux installation. A new combined
+  full Python run is in progress; no result is claimed before it finishes.
+
+Pending: final composed full/browser/linter validation, replacement PR and original-stack mapping,
 protected reviews/merges, platform installer evidence and operator-present
 studio validation. No production release or real MIDI action occurred.

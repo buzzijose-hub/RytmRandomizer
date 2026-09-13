@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-13T16:04:33.446735+00:00",
+  "updated_at": "2026-09-13T16:28:05.957447+00:00",
   "phase": "integration-and-final-validation",
-  "source_checkpoint": "59dfb07ed8c4ae667aec6568ee7fcfc70d78e49a",
+  "source_checkpoint": "f256db40f4949ff18ffb9031bd5a38b09667de98",
   "incoming_author_head": "a270ff114966d51f143b67c51d7dcd52db3954c0",
   "replacement_pr": null,
   "original_updater_prs": [
@@ -33,23 +33,32 @@
     {
       "name": "digitakt",
       "pr": 240,
-      "head": "15484906",
-      "status": "checks-passed-review-pending",
+      "head": "1548490669347f9938ec3fc15e95e16ee4e0fd76",
+      "status": "hosted-checks-passed-review-required",
       "remaining": [
-        "Push documentation-only approval qualification after normal pre-push hook",
-        "Required owner review, including requested stage-discriminator exception"
+        "Required owner review, including requested stage-discriminator exception; both push and pull-request required checks passed"
       ]
     },
     {
       "name": "updater",
       "pr": null,
-      "head": "b989d5af",
+      "head": "f256db40f4949ff18ffb9031bd5a38b09667de98",
       "status": "final-validation-pending",
       "remaining": [
-        "Final composed gates",
+        "Final full Python/browser/linter gates and hosted checks",
         "Publish one verified replacement",
         "Resolve original stack mapping",
-        "Protected review"
+        "Protected review including architecture-exception requests"
+      ]
+    },
+    {
+      "name": "combined-validation",
+      "pr": null,
+      "head": "54a13ab03b84310b36d12a819cc0cafeb5991a27",
+      "status": "final-checks-running",
+      "remaining": [
+        "Full Python repeat, browser and linter validation",
+        "Local-only composition; never publish this validation branch as another PR"
       ]
     }
   ],
@@ -101,6 +110,54 @@
       "result": "695 passed in 9.46 seconds",
       "scope": "Release, fleet, data, CI and persisted-store registry; combined full Python remains pending",
       "receipt": "release-closeout-evidence/updater-merged-targeted.log"
+    },
+    {
+      "boundary": "first-combined-python",
+      "result": "9,919 passed; two architecture failures; six skips in 305.37 seconds",
+      "scope": "At 636e4e4a; data re-export and plan-index failures repaired in a928e0f1; repeated full run pending",
+      "receipt": "release-closeout-evidence/combined-final-full.log"
+    },
+    {
+      "boundary": "combined-touched-coverage",
+      "result": "All 51 touched production files at 100% line/branch coverage; project pure branch 99.46183953033268%; combined 99.69494345669122%",
+      "scope": "Saved failed full-run coverage at 636e4e4a; all files present with no missing touched lines or branches; not a passing suite verdict",
+      "receipt": "release-closeout-evidence/combined-touched-coverage-audit.json"
+    },
+    {
+      "boundary": "current-native-units",
+      "result": "186 passed; zero failed, ignored or filtered",
+      "scope": "Default Rust suite including startup and journal regressions",
+      "receipt": "release-closeout-evidence/cargo-merged.log"
+    },
+    {
+      "boundary": "current-native-build",
+      "result": "Native build passed in 15.75 seconds; native TypeScript also passed",
+      "scope": "Native build receipt plus coordinator-reported TypeScript result; no production release",
+      "receipt": "release-closeout-evidence/cargo-native-final.log"
+    },
+    {
+      "boundary": "current-native-acceptance",
+      "result": "32 passed in 53.5 seconds",
+      "scope": "Actual Wry/WebView2 IPC and plugin verification; recorded install/restart terminal",
+      "receipt": "release-closeout-evidence/native-matrix-final.log"
+    },
+    {
+      "boundary": "actual-windows-handoff",
+      "result": "install_on_quit and install_now both passed; two cases in 8.2 seconds",
+      "scope": "Combined frontend/backend 54a13ab0; native Rust source 70e50605; fixture preparation f256db40; handoff-inputs-20260913c. Installer SHA-256 bc2909b33d558f64c837c46d63ad62e6682f12edf128bbf775ec3d0a970383e0; successor SHA-256 28c8df8ef5761ef28bb31dc8e49276578942cebb56a95ef200da985286beca96. Actual signed Windows PE handoff, not production NSIS/macOS/Linux installers.",
+      "receipt": "release-closeout-evidence/native-handoff-final.log"
+    },
+    {
+      "boundary": "digitakt-hosted-ci",
+      "result": "All hosted checks passed, including required-checks for both push and pull-request events; REVIEW_REQUIRED",
+      "scope": "Exact PR #240 head 15484906; no protected merge or exception approval implied",
+      "receipt": "Coordinator live GitHub checkpoint, September 13"
+    },
+    {
+      "boundary": "frontend-build",
+      "result": "Merged frontend build passed",
+      "scope": "After 1,009-test merged frontend coverage checkpoint; browser final checks remain pending",
+      "receipt": "release-closeout-evidence/frontend-merged-build.log"
     }
   ],
   "studio": {
@@ -126,13 +183,13 @@
     "free_memory_reserve_gb": 8
   },
   "remaining_limits": [
-    "Final composed software checks are not yet claimed",
+    "Final repeated full Python, browser, linter and updater hosted checks are not yet claimed",
     "No production signing credentials or release publication",
-    "Actual OS install/relaunch not executed by the native recorder",
+    "Actual Windows PE plugin handoff passed; production NSIS, macOS and Linux installation remain unverified",
     "Physical Rytm/A4 observations remain blank",
     "Required human protected approvals cannot be replaced by agent reviews",
-    "Latest native repairs and combined full Python require final composed verification; merged frontend and targeted Python passed",
-    "Explicit owner approval of inherited architecture exceptions remains pending; passing tests do not grant approval"
+    "The first combined suite failed two architecture checks; source repairs are present but final repeated result is pending",
+    "Explicit owner approval remains pending for _version.py, cockpit.ws -> _version and releases_branch_seed exceptions; Digitakt stage.py approval is separate"
   ],
   "recovery": [
     "Read this state and RUN_LOG; refresh GitHub heads/reviews/checks",

@@ -17,8 +17,18 @@ removes its unconsumed journal helpers. The 505 frozen
 parity files match the main index exactly after resolving line-ending-only
 merge artifacts, without capture/regeneration. The merged frontend passed 1,009
 tests across 71 files with all configured coverage at 100%; the merged targeted
-Python suite passed 695 tests. Combined full Python, Rust, native and hosted
-checks remain pending. No all-gates PASS is claimed,
+Python suite passed 695 tests. Updater functional repairs are at `a928e0f1`
+with fixture preparation corrected through `f256db40`; local validation merge
+`54a13ab0` combines `a928e0f1` with the final native work, Digitakt
+`15484906` and Forge follow-up `38397dbb`, preserving all histories. The first
+combined Python run had 9,919 passes, two architecture failures and six skips
+in 305.37s. Its data-package export and plan-index failures are repaired in
+`a928e0f1`; final combined checks remain pending. All 51 touched production
+Python files had 100% line and branch coverage in that saved run. Current Rust
+units and the 32-case native recorder matrix pass. Both actual Windows PE
+installer-handoff scenarios now pass; production NSIS/macOS/Linux installer
+evidence, final full/browser/linter checks and updater hosted checks remain pending.
+No all-gates PASS is claimed,
 and the old stack remains open until a verified replacement is linked.
 
 Forge #238 was approved by Eddie at `2026-09-08T14:53:23Z` and merged at
@@ -33,8 +43,10 @@ files reached 100% line/branch coverage, project pure branch coverage 99.4596%
 and combined coverage 99.69%. Its 685 frozen parity cases passed within that
 run. Formatting-only `23bc8b41` passed all pre-push mechanical gates and was
 pushed. Documentation-only `15484906` records the still-pending owner approval
-of the inherited stage-discriminator exemption; its push remains pending.
-This does not assert a Digitakt PR merge.
+of the inherited stage-discriminator exemption and is now pushed. All its
+hosted checks, including `required-checks` for both push and pull-request events,
+passed; GitHub still reports `REVIEW_REQUIRED`. This does not assert a Digitakt
+PR merge or approve its architecture exception.
 
 ## Coordinator-run evidence
 
@@ -43,13 +55,18 @@ This does not assert a Digitakt PR merge.
 | Release helper | 277 tests passed at `a8ae340c`; genuine Minisign positive/modified-byte negative self-test passed. | No production keys, OS signing or release publication. |
 | Native acceptance | 32 actual Wry/WebView2 cases passed in 53.9s; strict native TypeScript passed. | Real IPC/plugin verifier; terminal install/restart recorded with harmless signed bytes. |
 | Native unit checkpoint | 183 tests passed with Cargo jobs 2. | Predates final diagnostic/merge changes; not a final total. |
+| Current native units/build | 186 default Rust tests passed, including startup/journal regressions; native build passed in 15.75s and native TypeScript passed. | Does not prove actual OS installation or replace all final Rust static checks. |
+| Current native acceptance | 32 actual Wry/WebView2 cases passed in 53.5s (`native-matrix-final.log`). | Real IPC/plugin verifier with recorded install/restart boundary; actual Windows handoff has a separate receipt below. |
+| Actual Windows installer handoff | `install_on_quit` and `install_now` both passed in 8.2s (`native-handoff-final.log`). | Actual plugin handoff to the signed Windows PE fixture; not production NSIS or macOS/Linux installers. |
 | Updater frontend checkpoint | 885 tests / 67 files passed in 60.35s, all configured coverage metrics 100%. | Before Doctor and final author/main merge; composed checks pending. |
 | Merged updater frontend | 1,009 tests / 71 files passed in 50.72s; 3,519 statements, 2,638 branches, 1,203 functions and 3,155 lines all at 100%. | Includes Doctor and author/main merge; native platform verification remains separate. |
 | Merged Python targeted suite | 695 release/fleet/data/CI/store-registry tests passed in 9.46s. | Focused merged source coverage; combined full Python gate remains pending. |
 | Forge follow-up | 853 frontend tests / 62 files, all coverage metrics 100%; lint/TypeScript/Vite passed. Mechanical 805 architecture / 685 parity passed. | Python full-suite evidence is inherited; 505 frozen JSON files unchanged. |
 | New Forge package | Build 34241625440 succeeded; manifest/hashes verified; actual packaged smoke passed `2026-09-08T15:08:21.444Z`. | MIDI off; no physical observation or update installation. |
 | Digitakt + Forge | 9,127 passed / six skips; 42 touched production files at 100%; project pure branch 99.4596%. | Separate Digitakt worktree `35e7a1ce`, not final updater combined coverage. |
-| Updater combined coverage/CI | Pending. | Earlier targeted/global coverage receipts are not substituted for this final tree. |
+| First combined Python run | 9,919 passed / two architecture failures / six skips in 305.37s. All 51 touched production files had 100% line/branch coverage; project pure branch 99.4618395%, combined 99.6949435%. | Failed run at `636e4e4a`; export/index repairs are in `a928e0f1` and validation `54a13ab0`. Final composed checks pending. |
+| Digitakt hosted CI | All checks passed for `15484906`, including push and pull-request `required-checks`. | `REVIEW_REQUIRED`; protected approval is still outstanding. |
+| Final combined/browser/linters and updater CI | Pending. | Neither the repaired source nor passing subsets establish these remaining gates. |
 
 The new studio package `show-kit-forge-studio-c79597b69d05` identifies full
 source `c79597b69d055c32b8175fd665c77f20c384677c`:
@@ -69,14 +86,23 @@ physical checklist observations remain blank.
 
 No key means metadata discovery with an explicit unavailable-download message,
 not staged bytes or consent. Beacon completion, journal rotation locking and
-missing-key history are now repaired in source; final native regression remains
-required. Doctor queries the snapshot on export and includes a 50-row native
+missing-key history are repaired and the current 186-test Rust suite and
+32-case native matrix passed. Doctor queries the snapshot on export and includes a 50-row native
 journal tail, or null when unavailable, independently of Updates panel mounting.
-Consent and skips remain process-local. Real OS installation/restart, production
-GitHub/CDN delivery, signing credentials and required approvals remain separate.
+Consent and skips remain process-local. The actual Windows handoff used combined
+frontend/backend `54a13ab0` and the native binary from the same Rust source at
+`70e50605`. Fixture preparation fix `f256db40` compiled and signed inputs in
+`handoff-inputs-20260913c`. Installer SHA-256 is
+`bc2909b33d558f64c837c46d63ad62e6682f12edf128bbf775ec3d0a970383e0`;
+successor SHA-256 is
+`28c8df8ef5761ef28bb31dc8e49276578942cebb56a95ef200da985286beca96`.
+Both real plugin install choices passed. This closes that PE handoff evidence
+gap; production NSIS, macOS/Linux installation, GitHub/CDN delivery, production
+signing credentials and required approvals remain separate.
 
 Gate 9 requires explicit owner approval for the inherited `_version.py`
-top-level/import carve-out and `releases_branch_seed` root-directory exception.
+top-level exception, `cockpit.ws -> _version` dependency edge and
+`releases_branch_seed` root-directory exception.
 Digitakt independently requests approval for its narrow `cockpit/data/stage.py`
 identity-gate exemption. Recorded rationale and passing tests do not substitute
 for approval.
