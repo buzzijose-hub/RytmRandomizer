@@ -65,7 +65,17 @@ internal static class AcceptanceInstaller
                 {
                     if (child == null) throw new InvalidDataException("successor did not start");
                     restartedPid = child.Id;
-                    if (!child.WaitForExit(10000) || child.ExitCode != 0)
+                    if (!child.WaitForExit(10000))
+                    {
+                        // Reap only the successor we just started. Disposing a
+                        // Process handle alone would leave the timed-out process alive.
+                        try { child.Kill(); }
+                        catch (InvalidOperationException) { if (!child.HasExited) throw; }
+                        if (!child.WaitForExit(5000))
+                            throw new InvalidDataException("successor teardown timed out");
+                        throw new InvalidDataException("successor did not complete in time");
+                    }
+                    if (child.ExitCode != 0)
                         throw new InvalidDataException("successor did not complete");
                 }
             }
