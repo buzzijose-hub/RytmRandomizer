@@ -435,8 +435,12 @@ retaining checks; freeze disables both. No application installation identifier
 or MIDI data is included; ordinary HTTP connection metadata reaches the host.
 Fleet graphs estimate activity from download counters. Opt-outs can undercount
 and repeated/public requests can overcount; these are not unique-device counts
-and never authorize an update. Production beacon completion diagnostics remain
-a documented limitation.
+and never authorize an update. Asynchronous check-in outcomes now feed the local
+closed-vocabulary journal; they never gate an update or retry a check-in.
+
+Connection Doctor's explicit clipboard export also reads the local updater
+journal, whether or not Updates has been opened. It includes at most 50
+sanitized rows; a browser or unavailable shell reports `update_journal: null`.
 
 See [the closeout plan](docs/superpowers/plans/2026-09-08-release-closeout.md),
 [verification checkpoint](docs/superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md),

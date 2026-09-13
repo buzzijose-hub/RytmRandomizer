@@ -180,6 +180,11 @@ The Updates panel displays those settings; change the environment and restart
 rather than treating a local UI value as native configuration. None of these
 settings grants MIDI or hardware-save authority.
 
+Connection Doctor reads the native snapshot on clipboard export through the
+shared TypeScript adapter, independent of Updates panel mounting. It exports
+at most 50 sanitized journal rows and represents unavailable native activity
+as `update_journal: null`; it starts no network update check.
+
 | Variable/configuration | Unset/default | Reader and effect |
 | --- | --- | --- |
 | `RYTM_RAND_UPDATES` | Enabled | Shell launch: trimmed, case-insensitive `off` freezes checks, artifact downloads, installs and check-ins. Other values leave checking enabled. |

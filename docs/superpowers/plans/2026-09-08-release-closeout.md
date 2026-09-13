@@ -1,5 +1,7 @@
 # September 8 release closeout
 
+> Status: in-flight — resumed September 13; final composed validation/review pending
+
 Jose authorized review, repair, pushes, review requests, and normal protected merges of PRs #238–243. Upcoming Rytm/A4 shows take priority. This plan consolidates #239/#241/#242/#243 into one updater PR against `modularize-v1.34`, preserving original commit authorship. Forge (#238) and passive Digitakt support (#240) remain separate changes. No production release is part of this run.
 
 ## Ownership and execution
@@ -24,9 +26,31 @@ Root owns builds/tests and shared integration files. At most two implementation 
 
 ## State, recovery, and limits
 
-Durable checkpoint/evidence: sibling `release-closeout-evidence/STATE.json`, `RUN_LOG.md`, per-PR snapshots, reviewer reports, and command logs. On recovery, read them and re-query GitHub before selecting the next independent action. The original dirty checkout is preserved. Remote heads may move; fetch and reconcile before publishing, never overwrite concurrent commits. Existing updater PRs close only after a verified replacement exists.
+Durable tracked checkpoint: [state](2026-09-08-release-closeout_STATE.json),
+[schema](2026-09-08-release-closeout_STATE.schema.json),
+[log](2026-09-08-release-closeout_RUN_LOG.md) and
+[run report](2026-09-08-release-closeout_RUN_REPORT.md). Detailed machine-local
+command receipts remain in sibling `release-closeout-evidence`; their conclusions
+and limits are preserved in these tracked files. On recovery, re-query GitHub
+before selecting the next action. The dirty original checkout is preserved;
+remote heads may move and must be reconciled without overwriting author commits.
+Existing updater PRs close only after a verified replacement exists.
 
-Start is the user's September 8 request. Target completion is today, with a 24-hour execution cap; unresolved external approval or physical evidence is reported precisely. A STOP message interrupts execution and records the checkpoint. Fix ordinary failures autonomously. Preserve hardware dependency pins and all V1.34 fixtures. Do not open real MIDI, fabricate observations, bypass hooks/protection, or publish a production update. Rollback uses ordinary revert commits of this bundle; source kits and installed production artifacts are untouched.
+Start was the user's September 8 request; its original same-day/24-hour target
+was not met. The user explicitly resumed work September 13. Current termination
+criteria are the concrete software/PR/handoff outcomes below, with unresolved
+external approval and physical evidence identified precisely. A STOP message
+interrupts execution and records the checkpoint. Preserve hardware pins and all
+V1.34 fixtures. Do not open real MIDI, fabricate observations, bypass hooks or
+protection, or publish a production update. Rollback uses ordinary revert commits.
+
+The [maintainability baseline](2026-09-08-release-closeout_MAINTAINABILITY_AUDIT.md)
+honestly reconstructs the remaining-closeout preflight; the
+[reassessment](2026-09-08-release-closeout_MAINTAINABILITY_REPORT.md),
+[architecture delta](2026-09-08-release-closeout_ARCHITECTURE_BEFORE_AFTER.md),
+[learning/replay answers](2026-09-08-release-closeout_LEARNING_REPORT.md) and
+[collaborator guide](2026-09-08-release-closeout_REBASE_GUIDE.md) retain the review
+and handoff without claiming an original pre-code audit occurred.
 
 ## Conformance tracking
 
@@ -40,7 +64,7 @@ Per `docs/PLAN_REQUIREMENTS.md`, all 18 gates remain required. Unchecked items a
 - [ ] Gate 6 — types, immutable DTOs, passive imports preserved.
 - [ ] Gate 7 — operational decisions emit categorical diagnostics.
 - [ ] Gate 8 — regression tests exercise outcomes and real boundaries.
-- [ ] Gate 9 — existing package and dependency direction preserved.
+- [ ] Gate 9 — existing package and dependency direction reviewed; explicit owner approval remains pending for the inherited `_version.py` top-level/import carve-out and `releases_branch_seed` root-directory exception. Digitakt separately requests approval for its closed stage-discriminator exemption. Passing enforcement tests does not approve these exceptions.
 - [ ] Gate 10 — dispatch vocabularies remain canonical.
 - [ ] Gate 11 — shared fixtures reused.
 - [ ] Gate 12 — constants remain explicitly typed.

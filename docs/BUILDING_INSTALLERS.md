@@ -547,7 +547,7 @@ injected port `50477` as a string with a token present; the frontend continued
 dialing `4317` and stayed disconnected. That artifact is preserved outside the
 Studio folder as diagnostic evidence.
 
-**Corrected software handoff:** build
+**Earlier corrected software handoff:** build
 [`34149935386`](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34149935386)
 at `076ef67a3276bdd27ec6657f9dff77ccf207a5e2` succeeded. Its downloaded hashes
 matched the manifest, and the actual packaged GUI smoke passed at
@@ -557,8 +557,28 @@ UI refresh were verified; the smoke's own process tree was stopped. No capture,
 arm or output was requested. The [software receipt](2026-09-07-show-kit-forge-software-closeout.md)
 records the executable, both hashes and local smoke/checklist paths. A later
 documentation-only receipt commit does not change this artifact's source.
-Source CI passed; required maintainer review remains pending. Physical
-observations remain blank and A4 SEND remains blocked.
+This earlier package is retained as historical evidence; the current studio
+package below includes the later empty-bank export explanation.
+
+**Current identified studio handoff:** build
+[`34241625440`](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34241625440)
+from `c79597b69d055c32b8175fd665c77f20c384677c` passed. Its complete Git tree is
+identical to #245 head `38397dbb2a7919d9c144f63a971a26fc66d4edfa` (tree
+`2be8569bdeffd0a404aa6ef3a4ee8681204f3c5a`). The unsigned Windows package is
+`show-kit-forge-studio-c79597b69d05`; keep its bundled `binaries/` beside the shell.
+
+- Shell SHA-256: `c79e83b2356040b8360f10e2305eedc97d4296ff84d574c39e8a85e4222518d8`.
+- Sidecar SHA-256: `9b5a52fe60105b59edce6bea9fa9dbf99ff1fe4bf10e16a110475f20402e6e7b`.
+
+The real WebView2/bundled-backend smoke passed at `2026-09-08T15:08:21.444Z`
+with MIDI off. It checked fresh-token restart/reconnect, bank persistence,
+empty-export guidance and missing-capture refusal. The handoff manifest's 14
+file hashes were verified; its SHA-256 is
+`15c70c96fe1259fbddd1daf572d036cb7fe9318fa1478f2e21be2c130623acf4`.
+Eddie approved #238 before it merged; #245 has green required checks and still
+requires its own review. See the [current run report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md).
+Physical observations remain blank and A4 SEND remains blocked. This package
+contains no claimed production updater installation or OS-signing evidence.
 
 ### Briefcase source/install checks
 

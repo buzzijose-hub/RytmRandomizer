@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-09-13T16:04:33.446735+00:00",
+  "phase": "integration-and-final-validation",
+  "source_checkpoint": "59dfb07ed8c4ae667aec6568ee7fcfc70d78e49a",
+  "incoming_author_head": "a270ff114966d51f143b67c51d7dcd52db3954c0",
+  "replacement_pr": null,
+  "original_updater_prs": [
+    239,
+    241,
+    242,
+    243
+  ],
+  "workstreams": [
+    {
+      "name": "forge",
+      "pr": 238,
+      "head": "b1d6ff5678f80378176038fb13d6ef78d13c0abc",
+      "status": "merged",
+      "remaining": [
+        "Physical studio checklist"
+      ]
+    },
+    {
+      "name": "forge-followup",
+      "pr": 245,
+      "head": "38397dbb2a7919d9c144f63a971a26fc66d4edfa",
+      "status": "review-required",
+      "remaining": [
+        "Required code-owner approval; hosted required checks are green"
+      ]
+    },
+    {
+      "name": "digitakt",
+      "pr": 240,
+      "head": "15484906",
+      "status": "checks-passed-review-pending",
+      "remaining": [
+        "Push documentation-only approval qualification after normal pre-push hook",
+        "Required owner review, including requested stage-discriminator exception"
+      ]
+    },
+    {
+      "name": "updater",
+      "pr": null,
+      "head": "b989d5af",
+      "status": "final-validation-pending",
+      "remaining": [
+        "Final composed gates",
+        "Publish one verified replacement",
+        "Resolve original stack mapping",
+        "Protected review"
+      ]
+    }
+  ],
+  "verification_checkpoints": [
+    {
+      "boundary": "native-units",
+      "result": "183 passed",
+      "scope": "September 13 before final integration/diagnostic repairs",
+      "receipt": "release-closeout-evidence/cargo-resume.log"
+    },
+    {
+      "boundary": "frontend",
+      "result": "885 passed; 67 files; all configured coverage metrics 100%",
+      "scope": "Before Doctor/final author-main integration",
+      "receipt": "release-closeout-evidence/frontend-resume.log"
+    },
+    {
+      "boundary": "native-acceptance",
+      "result": "32 passed in 53.9 seconds",
+      "scope": "Real Wry/IPC/plugin verifier; terminal install/restart recorded",
+      "receipt": "release-closeout-evidence/native-matrix-1.log"
+    },
+    {
+      "boundary": "fleet-dashboard",
+      "result": "128 passed",
+      "scope": "September 8 focused regressions; final merge recheck pending",
+      "receipt": "release-closeout-evidence/python-targeted-2.log"
+    },
+    {
+      "boundary": "release-helper",
+      "result": "277 passed; genuine Minisign positive and tampered-byte negative checks passed",
+      "scope": "Earlier assembly checkpoint; later promotion/format repairs require final verification",
+      "receipt": "release-closeout-evidence/release-targeted.log"
+    },
+    {
+      "boundary": "digitakt-forge",
+      "result": "9,127 passed; six skipped; 42 touched production files at 100%; pure branch 99.4596%; combined 99.69%",
+      "scope": "Separate Digitakt worktree 35e7a1ce; formatting-only 23bc8b41 passed pre-push gates and was pushed; not updater full coverage",
+      "receipt": "release-closeout-evidence/digitakt-final-full.log"
+    },
+    {
+      "boundary": "merged-frontend",
+      "result": "1,009 passed / 71 files in 50.72 seconds; all configured coverage 100% (3,519 statements, 2,638 branches, 1,203 functions, 3,155 lines)",
+      "scope": "Includes Doctor and author/main merge; does not substitute for native/platform tests",
+      "receipt": "release-closeout-evidence/frontend-merged.log"
+    },
+    {
+      "boundary": "merged-python-targeted",
+      "result": "695 passed in 9.46 seconds",
+      "scope": "Release, fleet, data, CI and persisted-store registry; combined full Python remains pending",
+      "receipt": "release-closeout-evidence/updater-merged-targeted.log"
+    }
+  ],
+  "studio": {
+    "directory": "show-kit-forge-studio-c79597b69d05",
+    "source": "c79597b69d055c32b8175fd665c77f20c384677c",
+    "identical_tree": "2be8569bdeffd0a404aa6ef3a4ee8681204f3c5a",
+    "workflow_run": 34241625440,
+    "smoke_at": "2026-09-08T15:08:21.444Z",
+    "handoff_files_verified": 14,
+    "handoff_manifest_sha256": "15c70c96fe1259fbddd1daf572d036cb7fe9318fa1478f2e21be2c130623acf4",
+    "shell_sha256": "c79e83b2356040b8360f10e2305eedc97d4296ff84d574c39e8a85e4222518d8",
+    "sidecar_sha256": "9b5a52fe60105b59edce6bea9fa9dbf99ff1fe4bf10e16a110475f20402e6e7b",
+    "physical_validation": false,
+    "unsigned": true
+  },
+  "resource_contract": {
+    "heavy_jobs": 1,
+    "implementation_agents": 2,
+    "pytest_workers": 2,
+    "cargo_jobs": 2,
+    "frontend_workers": 2,
+    "playwright_workers": 1,
+    "free_memory_reserve_gb": 8
+  },
+  "remaining_limits": [
+    "Final composed software checks are not yet claimed",
+    "No production signing credentials or release publication",
+    "Actual OS install/relaunch not executed by the native recorder",
+    "Physical Rytm/A4 observations remain blank",
+    "Required human protected approvals cannot be replaced by agent reviews",
+    "Latest native repairs and combined full Python require final composed verification; merged frontend and targeted Python passed",
+    "Explicit owner approval of inherited architecture exceptions remains pending; passing tests do not grant approval"
+  ],
+  "recovery": [
+    "Read this state and RUN_LOG; refresh GitHub heads/reviews/checks",
+    "Preserve dirty primary checkout and concurrent author commits",
+    "Only one heavy job at a time; root owns test/build scheduling",
+    "Do not close original updater stack until a verified replacement exists"
+  ]
+}

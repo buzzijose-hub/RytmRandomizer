@@ -1,10 +1,10 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-09-07. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-09-13. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
 
-Show Kit Forge is implemented on `codex/show-kit-forge-complete` as one
+Show Kit Forge merged through PR #238 on September 8 as one
 versioned, paired Analog Rytm/Analog Four preparation workflow. It keeps
 `source -> candidate -> favorite -> hardware-saved -> verified -> show-ready`
 as distinct evidence states; selection and a Rytm live audition do not imply a
@@ -53,18 +53,44 @@ Final local verification passed: 8,926 Python tests with five skips, all 32
 touched production modules at 100% coverage, and 852 frontend tests with all
 coverage metrics at 100%. The full browser suite passed 21 tests with two
 existing skips using disabled/fake MIDI; its screenshots were inspected.
-The identified Windows build at `076ef67a3276bdd27ec6657f9dff77ccf207a5e2`
-and its actual packaged GUI smoke passed with MIDI off on loopback port 64055.
-The shell and bundled sidecar hashes match the build manifest, and authenticated
-catalog access and the UI refresh succeeded. The
-[software handoff](2026-09-07-show-kit-forge-software-closeout.md) records the
-exact executable, receipts, preserved backups and still-blank physical checklist.
-Source CI passed on Windows, macOS and Linux. Required maintainer review remains
-pending; the
-observed review decision is `CHANGES_REQUESTED`. No hardware validation or merge
-approval is inferred from the software smoke.
+The current Windows studio package is source
+`c79597b69d055c32b8175fd665c77f20c384677c`, with the same product tree as the
+empty-bank-export follow-up #245 at `38397dbb`. Its actual WebView2/bundled-backend
+smoke passed with MIDI off on September 8 at 15:08:21.444 UTC; fresh-token
+restart/reconnect, bank persistence, empty-export guidance and missing-capture
+refusal passed. Both executable hashes and all 14 handoff-file hashes were
+verified. The [current closeout report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md)
+records the exact artifact and still-blank physical checklist. Eddie approved
+#238 before its merge as `b1d6ff56`. The separate #245 required checks are green;
+its required review remains pending. Software receipts do not grant hardware
+validation or approval to another source revision.
+
+The updater program from #239/#241/#242/#243 is being consolidated into one
+replacement against `modularize-v1.34`, preserving original authorship. Repairs
+connect native scheduling, actual manifest policy, verified artifact retention,
+consent/teardown, authoritative frontend snapshots and release verification.
+Before the final author/main merge, 183 Rust unit tests, 885 frontend tests with
+100% configured coverage, and 32 real WebView2/native acceptance cases passed.
+After that merge, 1,009 frontend tests across 71 files passed with all configured
+coverage at 100%, and 695 targeted release/fleet/data/CI/store-registry tests
+passed. The combined full Python and final native/platform gates remain open.
+The acceptance fixture verifies real signatures but records terminal installation
+instead of changing the operating system. Final composed gates, production
+credentials, platform installation evidence and protected review remain separate.
+The [plan](superpowers/plans/2026-09-08-release-closeout.md),
+[state](superpowers/plans/2026-09-08-release-closeout_STATE.json) and
+[repair ledger](2026-09-08-updater-repair-ledger.md) identify the current checkpoint.
+Digitakt #240 remains a separate passive device PR; it is not included as merged
+support in this updater checkpoint.
 
 ## Recent Cleanup
+
+- 2026-09-13: Resumed the six-PR closeout after the user's continuation. Preserved
+  the dirty original checkout, reconciled concurrent author commits and kept
+  one heavy job active at a time. Added Connection Doctor's on-demand native
+  journal export and meaningful Digitakt/report refusal regressions. Integration
+  and final validation continue; no production update or physical MIDI action
+  was performed.
 
 - 2026-09-07: Completed the Show Kit Forge integration in a fresh worktree,
   preserving both the dirty main checkout and the earlier unfinished feature

@@ -1,11 +1,16 @@
 # Auto-update implementation plan
 
 Date: 2026-09-07
-Status: proposed (awaiting kickoff)
+Status: in-flight — implemented; final replacement closeout/review pending
 Base: `modularize-v1.34`
 Design source of truth: [`2026-08-03-autoupdate-distribution.md`](2026-08-03-autoupdate-distribution.md)
 (the spec; this plan never restates its contracts — section references
 below point into it). Diagram: `docs/ARCHITECTURE_DIAGRAMS.md` §38.
+
+Current execution is the [September 8 closeout](2026-09-08-release-closeout.md),
+resumed September 13. It replaces #239/#241/#242/#243 with one verified PR while
+preserving author history. The original workstream design below is retained as
+design history; its three-PR shape is superseded by that bundled closeout.
 
 ## Execution shape — three PRs, one external follow-up
 

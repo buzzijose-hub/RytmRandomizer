@@ -3293,6 +3293,7 @@ flowchart LR
     Commands --> Bridge
     Bridge --> UI["UpdatePanel<br/>PanelRenderer + OperatorLogList"]
     UI --> Bridge
+    Doctor["Connection Doctor export<br/>bounded update_journal or unavailable"] --> Bridge
     Effects --> Exit["shared backend teardown"]
     Exit --> Install["consented verified-byte install<br/>key + platform evidence required"]
     Transport -. "optional separate request" .-> Counters["GitHub counters -> fleet snapshot -> dashboard"]
@@ -3301,8 +3302,8 @@ flowchart LR
 
 No key means metadata discovery with an explicit unavailable-download message,
 not staged bytes or install consent. Channel/freeze are native launch settings.
-Consent and skips are process-local. The activity tail is diagnostic; beacon
-completion reporting is not complete at this checkpoint. Fleet estimates
+Consent and skips are process-local. The activity tail is diagnostic; asynchronous
+beacon completion records a closed outcome without gating updates. Fleet estimates
 cannot grant installation authority. No part of this graph authorizes MIDI
 output, hardware saving or physical validation.
 

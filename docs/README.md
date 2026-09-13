@@ -36,6 +36,10 @@ lives under `docs/archive/` and is historical — safe to skip on first pass.
 - **[LOCAL_DEV_TOOLING_NOTES.md](LOCAL_DEV_TOOLING_NOTES.md)** — env-var documentation home per `PLAN_REQUIREMENTS.md` Gate 13.
 
 ### Orchestrator state and current live-KIT evidence (runtime/reference; exempt)
+- **[Release closeout plan](superpowers/plans/2026-09-08-release-closeout.md)** — current Forge/updater/Digitakt coordination, bounded verification and protected review.
+- **[Release closeout report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md)** — exact software receipts, studio artifact and remaining physical/platform limits.
+- **[Release closeout state](superpowers/plans/2026-09-08-release-closeout_STATE.json)** — resumable checkpoint with [schema](superpowers/plans/2026-09-08-release-closeout_STATE.schema.json) and [run log](superpowers/plans/2026-09-08-release-closeout_RUN_LOG.md).
+- **[Updater repair ledger](2026-09-08-updater-repair-ledger.md)** — confirmed findings and their evidence; no inferred production readiness.
 - **[SIMPLIFICATION_STATE.json](SIMPLIFICATION_STATE.json)** — orchestrator state file (JSON; validates against `SIMPLIFICATION_STATE.schema.json`).
 - **[SIMPLIFICATION_RUN_LOG.md](SIMPLIFICATION_RUN_LOG.md)** — append-only run log; survives context compaction.
 - **[2026-08-26-targeted-live-kit-mutation_STATE.json](2026-08-26-targeted-live-kit-mutation_STATE.json)** — resumable state for the current dual-machine integration run.

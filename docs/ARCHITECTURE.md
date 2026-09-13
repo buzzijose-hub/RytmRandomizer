@@ -1507,7 +1507,12 @@ state are process-local; the diagnostic journal does not restore them.
 
 React subscribes before requesting `update_snapshot`, then refreshes after
 state events. The snapshot contains native channel/freeze posture and at most
-50 recent journal rows. The adapter rejects malformed/stale replies. A consent
+50 recent journal rows. The event subscription rejects malformed/stale replies.
+Connection Doctor independently calls the same `readUpdateSnapshot` adapter on
+export, so its diagnostic packet includes `update_journal` even when the Updates
+panel has never mounted. The projection contains at most 50 native-sanitized
+rows; unavailable native IPC yields `null`, not a claimed empty history. It adds
+no backend WebSocket command and initiates no network update check. A consent
 form remains retryable until native acknowledgment for its version/choice;
 missing signing keys and failed/skipped states are displayed truthfully.
 Mounting the panel reads local state, not a network update check. The ordinary
@@ -1534,9 +1539,11 @@ the [current run report](superpowers/plans/2026-09-08-release-closeout_RUN_REPOR
 
 The local journal rotates at 256 KiB and retains one prior generation. Closed
 fields exclude free-form paths and identifiers. Check-ins are separate optional
-requests; their production completion callback is still absent in the inspected
-checkpoint, so `ping_ok`/`ping_failed` history is not complete. Fleet estimates
-can undercount or overcount and never grant installation authority.
+requests; their asynchronous completion feeds `ping_ok`/`ping_failed` journal
+rows without retries or update-state gating. A shared writer lock covers journal
+rotation plus append. The missing-key refusal also emits its typed reason into
+history. These diagnostic repairs require the final native regression run. Fleet
+estimates can undercount or overcount and never grant installation authority.
 
 ## 7. Enforcement summary
 
