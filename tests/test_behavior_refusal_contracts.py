@@ -122,7 +122,9 @@ def test_withdrawn_group_commands_stay_passive_and_explain_deferral(
     assert result.accepted is False
     assert result.reason == reason
     assert result.metadata["source"] == "GROUP_COMMANDS"
-    assert result.executes_command is False
+    assert result.executes_scene is False
+    assert result.executes_group_mutation is False
+    assert result.state_changed is False
     assert result.sends_real_midi is False
     assert result.opens_ports is False
 
@@ -137,6 +139,8 @@ def test_known_group_command_without_supported_packet_is_refused(
     assert result.accepted is False
     assert result.reason == "unsupported_scene_group_command"
     assert result.metadata["source"] == "GROUP_COMMANDS"
-    assert result.executes_command is False
+    assert result.executes_scene is False
+    assert result.executes_group_mutation is False
+    assert result.state_changed is False
     assert result.sends_real_midi is False
     assert result.opens_ports is False
