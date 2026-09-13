@@ -69,7 +69,7 @@ jobs:
           cache: "pip"
           cache-dependency-path: pyproject.toml
 
-      - name: Generate stable manifest
+      - name: Retrieve published release and its verified manifest
         shell: bash
         # `version` and `rollout_percent` are free-text dispatch inputs.
         # Interpolating them with `${{ }}` would splice operator-supplied
@@ -77,13 +77,23 @@ jobs:
         # value would execute. Through `env:` they are only ever data, and
         # `release_lib` refuses a malformed version on its own terms.
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROMOTE_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p generated
+          gh api --method GET "repos/${GITHUB_REPOSITORY}/releases/tags/v${PROMOTE_VERSION}" > generated/release.json
+          gh release download "v${PROMOTE_VERSION}" --pattern update-manifest.json --dir generated
+
+      - name: Preserve verified artifact identities in stable manifest
+        shell: bash
+        env:
           PROMOTE_VERSION: ${{ inputs.version }}
           PROMOTE_ROLLOUT_PERCENT: ${{ inputs.rollout_percent }}
         run: |
           set -euo pipefail
-          mkdir -p generated
-          python scripts/release_lib.py generate \
-            --channel stable \
+          python scripts/release_artifacts.py promote \
+            --manifest generated/update-manifest.json --release generated/release.json \
             --version "$PROMOTE_VERSION" \
             --rollout-percent "$PROMOTE_ROLLOUT_PERCENT" \
             --output generated/stable.json

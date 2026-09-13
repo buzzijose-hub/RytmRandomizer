@@ -19,6 +19,13 @@ on:
         type: boolean
         required: false
         default: true
+      hardware_revalidation:
+        description: >-
+          Add the hardware-revalidation warning. Detected wire-path or hardware-pin
+          changes and [hw-reval] tag annotations always set it, regardless of this input.
+        type: boolean
+        required: false
+        default: false
 
 # One release at a time, and never cancel one in flight: a cancelled run
 # can leave a Release created but its manifest uncommitted, which is the
@@ -191,6 +198,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - name: Set up Python 3.11
         uses: actions/setup-python@v7
         with:
@@ -221,6 +230,16 @@ jobs:
         with:
           pattern: rytm-sidecar-*
           path: release-inputs/sidecars
+      - name: Derive release notes and conservative hardware warning
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ needs.verify-tag.outputs.version }}
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          HARDWARE_REVALIDATION: ${{ inputs.hardware_revalidation || false }}
+        run: |
+          python scripts/release_artifacts.py metadata \
+            --repo-root . --version "$RELEASE_VERSION" --tag "$RELEASE_TAG" \
+            --hardware-revalidation "$HARDWARE_REVALIDATION" --output release-metadata.json
       - name: Verify signatures and assemble exact release assets
         id: assemble
         shell: bash
@@ -231,7 +250,8 @@ jobs:
         run: |
           python scripts/release_artifacts.py assemble \
             --inputs release-inputs --output assembled \
-            --version "$RELEASE_VERSION" --source-epoch "$SOURCE_EPOCH"
+            --version "$RELEASE_VERSION" --source-epoch "$SOURCE_EPOCH" \
+            --metadata release-metadata.json
       - name: Validate verified fleet manifest
         if: steps.assemble.outputs.signed == 'true'
         run: python scripts/validate_manifest.py assembled/beta.json --summary
@@ -247,7 +267,16 @@ jobs:
         env:
           RELEASE_SIGNED: ${{ steps.assemble.outputs.signed }}
         run: |
-          cp CHANGELOG.md release-notes.md
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          metadata = json.loads(Path("release-metadata.json").read_text(encoding="utf-8"))
+          notes = metadata["notes"] + "\n"
+          if metadata["hardware_revalidation"]:
+              notes += "\nHardware revalidation is required before relying on changed wire behavior.\n"
+          Path("release-notes.md").write_text(notes, encoding="utf-8")
+          PY
           if [ "$RELEASE_SIGNED" != "true" ]; then
             printf '\nUnsigned draft: no verified updater artifacts or fleet manifest were produced.\n' >> release-notes.md
           fi

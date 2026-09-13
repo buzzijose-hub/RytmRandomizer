@@ -12,16 +12,26 @@ import base64
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
+import tomllib
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Final
 from urllib.parse import quote
 
-from release_lib import SUPPORTED_TARGETS, ReleaseError, generate_manifest, is_valid_version
+from release_lib import (
+    SUPPORTED_TARGETS,
+    ReleaseError,
+    generate_manifest,
+    is_valid_version,
+    manifest_is_acceptable,
+    validate_manifest,
+)
+from release_paths import hardware_revalidation_required
 
 _DISTRIBUTION_SUFFIXES: Final[tuple[str, ...]] = (
     ".exe",
@@ -39,6 +49,10 @@ _UPDATER_SUFFIXES: Final[Mapping[str, str]] = {
     "darwin-x86_64": ".app.tar.gz",
     "darwin-aarch64": ".app.tar.gz",
 }
+_PUBLIC_MANIFEST_NAME: Final[str] = "update-manifest.json"
+_HARDWARE_DEPENDENCY: Final[re.Pattern[str]] = re.compile(
+    r"^(mido|python-rtmidi)\s*(?:[=<>!~;\[]|$)"
+)
 
 
 def _object(path: Path) -> dict[str, object]:
@@ -57,6 +71,94 @@ def _text(value: object, name: str) -> str:
 def _write_json(path: Path, value: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def release_notes(changelog: str, version: str) -> str:
+    """Extract the prepared release's section rather than the whole history."""
+    heading = re.search(rf"^## \[{re.escape(version)}\](?:[ \t].*)?$", changelog, re.MULTILINE)
+    if heading is None:
+        raise ValueError("CHANGELOG is missing the release version section")
+    following = changelog[heading.end() :]
+    end = re.search(r"^## ", following, re.MULTILINE)
+    notes = following[: end.start()] if end else following
+    if not notes.strip():
+        raise ValueError("release notes are empty")
+    return notes.strip()
+
+
+def _hardware_pins(pyproject: str) -> frozenset[str]:
+    document: object = tomllib.loads(pyproject)
+    if not isinstance(document, dict) or not isinstance(document.get("project"), dict):
+        raise ValueError("release project metadata is missing")
+    dependencies = document["project"].get("dependencies")
+    if not isinstance(dependencies, list) or not all(
+        isinstance(item, str) for item in dependencies
+    ):
+        raise ValueError("release dependencies are missing")
+    return frozenset(
+        item.strip() for item in dependencies if _HARDWARE_DEPENDENCY.match(item.strip())
+    )
+
+
+def _git(repo_root: Path, *arguments: str, optional: bool = False) -> str | None:
+    executable = shutil.which("git")
+    if executable is None:
+        raise ValueError("Git is required for release provenance")
+    result = subprocess.run(  # noqa: S603 - trusted Git executable; arguments are separate data
+        [executable, "-C", str(repo_root), *arguments],
+        check=False,
+        capture_output=True,
+        encoding="utf-8",
+    )
+    if result.returncode:
+        if optional:
+            return None
+        raise ValueError("could not read release history")
+    return result.stdout
+
+
+def release_metadata(
+    repo_root: Path, *, version: str, tag: str, requested: bool
+) -> dict[str, object]:
+    """Derive notes and the additive hardware warning from the actual release history."""
+    if not is_valid_version(version) or (tag and tag != f"v{version}"):
+        raise ValueError("release metadata version/tag mismatch")
+    previous = _git(
+        repo_root, "describe", "--tags", "--abbrev=0", "--match", "v[0-9]*", "HEAD^", optional=True
+    )
+    previous = previous.strip() if previous else None
+    if previous and not is_valid_version(previous.removeprefix("v")):
+        raise ValueError("previous release tag is not a valid version")
+    if previous:
+        changed = _git(
+            repo_root, "diff", "--no-renames", "--name-only", "-z", previous, "HEAD", "--"
+        )
+        previous_project = _git(repo_root, "show", f"{previous}:pyproject.toml")
+    else:
+        # No comparison baseline: first releases retain the conservative warning.
+        changed = _git(repo_root, "ls-tree", "-r", "--name-only", "-z", "HEAD")
+        previous_project = None
+    current_project = _git(repo_root, "show", "HEAD:pyproject.toml")
+    changelog = _git(repo_root, "show", "HEAD:CHANGELOG.md")
+    annotation = (
+        _git(repo_root, "for-each-ref", "--format=%(objecttype)%00%(contents)", f"refs/tags/{tag}")
+        if tag
+        else ""
+    )
+    annotation = (
+        annotation.partition("\0")[2] if annotation and annotation.startswith("tag\0") else ""
+    )
+    return {
+        "notes": release_notes(changelog or "", version),
+        "hardware_revalidation": hardware_revalidation_required(
+            (changed or "").split("\0"),
+            pins_changed=previous_project is None
+            or _hardware_pins(previous_project) != _hardware_pins(current_project or ""),
+            tag_annotation=annotation,
+            requested=requested,
+        ),
+        "previous_tag": previous,
+    }
 
 
 def configure(config_path: Path, *, target: str, updater_requested: bool, public_key: str) -> bool:
@@ -231,6 +333,8 @@ def assemble(
     public_key: str,
     repository: str,
     pub_date: str,
+    notes: str,
+    hardware_revalidation: bool,
     run_url: str,
     workflow_sha: str,
     verifier: str = "minisign",
@@ -301,7 +405,8 @@ def assemble(
             channel="beta",
             version=version,
             pub_date=pub_date,
-            notes="",
+            notes=notes,
+            hardware_revalidation=hardware_revalidation,
             platforms=platforms,
             source_sha=source_sha,
             workflow_run_url=run_url,
@@ -325,12 +430,63 @@ def assemble(
         _copy(source, output / "dist" / name)
     if manifest is not None:
         _write_json(output / "beta.json", manifest)
+        _copy(output / "beta.json", output / "dist" / _PUBLIC_MANIFEST_NAME)
         for target in sorted(targets):
             (output / "dist" / f"beacon-{version}-{target}.txt").write_bytes(b".")
     _write_json(
         output / "release-status.json", {"signed": bool(platforms), "targets": sorted(targets)}
     )
     return bool(platforms)
+
+
+def promote(
+    manifest_path: Path,
+    release_path: Path,
+    output: Path,
+    *,
+    version: str,
+    rollout_percent: int,
+) -> None:
+    """Promote an archived verified release without regenerating artifact identities."""
+    if (
+        not is_valid_version(version)
+        or type(rollout_percent) is not int
+        or not 0 <= rollout_percent <= 100
+    ):
+        raise ValueError("invalid promotion version or rollout percentage")
+    release = _object(release_path)
+    if release.get("tag_name") != f"v{version}" or release.get("draft") is not False:
+        raise ValueError("promotion requires an existing published release of this version")
+    manifest = _object(manifest_path)
+    if manifest.get("version") != version or not manifest_is_acceptable(
+        validate_manifest(manifest, expected_channel="beta")
+    ):
+        raise ValueError("archived release manifest is invalid or names another version")
+    platforms = manifest.get("platforms")
+    assets = release.get("assets")
+    if (
+        not isinstance(platforms, dict)
+        or set(platforms) != set(SUPPORTED_TARGETS)
+        or not isinstance(assets, list)
+    ):
+        raise ValueError("published release must contain every supported target")
+    published_urls = {
+        asset.get("browser_download_url")
+        for asset in assets
+        if isinstance(asset, dict) and isinstance(asset.get("browser_download_url"), str)
+    }
+    if not all(
+        isinstance(entry, dict) and entry.get("url") in published_urls
+        for entry in platforms.values()
+    ):
+        raise ValueError("an archived updater artifact is absent from the published release")
+    # Preserve pub_date, notes, hardware warning, minimum-version policy,
+    # provenance, exact signed artifact URLs and forward-compatible fields.
+    manifest["channel"] = "stable"
+    manifest["rollout_percent"] = rollout_percent
+    if not manifest_is_acceptable(validate_manifest(manifest, expected_channel="stable")):
+        raise ValueError("promoted manifest failed validation")
+    _write_json(output, manifest)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -353,6 +509,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     assembly.add_argument("--output", type=Path, required=True)
     assembly.add_argument("--version", required=True)
     assembly.add_argument("--source-epoch", type=int, required=True)
+    assembly.add_argument("--metadata", type=Path, required=True)
+    metadata = commands.add_parser("metadata")
+    metadata.add_argument("--repo-root", type=Path, required=True)
+    metadata.add_argument("--version", required=True)
+    metadata.add_argument("--tag", default="")
+    metadata.add_argument("--hardware-revalidation", choices=("true", "false"), default="false")
+    metadata.add_argument("--output", type=Path, required=True)
+    promotion = commands.add_parser("promote")
+    promotion.add_argument("--manifest", type=Path, required=True)
+    promotion.add_argument("--release", type=Path, required=True)
+    promotion.add_argument("--version", required=True)
+    promotion.add_argument("--rollout-percent", type=int, required=True)
+    promotion.add_argument("--output", type=Path, required=True)
     self_test = commands.add_parser("verify-self-test")
     self_test.add_argument("--fixture", type=Path, required=True)
     args = parser.parse_args(argv)
@@ -379,8 +548,31 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
         elif args.command == "verify-self-test":
             verify_self_test(args.fixture, executable=os.environ.get("MINISIGN", "minisign"))
+        elif args.command == "metadata":
+            _write_json(
+                args.output,
+                release_metadata(
+                    args.repo_root,
+                    version=args.version,
+                    tag=args.tag,
+                    requested=args.hardware_revalidation == "true",
+                ),
+            )
+        elif args.command == "promote":
+            promote(
+                args.manifest,
+                args.release,
+                args.output,
+                version=args.version,
+                rollout_percent=args.rollout_percent,
+            )
         else:
             repository = os.environ.get("GITHUB_REPOSITORY", "")
+            metadata = _object(args.metadata)
+            notes = _text(metadata.get("notes"), "notes")
+            hardware_revalidation = metadata.get("hardware_revalidation")
+            if type(hardware_revalidation) is not bool:
+                raise ValueError("release hardware-revalidation flag must be a boolean")
             signed = assemble(
                 args.inputs,
                 args.output,
@@ -391,6 +583,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 pub_date=datetime.fromtimestamp(args.source_epoch, timezone.utc)
                 .isoformat()
                 .replace("+00:00", "Z"),
+                notes=notes,
+                hardware_revalidation=hardware_revalidation,
                 run_url=f"https://github.com/{repository}/actions/runs/{os.environ.get('GITHUB_RUN_ID', '')}",
                 workflow_sha=os.environ.get("GITHUB_WORKFLOW_SHA", "") or source_sha,
                 verifier=os.environ.get("MINISIGN", "minisign"),

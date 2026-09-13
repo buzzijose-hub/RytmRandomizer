@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -74,6 +75,8 @@ def _assemble(inputs: Path, output: Path) -> bool:
         public_key=_KEY,
         repository="o/r",
         pub_date="2026-09-08T12:00:00Z",
+        notes="Prepared release notes",
+        hardware_revalidation=True,
         run_url="https://github.com/o/r/actions/runs/1",
         workflow_sha=_SHA,
     )
@@ -231,6 +234,11 @@ def test_signed_assembly_verifies_exact_files_before_manifest_and_includes_all_d
     manifest = json.loads((output / "beta.json").read_text())
     assert set(manifest["platforms"]) == set(artifacts.SUPPORTED_TARGETS)
     assert len(verified) == 4
+    assert manifest["notes"] == "Prepared release notes"
+    assert manifest["hardware_revalidation"] is True
+    assert (output / "dist" / "update-manifest.json").read_bytes() == (
+        output / "beta.json"
+    ).read_bytes()
     for target, entry in manifest["platforms"].items():
         name = entry["url"].rsplit("/", 1)[-1]
         assert name in verified
@@ -374,3 +382,214 @@ def test_desktop_workflow_configures_target_and_cleans_cached_bundles_before_bui
     build = next(step for step in steps if step.get("run") == "cargo tauri build")
     collect = next(step for step in steps if "release_artifacts.py collect" in step.get("run", ""))
     assert steps.index(cache) < steps.index(cleanup) < steps.index(build) < steps.index(collect)
+
+
+def _release_history(
+    tmp_path: Path,
+    *,
+    changed_path: str = "README.md",
+    pins: str = "1.3.3",
+    annotation: str = "",
+    previous: bool = True,
+) -> Path:
+    root = tmp_path / "history"
+    root.mkdir()
+    git = shutil.which("git")
+    assert git is not None
+
+    def run(*args: str) -> None:
+        subprocess.run(
+            [git, "-C", str(root), *args], check=True, capture_output=True, encoding="utf-8"
+        )
+
+    def project(mido: str) -> str:
+        return f'[project]\nname="test"\ndependencies=["mido=={mido}","python-rtmidi==1.5.8"]\n'
+
+    run("init", "--quiet")
+    run("config", "user.name", "Release test")
+    run("config", "user.email", "release-test@example.invalid")
+    (root / "pyproject.toml").write_text(project("1.3.3"), encoding="utf-8")
+    (root / "CHANGELOG.md").write_text(
+        "## [1.34.0] - 2026-01-01\n\nPrevious release\n", encoding="utf-8"
+    )
+    run("add", ".")
+    run("commit", "--quiet", "-m", "initial")
+    if previous:
+        run("tag", "v1.34.0")
+    (root / "CHANGELOG.md").write_text(
+        "## [Unreleased]\n\nFuture notes\n\n## [1.35.0] - 2026-09-08\n\n### Fixed\n\n- Current release.\n\n## [1.34.0] - 2026-01-01\n\nOld notes\n",
+        encoding="utf-8",
+    )
+    (root / "pyproject.toml").write_text(project(pins), encoding="utf-8")
+    changed = root / changed_path
+    changed.parent.mkdir(parents=True, exist_ok=True)
+    changed.write_text("changed\n", encoding="utf-8")
+    run("add", ".")
+    run("commit", "--quiet", "-m", "release changes")
+    if annotation:
+        run("tag", "-a", "v1.35.0", "-m", annotation)
+    return root
+
+
+@pytest.mark.parametrize(
+    ("path", "pins", "annotation", "requested", "expected"),
+    [
+        ("README.md", "1.3.3", "", False, False),
+        ("rytm_randomizer/engines/pad.py", "1.3.3", "", False, True),
+        ("rytm_randomizer/senders/guarded.py", "1.3.3", "", False, True),
+        ("rytm_randomizer/app.py", "1.3.3", "", False, True),
+        ("tests/fixtures/v134_parity/sample.json", "1.3.3", "", False, True),
+        ("README.md", "1.3.4", "", False, True),
+        ("README.md", "1.3.3", "release [hw-reval]", False, True),
+        ("README.md", "1.3.3", "release notes", False, False),
+        ("README.md", "1.3.3", "", True, True),
+    ],
+)
+def test_release_metadata_uses_actual_git_diff_pins_and_additive_flags(
+    tmp_path: Path, path: str, pins: str, annotation: str, requested: bool, expected: bool
+) -> None:
+    root = _release_history(tmp_path, changed_path=path, pins=pins, annotation=annotation)
+    metadata = artifacts.release_metadata(
+        root, version="1.35.0", tag="v1.35.0" if annotation else "", requested=requested
+    )
+    assert metadata == {
+        "notes": "### Fixed\n\n- Current release.",
+        "hardware_revalidation": expected,
+        "previous_tag": "v1.34.0",
+    }
+
+
+def test_first_release_without_comparison_tag_keeps_conservative_warning(tmp_path: Path) -> None:
+    root = _release_history(tmp_path, previous=False)
+    metadata = artifacts.release_metadata(root, version="1.35.0", tag="", requested=False)
+    assert metadata["hardware_revalidation"] is True
+    assert metadata["previous_tag"] is None
+
+
+@pytest.mark.parametrize("text", ["## [Unreleased]\nFuture\n", "## [1.35.0]\n\n## [1.34.0]\nOld\n"])
+def test_missing_or_empty_release_notes_are_refused(text: str) -> None:
+    with pytest.raises(ValueError, match="release version section|notes are empty"):
+        artifacts.release_notes(text, "1.35.0")
+
+
+def _promotion_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Path]:
+    monkeypatch.setattr(artifacts, "verify_signature", lambda *args, **kwargs: None)
+    output = tmp_path / "assembled"
+    _assemble(_inputs(tmp_path), output)
+    manifest = output / "dist" / "update-manifest.json"
+    data = json.loads(manifest.read_text())
+    data["future_field"] = {"preserve": "value"}
+    data["minimum_version"] = "1.30.0"
+    manifest.write_text(json.dumps(data), encoding="utf-8")
+    release = tmp_path / "published-release.json"
+    release.write_text(
+        json.dumps(
+            {
+                "tag_name": "v1.35.0",
+                "draft": False,
+                "assets": [
+                    {"browser_download_url": entry["url"]} for entry in data["platforms"].values()
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    return manifest, release
+
+
+def test_promotion_preserves_exact_artifacts_notes_warning_and_provenance(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    manifest, release = _promotion_files(tmp_path, monkeypatch)
+    output = tmp_path / "stable.json"
+    assert (
+        artifacts.main(
+            [
+                "promote",
+                "--manifest",
+                str(manifest),
+                "--release",
+                str(release),
+                "--version",
+                "1.35.0",
+                "--rollout-percent",
+                "10",
+                "--output",
+                str(output),
+            ]
+        )
+        == 0
+    )
+    expected = json.loads(manifest.read_text())
+    expected.update(channel="stable", rollout_percent=10)
+    assert json.loads(output.read_text()) == expected
+
+
+@pytest.mark.parametrize(
+    "damage",
+    [
+        "version",
+        "draft",
+        "release_tag",
+        "missing_asset",
+        "wrong_asset",
+        "invalid_manifest",
+        "partial_targets",
+        "rollout",
+    ],
+)
+def test_promotion_refuses_unpublished_mismatched_or_incomplete_release(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, damage: str
+) -> None:
+    manifest, release = _promotion_files(tmp_path, monkeypatch)
+    data = json.loads(manifest.read_text())
+    published = json.loads(release.read_text())
+    if damage == "version":
+        data["version"] = "1.36.0"
+    elif damage == "draft":
+        published["draft"] = True
+    elif damage == "release_tag":
+        published["tag_name"] = "v1.34.0"
+    elif damage == "missing_asset":
+        published["assets"].pop()
+    elif damage == "wrong_asset":
+        published["assets"][0]["browser_download_url"] += "-not-the-artifact"
+    elif damage == "invalid_manifest":
+        data["hardware_revalidation"] = "false"
+    elif damage == "partial_targets":
+        data["platforms"].pop(next(iter(data["platforms"])))
+    manifest.write_text(json.dumps(data), encoding="utf-8")
+    release.write_text(json.dumps(published), encoding="utf-8")
+    output = tmp_path / "stable.json"
+    with pytest.raises(ValueError):
+        artifacts.promote(
+            manifest,
+            release,
+            output,
+            version="1.35.0",
+            rollout_percent=101 if damage == "rollout" else 10,
+        )
+    assert not output.exists()
+
+
+def test_release_workflows_wire_actual_metadata_and_archived_promotion() -> None:
+    root = Path(__file__).resolve().parents[1]
+    release = yaml.safe_load((root / ".github/workflows/release.yml").read_text())
+    steps = release["jobs"]["publish"]["steps"]
+    assert steps[0]["with"]["fetch-depth"] == 0
+    metadata = next(
+        step for step in steps if "release_artifacts.py metadata" in step.get("run", "")
+    )
+    assert (
+        metadata["env"]["RELEASE_TAG"] == "${{ github.ref_type == 'tag' && github.ref_name || '' }}"
+    )
+    assembly = next(step for step in steps if step.get("id") == "assemble")
+    assert "--metadata release-metadata.json" in assembly["run"]
+    assert steps.index(metadata) < steps.index(assembly)
+    promotion = yaml.safe_load((root / ".github/workflows/promote.yml").read_text())
+    job = promotion["jobs"]["promote"]
+    assert job["environment"] == "stable-promote"
+    runs = "\n".join(step.get("run", "") for step in job["steps"])
+    assert "release_lib.py generate" not in runs
+    assert "release_artifacts.py promote" in runs
+    assert "gh release download" in runs and "--pattern update-manifest.json" in runs

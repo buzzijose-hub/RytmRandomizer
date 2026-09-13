@@ -357,6 +357,26 @@ The same job writes the beta manifest with a reproducible UTC date from the
 source commit and generates four one-byte beacon assets. The exact assembled
 directory is both retained as workflow evidence and used for release upload.
 
+Manifest notes come from the current version's prepared `CHANGELOG.md` section;
+missing or empty notes refuse assembly. The hardware warning comes from the
+actual diff against the previous reachable version tag, changes to the pinned
+MIDI dependencies, an annotated tag's `[hw-reval]` marker, or the manual
+`hardware_revalidation` input. These conditions are combined with OR: the input
+cannot clear a detected hardware change. `scripts/release_paths.py` owns the
+path list, and an architecture regression requires it to cover every permitted
+transmit boundary and the frozen parity fixtures. A first release without a
+comparison tag conservatively carries the warning. The flag requests physical
+revalidation; it does not claim that revalidation already happened.
+
+Every verified release also ships its exact beta manifest as
+`update-manifest.json`. The environment-gated promotion workflow downloads that
+version's archived manifest and checks the published release still contains
+all four referenced artifacts. Promotion changes only the channel and rollout
+percentage; URLs, signatures, release date, notes, hardware warning, minimum
+version, and build provenance are preserved. This also permits rollback to an
+older release without rebuilding it. Releases predating this verified manifest
+asset cannot be promoted through this path, and unsigned drafts are refused.
+
 Without the updater private key, builds set `createUpdaterArtifacts=false`
 and still produce ordinary distributions. Non-dry release runs retain the
 unsigned-draft behavior; no beta manifest or fleet beacon is produced and the
