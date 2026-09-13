@@ -16,11 +16,28 @@ if (-not (Test-Path -LiteralPath $nativeFixtureCompiler)) { throw 'Windows .NET 
 $nativeFixtureSuccessor = Join-Path $nativeFixtureOutput 'RytmUpdaterAcceptanceSuccessor.exe'
 $nativeFixtureInstaller = Join-Path $nativeFixtureOutput 'RytmUpdaterAcceptanceInstaller.exe'
 $nativeFixtureCommon = @('/nologo', '/target:winexe', '/platform:x64', '/optimize+', '/reference:System.Web.Extensions.dll',
-    "/win32manifest:$(Join-Path $PSScriptRoot 'as-invoker.manifest')", (Join-Path $PSScriptRoot 'AcceptancePaths.cs'))
-& $nativeFixtureCompiler @nativeFixtureCommon "/out:$nativeFixtureSuccessor" (Join-Path $PSScriptRoot 'AcceptanceSuccessor.cs')
-if ($LASTEXITCODE -ne 0) { throw 'Acceptance successor compilation failed' }
-& $nativeFixtureCompiler @nativeFixtureCommon "/out:$nativeFixtureInstaller" "/resource:$nativeFixtureSuccessor,Acceptance.Successor" (Join-Path $PSScriptRoot 'AcceptanceInstaller.cs')
-if ($LASTEXITCODE -ne 0) { throw 'Acceptance installer compilation failed' }
+    ('/win32manifest:"{0}"' -f (Join-Path $PSScriptRoot 'as-invoker.manifest')),
+    ('"{0}"' -f (Join-Path $PSScriptRoot 'AcceptancePaths.cs')))
+# Framework csc has legacy command-line parsing. Response files keep the quotes
+# around each switch value/source path intact across PowerShell native invocation.
+$nativeFixtureSuccessorArgs = $nativeFixtureCommon + @(
+    ('/out:"{0}"' -f $nativeFixtureSuccessor),
+    ('"{0}"' -f (Join-Path $PSScriptRoot 'AcceptanceSuccessor.cs')))
+$nativeFixtureInstallerArgs = $nativeFixtureCommon + @(
+    ('/out:"{0}"' -f $nativeFixtureInstaller),
+    ('/resource:"{0}",Acceptance.Successor' -f $nativeFixtureSuccessor),
+    ('"{0}"' -f (Join-Path $PSScriptRoot 'AcceptanceInstaller.cs')))
+$nativeFixtureEncoding = [System.Text.UTF8Encoding]::new($false)
+[System.IO.File]::WriteAllLines((Join-Path $nativeFixtureOutput 'successor.rsp'), $nativeFixtureSuccessorArgs, $nativeFixtureEncoding)
+[System.IO.File]::WriteAllLines((Join-Path $nativeFixtureOutput 'installer.rsp'), $nativeFixtureInstallerArgs, $nativeFixtureEncoding)
+Push-Location -LiteralPath $nativeFixtureOutput
+try {
+    & $nativeFixtureCompiler '@successor.rsp'
+    if ($LASTEXITCODE -ne 0) { throw 'Acceptance successor compilation failed' }
+    & $nativeFixtureCompiler '@installer.rsp'
+    if ($LASTEXITCODE -ne 0) { throw 'Acceptance installer compilation failed' }
+}
+finally { Pop-Location }
 $nativeFixturePublic = Join-Path $nativeFixtureOutput 'ephemeral.pub'
 $nativeFixtureSecret = Join-Path $nativeFixtureOutput 'ephemeral.key'
 $nativeFixtureSignature = Join-Path $nativeFixtureOutput 'installer.minisig'
