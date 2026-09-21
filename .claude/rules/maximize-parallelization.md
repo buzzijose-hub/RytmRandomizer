@@ -78,6 +78,10 @@ For agents, the same test applies to each agent's prompt: if you can write each 
 
 ## Cross-references
 
+- `.claude/rules/parallel-agent-composition.md` — **the companion rule**: this
+  file says dispatch in parallel; that one says how to verify the parallel
+  outputs actually compose. A run that follows this rule and not that one
+  produces eleven individually-green agents and a broken merge.
 - `.claude/skills/learned/parallel-agent-bundle/SKILL.md` — operational pattern for dispatching parallel agents with pre-declared disjoint file scopes.
 - `.claude/skills/learned/parallel-agents-need-git-worktrees/SKILL.md` — when parallel agents must each have an isolated checkout (file overlap or branch divergence).
 - `.claude/rules/cascade-merge-pattern.md` — the same fan-out + integrate shape applied to PRs instead of in-session work.

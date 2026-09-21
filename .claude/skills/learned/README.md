@@ -9,6 +9,9 @@ These are NOT generic best-practices. Each one solves a *specific* bug or class 
 | Skill | When it bites you |
 |---|---|
 | [parallel-agents-need-git-worktrees](parallel-agents-need-git-worktrees/SKILL.md) | You're dispatching 2+ agents in parallel and one reports "the file changed under me" — they're sharing a working tree. Branches alone are not enough isolation. |
+| [agent-report-did-not-run](agent-report-did-not-run/SKILL.md) | A parallel agent reports "all green" but its suite errored at collection because a sibling's module was absent — zero tests ran. Parse the runner's summary; DID NOT RUN is a third outcome. |
+| [cross-language-seam-drift-guard](cross-language-seam-drift-guard/SKILL.md) | Two sides agree on the payload and disagree on the channel (IPC emit vs DOM listener). Both suites green, nothing crosses. Pin the CALL FORM, or generate one side from the other. |
+| [worktree-base-and-lint-traps](worktree-base-and-lint-traps/SKILL.md) | Harness worktrees branch from the ORIGINAL HEAD (agents silently get a stale base), and repo-root lint walks into siblings' half-written files and fails your pre-push on their code. |
 | [github-actions-matrix-conditional](github-actions-matrix-conditional/SKILL.md) | After a workflow edit, `gh run list --commit <sha>` is empty even though the YAML parses. Conditional matrix with `exclude: + ternary` silently invalidates the workflow. |
 | [pip-audit-editable-install](pip-audit-editable-install/SKILL.md) | `pip-audit --strict` fails with "Dependency not found on PyPI" or "distribution marked as editable" because the project isn't published. `--skip-editable` does NOT help. |
 | [branch-protection-with-path-filters](branch-protection-with-path-filters/SKILL.md) | PR stuck on "Some checks are still pending" forever. Path-filtered jobs that skipped are treated as pending by branch protection. |

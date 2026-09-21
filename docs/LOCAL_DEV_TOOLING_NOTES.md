@@ -173,6 +173,72 @@ something to set to make a red gate go green.
 | `SOURCE_DATE_EPOCH` | unset | Optional Unix epoch used by the passive AL16 Rytm kit exporter to freeze manifest timestamps for reproducible evidence. When unset, the exporter uses Unix epoch 0 for deterministic evidence. It never enables MIDI or hardware access. |
 | `RYTM_TEST_REFERENCE` | unset | Optional path to a private local initialized Analog Rytm saved-kit SysEx dump used only by the opt-in codec integration test. When unset, the test skips. Never commit the referenced dump; this variable does not enable MIDI or hardware access. |
 
+### Desktop update and release configuration
+
+Channel, freeze and beacon settings are resolved when the desktop shell starts.
+The Updates panel displays those settings; change the environment and restart
+rather than treating a local UI value as native configuration. None of these
+settings grants MIDI or hardware-save authority.
+
+Connection Doctor reads the native snapshot on clipboard export through the
+shared TypeScript adapter, independent of Updates panel mounting. It exports
+at most 50 sanitized journal rows and represents unavailable native activity
+as `update_journal: null`; it starts no network update check.
+
+| Variable/configuration | Unset/default | Reader and effect |
+| --- | --- | --- |
+| `RYTM_RAND_UPDATES` | Enabled | Shell launch: trimmed, case-insensitive `off` freezes checks, artifact downloads, installs and check-ins. Other values leave checking enabled. |
+| `RYTM_RAND_UPDATE_BEACON` | Enabled when updates are enabled | Shell launch: `off` disables the separate check-in request; freeze takes precedence. |
+| `RYTM_RAND_UPDATE_CHANNEL` | `stable` | Shell launch: accepts `stable`/`beta`, trimming and ignoring case; unknown values fall back to `stable`. |
+| `RYTM_RAND_UPDATE_MANIFEST_URL` | `https://raw.githubusercontent.com/buzzijose-hub/RytmRandomizer/releases` | Base URL read for each check; appends the channel filename. Invalid values fall back. The parser accepts HTTPS and exact loopback HTTP hosts, rejects credentials/query/fragment, and does not bypass artifact or signature validation. The debug native fixture separately enables loopback HTTP transport. |
+| `XDG_CONFIG_HOME`, `APPDATA`, `HOME`, `USERPROFILE` | First available, in that order; otherwise process temporary directory | Update state root: `XDG_CONFIG_HOME/RytmRandomizer`, else `APPDATA/RytmRandomizer`, else `(HOME or USERPROFILE)/.config/RytmRandomizer`, else `temp/RytmRandomizer`. Stores the local rollout ID and journal. |
+| `TAURI_SIGNING_PUBLIC_KEY` | Empty | Actions repository variable, passed as the reusable workflow's public-key input and as an environment value to `release_artifacts.py`. Configures the actual bundled `tauri.conf.json`; a keyless client can discover metadata but cannot download or install artifacts. |
+| `TAURI_SIGNING_PRIVATE_KEY` | Empty | Actions secret explicitly passed to the Tauri build. Without it, updater-artifact production is disabled; ordinary distributions can still build. Never commit this value. |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Empty | Optional password for the Tauri signing key, supplied only to the signing build. |
+| `MINISIGN` | `minisign` on PATH | Executable used by `release_artifacts.py` for the genuine signature self-test and assembled-artifact verification. Missing verifier refuses signed assembly. |
+| `RYTM_PUB_DATE` | No implicit current-time fallback | Lower-level `release_lib.py` manifest generation uses `--pub-date` first, then this RFC3339 timestamp; missing date refuses generation. The release assembly instead receives a reproducible source-commit epoch. |
+| `RYTM_SIGNATURE_<TARGET>` | No signature for that target | Lower-level manifest generation reads a signature, e.g. `RYTM_SIGNATURE_WINDOWS_X86_64`; it does not generate one. With no signed targets it refuses. The release assembly reads and verifies actual signature sidecars. |
+| `GITHUB_REPOSITORY` | Empty outside Actions | Artifact/provenance URL owner. Manifest generation requires it; fleet collection can use `--repo`. |
+| `GITHUB_TOKEN` | Anonymous API access when absent | GitHub workflow/fleet access; never enters a client manifest, journal or check-in. |
+| `GITHUB_SHA`, `GITHUB_RUN_ID`, `GITHUB_WORKFLOW_SHA` | Empty outside Actions; workflow SHA falls back to source SHA | Release source/run provenance. Explicit local artifact collection must supply valid source identity. |
+| `GITHUB_STEP_SUMMARY`, `GITHUB_OUTPUT` | No extra output file | Optional Actions summary/output destinations. These do not enable application or hardware behavior. |
+
+Workflow step-local variables such as `BUILD_REF`, `BUILD_SIGN`,
+`BUILD_UPDATER_ARTIFACTS`, `RUNNER_OS_LABEL`, `UPDATER_REQUESTED`,
+`DRY_RUN_INPUT`, `REF_TYPE`, `EVENT_NAME`, `INTEGRATION_BRANCH`, `PROMOTE_VERSION`, `PROMOTE_ROLLOUT_PERCENT`, `RELEASE_SIGNED` and `RELEASE_DRY_RUN` are bound from workflow
+inputs or verified outputs, not desktop settings. Manual release dispatch
+uses `dry_run=true` by default. Secret presence alone never establishes a
+signed release: assembly verifies the collected bytes, signatures, version,
+source and complete target set before setting `signed=true`.
+
+The runtime verification key is bundled at `plugins.updater.pubkey` in
+`desktop/shell/tauri.conf.json`; `RYTM_RAND_UPDATER_PUBKEY` is not read.
+The old browser fixture's `RYTM_RAND_UPDATE_FORCED_INSTALL_ID`,
+`RYTM_RAND_UPDATE_CURRENT_VERSION` and `RYTM_RAND_UPDATE_CONFIG_DIR` names
+are not supported production overrides. Consent and skipped versions last
+for the running process; the diagnostic journal does not restore them.
+
+#### Native acceptance fixture (development only)
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `RYTM_NATIVE_TEST_BINARY` | Unset: native runner refuses | Absolute path to the isolated debug shell built with `--features native-test`. |
+| `RYTM_NATIVE_HANDOFF_INPUTS` | Unset: explicit Windows install target refuses | Absolute `handoff-inputs.json` path produced by the ephemeral installer fixture preparation. Used only by the two real Windows handoff cases. |
+| `PYTHON`, then `PYTHON_EXECUTABLE` | Unset: native runner refuses | Absolute existing Python executable for the fixture's passive sidecar. |
+| `RYTM_RAND_NATIVE_TEST_CONFIG` | Unset: feature-enabled shell refuses | Runner-generated JSON configuration under its temporary root. Ordinary builds do not include this reader. |
+| `RYTM_RAND_MIDI_BACKEND` | Fixture requires exactly `off` | Prevents real MIDI in native acceptance; the normal application's documented backend setting is unchanged. |
+| `CI` | Unset/false locally | Native Playwright reporter and development-server reuse choice. |
+
+The fixture supplies its own loopback origin, config/WebView roots, test
+public key and rollout ID, and isolates terminal install/restart operations.
+A `native-test` release build is rejected at compile time. Missing native
+prerequisites fail rather than turn safety cases into skipped tests. The
+September 8 checkpoint records 32 actual Wry/WebView2 cases passing in 53.9
+seconds and strict native TypeScript passing. Terminal installation is recorded,
+not performed against the operating system. See `desktop/web/native-e2e/README.md` for the recipe.
+
+See [Building installers](BUILDING_INSTALLERS.md#verified-updater-release-assembly), [native acceptance](../desktop/web/native-e2e/README.md) and [the current closeout](superpowers/plans/2026-09-08-release-closeout.md).
+
 ## 8. Pre-push hook hardening (Windows Store python shim)
 
 The repo's pre-push hook (`.githooks/pre-push`) runs `scripts/code_review_gate.py --mode git-hook` to enforce the mechanical gates. On Windows, the bare `python` / `py` / `python3` commands frequently resolve to the Windows Store shim under `%LOCALAPPDATA%\Microsoft\WindowsApps\` — those shim executables throw "specified disk or diskette cannot be accessed" when invoked from non-interactive subprocesses (which is exactly what a git hook is).

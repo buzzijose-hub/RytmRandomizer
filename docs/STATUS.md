@@ -1,10 +1,10 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-09-07. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-09-21. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
 
-Show Kit Forge is implemented on `codex/show-kit-forge-complete` as one
+Show Kit Forge merged through PR #238 on September 8 as one
 versioned, paired Analog Rytm/Analog Four preparation workflow. It keeps
 `source -> candidate -> favorite -> hardware-saved -> verified -> show-ready`
 as distinct evidence states; selection and a Rytm live audition do not imply a
@@ -53,18 +53,60 @@ Final local verification passed: 8,926 Python tests with five skips, all 32
 touched production modules at 100% coverage, and 852 frontend tests with all
 coverage metrics at 100%. The full browser suite passed 21 tests with two
 existing skips using disabled/fake MIDI; its screenshots were inspected.
-The identified Windows build at `076ef67a3276bdd27ec6657f9dff77ccf207a5e2`
-and its actual packaged GUI smoke passed with MIDI off on loopback port 64055.
-The shell and bundled sidecar hashes match the build manifest, and authenticated
-catalog access and the UI refresh succeeded. The
-[software handoff](2026-09-07-show-kit-forge-software-closeout.md) records the
-exact executable, receipts, preserved backups and still-blank physical checklist.
-Source CI passed on Windows, macOS and Linux. Required maintainer review remains
-pending; the
-observed review decision is `CHANGES_REQUESTED`. No hardware validation or merge
-approval is inferred from the software smoke.
+The current Windows studio package is source
+`c79597b69d055c32b8175fd665c77f20c384677c`, with the same product tree as the
+empty-bank-export follow-up #245 at `38397dbb`. Its actual WebView2/bundled-backend
+smoke passed with MIDI off on September 8 at 15:08:21.444 UTC; fresh-token
+restart/reconnect, bank persistence, empty-export guidance and missing-capture
+refusal passed. Both executable hashes and all 14 handoff-file hashes were
+verified. The [current closeout report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md)
+records the exact artifact and still-blank physical checklist. Eddie approved
+#238 before its merge as `b1d6ff56`. The separate #245 required checks are green;
+its required review remains pending. Software receipts do not grant hardware
+validation or approval to another source revision.
+
+The updater program from #239/#241/#242/#243 is published as
+[PR #248](https://github.com/buzzijose-hub/RytmRandomizer/pull/248) against
+`modularize-v1.34`, preserving original authorship. Repairs
+connect native scheduling, actual manifest policy, verified artifact retention,
+consent/teardown, authoritative frontend snapshots and release verification.
+Final local validation source `7cc10e92` passed 9,922 Python tests with six skips
+in 278.98s; all 51 touched production files have 100% line/branch coverage and
+the 99.46% pure-branch result clears the unchanged 99% floor. Frontend passed
+1,010 tests across 71 files in 40.58s with all configured coverage at 100%; ESLint
+and build passed. Browser passed 32 tests with two existing skips in 52.6s:
+the keyboard skeleton and the armed journey requiring unavailable virtual MIDI.
+No updater or native case is skipped. The 32-case native recorder matrix and
+two actual signed Windows PE handoffs passed. Final local Rust/Python static
+checks passed. At published source `e2e46d6ec086a5f86a52a3bb080be4bfcbe9da5d`,
+all hosted checks passed, including both push and PR `required-checks` and the
+Windows native recorder/PE suites. Protected review, explicit architecture-exception
+approval, production credentials and production NSIS/MSI/macOS/Linux installer
+evidence remain pending. No all-gates closeout is claimed.
+Original PRs #239/#241/#242/#243 were closed as superseded on September 21
+after their latest heads were verified as included in #248 `e2e46d6e`.
+The [plan](superpowers/plans/2026-09-08-release-closeout.md),
+[state](superpowers/plans/2026-09-08-release-closeout_STATE.json) and
+[repair ledger](2026-09-08-updater-repair-ledger.md) identify the current checkpoint.
+Digitakt #240 remains a separate passive device PR; it is not included as merged
+support in this updater checkpoint.
 
 ## Recent Cleanup
+
+- 2026-09-21: Resumed the six-PR closeout and verified #248's hosted checks at
+  `e2e46d6e`, including both required aggregates and actual Windows acceptance.
+  Updated native architecture maps and the current state/report to distinguish
+  the 32 recorder cases from two real signed PE handoffs. Closed the four original
+  updater PRs as superseded after verifying their latest heads are included.
+  Protected review and
+  production/hardware evidence remain separate from these passing software gates.
+
+- 2026-09-13: Resumed the six-PR closeout after the user's continuation. Preserved
+  the dirty original checkout, reconciled concurrent author commits and kept
+  one heavy job active at a time. Added Connection Doctor's on-demand native
+  journal export and meaningful Digitakt/report refusal regressions. Integration
+  and final validation continue; no production update or physical MIDI action
+  was performed.
 
 - 2026-09-07: Completed the Show Kit Forge integration in a fresh worktree,
   preserving both the dirty main checkout and the earlier unfinished feature

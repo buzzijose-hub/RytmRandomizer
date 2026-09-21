@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "version": "1.36.0-beta.1",
+  "notes": "Synthetic beta channel manifest for fleet-snapshot tests.",
+  "pub_date": "2026-09-05T00:00:00Z",
+  "hardware_revalidation": false,
+  "rollout_percent": 100,
+  "platforms": {
+    "darwin-aarch64": {
+      "signature": "c2lnbmF0dXJl",
+      "url": "https://github.com/buzzijose-hub/RytmRandomizer/releases/download/v1.36.0-beta.1/RytmRandomizer-1.36.0-beta.1-darwin-aarch64.tar.gz"
+    }
+  },
+  "channel": "beta",
+  "build": {
+    "source_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "workflow_run_url": "https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/1",
+    "builder_workflow_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  }
+}

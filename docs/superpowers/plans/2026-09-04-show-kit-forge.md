@@ -2,8 +2,10 @@
 
 Date: 2026-09-04
 
-Status: in-flight — implementation published in [PR #238](https://github.com/buzzijose-hub/RytmRandomizer/pull/238);
-final CI and operator-present studio validation are tracked in the run state
+Status: in-flight — software merged in [PR #238](https://github.com/buzzijose-hub/RytmRandomizer/pull/238);
+operator-present studio validation remains pending. The independent #245 UI
+follow-up has green checks and requires its own review; see the
+[current closeout](2026-09-08-release-closeout_RUN_REPORT.md).
 
 Branch: `codex/show-kit-forge-complete`
 

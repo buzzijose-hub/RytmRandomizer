@@ -100,6 +100,7 @@ from ..mutation_targets import (
     RYTM_PAD_TARGET_MIN,
     MutationTargets,
 )
+from .app_version import resolve_app_version
 from .protocol import (
     COMMAND_ANALYZE_PATCH_GENOME,
     COMMAND_ARM,
@@ -227,6 +228,11 @@ def _build_session_status(session: CockpitSession) -> dict[str, object]:
         "connection_phase": _connection_phase(session),
         "unsaved_sends": session.unsaved_sends,
         "capture_enabled": session.kit_capture_service.enabled,
+        # Contract I1 (auto-update): read-only server -> client SemVer the
+        # cockpit reports for the *sidecar* half of a running install. It
+        # rides the existing handshake frame; nothing subscribes to it yet
+        # and nothing about it can transmit.
+        "app_version": resolve_app_version(),
     }
 
 

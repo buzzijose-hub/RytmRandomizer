@@ -43,6 +43,7 @@ export default defineConfig({
         'src/cockpit/**',
         'src/wizard/**',
         'src/types/wizard_protocol.ts',
+        'src/updateProtocol.ts',
       ],
       exclude: ['src/**/index.ts', 'src/cockpit/**/*.css', 'src/wizard/**/*.css'],
       thresholds: {

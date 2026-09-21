@@ -1,0 +1,121 @@
+name: fleet-snapshot
+
+# Appends one fleet check-in row to `fleet-history.json` on the `releases`
+# branch (contract I5; spec 2026-08-03-autoupdate-distribution.md §6).
+#
+# WHAT THE NUMBERS MEAN. Every release uploads one-byte `beacon-<version>-
+# <target>.txt` ping assets (contract I6). A running client fires a
+# fire-and-forget GET of the asset for its own version and OS on each update
+# check, so GitHub's `download_count` is a per-version, per-OS CHECK-IN tally.
+# Counts are cumulative and inflated by repeat checks -- they are NOT a device
+# count. `scripts/fleet_snapshot.py` records the raw counts plus the cadence
+# assumption and leaves device estimation (clearly labelled) to the dashboard.
+#
+# DELTA-ONLY COMMITS. The script writes nothing when counts and both channel
+# pointers are unchanged, and this workflow commits only when the staged index
+# actually differs from HEAD. A cron that committed every six hours regardless
+# would produce four noise commits a day and bury real movement.
+#
+# NO ISSUE ON FAILURE, BY DESIGN. A failed run does not open an issue or
+# notify anywhere: a red run plus the `$GITHUB_STEP_SUMMARY` the script writes
+# IS the alert. Fleet telemetry is a steering aid, not a paging surface, and
+# an auto-filed issue per broken cron would be worse noise than the silence.
+
+on:
+  schedule:
+    # Every six hours. Four samples a day resolves a staged rollout without
+    # spending meaningful Actions minutes (the job is a single API GET).
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Compute the row and print it, but never commit."
+        type: boolean
+        default: false
+
+# Least privilege: the job needs to push one file to the `releases` branch and
+# nothing else. No `issues:`, no `pull-requests:`, no `packages:` -- the
+# Releases API endpoint this reads is public and the default token's read
+# access is a rate-limit courtesy, not an authorization.
+permissions:
+  contents: write
+
+# One snapshot at a time. Two overlapping runs would race on the same file and
+# the loser's push would be rejected; serializing is cheaper than retrying.
+concurrency:
+  group: fleet-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    name: append fleet history row
+    runs-on: ubuntu-latest
+
+    steps:
+      # The script reads the Releases API for THIS repo, so the default branch
+      # checkout supplies the script while the `releases` worktree below
+      # supplies the data. Two checkouts keep the data branch's history clean
+      # of any default-branch content.
+      - name: Checkout default branch (for the script)
+        uses: actions/checkout@v7
+        with:
+          path: main
+
+      - name: Checkout releases branch (for the data)
+        uses: actions/checkout@v7
+        with:
+          ref: releases
+          path: releases
+        # The branch is bootstrapped by PR-A/A6. Until it exists this step
+        # fails loudly rather than silently snapshotting into thin air.
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: main/pyproject.toml
+
+      # No `pip install -e .` on purpose: scripts/fleet_snapshot.py is
+      # stdlib-only, so this cron never pays for the ALSA headers and the
+      # pinned rtmidi build that the package's test job needs.
+      - name: Append snapshot row
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python main/scripts/fleet_snapshot.py \
+            --repo "${{ github.repository }}" \
+            --history releases/fleet-history.json \
+            --stable-manifest releases/stable.json \
+            --beta-manifest releases/beta.json
+
+      # On a `schedule` event there are no inputs at all, so `inputs.dry_run`
+      # is null and this reads `true` -- the cron path always commits. Spelled
+      # as an explicit comparison rather than `!inputs.dry_run` so that the
+      # scheduled behaviour is legible instead of resting on null coercion.
+      - name: Commit when the row changed
+        if: ${{ inputs.dry_run != true }}
+        working-directory: releases
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Stage FIRST, then ask the index whether anything changed.
+          #
+          # `git diff --quiet -- fleet-history.json` (the obvious spelling) is
+          # WRONG here: on the first-ever run the file does not yet exist on
+          # the branch, so the script creates it UNTRACKED -- and `git diff`
+          # ignores untracked files entirely. That reports "no delta", skips
+          # the commit, and drops the very first row on the floor; the next
+          # run then re-creates the same untracked file and drops it again,
+          # forever. `git add` + `git diff --cached --quiet` sees additions
+          # and modifications alike.
+          git add fleet-history.json
+          if git diff --cached --quiet -- fleet-history.json; then
+            echo "No delta -- nothing to commit."
+            echo "### Fleet snapshot: no commit (unchanged)" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git commit -m "chore(fleet): snapshot check-in counts"
+          git push origin HEAD:releases
+          echo "### Fleet snapshot: committed one row" >> "$GITHUB_STEP_SUMMARY"

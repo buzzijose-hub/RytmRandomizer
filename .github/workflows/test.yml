@@ -2,6 +2,13 @@ name: test
 
 on:
   push:
+    # The `releases` branch holds only auto-update channel manifests and
+    # the fleet dashboard — no Python, no tests. Running the full 3-OS
+    # matrix on every one-line manifest commit (and every rollout-percent
+    # bump) would burn ~30 CI-minutes to test code that did not change.
+    # manifest-validate.yml is that branch's gate instead.
+    branches-ignore:
+      - releases
   pull_request:
   schedule:
     # Weekly scan: re-runs the security (pip-audit) and architecture
@@ -703,9 +710,11 @@ jobs:
   desktop-shell:
     # Validates the Rust/Tauri shell on Windows, matching the primary
     # operator platform and avoiding Linux WebKit package churn. The job
-    # does not launch the GUI or touch MIDI; it builds the static web
-    # bundle that tauri.conf.json points at, then compiles/tests shell code.
+    # builds the static web bundle, checks shell code, then exercises the
+    # real hidden WebView/IPC with signed test bytes and physical MIDI off.
     name: desktop-shell
+    env:
+      CARGO_BUILD_JOBS: "2"
     needs: detect-changes
     if: |
       github.event_name == 'workflow_dispatch' ||
@@ -751,6 +760,65 @@ jobs:
 
       - name: clippy
         run: cargo clippy --all-targets -- -D warnings
+
+      - name: Set up Python for native updater backend
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install native backend dependencies
+        working-directory: .
+        run: python -m pip install -e ".[dev]"
+
+      - name: Build debug-only native updater acceptance shell
+        run: cargo build --features native-test
+
+      - name: Type-check native acceptance driver
+        working-directory: desktop/web
+        run: npx tsc --noEmit -p tsconfig.native.json
+
+      - name: Exercise signed updater through real WebView and IPC
+        working-directory: desktop/web
+        shell: pwsh
+        run: |
+          $env:PYTHON = (Get-Command python).Source
+          $env:RYTM_NATIVE_TEST_BINARY = (Resolve-Path ../shell/target/debug/rytm-randomizer-shell.exe).Path
+          npx playwright test --config playwright.native.config.ts --workers=1
+
+      - name: Exercise actual Windows installer handoff and restart
+        working-directory: .
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $nativeHandoffTools = Join-Path $env:RUNNER_TEMP ("rytm-handoff-tools-" + [guid]::NewGuid().ToString('N'))
+          New-Item -ItemType Directory -Path $nativeHandoffTools | Out-Null
+          gh release download 0.12 --repo jedisct1/minisign --pattern minisign-0.12-win64.zip --dir $nativeHandoffTools
+          if ($LASTEXITCODE -ne 0) { throw 'Official acceptance signer download failed' }
+          Expand-Archive -LiteralPath (Join-Path $nativeHandoffTools 'minisign-0.12-win64.zip') -DestinationPath (Join-Path $nativeHandoffTools 'extracted')
+          $nativeHandoffSigner = Join-Path $nativeHandoffTools 'extracted/minisign-win64/x86_64/minisign.exe'
+          $nativeHandoffPrepared = Join-Path $nativeHandoffTools 'prepared'
+          & ./desktop/web/native-e2e/installer-fixture/prepare.ps1 -OutputDirectory $nativeHandoffPrepared -Minisign $nativeHandoffSigner
+          $env:PYTHON = (Get-Command python).Source
+          $env:RYTM_NATIVE_TEST_BINARY = (Resolve-Path desktop/shell/target/debug/rytm-randomizer-shell.exe).Path
+          $env:RYTM_NATIVE_HANDOFF_INPUTS = Join-Path $nativeHandoffPrepared 'handoff-inputs.json'
+          Push-Location desktop/web
+          try { npx playwright test --config playwright.native-install.config.ts --workers=1 }
+          finally { Pop-Location }
+          if ($LASTEXITCODE -ne 0) { throw 'Actual Windows installer acceptance failed' }
+
+      - name: Upload native updater acceptance report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-updater-report
+          path: |
+            desktop/web/native-playwright-report
+            desktop/web/native-install-playwright-report
+          if-no-files-found: ignore
+          retention-days: 14
 
   docs-gate:
     # Pull-request-only gate enforcing the data-not-code rule's onboarding

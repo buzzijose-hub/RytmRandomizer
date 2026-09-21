@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "channel": "stable",
+  "version": "1.35.1",
+  "pub_date": "2026-09-14T00:00:00Z",
+  "notes": "### 1.35.1\n\n- fix: scene runner no longer drops the final step on a wrapped page\n- feat: Analog Four dual-machine target report\n",
+  "hardware_revalidation": false,
+  "rollout_percent": 100,
+  "minimum_version": "1.36.0",
+  "build": {
+    "source_sha": "0b77f9fe1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f",
+    "workflow_run_url": "https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/1234567890",
+    "builder_workflow_sha": "9f8e7d6c5b4a39281706f5e4d3c2b1a09f8e7d6c"
+  },
+  "platforms": {
+    "darwin-aarch64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IGZpeHR1cmUgZGFyd2luLWFhcmNoNjQK",
+      "url": "https://github.com/buzzijose-hub/RytmRandomizer/releases/download/v1.35.1/RytmRandomizer_aarch64.app.tar.gz"
+    },
+    "darwin-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IGZpeHR1cmUgZGFyd2luLXg4Nl82NAo=",
+      "url": "https://github.com/buzzijose-hub/RytmRandomizer/releases/download/v1.35.1/RytmRandomizer_x64.app.tar.gz"
+    },
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IGZpeHR1cmUgd2luZG93cy14ODZfNjQK",
+      "url": "https://github.com/buzzijose-hub/RytmRandomizer/releases/download/v1.35.1/RytmRandomizer_1.35.1_x64-setup.nsis.zip"
+    },
+    "linux-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IGZpeHR1cmUgbGludXgteDg2XzY0Cg==",
+      "url": "https://github.com/buzzijose-hub/RytmRandomizer/releases/download/v1.35.1/rytm-randomizer_1.35.1_amd64.AppImage.tar.gz"
+    }
+  }
+}

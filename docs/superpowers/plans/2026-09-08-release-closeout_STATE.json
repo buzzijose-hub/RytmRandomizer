@@ -1,0 +1,306 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-09-21T15:16:24.018491+00:00",
+  "phase": "integration-and-final-validation",
+  "source_checkpoint": "7cc10e929ece79ec2f67b1342c547597529652f0",
+  "incoming_author_head": "a270ff114966d51f143b67c51d7dcd52db3954c0",
+  "replacement_pr": 248,
+  "original_updater_prs": [
+    239,
+    241,
+    242,
+    243
+  ],
+  "workstreams": [
+    {
+      "name": "forge",
+      "pr": 238,
+      "head": "b1d6ff5678f80378176038fb13d6ef78d13c0abc",
+      "status": "merged",
+      "remaining": [
+        "Physical studio checklist"
+      ]
+    },
+    {
+      "name": "forge-followup",
+      "pr": 245,
+      "head": "38397dbb2a7919d9c144f63a971a26fc66d4edfa",
+      "status": "review-required",
+      "remaining": [
+        "Required code-owner approval; hosted required checks are green"
+      ]
+    },
+    {
+      "name": "digitakt",
+      "pr": 240,
+      "head": "1548490669347f9938ec3fc15e95e16ee4e0fd76",
+      "status": "hosted-checks-passed-review-required",
+      "remaining": [
+        "Required owner review, including requested stage-discriminator exception; both push and pull-request required checks passed"
+      ]
+    },
+    {
+      "name": "updater",
+      "pr": 248,
+      "head": "124a3129c2a55bebfa583b1c7e5ef271db961495",
+      "status": "candidate-native-acceptance-passed-fresh-hosted-checks-pending",
+      "remaining": [
+        "Commit/push candidate debug-harness repairs and collect fresh required hosted checks",
+        "Protected review including explicit architecture-exception approval"
+      ]
+    },
+    {
+      "name": "combined-validation",
+      "pr": null,
+      "head": "7cc10e929ece79ec2f67b1342c547597529652f0",
+      "status": "local-validation-passed",
+      "remaining": [
+        "Local-only composition; never publish this validation branch as another PR",
+        "Later test-only fixture cleanup ae60f111 passed 80 focused release tests and Vulture; no production behavior changed"
+      ]
+    }
+  ],
+  "verification_checkpoints": [
+    {
+      "boundary": "native-units",
+      "result": "183 passed",
+      "scope": "September 13 before final integration/diagnostic repairs",
+      "receipt": "release-closeout-evidence/cargo-resume.log"
+    },
+    {
+      "boundary": "frontend",
+      "result": "885 passed; 67 files; all configured coverage metrics 100%",
+      "scope": "Before Doctor/final author-main integration",
+      "receipt": "release-closeout-evidence/frontend-resume.log"
+    },
+    {
+      "boundary": "native-acceptance",
+      "result": "32 passed in 53.9 seconds",
+      "scope": "Real Wry/IPC/plugin verifier; terminal install/restart recorded",
+      "receipt": "release-closeout-evidence/native-matrix-1.log"
+    },
+    {
+      "boundary": "fleet-dashboard",
+      "result": "128 passed",
+      "scope": "September 8 focused regressions; final merge recheck pending",
+      "receipt": "release-closeout-evidence/python-targeted-2.log"
+    },
+    {
+      "boundary": "release-helper",
+      "result": "277 passed; genuine Minisign positive and tampered-byte negative checks passed",
+      "scope": "Earlier assembly checkpoint; later promotion/format repairs require final verification",
+      "receipt": "release-closeout-evidence/release-targeted.log"
+    },
+    {
+      "boundary": "digitakt-forge",
+      "result": "9,127 passed; six skipped; 42 touched production files at 100%; pure branch 99.4596%; combined 99.69%",
+      "scope": "Separate Digitakt worktree 35e7a1ce; formatting-only 23bc8b41 passed pre-push gates and was pushed; not updater full coverage",
+      "receipt": "release-closeout-evidence/digitakt-final-full.log"
+    },
+    {
+      "boundary": "merged-frontend",
+      "result": "1,009 passed / 71 files in 50.72 seconds; all configured coverage 100% (3,519 statements, 2,638 branches, 1,203 functions, 3,155 lines)",
+      "scope": "Includes Doctor and author/main merge; does not substitute for native/platform tests",
+      "receipt": "release-closeout-evidence/frontend-merged.log"
+    },
+    {
+      "boundary": "merged-python-targeted",
+      "result": "695 passed in 9.46 seconds",
+      "scope": "Release, fleet, data, CI and persisted-store registry; focused checkpoint superseded by final full Python pass",
+      "receipt": "release-closeout-evidence/updater-merged-targeted.log"
+    },
+    {
+      "boundary": "first-combined-python",
+      "result": "9,919 passed; two architecture failures; six skips in 305.37 seconds",
+      "scope": "At 636e4e4a; data re-export and plan-index failures repaired in a928e0f1; superseded by passing 7cc10e92 full run",
+      "receipt": "release-closeout-evidence/combined-final-full.log"
+    },
+    {
+      "boundary": "combined-touched-coverage",
+      "result": "All 51 touched production files at 100% line/branch coverage; project pure branch 99.46183953033268%; combined 99.69494345669122%",
+      "scope": "Saved failed full-run coverage at 636e4e4a; all files present with no missing touched lines or branches; not a passing suite verdict",
+      "receipt": "release-closeout-evidence/combined-touched-coverage-audit.json"
+    },
+    {
+      "boundary": "current-native-units",
+      "result": "186 passed; zero failed, ignored or filtered",
+      "scope": "Default Rust suite including startup and journal regressions",
+      "receipt": "release-closeout-evidence/cargo-merged.log"
+    },
+    {
+      "boundary": "current-native-build",
+      "result": "Native build passed in 15.75 seconds; native TypeScript also passed",
+      "scope": "Native build receipt plus coordinator-reported TypeScript result; no production release",
+      "receipt": "release-closeout-evidence/cargo-native-final.log"
+    },
+    {
+      "boundary": "current-native-acceptance",
+      "result": "32 passed in 53.5 seconds",
+      "scope": "Actual Wry/WebView2 IPC and plugin verification; recorded install/restart terminal",
+      "receipt": "release-closeout-evidence/native-matrix-final.log"
+    },
+    {
+      "boundary": "actual-windows-handoff",
+      "result": "install_on_quit and install_now both passed; two cases in 8.2 seconds",
+      "scope": "Combined frontend/backend 54a13ab0; native Rust source 70e50605; fixture preparation f256db40; handoff-inputs-20260913c. Installer SHA-256 bc2909b33d558f64c837c46d63ad62e6682f12edf128bbf775ec3d0a970383e0; successor SHA-256 28c8df8ef5761ef28bb31dc8e49276578942cebb56a95ef200da985286beca96. Actual signed Windows PE handoff, not production NSIS/macOS/Linux installers.",
+      "receipt": "release-closeout-evidence/native-handoff-final.log"
+    },
+    {
+      "boundary": "digitakt-hosted-ci",
+      "result": "All hosted checks passed, including required-checks for both push and pull-request events; REVIEW_REQUIRED",
+      "scope": "Exact PR #240 head 15484906; no protected merge or exception approval implied",
+      "receipt": "Coordinator live GitHub checkpoint, September 13"
+    },
+    {
+      "boundary": "frontend-build",
+      "result": "Merged frontend build passed",
+      "scope": "Earlier build after 1,009-test frontend checkpoint; final combined frontend/browser receipts are recorded separately",
+      "receipt": "release-closeout-evidence/frontend-merged-build.log"
+    },
+    {
+      "boundary": "final-combined-python",
+      "result": "9,922 passed; six skipped; six warnings in 278.98 seconds",
+      "scope": "Full suite at validation 7cc10e929ece79ec2f67b1342c547597529652f0, including architecture and frozen parity",
+      "receipt": "release-closeout-evidence/combined-passing-full.log"
+    },
+    {
+      "boundary": "final-touched-coverage-and-version",
+      "result": "Actual touched-file gate passed all 51 production files at 100% line/branch coverage; pure-branch ratchet passed 99.46% versus unchanged floor 99%; four version declarations agree at 1.34.0",
+      "scope": "Final validation 7cc10e92; check_touched_coverage.py, coverage ratchet and sync_version --check passed; project combined coverage 99.69494345669122%",
+      "receipt": "release-closeout-evidence/coverage-combined-passing.json"
+    },
+    {
+      "boundary": "final-combined-frontend",
+      "result": "1,010 passed / 71 files in 40.58 seconds; 3,519 statements, 2,641 branches, 1,203 functions, 3,155 lines all at 100%",
+      "scope": "Final validation source 7cc10e92; no updater cases skipped",
+      "receipt": "release-closeout-evidence/combined-frontend-coverage.log"
+    },
+    {
+      "boundary": "final-frontend-eslint",
+      "result": "Passed with zero allowed warnings",
+      "scope": "Final validation source 7cc10e92",
+      "receipt": "release-closeout-evidence/combined-frontend-lint.log"
+    },
+    {
+      "boundary": "final-frontend-build",
+      "result": "Passed",
+      "scope": "Final validation source 7cc10e92",
+      "receipt": "release-closeout-evidence/combined-frontend-build.log"
+    },
+    {
+      "boundary": "final-browser",
+      "result": "32 passed; two existing skips in 52.6 seconds",
+      "scope": "Keyboard skeleton and armed journey requiring absent virtual MIDI skipped; no updater/native skips; final validation source 7cc10e92",
+      "receipt": "release-closeout-evidence/combined-browser.log"
+    },
+    {
+      "boundary": "final-rust-default-and-format",
+      "result": "186 default Rust tests passed in 0.12 seconds after approximately 1m29s compilation; formatting passed",
+      "scope": "Final coordinator run; Clippy remains running and no combined static-gate completion is claimed",
+      "receipt": "Coordinator September 13 final Rust checkpoint"
+    },
+    {
+      "boundary": "production-distribution-configuration",
+      "result": "Releases-branch endpoint returned 404; repository Actions variable-name and secret-name listings succeeded and were empty",
+      "scope": "Read-only September 13 GitHub inspection; no secret values read; production distribution not activated",
+      "receipt": "Coordinator September 13 live GitHub configuration checkpoint"
+    },
+    {
+      "boundary": "final-rust-complete",
+      "result": "Formatting, 186 default Rust tests and all-target Clippy with warnings denied all passed; Clippy completed in 1m16s",
+      "scope": "Validation Cargo resolved its ignored lockfile; native 32+2 used updater lock, same updater-plugin/Tauri 2.11.0/2.11.5. Ruff also passed; remaining Python static checks pending.",
+      "receipt": "Coordinator September 13 final Rust/static checkpoint"
+    },
+    {
+      "boundary": "final-python-static-and-dead-code",
+      "result": "Ruff, Black (916 files), isort, strict Pyright on all 51 production modules and Vulture passed",
+      "scope": "Two unused test-only fixture parameters changed to pytest.mark.usefixtures in ae60f111 without removing setup/helpers/assertions; 80 focused release tests passed in 0.65s; final Vulture exited zero",
+      "receipt": "release-closeout-evidence/updater-final-vulture.log; release-closeout-evidence/updater-final-log-fixture.log; coordinator combined static logs"
+    },
+    {
+      "boundary": "final-combined-vulture-and-source-continuity",
+      "result": "Combined Vulture passed after ae60f111; no production Python/desktop diff from validated 7cc10e92; fixtures and .coveragerc match integration baseline",
+      "scope": "Test-only fixture cleanup preserves all production behavior and frozen coverage inputs",
+      "receipt": "release-closeout-evidence/combined-final-vulture.log; coordinator final git comparison"
+    },
+    {
+      "boundary": "published-updater-hosted-ci",
+      "result": "All hosted checks passed, including both push and PR required-checks, CodeQL and Windows native recorder/PE suites; REVIEW_REQUIRED",
+      "scope": "Confirmed September 21 at exact PR248 head e2e46d6ec086a5f86a52a3bb080be4bfcbe9da5d. Windows jobs 103756622199 and 103756611672 include the 32-case recorder matrix and two actual signed Windows PE handoffs. A later head needs its own checks; no protected merge or architecture-exception approval is implied.",
+      "receipt": "https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34769559471; https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34769561768"
+    },
+    {
+      "boundary": "original-updater-stack-closure",
+      "result": "Original PRs239/241/242/243 closed as superseded by PR248 on September 21 after every latest head passed merge-base --is-ancestor against e2e46d6e",
+      "scope": "PR239 0871194b07916052084b4b3b993b40c267321854 closed 2026-09-21T14:46:38Z; PR241 2004322c0e8f5c33c5093d3aceb8f45a29f2af0c closed 14:46:41Z; PR242 711714350db71a6b50027ec723eee841f72faa71 closed 14:46:44Z; PR243 a270ff114966d51f143b67c51d7dcd52db3954c0 closed 14:46:48Z. Branches/authorship preserved. Closure comments link PR248 and retain human/Gate9 approval requirements; no protected merge.",
+      "receipt": "Coordinator September 21 live GitHub closure and latest-head ancestry checkpoint"
+    },
+    {
+      "boundary": "documentation-head-pr-windows-failure",
+      "result": "At 124a3129: 31 native cases passed; rollout_out hit the unchanged 65-second process timeout; later two-PE step skipped after failure",
+      "scope": "PR run35614910454 Windows job106383099423. Failed receipt retained; the original hang cause remains unproven and no production defect is established.",
+      "receipt": "https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/35614910454/job/106383099423"
+    },
+    {
+      "boundary": "documentation-head-push-windows-pass",
+      "result": "At 124a3129: all 32 native cases passed in 1.5 minutes; both actual Windows PE handoffs passed in 10 seconds",
+      "scope": "Push run35614905361 Windows job106383072742. This same-head pass does not erase the failed PR run or establish its cause.",
+      "receipt": "https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/35614905361/job/106383072742"
+    },
+    {
+      "boundary": "unchanged-rollout-local-replay",
+      "result": "Twenty unchanged local rollout_out repetitions passed in 33.6 seconds",
+      "scope": "At 124a3129 before debug acceptance repairs; original CI hang not reproduced and its cause remains unproven.",
+      "receipt": "release-closeout-evidence/native-rollout-reproduce-124a3129.log"
+    },
+    {
+      "boundary": "native-debug-harness-focused-repairs",
+      "result": "Seven focused regressions passed; native TypeScript and targeted ESLint passed",
+      "scope": "Debug-only joint state/journal observation, existing 25-second deadline also bounds pending IPC, categorical bootstrap failure report, report-entry marker and bounded credential-redacted timeout evidence before cleanup. No production behavior, timeout increase, retry policy or skip-condition changes; not a proven cause of the earlier hang.",
+      "receipt": "release-closeout-evidence/native-harness-regressions.log; coordinator native TypeScript/targeted ESLint checkpoint"
+    },
+    {
+      "boundary": "candidate-native-harness-validation",
+      "result": "Rust formatting and strict all-target Clippy with native-test passed (Clippy 1m02s); rebuilt debug shell in 16.44s; all 32 native cases passed in 55.3s; both actual Windows PE handoffs passed in 8.6s",
+      "scope": "September 21 candidate debug acceptance harness. Binary release-closeout-evidence/native-test-harness-20260921/rytm-native-test.exe SHA-256 52709be8e964dda6b21e15e99282f472dfd55bdf2f911a345f1f7ccfcaa12afa. Ordinary app/runtime unchanged. Original 124a3129 PR timeout cause remains unproven; no fixed-hang claim. Fresh hosted checks pending until commit/push.",
+      "receipt": "release-closeout-evidence/native-harness-matrix.log; release-closeout-evidence/native-harness-handoff.log; coordinator build/Clippy checkpoint"
+    }
+  ],
+  "studio": {
+    "directory": "show-kit-forge-studio-c79597b69d05",
+    "source": "c79597b69d055c32b8175fd665c77f20c384677c",
+    "identical_tree": "2be8569bdeffd0a404aa6ef3a4ee8681204f3c5a",
+    "workflow_run": 34241625440,
+    "smoke_at": "2026-09-08T15:08:21.444Z",
+    "handoff_files_verified": 14,
+    "handoff_manifest_sha256": "15c70c96fe1259fbddd1daf572d036cb7fe9318fa1478f2e21be2c130623acf4",
+    "shell_sha256": "c79e83b2356040b8360f10e2305eedc97d4296ff84d574c39e8a85e4222518d8",
+    "sidecar_sha256": "9b5a52fe60105b59edce6bea9fa9dbf99ff1fe4bf10e16a110475f20402e6e7b",
+    "physical_validation": false,
+    "unsigned": true
+  },
+  "resource_contract": {
+    "heavy_jobs": 1,
+    "implementation_agents": 2,
+    "pytest_workers": 2,
+    "cargo_jobs": 2,
+    "frontend_workers": 2,
+    "playwright_workers": 1,
+    "free_memory_reserve_gb": 8
+  },
+  "remaining_limits": [
+    "Prior production local gates passed; published PR248 at 124a3129 has a failed Windows PR run and passing same-head push run. Candidate debug-acceptance regressions, static checks, 32-case matrix and two PE handoffs passed locally; fresh hosted checks after commit/push, protected review and explicit architecture-exception approval remain pending. Original timeout cause unproven",
+    "No production signing credentials or release publication",
+    "Actual Windows PE plugin handoff passed locally and in hosted Windows CI; production NSIS/MSI, macOS and Linux installation remain unverified",
+    "Physical Rytm/A4 observations remain blank",
+    "Required human protected approvals cannot be replaced by agent reviews",
+    "Prior local Gates 1-8 and 10-18 and candidate debug-harness validation passed; fresh hosted checks remain pending. Gate 9 still requires explicit owner approval for _version.py, cockpit.ws -> _version and releases_branch_seed; Digitakt stage.py approval is separate",
+    "Production distribution not activated: September 13 read-only inspection found no releases branch or repository Actions variables/secrets; owner release configuration remains required"
+  ],
+  "recovery": [
+    "Read this state and RUN_LOG; refresh GitHub heads/reviews/checks",
+    "Preserve dirty primary checkout and concurrent author commits",
+    "Only one heavy job at a time; root owns test/build scheduling",
+    "Original updater PRs239/241/242/243 are closed as superseded after verified latest-head inclusion; continue PR248 and preserve any later author work"
+  ]
+}

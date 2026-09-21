@@ -73,7 +73,7 @@ Tauri writes per-OS installers under
 |---|---|
 | Windows | `msi/RytmRandomizerCockpit_<version>_x64_en-US.msi` (plus a `nsis/` `.exe` if NSIS is configured) |
 | macOS | `dmg/RytmRandomizerCockpit_<version>_x64.dmg` and `macos/RytmRandomizerCockpit.app` |
-| Linux | `deb/`, `rpm/`, and `appimage/` subdirectories |
+| Linux | CI publishes `appimage/` only; local default builds may also produce `deb/` and `rpm/` |
 
 These are GUI installers (the operator double-clicks the file), unlike
 the CLI-oriented Briefcase artifacts. They embed the web frontend from
@@ -303,15 +303,102 @@ gate PRs. The installer job runs only on `v*` tags and manual dispatch.
 
 ## Signing
 
-> **Current status: DEFERRED (maintainer decision, 2026-07).** CI
-> produces unsigned / ad-hoc-signed **dev artifacts only** — no signing
-> steps run in `installers.yml` (for the Briefcase installers, the Tauri
-> bundle, or the bundled `rytm-sidecar` binary), and no signing keys
-> live in GitHub Secrets. The placeholders below document the eventual
-> workflow for when the signing/notarization posture decision lands.
-> Until then, expect SmartScreen / Gatekeeper warnings on the dev
-> artifacts (right-click → Open on macOS; "More info → Run anyway" on
-> Windows).
+> **OS code signing remains deferred.** The Windows certificate and macOS
+> Developer ID/notarization steps below still require maintainer provisioning.
+> Updater signatures are a separate mechanism: the release train now creates
+> and verifies them when its updater keypair is configured. An updater
+> signature does not establish Windows publisher identity or Apple notarization.
+
+### Verified updater release assembly
+
+Configure repository variable `TAURI_SIGNING_PUBLIC_KEY` with the public key
+document emitted by Tauri (outer base64), secret `TAURI_SIGNING_PRIVATE_KEY`
+with its matching private key, and optional secret
+`TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. These use the
+[official Tauri updater signing contract](https://v2.tauri.app/plugin/updater/#signing-updates).
+No production key is generated or provisioned by this repair.
+
+The reusable installer workflow explicitly passes signing secrets to the Tauri
+build. Before compilation, `scripts/release_artifacts.py configure` rewrites
+the actual `desktop/shell/tauri.conf.json` with the resolved public key and
+`createUpdaterArtifacts` posture. This must be a file rewrite, because
+`updater::signing_key_present()` reads that file with Rust `include_str!`;
+a CLI configuration overlay alone would leave the guard reporting no key.
+The normal `cargo tauri build` then signs native updater bytes. The collector
+requires the bundle version to match `VERSION` and records its source commit.
+
+There are four desktop targets: Windows x86_64, Linux x86_64, macOS x86_64,
+and macOS aarch64. The two Mac builds use separate native runners. Updater
+assets preserve the format Tauri consumes: Windows NSIS `.exe`, Linux
+`.AppImage`, and macOS `.app.tar.gz`. No universal archive extension is
+invented. The release URL is derived from the collected asset's actual name.
+
+The Linux desktop build explicitly selects `bundle.targets=["appimage"]`,
+including keyless rehearsals. The four-target manifest has one Linux URL;
+Tauri's installed Deb/RPM clients require their own package format and cannot
+install that AppImage. Existing desktop Deb/RPM installations therefore need
+a manual migration to the AppImage before using this update train. Briefcase
+CLI packages remain independent and are not updated by the desktop updater.
+
+After restoring the Rust cache and immediately before bundling, the workflow
+runs `release_artifacts.py clean-bundle --shell-root desktop/shell`. It resolves
+and validates the fixed `target/release/bundle` directory, refuses redirected
+paths (including Windows junctions), and removes only old bundle output.
+Compiled dependencies and other `target` files stay cached. This prevents an
+earlier release's installer or signature from entering the current artifact
+index under the new version's name.
+
+The assembly job downloads Python wheel/sdist, all indexed desktop bundles,
+Briefcase installers, and standalone sidecars. It verifies each indexed hash,
+source/version, public key, signature sidecar, and exact updater bytes using
+the reference [Minisign verifier](https://github.com/jedisct1/minisign).
+Only successful verification for all four targets sets `signed=true`.
+The same job writes the beta manifest with a reproducible UTC date from the
+source commit and generates four one-byte beacon assets. The exact assembled
+directory is both retained as workflow evidence and used for release upload.
+
+Manifest notes come from the current version's prepared `CHANGELOG.md` section;
+missing or empty notes refuse assembly. The hardware warning comes from the
+actual diff against the previous reachable version tag, changes to the pinned
+MIDI dependencies, an annotated tag's `[hw-reval]` marker, or the manual
+`hardware_revalidation` input. These conditions are combined with OR: the input
+cannot clear a detected hardware change. `scripts/release_paths.py` owns the
+path list, and an architecture regression requires it to cover every permitted
+transmit boundary and the frozen parity fixtures. A first release without a
+comparison tag conservatively carries the warning. The flag requests physical
+revalidation; it does not claim that revalidation already happened.
+
+Every verified release also ships its exact beta manifest as
+`update-manifest.json`. The environment-gated promotion workflow downloads that
+version's archived manifest and checks the published release still contains
+all four referenced artifacts. Promotion changes only the channel and rollout
+percentage; URLs, signatures, release date, notes, hardware warning, minimum
+version, and build provenance are preserved. This also permits rollback to an
+older release without rebuilding it. Releases predating this verified manifest
+asset cannot be promoted through this path, and unsigned drafts are refused.
+
+Without the updater private key, builds set `createUpdaterArtifacts=false`
+and still produce ordinary distributions. Non-dry release runs retain the
+unsigned-draft behavior; no beta manifest or fleet beacon is produced and the
+channel branch is unchanged. `workflow_dispatch` defaults to `dry_run=true`:
+all artifacts stay in the workflow run and no GitHub Release is created.
+Mixed signed/unsigned target sets and invalid signatures fail before upload.
+
+The release job always runs a genuine public Minisign signature vector and a
+modified-byte negative control before assembly. To reproduce it locally with
+Minisign available on PATH (or `MINISIGN` set to its executable):
+
+```text
+python scripts/release_artifacts.py verify-self-test --fixture tests/fixtures/release_signature.json
+python -m pytest tests/test_release_artifacts.py tests/test_release_lib.py tests/test_validate_manifest.py -n 2
+```
+
+The public vector is test data from `minisign-verify` 0.2.5, independent of all
+production keys. Unit regressions also prove that key presence alone, a failed
+verifier, changed bytes, wrong provenance, missing targets, and mismatched
+signature files cannot produce a fleet manifest. OS signing, real installer
+execution on each platform, and production publication require separate
+operator evidence; these tests do not claim those steps occurred.
 
 **Required before public release.** Unsigned `.msi` / `.pkg` artifacts
 trigger SmartScreen / Gatekeeper warnings that look identical to malware
@@ -460,7 +547,7 @@ injected port `50477` as a string with a token present; the frontend continued
 dialing `4317` and stayed disconnected. That artifact is preserved outside the
 Studio folder as diagnostic evidence.
 
-**Corrected software handoff:** build
+**Earlier corrected software handoff:** build
 [`34149935386`](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34149935386)
 at `076ef67a3276bdd27ec6657f9dff77ccf207a5e2` succeeded. Its downloaded hashes
 matched the manifest, and the actual packaged GUI smoke passed at
@@ -470,8 +557,28 @@ UI refresh were verified; the smoke's own process tree was stopped. No capture,
 arm or output was requested. The [software receipt](2026-09-07-show-kit-forge-software-closeout.md)
 records the executable, both hashes and local smoke/checklist paths. A later
 documentation-only receipt commit does not change this artifact's source.
-Source CI passed; required maintainer review remains pending. Physical
-observations remain blank and A4 SEND remains blocked.
+This earlier package is retained as historical evidence; the current studio
+package below includes the later empty-bank export explanation.
+
+**Current identified studio handoff:** build
+[`34241625440`](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34241625440)
+from `c79597b69d055c32b8175fd665c77f20c384677c` passed. Its complete Git tree is
+identical to #245 head `38397dbb2a7919d9c144f63a971a26fc66d4edfa` (tree
+`2be8569bdeffd0a404aa6ef3a4ee8681204f3c5a`). The unsigned Windows package is
+`show-kit-forge-studio-c79597b69d05`; keep its bundled `binaries/` beside the shell.
+
+- Shell SHA-256: `c79e83b2356040b8360f10e2305eedc97d4296ff84d574c39e8a85e4222518d8`.
+- Sidecar SHA-256: `9b5a52fe60105b59edce6bea9fa9dbf99ff1fe4bf10e16a110475f20402e6e7b`.
+
+The real WebView2/bundled-backend smoke passed at `2026-09-08T15:08:21.444Z`
+with MIDI off. It checked fresh-token restart/reconnect, bank persistence,
+empty-export guidance and missing-capture refusal. The handoff manifest's 14
+file hashes were verified; its SHA-256 is
+`15c70c96fe1259fbddd1daf572d036cb7fe9318fa1478f2e21be2c130623acf4`.
+Eddie approved #238 before it merged; #245 has green required checks and still
+requires its own review. See the [current run report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md).
+Physical observations remain blank and A4 SEND remains blocked. This package
+contains no claimed production updater installation or OS-signing evidence.
 
 ### Briefcase source/install checks
 

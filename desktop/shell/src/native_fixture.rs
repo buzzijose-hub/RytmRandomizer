@@ -1,0 +1,409 @@
+//! Debug-only native acceptance controls. Production builds contain none of this.
+//!
+//! The real shell, IPC, driver, journal, supervisor and plugin verifier run.
+//! Only network destinations and terminal install/restart operations are fixtures.
+
+use std::path::PathBuf;
+use std::process::Child;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
+
+use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
+use tauri::Runtime;
+
+use crate::update_policy::{ConsentChoice, ErrorCode};
+
+pub const CONFIG_ENV: &str = "RYTM_RAND_NATIVE_TEST_CONFIG";
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct Options {
+    root: PathBuf,
+    origin: String,
+    scenario: String,
+    public_key: String,
+    install_id: String,
+    python: PathBuf,
+    sidecar_entry: PathBuf,
+    #[serde(default)]
+    handoff_nonce: Option<String>,
+}
+
+#[derive(Clone, Serialize)]
+struct TerminalEvent {
+    event: &'static str,
+    version: String,
+    choice: String,
+    sha256: String,
+}
+
+type Teardown = Arc<dyn Fn() + Send + Sync>;
+
+pub struct NativeFixture {
+    options: Options,
+    terminal: Mutex<Vec<TerminalEvent>>,
+    teardown: Mutex<Option<Teardown>>,
+    child: Mutex<Option<Arc<Mutex<Option<Child>>>>>,
+    shutdown_requested: Mutex<Option<Arc<AtomicBool>>>,
+}
+
+impl NativeFixture {
+    /// A feature-enabled binary refuses to start without an explicit sandbox.
+    pub fn from_env() -> Arc<Self> {
+        let path = std::env::var_os(CONFIG_ENV).expect("native-test requires a fixture config");
+        let options: Options =
+            serde_json::from_slice(&std::fs::read(path).expect("read native fixture config"))
+                .expect("decode native fixture config");
+        let url = reqwest::Url::parse(&options.origin).expect("fixture origin URL");
+        assert!(
+            url.scheme() == "http"
+                && url.host_str() == Some("127.0.0.1")
+                && url.port().is_some()
+                && url.path() == "/"
+                && url.username().is_empty()
+                && url.password().is_none()
+                && url.query().is_none()
+                && url.fragment().is_none(),
+            "native fixture must use one explicit loopback origin"
+        );
+        assert!(options.root.is_absolute() && options.root.is_dir());
+        assert!(!options.public_key.is_empty());
+        assert!(options.python.is_absolute() && options.python.is_file());
+        assert!(options.sidecar_entry.is_absolute() && options.sidecar_entry.is_file());
+        assert!(options.sidecar_entry.starts_with(&options.root));
+        assert!(options
+            .scenario
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_'));
+        assert_eq!(
+            std::env::var("RYTM_RAND_MIDI_BACKEND").as_deref(),
+            Ok("off")
+        );
+        assert_eq!(
+            std::env::var(crate::updater::MANIFEST_URL_ENV_VAR)
+                .ok()
+                .as_deref(),
+            Some(options.origin.as_str()),
+            "native manifest traffic must use the fixture origin"
+        );
+        if matches!(
+            options.scenario.as_str(),
+            "install_handoff_quit" | "install_handoff_now"
+        ) {
+            let nonce = options.handoff_nonce.as_ref().expect("handoff nonce");
+            assert!(nonce.len() == 36 && nonce.chars().all(|c| c.is_ascii_hexdigit() || c == '-'));
+            assert!(options
+                .root
+                .file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| name.starts_with("rytm-native-update-")));
+            assert_eq!(
+                std::fs::read_to_string(options.root.join("acceptance-marker"))
+                    .expect("handoff marker"),
+                *nonce
+            );
+            assert_eq!(
+                std::env::current_exe()
+                    .expect("current executable")
+                    .canonicalize()
+                    .expect("canonical executable"),
+                options
+                    .root
+                    .join("fixture-shell.exe")
+                    .canonicalize()
+                    .expect("copied fixture executable"),
+                "real plugin handoff can replace only the isolated fixture copy"
+            );
+        } else {
+            assert!(
+                options.handoff_nonce.is_none(),
+                "handoff nonce requires an explicit handoff scenario"
+            );
+        }
+        Arc::new(Self {
+            options,
+            terminal: Mutex::new(Vec::new()),
+            teardown: Mutex::new(None),
+            child: Mutex::new(None),
+            shutdown_requested: Mutex::new(None),
+        })
+    }
+
+    pub fn install_id(&self) -> &str {
+        &self.options.install_id
+    }
+
+    pub fn signing_key_present(&self) -> bool {
+        self.options.scenario != "missing_key"
+    }
+
+    pub fn sidecar_launch(&self) -> crate::sidecar::SidecarLaunch {
+        crate::sidecar::SidecarLaunch::NativeFixturePython {
+            python: self.options.python.clone(),
+            entry: self.options.sidecar_entry.clone(),
+        }
+    }
+
+    pub fn configure(&self, config: &mut tauri::Config) {
+        let installer_args = if self.real_install_handoff() {
+            config.product_name = Some("RytmUpdaterAcceptanceFixture".into());
+            config.identifier = "invalid.rytm.updater-acceptance".into();
+            vec![
+                "--fixture-root".to_string(),
+                format!("\"{}\"", self.options.root.display()),
+                "--fixture-nonce".to_string(),
+                self.options.handoff_nonce.clone().expect("handoff nonce"),
+            ]
+        } else {
+            Vec::new()
+        };
+        config.build.dev_url = Some("http://127.0.0.1:5173".parse().expect("fixture Vite URL"));
+        config.plugins.0.insert(
+            "updater".into(),
+            serde_json::json!({
+                "endpoints": [format!("{}/stable.json", self.options.origin)],
+                "pubkey": if self.signing_key_present() { self.options.public_key.as_str() } else { "" },
+                "dangerousInsecureTransportProtocol": true,
+                "windows": {"installMode": "passive", "installerArgs": installer_args},
+            }),
+        );
+        // WebView cookies/storage cannot cross fixture runs or touch a real profile.
+        for window in &mut config.app.windows {
+            window.data_directory = Some(self.options.root.join("webview"));
+            window.visible = false;
+        }
+    }
+
+    pub fn attach_lifecycle(
+        &self,
+        teardown: Teardown,
+        child: Arc<Mutex<Option<Child>>>,
+        shutdown_requested: Arc<AtomicBool>,
+    ) {
+        *self.teardown.lock().expect("fixture teardown") = Some(teardown);
+        *self.child.lock().expect("fixture child") = Some(child);
+        *self
+            .shutdown_requested
+            .lock()
+            .expect("fixture shutdown flag") = Some(shutdown_requested);
+    }
+
+    pub fn artifact_url(&self) -> reqwest::Url {
+        format!("{}/artifact.bin", self.options.origin)
+            .parse()
+            .expect("fixture artifact URL")
+    }
+
+    pub fn beacon_url(&self) -> String {
+        format!("{}/beacon.txt", self.options.origin)
+    }
+
+    pub fn bootstrap_script(&self) -> String {
+        let scenario = serde_json::to_string(&self.options.scenario).expect("scenario JSON");
+        let origin = serde_json::to_string(&self.options.origin).expect("origin JSON");
+        // If Vite cannot load the driver, its own try/catch never runs. Use
+        // Tauri's already-injected invoke bridge instead of importing again.
+        // Keep the report categorical: import errors can contain local paths.
+        format!(
+            "import('/e2e/fixtures/native_update_driver.ts')\
+             .then(m => m.run({scenario}, {origin}))\
+             .catch(() => window.__TAURI_INTERNALS__.invoke('report', \
+             {{passed: false, detail: 'native_driver_bootstrap_or_report_failed'}}));"
+        )
+    }
+
+    fn persist_terminal(&self, event: TerminalEvent) {
+        let mut terminal = self.terminal.lock().expect("fixture terminal");
+        terminal.push(event);
+        std::fs::write(
+            self.options.root.join("terminal.json"),
+            serde_json::to_vec(&*terminal).expect("terminal JSON"),
+        )
+        .expect("write native terminal evidence");
+    }
+
+    pub fn record_install(
+        &self,
+        version: &str,
+        choice: ConsentChoice,
+        bytes: &[u8],
+    ) -> Result<(), ErrorCode> {
+        if self.real_install_handoff() {
+            let stopped = self
+                .shutdown_requested
+                .lock()
+                .expect("fixture shutdown flag")
+                .as_ref()
+                .is_some_and(|flag| flag.load(Ordering::SeqCst));
+            if !stopped {
+                return Err(ErrorCode::InstallFailed);
+            }
+            // Do not relock the child slot: teardown may still hold its guard
+            // while dispatching SidecarExited. The separate installer checks
+            // that the captured real sidecar PID is gone before replacement.
+            std::fs::write(self.options.root.join("handoff-boundary.json"),
+                serde_json::json!({"parent_pid": std::process::id(),
+                    "shutdown_requested": stopped, "artifact_sha256": format!("{:x}", Sha256::digest(bytes))}).to_string())
+                .map_err(|_| ErrorCode::InstallFailed)?;
+        }
+        self.persist_terminal(TerminalEvent {
+            event: "install",
+            version: version.into(),
+            choice: match choice {
+                ConsentChoice::InstallOnQuit => "install_on_quit",
+                ConsentChoice::RestartAndInstall => "install_now",
+            }
+            .into(),
+            sha256: format!("{:x}", Sha256::digest(bytes)),
+        });
+        if self.options.scenario == "install_failure" {
+            Err(ErrorCode::InstallFailed)
+        } else {
+            Ok(())
+        }
+    }
+
+    pub fn record_restart(&self) {
+        self.persist_terminal(TerminalEvent {
+            event: "restart",
+            version: String::new(),
+            choice: String::new(),
+            sha256: String::new(),
+        });
+    }
+
+    pub fn real_install_handoff(&self) -> bool {
+        matches!(
+            self.options.scenario.as_str(),
+            "install_handoff_quit" | "install_handoff_now"
+        )
+    }
+
+    fn prepare_handoff(&self) -> Result<(), String> {
+        if !self.real_install_handoff() {
+            return Err("handoff_scenario_required".into());
+        }
+        let slot = self
+            .child
+            .lock()
+            .expect("fixture child")
+            .clone()
+            .ok_or("fixture_child_missing")?;
+        let mut child = slot.lock().expect("child slot");
+        let child = child.as_mut().ok_or("fixture_child_missing")?;
+        if child
+            .try_wait()
+            .map_err(|_| "fixture_child_status_failed")?
+            .is_some()
+        {
+            return Err("fixture_child_not_running".into());
+        }
+        std::fs::write(
+            self.options.root.join("handoff-start.json"),
+            serde_json::json!({"parent_pid": std::process::id(), "sidecar_pid": child.id()})
+                .to_string(),
+        )
+        .map_err(|_| "handoff_receipt_failed".into())
+    }
+
+    fn shutdown(&self) {
+        let teardown = self.teardown.lock().expect("fixture teardown").clone();
+        if let Some(teardown) = teardown {
+            teardown();
+        }
+    }
+
+    fn stats(&self) -> serde_json::Value {
+        let terminal = self.terminal.lock().expect("fixture terminal").clone();
+        serde_json::json!({"terminal": terminal})
+    }
+}
+
+#[tauri::command]
+pub async fn control<R: Runtime>(
+    _app: tauri::AppHandle<R>,
+    state: tauri::State<'_, Arc<NativeFixture>>,
+    action: String,
+) -> Result<serde_json::Value, String> {
+    let fixture = Arc::clone(state.inner());
+    match action.as_str() {
+        "stats" => Ok(fixture.stats()),
+        "prepare_handoff" => {
+            fixture.prepare_handoff()?;
+            Ok(fixture.stats())
+        }
+        "shutdown" => tauri::async_runtime::spawn_blocking(move || {
+            fixture.shutdown();
+            fixture.stats()
+        })
+        .await
+        .map_err(|_| "fixture_shutdown_failed".into()),
+        "restart_backend" => {
+            let slot = fixture
+                .child
+                .lock()
+                .expect("fixture child")
+                .clone()
+                .ok_or("fixture_child_missing")?;
+            let mut child = slot.lock().expect("child slot");
+            child
+                .as_mut()
+                .ok_or("fixture_child_missing")?
+                .kill()
+                .map_err(|_| "fixture_child_kill_failed")?;
+            Ok(serde_json::Value::Null)
+        }
+        "crash_after_consent" if fixture.options.scenario == "consent_crash" => {
+            // A real process termination, without the shutdown policy event.
+            // Reap our passive child first so this crash fixture owns no orphan.
+            if let Some(shutdown) = fixture
+                .shutdown_requested
+                .lock()
+                .expect("fixture shutdown flag")
+                .as_ref()
+            {
+                shutdown.store(true, Ordering::SeqCst);
+            }
+            if let Some(slot) = fixture.child.lock().expect("fixture child").clone() {
+                if let Some(mut child) = slot.lock().expect("child slot").take() {
+                    let _ = child.kill();
+                    let _ = child.wait();
+                }
+            }
+            std::fs::write(fixture.options.root.join("crashed"), b"consent_crash")
+                .map_err(|_| "fixture_crash_marker_failed")?;
+            std::process::exit(86);
+        }
+        _ => Err("unknown_fixture_action".into()),
+    }
+}
+
+#[tauri::command]
+pub async fn report<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    state: tauri::State<'_, Arc<NativeFixture>>,
+    passed: bool,
+    detail: String,
+) -> Result<(), String> {
+    let fixture = Arc::clone(state.inner());
+    // Preserve entry separately from result.json, which still means teardown
+    // completed. A timed-out runner can distinguish these without credentials.
+    std::fs::write(
+        fixture.options.root.join("report-started.json"),
+        b"{\"phase\":\"report_started\"}",
+    )
+    .map_err(|_| "fixture_report_marker_failed".to_string())?;
+    tauri::async_runtime::spawn_blocking(move || {
+        fixture.shutdown();
+        let result = serde_json::json!({
+            "passed": passed,
+            "scenario": fixture.options.scenario,
+            "detail": detail.chars().take(2000).collect::<String>(),
+        });
+        std::fs::write(fixture.options.root.join("result.json"), result.to_string())
+            .expect("write native fixture result");
+        app.exit(if passed { 0 } else { 1 });
+    });
+    Ok(())
+}

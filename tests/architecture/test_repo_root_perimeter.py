@@ -47,6 +47,15 @@ PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 # (see ``_IGNORED_ROOT_NAMES``) rather than allowlisted.
 _ALLOWED_ROOT_DIRS: Final[frozenset[str]] = frozenset(
     {
+        # The zero-opex fleet dashboard (spec §6.1): one self-contained
+        # static page served from GitHub Pages off the `releases` branch.
+        # Repo-root because it is published verbatim, not built.
+        "dashboard",
+        # Seed content for the orphan `releases` branch (empty-but-valid
+        # channel manifests + fleet history + README). Repo-root per the
+        # auto-update plan: scripts/bootstrap_releases_branch.py publishes
+        # it verbatim, so it is data-for-another-branch, not source.
+        "releases_branch_seed",
         # NOTE dual casing: git tracks BOTH ``Scripts/`` (PowerShell operator
         # scripts) and ``scripts/`` (Python repo/CI scripts). On macOS's
         # case-insensitive filesystem they materialize as ONE directory (the
