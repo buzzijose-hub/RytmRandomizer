@@ -1,9 +1,12 @@
-# Updater review and repair ledger — September 13 checkpoint
+# Updater review and repair ledger — September 21 checkpoint
 
 Original review baseline: #239 `218f18a4`, #241 `ab8c9b58`, #242 `47d0ce94`,
 #243 `6d1c6228`. Later author history through `a270ff11` is preserved by merge
-`59dfb07e`, together with the merged Forge baseline. The original stack remains
-open until one verified replacement exists. No production update is published.
+`59dfb07e`, together with the merged Forge baseline. The verified replacement is
+[PR #248](https://github.com/buzzijose-hub/RytmRandomizer/pull/248), based on
+`modularize-v1.34`. Original PRs #239/#241/#242/#243 were closed as superseded
+on September 21 after their latest heads were verified as ancestors of #248
+`e2e46d6e`; their branches and authorship are preserved. No production update is published.
 
 ## Confirmed findings and dispositions
 
@@ -27,7 +30,7 @@ open until one verified replacement exists. No production update is published.
 | Stable promotion lost verified release metadata | Preserve verified notes/hardware flags/signatures and shared hardware-path detection. | `67418040` and `e614129a`; merged 695-test Python suite passed. |
 | Fleet omitted releases beyond 100 | Continue release pagination until exhausted. | Fleet/dashboard cases passed in the merged 695-test Python suite. |
 | “Guaranteed lower bound” misrepresented counters | Explain offline/opt-out undercounts and repeated/public-request inflation. | Dashboard/snapshot assertions passed; no unique-device claim. |
-| Regex HTML extraction tripped CodeQL | Use HTMLParser, including uppercase-tag/attribute cases. | Focused Python tests passed; final hosted CodeQL remains required. |
+| Regex HTML extraction tripped CodeQL | Use HTMLParser, including uppercase-tag/attribute cases. | Focused Python tests and hosted CodeQL passed at `e2e46d6e`. |
 | Windows child test assumed Unix `true` | Use platform-native trivial child process. | Native unit checkpoint passed. |
 | Beacon completions never reached history | Asynchronous closed success/failure callback; no retry or update gating. | Current 186-test Rust suite and 32-case native matrix passed, including repaired journal behavior. |
 | Missing signing key had no journal reason | Record existing categorical keyless refusal alongside discovery state. | Current 186-test Rust suite and 32-case native matrix passed; keyless discovery remains download-disabled. |
@@ -62,8 +65,14 @@ Final default Rust tests passed **186 cases**; formatting and all-target Clippy
 with warnings denied also passed. Ruff, Black, isort, strict Pyright on all 51 production modules and the required
 Vulture scan also passed after test-only fixture cleanup `ae60f111`; the 80
 focused release tests passed in 0.65s with setup and assertions preserved.
-Updater replacement publication, hosted checks and owner approval remain pending. The existing Windows CI job includes native compilation/typechecking
-and acceptance; hosted execution must still be collected.
+Replacement #248 is published. All hosted checks passed at
+`e2e46d6ec086a5f86a52a3bb080be4bfcbe9da5d`, including both `required-checks`
+aggregates, CodeQL and Windows native compilation/typechecking plus the 32-case
+recorder matrix and two actual PE handoffs. The
+[push run](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34769559471)
+and [PR run](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34769561768)
+retain the hosted receipts. Required owner review, including explicit
+architecture-exception approval, remains pending.
 
 Read-only GitHub inspection on September 13 returned **404** for the `releases`
 branch endpoint. Repository Actions variable-name and secret-name listings both

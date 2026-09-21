@@ -5,21 +5,23 @@
 Per [PLAN_REQUIREMENTS.md](../../PLAN_REQUIREMENTS.md), Gate 15. The replacement
 branch is `codex/autoupdate-complete-bundle`, based on `modularize-v1.34`.
 The verified replacement is [PR #248](https://github.com/buzzijose-hub/RytmRandomizer/pull/248).
-Its local gates passed and Eddie's review was requested. The linked PR is the
-authority for current hosted-check, review and original-stack closure status.
+Its local gates and all hosted checks at `e2e46d6e` passed; Eddie's protected
+review remains required. The linked PR is the authority for later source/check
+changes and protected review. All four originals were closed as superseded on
+September 21 after their latest heads were verified as ancestors of `e2e46d6e`.
 
-| Original PR | Scope | Disposition |
+| Original PR | Preserved latest head | Disposition |
 | --- | --- | --- |
-| #239 | Distribution specification | Retain author history and corrected normative context. |
-| #241 | Version and release tooling | Retain history plus verified assembly/promotion repairs. |
-| #242 | Native shell and frontend updater | Retain history plus real IPC, scheduling and lifecycle repairs. |
-| #243 | Native acceptance, fleet and dashboard | Retain history plus executable boundary tests and accurate estimator limits. |
+| [#239](https://github.com/buzzijose-hub/RytmRandomizer/pull/239) | `0871194b` | Closed as superseded; distribution specification and corrected normative context retained. |
+| [#241](https://github.com/buzzijose-hub/RytmRandomizer/pull/241) | `2004322c` | Closed as superseded; version/release tooling plus assembly/promotion repairs retained. |
+| [#242](https://github.com/buzzijose-hub/RytmRandomizer/pull/242) | `71171435` | Closed as superseded; shell/frontend plus IPC, scheduling and lifecycle repairs retained. |
+| [#243](https://github.com/buzzijose-hub/RytmRandomizer/pull/243) | `a270ff11` | Closed as superseded; executable boundary tests and accurate fleet/dashboard estimator limits retained. |
 
 The original inspected stack ended at `6d1c6228`; subsequent author snapshots
 included `17891251` and `a270ff11`. Integration uses merges to preserve authorship.
-All four original PRs map to #248. They may be closed as superseded after the
-replacement's required hosted checks pass and their latest heads are confirmed
-included. Link #248 from each original; do not discard a subsequent author commit.
+Each closure comment links #248 and preserves the remaining human/Gate 9 approval
+requirements. Branches were retained. Closed originals are not protected merges,
+and a later author change still needs exact-head reconciliation.
 
 For a later collaborator change, fetch and compare its exact source revision
 against the replacement before applying it. Do not replay all original commits

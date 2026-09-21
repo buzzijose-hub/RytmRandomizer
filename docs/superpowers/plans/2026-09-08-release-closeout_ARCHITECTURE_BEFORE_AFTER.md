@@ -1,6 +1,6 @@
 # Release closeout architecture changes
 
-> Status: in-flight — final integration validation pending
+> Status: in-flight — local and hosted validation passed; protected review required
 
 Per [PLAN_REQUIREMENTS.md](../../PLAN_REQUIREMENTS.md), Gates 17–18.
 
@@ -15,7 +15,7 @@ Per [PLAN_REQUIREMENTS.md](../../PLAN_REQUIREMENTS.md), Gates 17–18.
 | Release | Key presence and constructed names implied signed artifacts. | Actual artifact hashes, provenance, native signature sidecars and four-target validation gate manifests. |
 | Persisted stores | Library/profile refusal maps were copied. | Pure shared schema/refusal registry; owning stores retain I/O and metrics. Other stores are not implicitly enrolled. |
 | Fleet | First page only; “lower bound” understated bias. | Paged release enumeration; report that offline/opt-out undercounts and repeated requests can inflate. |
-| Native tests | Browser placeholders bypassed shell/plugin boundaries. | Debug-only Wry/WebView2 fixture uses production shell/IPC/verifier; OS installation is recorded. |
+| Native tests | Browser placeholders bypassed shell/plugin boundaries. | Debug-only Wry/WebView2 fixture uses production shell/IPC/verifier: 32 recorder cases plus two actual signed Windows PE installer/successor handoffs confined to a temporary shell copy. Production installers remain unverified. |
 
 No new MIDI port, SEND, persistent KIT SAVE or device family boundary is added
 by the updater. Forge stays in `cockpit/show_bank`; passive Digitakt remains its

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-13T16:44:30.8061852+00:00",
+  "updated_at": "2026-09-21T14:47:49.080329+00:00",
   "phase": "review-required",
   "source_checkpoint": "7cc10e929ece79ec2f67b1342c547597529652f0",
   "incoming_author_head": "a270ff114966d51f143b67c51d7dcd52db3954c0",
@@ -42,12 +42,11 @@
     {
       "name": "updater",
       "pr": 248,
-      "head": "af43f81820f41345b6fbea46be9892be8a672605",
-      "status": "published-local-gates-passed-protected-review-required",
+      "head": "e2e46d6ec086a5f86a52a3bb080be4bfcbe9da5d",
+      "status": "hosted-checks-passed-protected-review-required",
       "remaining": [
-        "Follow PR248 for current hosted checks and original-stack closure",
-        "Close superseded originals only after hosted checks pass and latest heads are included",
-        "Protected review including explicit architecture-exception approval"
+        "Protected review including explicit architecture-exception approval",
+        "A later source revision needs its own required hosted checks"
       ]
     },
     {
@@ -223,6 +222,18 @@
       "result": "Combined Vulture passed after ae60f111; no production Python/desktop diff from validated 7cc10e92; fixtures and .coveragerc match integration baseline",
       "scope": "Test-only fixture cleanup preserves all production behavior and frozen coverage inputs",
       "receipt": "release-closeout-evidence/combined-final-vulture.log; coordinator final git comparison"
+    },
+    {
+      "boundary": "published-updater-hosted-ci",
+      "result": "All hosted checks passed, including both push and PR required-checks, CodeQL and Windows native recorder/PE suites; REVIEW_REQUIRED",
+      "scope": "Confirmed September 21 at exact PR248 head e2e46d6ec086a5f86a52a3bb080be4bfcbe9da5d. Windows jobs 103756622199 and 103756611672 include the 32-case recorder matrix and two actual signed Windows PE handoffs. A later head needs its own checks; no protected merge or architecture-exception approval is implied.",
+      "receipt": "https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34769559471; https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34769561768"
+    },
+    {
+      "boundary": "original-updater-stack-closure",
+      "result": "Original PRs239/241/242/243 closed as superseded by PR248 on September 21 after every latest head passed merge-base --is-ancestor against e2e46d6e",
+      "scope": "PR239 0871194b07916052084b4b3b993b40c267321854 closed 2026-09-21T14:46:38Z; PR241 2004322c0e8f5c33c5093d3aceb8f45a29f2af0c closed 14:46:41Z; PR242 711714350db71a6b50027ec723eee841f72faa71 closed 14:46:44Z; PR243 a270ff114966d51f143b67c51d7dcd52db3954c0 closed 14:46:48Z. Branches/authorship preserved. Closure comments link PR248 and retain human/Gate9 approval requirements; no protected merge.",
+      "receipt": "Coordinator September 21 live GitHub closure and latest-head ancestry checkpoint"
     }
   ],
   "studio": {
@@ -248,18 +259,18 @@
     "free_memory_reserve_gb": 8
   },
   "remaining_limits": [
-    "All local suite/static/dead-code checks passed; updater replacement publication, hosted checks and protected review remain pending",
+    "All local suite/static/dead-code checks and hosted checks passed; published replacement PR248 still requires protected review and explicit architecture-exception approval",
     "No production signing credentials or release publication",
-    "Actual Windows PE plugin handoff passed; production NSIS, macOS and Linux installation remain unverified",
+    "Actual Windows PE plugin handoff passed locally and in hosted Windows CI; production NSIS/MSI, macOS and Linux installation remain unverified",
     "Physical Rytm/A4 observations remain blank",
     "Required human protected approvals cannot be replaced by agent reviews",
     "Local Gates 1-8 and 10-18 are complete; Gate 9 still requires explicit owner approval for _version.py, cockpit.ws -> _version and releases_branch_seed; Digitakt stage.py approval is separate",
-    "Production distribution not activated: releases-branch endpoint returned 404 and repository Actions variable-name/secret-name listings were empty; owner release configuration remains required"
+    "Production distribution not activated: September 13 read-only inspection found no releases branch or repository Actions variables/secrets; owner release configuration remains required"
   ],
   "recovery": [
     "Read this state and RUN_LOG; refresh GitHub heads/reviews/checks",
     "Preserve dirty primary checkout and concurrent author commits",
     "Only one heavy job at a time; root owns test/build scheduling",
-    "Do not close original updater stack until a verified replacement exists"
+    "Original updater PRs239/241/242/243 are closed as superseded after verified latest-head inclusion; continue PR248 and preserve any later author work"
   ]
 }

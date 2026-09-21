@@ -15,9 +15,9 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 
 | Date | Plan | Status | PR |
 |---|---|---|---|
-| 2026-09-08 | [release-closeout](2026-09-08-release-closeout.md) | in-flight — local verification passed; protected review required | #238–243; #245; replacement #248 |
+| 2026-09-08 | [release-closeout](2026-09-08-release-closeout.md) | in-flight — local and hosted verification passed; protected review required | #238–243; #245; replacement #248 |
 | 2026-09-08 | [release-closeout learning and replay](2026-09-08-release-closeout_LEARNING_REPORT.md) | in-flight — lessons and verified replay retained; review required | #238–243; #245; #248 |
-| 2026-09-08 | [release-closeout collaborator guide](2026-09-08-release-closeout_REBASE_GUIDE.md) | in-flight — original updater stack maps to #248 | #239, #241–243; #248 |
+| 2026-09-08 | [release-closeout collaborator guide](2026-09-08-release-closeout_REBASE_GUIDE.md) | in-flight — originals closed as superseded; #248 awaits protected review | #239, #241–243; #248 |
 | 2026-09-07 | [autoupdate-implementation](2026-09-07-autoupdate-implementation.md) | in-flight — implemented and locally verified; review at #248 | #239, #241–243; #248 |
 | 2026-09-04 | [show-kit-forge](2026-09-04-show-kit-forge.md) | merged software; hardware observations pending | #238; #245 follow-up |
 | 2026-08-26 | [targeted-live-kit-mutation](2026-08-26-targeted-live-kit-mutation.md) | in-flight — software-complete / hardware-blocked | #237 |

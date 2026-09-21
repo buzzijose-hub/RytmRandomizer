@@ -266,7 +266,7 @@ may read from `data/` and `state/` but they may not import `engines`, `shell`,
 | `scripts/release_lib.py` and thin release CLIs | Shared Python version/manifest validation and generation. |
 | `scripts/release_artifacts.py` | Configure, collect and verify native updater artifacts; check signatures, provenance and complete targets before release assembly. |
 | `scripts/fleet_snapshot.py`, `dashboard/index.html` | Paginated release-counter collection and explicitly approximate fleet activity. |
-| `desktop/shell/src/native_fixture.rs`, `desktop/web/native-e2e/` | Debug-feature-only native acceptance harness: real WebView/IPC/plugin verification with isolated network and terminal install/restart fixtures. |
+| `desktop/shell/src/native_fixture.rs`, `desktop/web/native-e2e/`, `desktop/web/native-install-e2e/` | Debug-feature-only native acceptance: real WebView/IPC/plugin verification with a terminal recorder, plus signed Windows PE installer/successor handoffs confined to a temporary fixture copy. |
 
 ## 3. Dependency direction rules (machine-enforced)
 
@@ -1529,10 +1529,14 @@ notarization and real platform installation are separate evidence.
 The native acceptance target compiles the real shell, IPC, driver, journal,
 supervisor and plugin verifier. Its `native-test` feature is rejected in
 release builds and requires an explicit temporary-root/loopback fixture with
-MIDI off; terminal installation/restart is inert. At the September 8 checkpoint,
-32 actual Wry/WebView2 cases passed in 53.9 seconds and strict native TypeScript
-passed. Terminal installation/restart was recorded rather than performed. Unit counts,
-signature-vector verification and harness compilation are separate proofs.
+MIDI off. The recorder matrix covers 32 actual Wry/WebView2 cases with terminal
+installation/restart recorded. The separate `native-install-e2e` suite performs
+both install-on-quit and install-now through the real Windows plugin using a
+signed PE installer and successor confined to a marked temporary shell copy.
+Both suites passed locally and in Windows CI at the published #248 checkpoint
+`e2e46d6e`. These tests do not prove production NSIS/MSI, macOS/Linux installation,
+publisher signing or production GitHub/CDN delivery. Unit counts,
+signature-vector verification and harness compilation remain separate proofs.
 See [native acceptance](../desktop/web/native-e2e/README.md),
 [release assembly](BUILDING_INSTALLERS.md#verified-updater-release-assembly) and
 the [current run report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md).
@@ -1542,7 +1546,8 @@ fields exclude free-form paths and identifiers. Check-ins are separate optional
 requests; their asynchronous completion feeds `ping_ok`/`ping_failed` journal
 rows without retries or update-state gating. A shared writer lock covers journal
 rotation plus append. The missing-key refusal also emits its typed reason into
-history. These diagnostic repairs require the final native regression run. Fleet
+history. These diagnostic repairs passed the 186-test Rust suite and the native
+recorder matrix. Fleet
 estimates can undercount or overcount and never grant installation authority.
 
 ## 7. Enforcement summary

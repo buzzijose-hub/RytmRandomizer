@@ -1167,7 +1167,7 @@ flowchart TB
 
     subgraph Layer4["Layer 4 — End-to-end boundaries"]
         E2ETests["tests/test_*_e2e.py<br/>(MockMidiSender; no real hardware)"]
-        NativeE2E["desktop/web/native-e2e<br/>real WebView / IPC / plugin verifier<br/>isolated install/restart fixture"]
+        NativeE2E["desktop/web/native-e2e + native-install-e2e<br/>real WebView / IPC / plugin verifier<br/>recorder + isolated Windows PE handoff"]
     end
 
     subgraph Layer5["Layer 5 — Coverage ratchet"]
@@ -3268,9 +3268,10 @@ seven-bit CC audition seam and persistent-KIT refusal remain unchanged.
 
 ## 38. Desktop update components — software closeout
 
-The implementation is present and 32 native acceptance cases passed; final
-combined gates, production credentials and platform installation evidence
-remain pending. The stable
+The implementation is published in [PR #248](https://github.com/buzzijose-hub/RytmRandomizer/pull/248).
+Local combined gates passed; hosted checks passed at `e2e46d6e`, including 32 native
+recorder cases and two actual Windows PE handoffs. Required protected review,
+production credentials and production installer evidence remain pending. The stable
 `desktop-update-components` anchor survives integration with independently
 numbered Forge diagrams. Historical links to the design-only heading are retained.
 
@@ -3297,7 +3298,8 @@ flowchart LR
     Effects --> Exit["shared backend teardown"]
     Exit --> Install["consented verified-byte install<br/>key + platform evidence required"]
     Transport -. "optional separate request" .-> Counters["GitHub counters -> fleet snapshot -> dashboard"]
-    Fixture["debug native-test fixture<br/>real verifier; inert terminal operations"] -. "acceptance boundary" .-> Transport
+    Fixture["debug native-test recorder<br/>real verifier; 32 recorded terminal cases"] -. "acceptance boundary" .-> Transport
+    Handoff["native-install-e2e<br/>2 actual signed Windows PE handoffs<br/>temporary fixture copy only"] -. "plugin install boundary" .-> Install
 ```
 
 No key means metadata discovery with an explicit unavailable-download message,
@@ -3308,7 +3310,8 @@ cannot grant installation authority. No part of this graph authorizes MIDI
 output, hardware saving or physical validation.
 
 The [current run report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md)
-separates passing signature/tooling checks and 32 native cases from pending
-platform installation and final combined verification. See [release assembly](BUILDING_INSTALLERS.md#verified-updater-release-assembly)
+separates passing combined gates, 32 native recorder cases and two actual Windows
+PE handoffs from unverified production NSIS/MSI, macOS/Linux installation,
+publisher signing and production distribution. See [release assembly](BUILDING_INSTALLERS.md#verified-updater-release-assembly)
 for the four target formats and [native acceptance](../desktop/web/native-e2e/README.md)
 for the isolated fixture contract.

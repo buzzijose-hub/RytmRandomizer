@@ -137,6 +137,24 @@ reconstructed as a pass.
   validation diff from `7cc10e92` contains no production Python or desktop
   changes, and frozen fixtures plus `.coveragerc` match the integration baseline.
 
-Pending: replacement publication, hosted checks and original-stack mapping,
-protected reviews/merges, platform installer evidence and operator-present
-studio validation. No production release or real MIDI action occurred.
+- 2026-09-21: User requested continuation. Confirmed the updater replacement
+  #248 is published against `modularize-v1.34` at
+  `e2e46d6ec086a5f86a52a3bb080be4bfcbe9da5d`. All hosted checks passed, including
+  both required aggregates and CodeQL. Push run `34769559471` and PR run
+  `34769561768` retain the results; Windows jobs `103756622199` and `103756611672`
+  passed the native recorder matrix and both actual signed PE handoffs. These
+  receipts do not grant protected review or production installer/hardware evidence.
+  Updated the current state, ledger and native architecture maps to reflect
+  publication and distinguish the recorder from actual Windows handoffs.
+
+- 2026-09-21: Verified every latest original updater head is an ancestor of
+  `e2e46d6e`, then closed the originals as superseded by #248: #239
+  `0871194b07916052084b4b3b993b40c267321854` at `14:46:38Z`; #241
+  `2004322c0e8f5c33c5093d3aceb8f45a29f2af0c` at `14:46:41Z`; #242
+  `711714350db71a6b50027ec723eee841f72faa71` at `14:46:44Z`; #243
+  `a270ff114966d51f143b67c51d7dcd52db3954c0` at `14:46:48Z`. Each closure comment
+  links #248 and preserves the human/Gate 9 approval requirements. Original
+  branches and authorship remain; the replacement is not merged.
+
+Pending: protected reviews/merges, production signing/distribution and platform installer evidence, and
+operator-present studio validation. No production release or real MIDI action occurred.

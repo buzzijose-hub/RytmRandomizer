@@ -1,6 +1,6 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-09-13. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-09-21. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
 
@@ -77,9 +77,14 @@ the 99.46% pure-branch result clears the unchanged 99% floor. Frontend passed
 and build passed. Browser passed 32 tests with two existing skips in 52.6s:
 the keyboard skeleton and the armed journey requiring unavailable virtual MIDI.
 No updater or native case is skipped. The 32-case native recorder matrix and
-two actual signed Windows PE handoffs passed. Final local Rust/Python static checks passed. Updater hosted checks, protected
-review, production credentials and production
-NSIS/macOS/Linux installer evidence remain pending. No all-gates closeout is claimed.
+two actual signed Windows PE handoffs passed. Final local Rust/Python static
+checks passed. At published source `e2e46d6ec086a5f86a52a3bb080be4bfcbe9da5d`,
+all hosted checks passed, including both push and PR `required-checks` and the
+Windows native recorder/PE suites. Protected review, explicit architecture-exception
+approval, production credentials and production NSIS/MSI/macOS/Linux installer
+evidence remain pending. No all-gates closeout is claimed.
+Original PRs #239/#241/#242/#243 were closed as superseded on September 21
+after their latest heads were verified as included in #248 `e2e46d6e`.
 The [plan](superpowers/plans/2026-09-08-release-closeout.md),
 [state](superpowers/plans/2026-09-08-release-closeout_STATE.json) and
 [repair ledger](2026-09-08-updater-repair-ledger.md) identify the current checkpoint.
@@ -87,6 +92,14 @@ Digitakt #240 remains a separate passive device PR; it is not included as merged
 support in this updater checkpoint.
 
 ## Recent Cleanup
+
+- 2026-09-21: Resumed the six-PR closeout and verified #248's hosted checks at
+  `e2e46d6e`, including both required aggregates and actual Windows acceptance.
+  Updated native architecture maps and the current state/report to distinguish
+  the 32 recorder cases from two real signed PE handoffs. Closed the four original
+  updater PRs as superseded after verifying their latest heads are included.
+  Protected review and
+  production/hardware evidence remain separate from these passing software gates.
 
 - 2026-09-13: Resumed the six-PR closeout after the user's continuation. Preserved
   the dirty original checkout, reconciled concurrent author commits and kept

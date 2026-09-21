@@ -1,6 +1,6 @@
 # September 8 release closeout — run report
 
-> Status: in-flight — all local gates passed; owner exception approval and hosted review pending
+> Status: in-flight — local and hosted gates passed; owner exception approval and protected review pending
 
 Per [PLAN_REQUIREMENTS.md](../../PLAN_REQUIREMENTS.md).
 [Plan](2026-09-08-release-closeout.md) · [State](2026-09-08-release-closeout_STATE.json)
@@ -29,11 +29,24 @@ updater or native case is skipped. Current native units, the 32-case recorder
 matrix and both actual Windows PE handoffs pass. Final Rust format/test/clippy, Ruff/Black/isort, strict Pyright on 51 production
 modules and the required dead-code scan all passed. The replacement is published
 as [PR #248](https://github.com/buzzijose-hub/RytmRandomizer/pull/248), with Eddie's
-review requested. Use that PR for current hosted checks and protected review.
-Production NSIS/macOS/Linux installer evidence
-also remains outside the verified PE-fixture scope.
-No all-gates PASS is claimed,
-and original-stack closure requires passing hosted checks and latest-head inclusion.
+review requested. On September 21, all hosted checks were confirmed successful
+at published head `e2e46d6ec086a5f86a52a3bb080be4bfcbe9da5d`, including both
+`required-checks` aggregates, CodeQL and Windows native acceptance. The
+[push run](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34769559471)
+and [PR run](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34769561768)
+retain those receipts; Windows jobs
+[103756622199](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34769559471/job/103756622199)
+and [103756611672](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34769561768/job/103756611672)
+include the 32 recorder cases and two actual signed PE handoffs. These are
+revision-specific checks; later changes require their own required checks.
+Protected review and explicit owner exception approval remain pending.
+Production NSIS/MSI/macOS/Linux installer evidence remains outside the verified
+PE-fixture scope. No all-gates PASS is claimed.
+Original PRs #239/#241/#242/#243 were closed as superseded on September 21
+after their latest heads (`0871194b`, `2004322c`, `71171435`, `a270ff11`)
+were each verified as ancestors of `e2e46d6e`. Closure comments link #248;
+branches and original authorship remain preserved. This does not merge #248
+or supply the missing human approval.
 
 Forge #238 was approved by Eddie at `2026-09-08T14:53:23Z` and merged at
 `14:53:39Z` as `b1d6ff5678f80378176038fb13d6ef78d13c0abc`. Its empty-bank UI
@@ -70,11 +83,12 @@ PR merge or approve its architecture exception.
 | Digitakt + Forge | 9,127 passed / six skips; 42 touched production files at 100%; project pure branch 99.4596%. | Separate Digitakt worktree `35e7a1ce`, not final updater combined coverage. |
 | First combined Python run | 9,919 passed / two architecture failures / six skips in 305.37s. All 51 touched production files had 100% line/branch coverage; project pure branch 99.4618395%, combined 99.6949435%. | Failed run at `636e4e4a`; export/index repairs in `a928e0f1` are verified by the final passing run below. |
 | Final combined Python and coverage | 9,922 passed / six skips / six warnings in 278.98s at `7cc10e92`. Touched-file gate passed 51 production files at 100% line/branch coverage; pure-branch ratchet passed 99.46% against unchanged 99% floor. Four version declarations agree on 1.34.0. | Final source suite passed; Python lint/type/dead-code checks also passed; hosted review remains separate. |
-| Final combined frontend | 1,010 tests / 71 files passed in 40.58s; 3,519 statements, 2,641 branches, 1,203 functions and 3,155 lines all at 100%. ESLint and build passed. | At final validation source `7cc10e92`; updater hosted checks remain pending. |
+| Final combined frontend | 1,010 tests / 71 files passed in 40.58s; 3,519 statements, 2,641 branches, 1,203 functions and 3,155 lines all at 100%. ESLint and build passed. | At final validation source `7cc10e92`; hosted evidence for published updater `e2e46d6e` is recorded separately. |
 | Final browser suite | 32 passed / two existing skips in 52.6s. | Skips: keyboard skeleton and virtual-MIDI-dependent armed journey; no updater/native skips. |
 | Digitakt hosted CI | All checks passed for `15484906`, including push and pull-request `required-checks`. | `REVIEW_REQUIRED`; protected approval is still outstanding. |
 | Final local static/dead-code checks | Ruff, Black (916 files), isort, strict Pyright (51 modules), Rust format/test/clippy and Vulture all passed. | Test-only cleanup `ae60f111` retained fixture execution/assertions; 80 targeted release tests passed in 0.65s. |
-| Replacement publication/hosted checks | #248 published from `af43f818`; Eddie requested. Pre-push passed 855 architecture and 696 non-fast items (including the 685 parity items). | Follow the linked PR for current checks and original-stack closure. Local gates do not supply owner approval or protected merge. |
+| Replacement publication/hosted checks | #248 published; all hosted checks passed at `e2e46d6e`, including both required aggregates and Windows native recorder/PE suites. Push run `34769559471`; PR run `34769561768`. | Eddie's required review and explicit architecture-exception approval remain outstanding. A later head needs its own hosted checks; no protected merge is claimed. |
+| Original updater stack | #239/#241/#242/#243 closed as superseded September 21 after latest-head ancestor checks against `e2e46d6e`. | Original branches/authorship preserved; each closure links #248 and retains human/Gate 9 approval requirements. |
 
 The new studio package `show-kit-forge-studio-c79597b69d05` identifies full
 source `c79597b69d055c32b8175fd665c77f20c384677c`:
@@ -121,8 +135,9 @@ Digitakt independently requests approval for its narrow `cockpit/data/stage.py`
 identity-gate exemption. Recorded rationale and passing tests do not substitute
 for approval.
 
-Fresh-clone handoff answers, using repository files (final clean-checkout check
-pending): current plan/state/log are linked above; new stores extend
+Fresh-checkout handoff answers were checked against the existing clean updater
+worktree at published `e2e46d6e` before this documentation refresh; no new clone
+or build was used for that inspection. Current plan/state/log are linked above; new stores extend
 `data/persisted_state.py` plus their owning I/O guard; updater events extend native
 policy and shared `updateProtocol.ts`; freeze requires `RYTM_RAND_UPDATES=off`
 before restart; safe native replay follows [native-e2e/README.md](../../../desktop/web/native-e2e/README.md)

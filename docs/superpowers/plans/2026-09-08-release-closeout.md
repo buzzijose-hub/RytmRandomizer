@@ -1,6 +1,6 @@
 # September 8 release closeout
 
-> Status: in-flight — resumed September 13; local checks passed; owner exceptions/hosted review pending
+> Status: in-flight — resumed September 21; local and hosted checks passed; owner exceptions/protected review pending
 
 Jose authorized review, repair, pushes, review requests, and normal protected merges of PRs #238–243. Upcoming Rytm/A4 shows take priority. This plan consolidates #239/#241/#242/#243 into one updater PR against `modularize-v1.34`, preserving original commit authorship. Forge (#238) and passive Digitakt support (#240) remain separate changes. No production release is part of this run.
 
@@ -37,7 +37,7 @@ remote heads may move and must be reconciled without overwriting author commits.
 Existing updater PRs close only after a verified replacement exists.
 
 Start was the user's September 8 request; its original same-day/24-hour target
-was not met. The user explicitly resumed work September 13. Current termination
+was not met. The user explicitly resumed work September 13 and September 21. Current termination
 criteria are the concrete software/PR/handoff outcomes below, with unresolved
 external approval and physical evidence identified precisely. A STOP message
 interrupts execution and records the checkpoint. Preserve hardware pins and all
