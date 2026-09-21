@@ -73,6 +73,39 @@ async function reapOwnedProcess(child: ChildProcess): Promise<void> {
   }
 }
 
+/** Preserve bounded, credential-free startup/IPC clues before fixture cleanup. */
+export function nativeFailureDetails(root: string, output: readonly string[], requests: readonly string[]): string {
+  const readOptional = (name: string): string | null => {
+    try { return readFileSync(path.join(root, name), 'utf8'); }
+    catch { return null; } // Concurrent rotation/teardown must not hide the timeout.
+  };
+  const journal = readOptional(path.join('RytmRandomizer', 'update-journal.jsonl'));
+  const journalEvents: string[] = [];
+  if (journal !== null) {
+    for (const line of journal.trim().split('\n').filter(Boolean).slice(-50)) {
+      try {
+        const row: unknown = JSON.parse(line);
+        if (typeof row === 'object' && row !== null && 'event' in row && typeof row.event === 'string') {
+          journalEvents.push(row.event.slice(0, 64));
+        }
+      } catch { journalEvents.push('<incomplete-row>'); }
+    }
+  }
+  let diagnostic = output.join('').split(root).join('<fixture-root>');
+  for (const name of ['ws-token', 'arm-secret']) {
+    const secret = readOptional(name)?.trim();
+    if (secret !== undefined && secret !== '') diagnostic = diagnostic.split(secret).join('<fixture-credential>');
+  }
+  return JSON.stringify({
+    requests: requests.slice(-50).map((url) => url.split('?')[0]?.slice(0, 128)),
+    resultPresent: existsSync(path.join(root, 'result.json')),
+    reportStarted: existsSync(path.join(root, 'report-started.json')),
+    sidecarCredentialsPresent: existsSync(path.join(root, 'ws-token')),
+    journalEvents,
+    output: diagnostic.slice(-8000),
+  });
+}
+
 /** No browser Page and no mocked IPC: the spawned native window runs the assertions. */
 export async function runNativeScenario(scenario: string): Promise<NativeEvidence> {
   const binary = process.env.RYTM_NATIVE_TEST_BINARY;
@@ -169,7 +202,7 @@ export async function runNativeScenario(scenario: string): Promise<NativeEvidenc
     const waitForExit = (running: ChildProcess): Promise<void> => new Promise((resolve, reject) => {
       running.stdout?.on('data', (data: Buffer) => { output.push(data.toString()); if (output.length > 150) output.shift(); });
       running.stderr?.on('data', (data: Buffer) => { output.push(data.toString()); if (output.length > 150) output.shift(); });
-      const deadline = setTimeout(() => reject(new Error(`Native scenario ${scenario} timed out`)), 65_000);
+      const deadline = setTimeout(() => reject(new Error(`Native scenario ${scenario} timed out:\n${nativeFailureDetails(root, output, requests)}`)), 65_000);
       running.once('error', (error) => { clearTimeout(deadline); reject(error); });
       running.once('exit', () => { clearTimeout(deadline); resolve(); });
     });
@@ -189,15 +222,7 @@ export async function runNativeScenario(scenario: string): Promise<NativeEvidenc
     }
     const resultPath = path.join(root, 'result.json');
     if (handoff === undefined && !existsSync(resultPath)) {
-      let diagnostic = output.join('').slice(-12_000).split(root).join('<fixture-root>');
-      for (const name of ['ws-token', 'arm-secret']) {
-        const secretPath = path.join(root, name);
-        if (existsSync(secretPath)) {
-          const secret = readFileSync(secretPath, 'utf8').trim();
-          if (secret !== '') diagnostic = diagnostic.split(secret).join('<fixture-credential>');
-        }
-      }
-      throw new Error(`Native runner produced no result for ${scenario}:\n${diagnostic}`);
+      throw new Error(`Native runner produced no result for ${scenario}:\n${nativeFailureDetails(root, output, requests)}`);
     }
     const result = handoff === undefined ? JSON.parse(readFileSync(resultPath, 'utf8')) as NativeEvidence['result']
       : { passed: true, scenario, detail: 'Real Windows installer handoff and native/DOM assertions' };

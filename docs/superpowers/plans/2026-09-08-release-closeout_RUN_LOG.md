@@ -156,5 +156,34 @@ reconstructed as a pass.
   links #248 and preserves the human/Gate 9 approval requirements. Original
   branches and authorship remain; the replacement is not merged.
 
-Pending: protected reviews/merges, production signing/distribution and platform installer evidence, and
+- 2026-09-21: At documentation-only head `124a3129`, PR run `35614910454`
+  Windows job `106383099423` passed 31 native cases, then `rollout_out` hit the
+  existing 65-second process timeout. The later two-PE step was skipped after
+  that failure. The same head's push run `35614905361`, Windows job
+  `106383072742`, passed all 32 native cases in 1.5 minutes and both actual PE
+  handoffs in 10 seconds. Twenty unchanged local `rollout_out` repetitions
+  passed in 33.6 seconds. The original hang's cause remains unproven; none of
+  the passing receipts replaces the failed PR receipt.
+- 2026-09-21: Repaired debug acceptance evidence and bounds: joint state/journal
+  observation, pending IPC bounded by the existing 25-second polling deadline,
+  categorical bootstrap failure reporting, a report-entry marker before teardown,
+  and bounded credential-redacted timeout evidence before cleanup. Seven focused
+  tests passed. Full native and fresh hosted validation remain pending. No
+  production defect/cause is claimed; timeout values, retries and skip conditions
+  are unchanged.
+
+- 2026-09-21: Candidate debug-harness validation passed native TypeScript and
+  targeted ESLint, seven focused regressions (`native-harness-regressions.log`),
+  Rust formatting and strict Clippy with native-test/all-targets (1m02s). The
+  rebuilt debug shell completed in 16.44s; all 32 native cases passed in 55.3s
+  (`native-harness-matrix.log`) and both actual PE handoffs passed in 8.6s
+  (`native-harness-handoff.log`). Binary
+  `native-test-harness-20260921/rytm-native-test.exe` SHA-256 is
+  `52709be8e964dda6b21e15e99282f472dfd55bdf2f911a345f1f7ccfcaa12afa`.
+  Ordinary application/runtime code is unchanged. The original `124a3129` PR
+  timeout cause remains unproven; this is not a claim that the hang is fixed.
+  Fresh hosted checks remain pending until the candidate is committed/pushed.
+
+Pending: fresh hosted gates, protected reviews/merges,
+production signing/distribution and platform installer evidence, and
 operator-present studio validation. No production release or real MIDI action occurred.

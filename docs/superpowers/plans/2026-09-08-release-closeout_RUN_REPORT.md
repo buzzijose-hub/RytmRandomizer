@@ -1,6 +1,6 @@
 # September 8 release closeout — run report
 
-> Status: in-flight — local and hosted gates passed; owner exception approval and protected review pending
+> Status: in-flight — candidate native acceptance passed; fresh hosted gates and protected review pending
 
 Per [PLAN_REQUIREMENTS.md](../../PLAN_REQUIREMENTS.md).
 [Plan](2026-09-08-release-closeout.md) · [State](2026-09-08-release-closeout_STATE.json)
@@ -39,6 +39,24 @@ retain those receipts; Windows jobs
 and [103756611672](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34769561768/job/103756611672)
 include the 32 recorder cases and two actual signed PE handoffs. These are
 revision-specific checks; later changes require their own required checks.
+The later documentation-only head `124a3129` has a failed PR Windows receipt:
+[job 106383099423](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/35614910454/job/106383099423)
+passed 31 native cases before `rollout_out` hit the 65-second process timeout;
+the later two-PE step was skipped after that failure. The same head's
+[push job 106383072742](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/35614905361/job/106383072742)
+passed all 32 native cases in 1.5 minutes and both PE cases in 10 seconds.
+Twenty unchanged local `rollout_out` repeats passed in 33.6 seconds, so the
+original hang's cause remains unproven. Debug-only acceptance repairs now make
+state/journal observation joint, bound pending IPC by the existing 25-second
+polling deadline, report bootstrap/report-entry progress and retain bounded,
+credential-redacted timeout evidence before cleanup. Candidate validation passed:
+seven focused regressions, native TypeScript/targeted ESLint, Rust formatting and
+strict all-target Clippy with `native-test` enabled, all 32 native cases in
+55.3 seconds and both actual PE handoffs in 8.6 seconds. Fresh hosted checks
+for the candidate remain pending until commit/push.
+No production defect or causal explanation is claimed, and timeout values,
+retries and skip conditions are unchanged. Passing receipts do not replace the
+failed PR-run receipt.
 Protected review and explicit owner exception approval remain pending.
 Production NSIS/MSI/macOS/Linux installer evidence remains outside the verified
 PE-fixture scope. No all-gates PASS is claimed.
@@ -88,6 +106,10 @@ PR merge or approve its architecture exception.
 | Digitakt hosted CI | All checks passed for `15484906`, including push and pull-request `required-checks`. | `REVIEW_REQUIRED`; protected approval is still outstanding. |
 | Final local static/dead-code checks | Ruff, Black (916 files), isort, strict Pyright (51 modules), Rust format/test/clippy and Vulture all passed. | Test-only cleanup `ae60f111` retained fixture execution/assertions; 80 targeted release tests passed in 0.65s. |
 | Replacement publication/hosted checks | #248 published; all hosted checks passed at `e2e46d6e`, including both required aggregates and Windows native recorder/PE suites. Push run `34769559471`; PR run `34769561768`. | Eddie's required review and explicit architecture-exception approval remain outstanding. A later head needs its own hosted checks; no protected merge is claimed. |
+| Later PR Windows run at `124a3129` | PR run `35614910454`, job `106383099423`: 31 native passes, `rollout_out` process timeout at 65 seconds; later two-PE step skipped. | Failed run retained; original hang cause unproven. |
+| Same-head push Windows run and local replay | Push run `35614905361`, job `106383072742`: 32 native passes in 1.5 minutes and two PE passes in 10 seconds. Twenty unchanged local `rollout_out` repeats passed in 33.6 seconds. | Neither passing receipt supplies a causal explanation or erases the failed PR receipt. |
+| Debug acceptance diagnostics | Seven focused regressions, native TypeScript and targeted ESLint passed; Rust format and strict all-target native-test Clippy passed (Clippy 1m02s). Fresh debug build passed in 16.44s. | Candidate harness only; ordinary runtime, timeout values, retries and skip conditions unchanged. Original hang cause remains unproven. |
+| Candidate native harness | All 32 native cases passed in 55.3s (`native-harness-matrix.log`); both actual PE handoffs passed in 8.6s (`native-harness-handoff.log`). | Candidate binary identified below; fresh hosted checks pending until commit/push. Passing evidence does not prove the original hang fixed. |
 | Original updater stack | #239/#241/#242/#243 closed as superseded September 21 after latest-head ancestor checks against `e2e46d6e`. | Original branches/authorship preserved; each closure links #248 and retains human/Gate 9 approval requirements. |
 
 The new studio package `show-kit-forge-studio-c79597b69d05` identifies full
@@ -105,6 +127,15 @@ This supersedes the older `076ef67a` package as the identified software artifact
 physical checklist observations remain blank.
 
 ## Remaining limits and replay
+
+The September 21 candidate debug harness executable is
+`release-closeout-evidence/native-test-harness-20260921/rytm-native-test.exe`,
+SHA-256 `52709be8e964dda6b21e15e99282f472dfd55bdf2f911a345f1f7ccfcaa12afa`.
+The seven focused regression receipt is `native-harness-regressions.log`.
+This isolated feature-enabled executable validates acceptance infrastructure;
+it is not a production or studio package. Its passing local matrix/handoff
+receipts do not establish the cause of the earlier CI timeout. New-head hosted
+checks, protected review and owner exception approval remain outstanding.
 
 No key means metadata discovery with an explicit unavailable-download message,
 not staged bytes or consent. Beacon completion, journal rotation locking and

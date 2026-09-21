@@ -202,8 +202,14 @@ impl NativeFixture {
     pub fn bootstrap_script(&self) -> String {
         let scenario = serde_json::to_string(&self.options.scenario).expect("scenario JSON");
         let origin = serde_json::to_string(&self.options.origin).expect("origin JSON");
+        // If Vite cannot load the driver, its own try/catch never runs. Use
+        // Tauri's already-injected invoke bridge instead of importing again.
+        // Keep the report categorical: import errors can contain local paths.
         format!(
-            "import('/e2e/fixtures/native_update_driver.ts').then(m => m.run({scenario}, {origin}));"
+            "import('/e2e/fixtures/native_update_driver.ts')\
+             .then(m => m.run({scenario}, {origin}))\
+             .catch(() => window.__TAURI_INTERNALS__.invoke('report', \
+             {{passed: false, detail: 'native_driver_bootstrap_or_report_failed'}}));"
         )
     }
 
@@ -381,6 +387,13 @@ pub async fn report<R: Runtime>(
     detail: String,
 ) -> Result<(), String> {
     let fixture = Arc::clone(state.inner());
+    // Preserve entry separately from result.json, which still means teardown
+    // completed. A timed-out runner can distinguish these without credentials.
+    std::fs::write(
+        fixture.options.root.join("report-started.json"),
+        b"{\"phase\":\"report_started\"}",
+    )
+    .map_err(|_| "fixture_report_marker_failed".to_string())?;
     tauri::async_runtime::spawn_blocking(move || {
         fixture.shutdown();
         let result = serde_json::json!({

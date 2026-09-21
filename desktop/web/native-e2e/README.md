@@ -56,6 +56,17 @@ owned process tree on failure and removes its temporary directory. A failed real
 handoff retains its isolated directory so it cannot remove files still owned by
 the bounded installer process.
 
+The acceptance driver observes rollout state and its decision journal together.
+Its existing 25-second polling deadline also bounds a pending IPC predicate;
+the outer 65-second process deadline is unchanged. A bootstrap failure reports
+a categorical error through the already-injected native bridge. The native
+report handler writes `report-started.json` before teardown; `result.json` still
+means teardown completed, so the marker alone never proves success. Before a
+timeout cleanup, the runner captures bounded request paths, journal event names,
+report/credential-presence flags and credential-redacted output. Test retries,
+skips and deadlines are not increased to hide a failing case. These diagnostics
+improve evidence collection without establishing the cause of an earlier hang.
+
 The key/signature test vector comes from `minisign-verify` 0.2.5's upstream test
 `verify_prehashed` in `src/lib.rs` (Frank Denis; MIT). It uses public test data;
 no private release signing key is needed. The license is reproduced in

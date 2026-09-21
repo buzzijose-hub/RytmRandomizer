@@ -36,6 +36,7 @@ on September 21 after their latest heads were verified as ancestors of #248
 | Missing signing key had no journal reason | Record existing categorical keyless refusal alongside discovery state. | Current 186-test Rust suite and 32-case native matrix passed; keyless discovery remains download-disabled. |
 | Concurrent rotation could lose journal rows | Share a writer lock across rotation and append, outside policy-state lock. | Concurrent-write regression passed in the current 186-test Rust suite. |
 | Doctor export omitted native activity | Read shared snapshot on export, project at most 50 sanitized rows; unavailable becomes null. | Doctor/SDK outcome tests passed in the final combined frontend suite: 1,010 tests, all configured coverage 100%. |
+| A native CI timeout had insufficient diagnostic evidence; pending IPC could outlive the polling deadline | Debug-only acceptance observes state/journal together, bounds pending IPC by the existing 25-second deadline, reports bootstrap failures and report entry, and captures bounded credential-redacted timeout evidence before cleanup. | Seven focused tests, native TypeScript/targeted ESLint, Rust format/strict native-test Clippy, all 32 native cases (55.3s) and two actual PE handoffs (8.6s) passed. Fresh hosted checks remain pending; the original hang's cause is still unproven. |
 
 ## Evidence boundary
 
@@ -73,6 +74,23 @@ recorder matrix and two actual PE handoffs. The
 and [PR run](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34769561768)
 retain the hosted receipts. Required owner review, including explicit
 architecture-exception approval, remains pending.
+
+At the later documentation-only head `124a3129`, results diverged: the
+[PR Windows job](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/35614910454/job/106383099423)
+passed 31 native cases, then `rollout_out` hit the existing 65-second process
+timeout; the later two-PE step was skipped because the job had failed. The
+[push Windows job](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/35614905361/job/106383072742)
+passed all 32 native cases in 1.5 minutes and both PE cases in 10 seconds.
+Twenty unchanged local `rollout_out` repetitions passed in 33.6 seconds.
+The original hang's cause remains unproven. The subsequent debug-acceptance
+repairs preserve production behavior, timeout values, retry policy and skip
+conditions. The candidate harness passed seven focused tests, native TypeScript
+and targeted ESLint, Rust formatting and strict all-target Clippy with
+`native-test` enabled. A fresh debug build completed in 16.44 seconds; all
+32 native cases passed in 55.3 seconds and both actual PE handoffs in 8.6 seconds.
+The ordinary app/runtime is unchanged. The run report records the candidate
+binary hash; new-head hosted checks remain pending until commit/push. These
+passing receipts do not establish a fixed hang or erase the failed PR receipt.
 
 Read-only GitHub inspection on September 13 returned **404** for the `releases`
 branch endpoint. Repository Actions variable-name and secret-name listings both

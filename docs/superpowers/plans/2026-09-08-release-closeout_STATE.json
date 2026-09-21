@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-21T14:47:49.080329+00:00",
-  "phase": "review-required",
+  "updated_at": "2026-09-21T15:16:24.018491+00:00",
+  "phase": "integration-and-final-validation",
   "source_checkpoint": "7cc10e929ece79ec2f67b1342c547597529652f0",
   "incoming_author_head": "a270ff114966d51f143b67c51d7dcd52db3954c0",
   "replacement_pr": 248,
@@ -42,11 +42,11 @@
     {
       "name": "updater",
       "pr": 248,
-      "head": "e2e46d6ec086a5f86a52a3bb080be4bfcbe9da5d",
-      "status": "hosted-checks-passed-protected-review-required",
+      "head": "124a3129c2a55bebfa583b1c7e5ef271db961495",
+      "status": "candidate-native-acceptance-passed-fresh-hosted-checks-pending",
       "remaining": [
-        "Protected review including explicit architecture-exception approval",
-        "A later source revision needs its own required hosted checks"
+        "Commit/push candidate debug-harness repairs and collect fresh required hosted checks",
+        "Protected review including explicit architecture-exception approval"
       ]
     },
     {
@@ -234,6 +234,36 @@
       "result": "Original PRs239/241/242/243 closed as superseded by PR248 on September 21 after every latest head passed merge-base --is-ancestor against e2e46d6e",
       "scope": "PR239 0871194b07916052084b4b3b993b40c267321854 closed 2026-09-21T14:46:38Z; PR241 2004322c0e8f5c33c5093d3aceb8f45a29f2af0c closed 14:46:41Z; PR242 711714350db71a6b50027ec723eee841f72faa71 closed 14:46:44Z; PR243 a270ff114966d51f143b67c51d7dcd52db3954c0 closed 14:46:48Z. Branches/authorship preserved. Closure comments link PR248 and retain human/Gate9 approval requirements; no protected merge.",
       "receipt": "Coordinator September 21 live GitHub closure and latest-head ancestry checkpoint"
+    },
+    {
+      "boundary": "documentation-head-pr-windows-failure",
+      "result": "At 124a3129: 31 native cases passed; rollout_out hit the unchanged 65-second process timeout; later two-PE step skipped after failure",
+      "scope": "PR run35614910454 Windows job106383099423. Failed receipt retained; the original hang cause remains unproven and no production defect is established.",
+      "receipt": "https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/35614910454/job/106383099423"
+    },
+    {
+      "boundary": "documentation-head-push-windows-pass",
+      "result": "At 124a3129: all 32 native cases passed in 1.5 minutes; both actual Windows PE handoffs passed in 10 seconds",
+      "scope": "Push run35614905361 Windows job106383072742. This same-head pass does not erase the failed PR run or establish its cause.",
+      "receipt": "https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/35614905361/job/106383072742"
+    },
+    {
+      "boundary": "unchanged-rollout-local-replay",
+      "result": "Twenty unchanged local rollout_out repetitions passed in 33.6 seconds",
+      "scope": "At 124a3129 before debug acceptance repairs; original CI hang not reproduced and its cause remains unproven.",
+      "receipt": "release-closeout-evidence/native-rollout-reproduce-124a3129.log"
+    },
+    {
+      "boundary": "native-debug-harness-focused-repairs",
+      "result": "Seven focused regressions passed; native TypeScript and targeted ESLint passed",
+      "scope": "Debug-only joint state/journal observation, existing 25-second deadline also bounds pending IPC, categorical bootstrap failure report, report-entry marker and bounded credential-redacted timeout evidence before cleanup. No production behavior, timeout increase, retry policy or skip-condition changes; not a proven cause of the earlier hang.",
+      "receipt": "release-closeout-evidence/native-harness-regressions.log; coordinator native TypeScript/targeted ESLint checkpoint"
+    },
+    {
+      "boundary": "candidate-native-harness-validation",
+      "result": "Rust formatting and strict all-target Clippy with native-test passed (Clippy 1m02s); rebuilt debug shell in 16.44s; all 32 native cases passed in 55.3s; both actual Windows PE handoffs passed in 8.6s",
+      "scope": "September 21 candidate debug acceptance harness. Binary release-closeout-evidence/native-test-harness-20260921/rytm-native-test.exe SHA-256 52709be8e964dda6b21e15e99282f472dfd55bdf2f911a345f1f7ccfcaa12afa. Ordinary app/runtime unchanged. Original 124a3129 PR timeout cause remains unproven; no fixed-hang claim. Fresh hosted checks pending until commit/push.",
+      "receipt": "release-closeout-evidence/native-harness-matrix.log; release-closeout-evidence/native-harness-handoff.log; coordinator build/Clippy checkpoint"
     }
   ],
   "studio": {
@@ -259,12 +289,12 @@
     "free_memory_reserve_gb": 8
   },
   "remaining_limits": [
-    "All local suite/static/dead-code checks and hosted checks passed; published replacement PR248 still requires protected review and explicit architecture-exception approval",
+    "Prior production local gates passed; published PR248 at 124a3129 has a failed Windows PR run and passing same-head push run. Candidate debug-acceptance regressions, static checks, 32-case matrix and two PE handoffs passed locally; fresh hosted checks after commit/push, protected review and explicit architecture-exception approval remain pending. Original timeout cause unproven",
     "No production signing credentials or release publication",
     "Actual Windows PE plugin handoff passed locally and in hosted Windows CI; production NSIS/MSI, macOS and Linux installation remain unverified",
     "Physical Rytm/A4 observations remain blank",
     "Required human protected approvals cannot be replaced by agent reviews",
-    "Local Gates 1-8 and 10-18 are complete; Gate 9 still requires explicit owner approval for _version.py, cockpit.ws -> _version and releases_branch_seed; Digitakt stage.py approval is separate",
+    "Prior local Gates 1-8 and 10-18 and candidate debug-harness validation passed; fresh hosted checks remain pending. Gate 9 still requires explicit owner approval for _version.py, cockpit.ws -> _version and releases_branch_seed; Digitakt stage.py approval is separate",
     "Production distribution not activated: September 13 read-only inspection found no releases branch or repository Actions variables/secrets; owner release configuration remains required"
   ],
   "recovery": [

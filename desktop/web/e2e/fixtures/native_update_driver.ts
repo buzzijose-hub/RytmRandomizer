@@ -17,11 +17,24 @@ function check(condition: unknown, label: string): asserts condition {
   if (!condition) throw new Error(label);
 }
 
-async function until(label: string, predicate: () => boolean | Promise<boolean>): Promise<void> {
+export async function until(label: string, predicate: () => boolean | Promise<boolean>): Promise<void> {
   const deadline = Date.now() + 25_000;
   while (Date.now() < deadline) {
-    if (await predicate()) return;
-    await new Promise((resolve) => setTimeout(resolve, 75));
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      // A stalled IPC promise must not outlive the same overall polling
+      // deadline. Racing it also keeps a late rejection handled after timeout.
+      const matched = await Promise.race([
+        Promise.resolve().then(predicate),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error(`Timed out: ${label}`)), Math.max(0, deadline - Date.now()));
+        }),
+      ]);
+      if (matched) return;
+    } finally {
+      clearTimeout(timer);
+    }
+    await new Promise((resolve) => setTimeout(resolve, Math.min(75, Math.max(0, deadline - Date.now()))));
   }
   throw new Error(`Timed out: ${label}`);
 }
@@ -107,9 +120,14 @@ export async function run(scenario: string, origin: string): Promise<void> {
       check(element('update-chip') === null, 'reload cannot resurrect skipped chip');
       check((await snapshot()).journal.some((row) => row.event === 'skip_recorded'), 'skip is evidenced in native journal');
     } else if (['equal_version', 'rollout_out', 'rollout_expands'].includes(scenario)) {
-      await until('native up-to-date state', async () => (await snapshot()).state.state === 'up_to_date');
+      await until('native up-to-date state and decision journal', async () => {
+        const current = await snapshot();
+        // The driver publishes state before performing its journal effects.
+        // Observe the outcome and its evidence together, not in separate reads.
+        return current.state.state === 'up_to_date' &&
+          (!scenario.startsWith('rollout_') || current.journal.some((row) => row.event === 'bucket_excluded'));
+      });
       check(element('update-chip') === null, 'no chip for equal/excluded release');
-      if (scenario.startsWith('rollout_')) check((await snapshot()).journal.some((row) => row.event === 'bucket_excluded'), 'native rollout exclusion journalled');
       if (scenario === 'rollout_expands') {
         await fetch(`${origin}/control?rollout=100`);
         check(await requestUpdateCheck(), 'manual rollout recheck accepted');
