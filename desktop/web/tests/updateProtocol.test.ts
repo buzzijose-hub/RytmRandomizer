@@ -37,6 +37,7 @@ import {
   type UpdateSlice,
   confirmUpdateChoiceOnShell,
   requestUpdateCheck,
+  stopQuietly,
 } from '../src/updateProtocol';
 
 function row(over: Partial<UpdateJournalRow> = {}): UpdateJournalRow {
@@ -308,5 +309,42 @@ describe('shell command bindings', () => {
     await expect(
       confirmUpdateChoiceOnShell('1.35.1', 'install_on_quit'),
     ).resolves.toBe(false);
+  });
+});
+
+describe('unsubscribe during teardown', () => {
+  it('does not let a rejecting unlisten handle escape as an unhandled error', async () => {
+    // `_unlisten` in @tauri-apps/api/event is async and dereferences bare
+    // `window`, so unsubscribing after a JSDOM teardown returns a REJECTED
+    // promise. Unhandled, it fails whichever suite is running -- on PR #243
+    // that landed on tests/a11y/update_surface.test.tsx, a file that was
+    // entirely blameless. It is timing-dependent, so a green run does not
+    // prove absence; this pins the behaviour directly.
+    const rejecting = (): void =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      Promise.reject(new ReferenceError('window is not defined')) as any;
+
+    let unhandled: unknown = null;
+    const onUnhandled = (reason: unknown): void => {
+      unhandled = reason;
+    };
+    process.on('unhandledRejection', onUnhandled);
+    try {
+      stopQuietly(rejecting);
+      // Drain the microtask queue so an unhandled rejection would surface.
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    } finally {
+      process.off('unhandledRejection', onUnhandled);
+    }
+
+    expect(unhandled).toBeNull();
+  });
+
+  it('swallows a synchronously throwing unlisten handle', () => {
+    expect(() =>
+      stopQuietly(() => {
+        throw new ReferenceError('window is not defined');
+      }),
+    ).not.toThrow();
   });
 });

@@ -401,6 +401,34 @@ export function journalLogEntries(
  * Receive-only. Listening is not transmitting, so this is safe on mount and
  * does not need the armed-connection gate the #238 lesson requires of actions.
  */
+/**
+ * Call a Tauri unlisten handle without letting its failure escape.
+ *
+ * `_unlisten` in `@tauri-apps/api/event` is `async` and dereferences bare
+ * `window` (`window.__TAURI_EVENT_PLUGIN_INTERNALS__`), so invoking the handle
+ * returns a promise that REJECTS whenever `window` is already gone.
+ * Unsubscribing during teardown is exactly when that happens: a JSDOM
+ * environment is torn down before a pending cleanup runs, and the rejection
+ * surfaces as an unhandled error that fails whichever suite happens to be
+ * running -- from a file that did nothing wrong. Vitest reported precisely
+ * that against `tests/a11y/update_surface.test.tsx` on PR #243.
+ *
+ * The cleanup closure below is the vulnerable caller: the `stop()` inside the
+ * promise chain is covered by that chain's own `.catch`, but the handle
+ * invoked from the returned unsubscribe function is not.
+ *
+ * Nothing useful remains to do at that point -- the listener's host is already
+ * gone, so the subscription it would have cancelled cannot fire again.
+ */
+export function stopQuietly(stop: () => void): void {
+  try {
+    const result = stop() as unknown;
+    if (result instanceof Promise) result.catch(() => {});
+  } catch {
+    // The bridge vanished before we could unsubscribe; nothing left to cancel.
+  }
+}
+
 export function subscribeUpdateState(
   onState: (event: UpdateStateEvent) => void,
   onSnapshot?: (snapshot: UpdateSnapshot) => void,
@@ -431,7 +459,7 @@ export function subscribeUpdateState(
       }),
     )
     .then((stop) => {
-      if (cancelled) stop();
+      if (cancelled) stopQuietly(stop);
       else {
         unlisten = stop;
         // Subscribe first: setup may have emitted before React mounted.
@@ -445,7 +473,7 @@ export function subscribeUpdateState(
 
   return () => {
     cancelled = true;
-    if (unlisten !== null) unlisten();
+    if (unlisten !== null) stopQuietly(unlisten);
   };
 }
 

@@ -81,6 +81,34 @@ def _web_source_text() -> str:
     )
 
 
+#: A real ``listen(...)`` subscribe call from ``@tauri-apps/api``.
+#:
+#: Two properties this must have, and a plain ``"listen(" in web`` substring
+#: test has neither:
+#:
+#: 1. It must match the GENERIC form. The only call site in this repo is
+#:    ``listen<unknown>(UPDATE_STATE_EVENT_NAME, ...)``; the literal substring
+#:    ``listen(`` never appears, so the naive test read "no Tauri subscription
+#:    here" and flagged a correct codebase.
+#: 2. It must NOT match ``unlisten(``. The naive test was satisfied by the
+#:    UNSUBSCRIBE call — ``unlisten()`` contains ``listen(`` — so its evidence
+#:    that the webview subscribes over IPC came from the teardown path. A
+#:    codebase that only ever unsubscribed, and never subscribed at all, would
+#:    have passed it. Renaming that one call (to ``stopQuietly(unlisten)``)
+#:    made the guard fail on code whose subscribe path was untouched, which is
+#:    how this was found.
+#:
+#: The leading boundary is what excludes ``unlisten`` / ``removeListen``.
+_TS_TAURI_LISTEN: Final[re.Pattern[str]] = re.compile(
+    r"(?<![A-Za-z0-9_$.])listen\s*(?:<[^>]*>\s*)?\("
+)
+
+
+def _web_subscribes_over_ipc(web: str) -> bool:
+    """Whether the web layer makes a real ``@tauri-apps/api`` listen call."""
+    return _TS_TAURI_LISTEN.search(web) is not None
+
+
 def test_ipc_emitted_events_are_not_consumed_as_dom_events() -> None:
     """A Tauri-IPC event subscribed with ``addEventListener`` never fires."""
     emitted = _rust_emitted_event_names()
@@ -96,7 +124,7 @@ def test_ipc_emitted_events_are_not_consumed_as_dom_events() -> None:
             # subscribed via a TS constant holding the same string
             re.search(rf"=\s*[\"']{re.escape(name)}[\"']", web)
             and "addEventListener" in web
-            and "listen(" not in web
+            and not _web_subscribes_over_ipc(web)
         )
     ]
 
@@ -116,7 +144,7 @@ def test_ipc_emitted_events_are_not_consumed_as_dom_events() -> None:
 def test_web_declares_tauri_api_when_it_listens_for_shell_events() -> None:
     """If the web layer calls ``listen(``, the dependency must be declared."""
     web = _web_source_text()
-    if "listen(" not in web:
+    if not _web_subscribes_over_ipc(web):
         return
     if not WEB_PACKAGE_JSON.is_file():
         return
@@ -126,3 +154,38 @@ def test_web_declares_tauri_api_when_it_listens_for_shell_events() -> None:
         "@tauri-apps/api is not declared in desktop/web/package.json. The "
         "import resolves in neither the dev loop nor the bundle."
     )
+
+
+def test_the_listen_detector_matches_the_call_form_not_a_substring() -> None:
+    """The detector must accept a real subscribe and reject an unsubscribe.
+
+    This pins the two ways the previous ``"listen(" in web`` substring test was
+    wrong, because both were silent:
+
+    * It **missed the generic form**. The only call site in this repo is
+      ``listen<unknown>(...)``, in which the literal ``listen(`` never appears,
+      so the check concluded there was no Tauri subscription at all.
+    * It **accepted the unsubscribe call**. ``unlisten()`` contains
+      ``listen(``, so the guard's evidence that the webview subscribed over IPC
+      came from the teardown path. Renaming that single call site to
+      ``stopQuietly(unlisten)`` — a change that did not touch the subscribe
+      path — made the guard fail on correct code, which is how this surfaced.
+
+    A guard whose pass depends on an unrelated substring is not enforcing its
+    invariant; it is passing by coincidence.
+    """
+    subscribes = [
+        "listen<unknown>(UPDATE_STATE_EVENT_NAME, cb)",
+        "listen(UPDATE_STATE_EVENT_NAME, cb)",
+        "await listen<T>( NAME, cb )",
+    ]
+    not_subscribes = [
+        "unlisten()",
+        "stopQuietly(unlisten)",
+        "this.removeListen(x)",
+        "obj.listen(x)",
+    ]
+    for src in subscribes:
+        assert _web_subscribes_over_ipc(src), f"must count as a subscribe: {src!r}"
+    for src in not_subscribes:
+        assert not _web_subscribes_over_ipc(src), f"must NOT count as a subscribe: {src!r}"
