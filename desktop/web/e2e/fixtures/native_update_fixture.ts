@@ -226,7 +226,11 @@ export async function runNativeScenario(scenario: string): Promise<NativeEvidenc
     }
     const result = handoff === undefined ? JSON.parse(readFileSync(resultPath, 'utf8')) as NativeEvidence['result']
       : { passed: true, scenario, detail: 'Real Windows installer handoff and native/DOM assertions' };
-    if (!result.passed) throw new Error(`Native ${scenario}: ${result.detail}`);
+    if (!result.passed) {
+      throw new Error(
+        `Native ${scenario}: ${result.detail}\n${nativeFailureDetails(root, output, requests)}`,
+      );
+    }
     const journalPath = path.join(root, 'RytmRandomizer', 'update-journal.jsonl');
     const journal = existsSync(journalPath) ? readFileSync(journalPath, 'utf8').trim().split('\n').filter(Boolean).map((line) => JSON.parse(line)) as NativeEvidence['journal'] : [];
     const terminalPath = path.join(root, 'terminal.json');

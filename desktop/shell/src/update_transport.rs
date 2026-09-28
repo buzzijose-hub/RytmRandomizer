@@ -165,9 +165,8 @@ mod tests {
     /// aborted beacon writes NO journal row at all — not a late one. Since
     /// every `CheckRequested` emits a beacon (spec §6 keeps a staged install
     /// checking in), a second check arriving while the first request was open
-    /// destroyed the first's evidence. That is what made
-    /// `native-e2e/update_boundary.spec.ts` flaky: it waits 25s for a
-    /// `ping_ok` row that a superseding beacon had cancelled.
+    /// destroyed the first's evidence. This test pins that real cancellation
+    /// defect without claiming it caused a separate intermittent native test.
     #[test]
     fn a_second_beacon_does_not_cancel_the_first() {
         let operations = Operations::default();
@@ -180,16 +179,24 @@ mod tests {
         // is exactly the false green this test exists to avoid.
         let (release, mut blocked) = tauri::async_runtime::channel::<()>(1);
         let first = Arc::clone(&done);
-        operations.spawn_detached(async move {
-            // Held open until the second beacon has been spawned, which is the
-            // window in which the old code aborted this task.
-            let _ = blocked.recv().await;
-            first.lock().expect("poisoned").push("first");
-        });
+        operations.spawn_beacon(
+            async move {
+                // Held open until the second beacon has been spawned, which is
+                // the window in which the old code aborted this task.
+                let _ = blocked.recv().await;
+                first.lock().expect("poisoned").push("first");
+                true
+            },
+            |_| {},
+        );
         let second = Arc::clone(&done);
-        operations.spawn_detached(async move {
-            second.lock().expect("poisoned").push("second");
-        });
+        operations.spawn_beacon(
+            async move {
+                second.lock().expect("poisoned").push("second");
+                true
+            },
+            |_| {},
+        );
 
         let _ = tauri::async_runtime::block_on(release.send(()));
         // Both must report. Ordering is irrelevant — beacons are independent
@@ -209,11 +216,65 @@ mod tests {
         assert!(seen.contains(&"second"), "{seen:?}");
     }
 
+    #[test]
+    fn beacon_concurrency_is_bounded_and_excess_requests_report_failure() {
+        let operations = Operations::default();
+        for _ in 0..BEACON_CONCURRENCY_LIMIT {
+            operations.spawn_beacon(std::future::pending::<bool>(), |_| {});
+        }
+
+        let outcome = Arc::new(Mutex::new(None));
+        let observed = Arc::clone(&outcome);
+        operations.spawn_beacon(async { true }, move |ok| {
+            *observed.lock().expect("poisoned") = Some(ok);
+        });
+
+        assert_eq!(*outcome.lock().expect("poisoned"), Some(false));
+        operations.close();
+    }
+
+    #[test]
+    fn shutdown_aborts_every_in_flight_beacon() {
+        let operations = Operations::default();
+        let completed = Arc::new(Mutex::new(Vec::new()));
+        let (release_first, mut first_blocked) = tauri::async_runtime::channel::<()>(1);
+        let first = Arc::clone(&completed);
+        operations.spawn_beacon(
+            async move {
+                let _ = first_blocked.recv().await;
+                true
+            },
+            move |_| first.lock().expect("poisoned").push("first"),
+        );
+        let (release_second, mut second_blocked) = tauri::async_runtime::channel::<()>(1);
+        let second = Arc::clone(&completed);
+        operations.spawn_beacon(
+            async move {
+                let _ = second_blocked.recv().await;
+                true
+            },
+            move |_| second.lock().expect("poisoned").push("second"),
+        );
+
+        operations.close();
+        let _ = tauri::async_runtime::block_on(release_first.send(()));
+        let _ = tauri::async_runtime::block_on(release_second.send(()));
+        std::thread::sleep(std::time::Duration::from_millis(50));
+
+        assert!(completed.lock().expect("poisoned").is_empty());
+        assert!(operations
+            .beacons
+            .lock()
+            .expect("beacon tasks poisoned")
+            .iter()
+            .all(Option::is_none));
+    }
+
     /// The other two slots keep superseding, deliberately.
     ///
     /// A newer manifest check makes an older in-flight one irrelevant, and
     /// letting both land would race two answers into one state machine. This
-    /// pins that `spawn` and `spawn_detached` are genuinely different, so a
+    /// pins that `spawn` and `spawn_beacon` are genuinely different, so a
     /// future cleanup cannot collapse them into one.
     #[test]
     fn a_superseding_manifest_fetch_still_aborts_its_predecessor() {
@@ -332,15 +393,29 @@ mod tests {
 type StagedSlot =
     std::sync::Arc<std::sync::Mutex<Option<(String, tauri_plugin_updater::Update, Vec<u8>)>>>;
 
-/// Slot index of the fire-and-forget §6 beacon. Named because it is the one
-/// operation whose in-flight task must NOT be aborted by its successor.
-const BEACON_SLOT: usize = 2;
+/// One active beacon plus one overlap is enough to preserve both receipts
+/// without allowing repeated manual checks to create unbounded network work.
+const BEACON_CONCURRENCY_LIMIT: usize = 2;
 
-/// At most one task per operation; completed handles remain bounded too.
+struct BeaconTask {
+    finished: Arc<AtomicBool>,
+    handle: tauri::async_runtime::JoinHandle<()>,
+}
+
+struct BeaconCompletion(Arc<AtomicBool>);
+
+impl Drop for BeaconCompletion {
+    fn drop(&mut self) {
+        self.0.store(true, Ordering::SeqCst);
+    }
+}
+
+/// Superseding operations keep one task each; beacons use a separate ceiling.
 #[derive(Default)]
 struct Operations {
     closed: AtomicBool,
-    tasks: Mutex<[Option<tauri::async_runtime::JoinHandle<()>>; 3]>,
+    tasks: Mutex<[Option<tauri::async_runtime::JoinHandle<()>>; 2]>,
+    beacons: Mutex<[Option<BeaconTask>; BEACON_CONCURRENCY_LIMIT]>,
 }
 
 impl Operations {
@@ -360,9 +435,8 @@ impl Operations {
         tasks[slot] = Some(tauri::async_runtime::spawn(task));
     }
 
-    /// Start `task` in `slot` WITHOUT aborting an in-flight predecessor.
+    /// Start a beacon without aborting an in-flight predecessor.
     ///
-    /// The beacon needs this and the other two operations must not have it.
     /// A beacon reports its outcome only after the request resolves, so
     /// aborting one mid-flight means its journal row is never written at all
     /// — not a late row, no row. Every `CheckRequested` emits a beacon
@@ -370,30 +444,46 @@ impl Operations {
     /// arriving while the first request is open silently destroyed the
     /// evidence of the first.
     ///
-    /// That is what made `native-e2e/update_boundary.spec.ts` flaky: it waits
-    /// up to 25s for a `ping_ok` row that a superseding beacon had cancelled.
-    /// The test was right and the transport was wrong.
+    /// This cancellation defect is real, but it is not an established cause
+    /// of the intermittent native updater test failures. Failed receipts on
+    /// the same source revision stop at more than one boundary.
     ///
-    /// Safe precisely because the beacon is fire-and-forget: outcomes carry no
-    /// state, cannot change the update flow, and are idempotent, so two
-    /// overlapping check-ins racing to the journal is harmless. `close()`
-    /// still aborts whatever is live, so shutdown is unaffected.
-    fn spawn_detached(&self, task: impl std::future::Future<Output = ()> + Send + 'static) {
-        let mut tasks = self.tasks.lock().expect("operation tasks poisoned");
+    /// Two concurrent beacons are retained and independently abortable. If a
+    /// third request arrives before either finishes, it receives an immediate
+    /// failed diagnostic rather than starting unbounded detached work.
+    fn spawn_beacon(
+        &self,
+        task: impl std::future::Future<Output = bool> + Send + 'static,
+        complete: impl FnOnce(bool) + Send + 'static,
+    ) {
+        let mut beacons = self.beacons.lock().expect("beacon tasks poisoned");
         if self.closed.load(Ordering::SeqCst) {
+            drop(beacons);
+            complete(false);
             return;
         }
-        // Keep the newest handle so `close()` can still abort on shutdown.
-        //
-        // The trade this makes, stated rather than left to be discovered: when
-        // two beacons genuinely overlap, only the newer handle is retained, so
-        // `close()` cannot abort the older one. That is bounded and harmless —
-        // a beacon is a bare GET under a 10s client timeout, it carries no
-        // state, and it reports through a `Weak<ShellSink>` that no-ops once
-        // the sink is gone. Worst case is one extra journal row written up to
-        // ten seconds into shutdown. The alternative was losing a check-in's
-        // evidence entirely, every time two checks overlapped.
-        tasks[BEACON_SLOT] = Some(tauri::async_runtime::spawn(task));
+
+        for beacon in &mut *beacons {
+            if beacon
+                .as_ref()
+                .is_some_and(|task| task.finished.load(Ordering::SeqCst))
+            {
+                *beacon = None;
+            }
+        }
+
+        let Some(slot) = beacons.iter_mut().find(|slot| slot.is_none()) else {
+            drop(beacons);
+            complete(false);
+            return;
+        };
+        let finished = Arc::new(AtomicBool::new(false));
+        let completion = BeaconCompletion(Arc::clone(&finished));
+        let handle = tauri::async_runtime::spawn(async move {
+            let _completion = completion;
+            complete(task.await);
+        });
+        *slot = Some(BeaconTask { finished, handle });
     }
 
     fn close(&self) {
@@ -406,6 +496,16 @@ impl Operations {
         {
             if let Some(task) = task.take() {
                 task.abort();
+            }
+        }
+        for beacon in self
+            .beacons
+            .lock()
+            .expect("beacon tasks poisoned")
+            .iter_mut()
+        {
+            if let Some(task) = beacon.take() {
+                task.handle.abort();
             }
         }
     }
@@ -713,32 +813,33 @@ impl<R: tauri::Runtime> Transport for PluginTransport<R> {
             .fixture
             .as_ref()
             .map_or(url, |fixture| fixture.beacon_url());
-        self.operations.spawn_detached(async move {
-            #[cfg(feature = "native-test")]
-            let redirects = redirect_policy(url.parse().expect("generated beacon URL"));
-            #[cfg(not(feature = "native-test"))]
-            let redirects = reqwest::redirect::Policy::custom(|attempt| {
-                if attempt.previous().len() < 5 && artifact_redirect_allowed(attempt.url()) {
-                    attempt.follow()
-                } else {
-                    attempt.error("beacon redirect refused")
-                }
-            });
-            let Ok(client) = reqwest::Client::builder()
-                .timeout(std::time::Duration::from_secs(10))
-                .redirect(redirects)
-                .build()
-            else {
-                report(TransportOutcome::BeaconCompleted { ok: false });
-                return;
-            };
-            let ok = client
-                .get(url)
-                .send()
-                .await
-                .is_ok_and(|response| response.status().is_success());
-            report(TransportOutcome::BeaconCompleted { ok });
-        });
+        self.operations.spawn_beacon(
+            async move {
+                #[cfg(feature = "native-test")]
+                let redirects = redirect_policy(url.parse().expect("generated beacon URL"));
+                #[cfg(not(feature = "native-test"))]
+                let redirects = reqwest::redirect::Policy::custom(|attempt| {
+                    if attempt.previous().len() < 5 && artifact_redirect_allowed(attempt.url()) {
+                        attempt.follow()
+                    } else {
+                        attempt.error("beacon redirect refused")
+                    }
+                });
+                let Ok(client) = reqwest::Client::builder()
+                    .timeout(std::time::Duration::from_secs(10))
+                    .redirect(redirects)
+                    .build()
+                else {
+                    return false;
+                };
+                client
+                    .get(url)
+                    .send()
+                    .await
+                    .is_ok_and(|response| response.status().is_success())
+            },
+            move |ok| report(TransportOutcome::BeaconCompleted { ok }),
+        );
     }
 
     fn shutdown(&self) {

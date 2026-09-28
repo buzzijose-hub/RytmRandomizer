@@ -378,30 +378,6 @@ export function journalLogEntries(
 }
 
 /**
- * Subscribe to the shell's I2 update-state event. Returns an unsubscribe.
- *
- * **This function is the contract.** The I2 row originally fixed only the
- * event's NAME and PAYLOAD — the nouns — and left the transport free. The
- * shell emitted over Tauri IPC (`window.emit`) while the panel listened for a
- * DOM event (`window.addEventListener`): two different channels, nothing
- * bridging them. Both sides were individually correct, fully typed and 100%
- * covered, `cargo test` and `vitest` were green, and no message could ever
- * cross — in the bundled app the update chip simply never appeared.
- *
- * Naming the *call* rather than only the data is what closes that class of
- * defect, so every consumer goes through here and no component knows the
- * transport. `tests/architecture/test_cross_language_event_seams_agree.py`
- * fails if anything subscribes with `addEventListener` to an `emit`-ed event.
- *
- * Outside a Tauri webview (the two-terminal dev loop, or a plain browser)
- * `listen` is unavailable; this degrades to a no-op unsubscribe so the panel
- * renders its "updates run in the installed app" body rather than throwing
- * and blanking the cockpit (spec §7).
- *
- * Receive-only. Listening is not transmitting, so this is safe on mount and
- * does not need the armed-connection gate the #238 lesson requires of actions.
- */
-/**
  * Call a Tauri unlisten handle without letting its failure escape.
  *
  * `_unlisten` in `@tauri-apps/api/event` is `async` and dereferences bare
@@ -429,6 +405,30 @@ export function stopQuietly(stop: () => void): void {
   }
 }
 
+/**
+ * Subscribe to the shell's I2 update-state event. Returns an unsubscribe.
+ *
+ * **This function is the contract.** The I2 row originally fixed only the
+ * event's NAME and PAYLOAD — the nouns — and left the transport free. The
+ * shell emitted over Tauri IPC (`window.emit`) while the panel listened for a
+ * DOM event (`window.addEventListener`): two different channels, nothing
+ * bridging them. Both sides were individually correct, fully typed and 100%
+ * covered, `cargo test` and `vitest` were green, and no message could ever
+ * cross — in the bundled app the update chip simply never appeared.
+ *
+ * Naming the *call* rather than only the data is what closes that class of
+ * defect, so every consumer goes through here and no component knows the
+ * transport. `tests/architecture/test_cross_language_event_seams_agree.py`
+ * fails if anything subscribes with `addEventListener` to an `emit`-ed event.
+ *
+ * Outside a Tauri webview (the two-terminal dev loop, or a plain browser)
+ * `listen` is unavailable; this degrades to a no-op unsubscribe so the panel
+ * renders its "updates run in the installed app" body rather than throwing
+ * and blanking the cockpit (spec §7).
+ *
+ * Receive-only. Listening is not transmitting, so this is safe on mount and
+ * does not need the armed-connection gate the #238 lesson requires of actions.
+ */
 export function subscribeUpdateState(
   onState: (event: UpdateStateEvent) => void,
   onSnapshot?: (snapshot: UpdateSnapshot) => void,
