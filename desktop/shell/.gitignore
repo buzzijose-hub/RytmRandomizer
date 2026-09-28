@@ -3,6 +3,17 @@ dist/
 # Bundled Python sidecar binaries (built per-OS in CI by
 # scripts/build_sidecar_binary.py; never committed).
 binaries/
-Cargo.lock
+# Cargo.lock IS committed, deliberately.
+#
+# This crate is a binary (the Tauri shell), and Cargo's own guidance is to
+# commit the lockfile for binaries — it is libraries that leave it out. Without
+# it CI re-resolves every dependency on each run, so the build depends on what
+# crates.io published that morning rather than on anything in this repo.
+#
+# That is not hypothetical: `desktop-shell` was green on 2026-09-21 and red on
+# 2026-09-28 with no Rust change in between, because the tauri crates published
+# releases requiring rustc 1.90 while CI pins 1.88.0. A committed lockfile
+# makes a toolchain bump an explicit, reviewable commit instead of a surprise
+# on an unrelated PR.
 gen/
 .tauri/
