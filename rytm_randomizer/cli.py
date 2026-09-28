@@ -326,6 +326,10 @@ def _registered_command_exit_code(args: Sequence[str]) -> int | None:
             "rytm_randomizer.reports.live_gui_performance_console_model",
             "LIVE_GUI_PERFORMANCE_CONSOLE_CLI_COMMAND",
         ),
+        "live-gui-device-inventory-report": (
+            "rytm_randomizer.reports.live_gui_device_inventory_model",
+            "LIVE_GUI_DEVICE_INVENTORY_CLI_COMMAND",
+        ),
         "oxi-live-set-strategy-report": (
             "rytm_randomizer.reports.oxi_live_set_strategy",
             "OXI_LIVE_SET_STRATEGY_CLI_COMMAND",

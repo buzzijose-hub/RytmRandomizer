@@ -1553,6 +1553,32 @@ Safety:
   no hardware required"""
 
 
+def _live_gui_device_inventory_report_help():
+    return """RytmRandomizer passive CLI: live-gui-device-inventory-report
+
+Usage:
+  python -m rytm_randomizer.cli live-gui-device-inventory-report
+  python -m rytm_randomizer.cli live-gui-device-inventory-report --json
+  python -m rytm_randomizer.cli live-gui-device-inventory-report --help
+
+Behavior:
+  Emits every registered device with the facts an operator or hardware
+  verifier checks: track count, default MIDI channel, manufacturer id,
+  capabilities, and the actions that stay blocked. Rendered from the shared
+  device registry, so a newly registered device appears here automatically.
+
+Safety:
+  passive/read-only
+  device registry metadata only
+  no GUI launch
+  no file writing
+  no command execution
+  no MIDI sending
+  no port opening
+  no hardware mutation
+  no hardware required"""
+
+
 def _live_gui_performance_console_report_help():
     return """RytmRandomizer passive CLI: live-gui-performance-console-report
 
@@ -3620,6 +3646,7 @@ Safety:
     ),
     "rytm-live-macro-hardware-rehearsal-report": (_rytm_live_macro_hardware_rehearsal_report_help),
     "live-gui-performance-flow-model-report": _live_gui_performance_flow_model_report_help,
+    "live-gui-device-inventory-report": _live_gui_device_inventory_report_help,
     "live-gui-performance-console-report": _live_gui_performance_console_report_help,
     "oxi-live-set-strategy-report": _oxi_live_set_strategy_report_help,
     "reference-style-blueprint-report": _reference_style_blueprint_report_help,

@@ -21,15 +21,46 @@ export interface KitCapturePanelProps {
   onClose: () => void;
 }
 
+/**
+ * Exhaustive over `CockpitDeviceId`, deliberately — not a two-branch ternary.
+ *
+ * The previous form was `deviceId === RYTM_DEVICE_ID ? 'Rytm' : 'Analog Four'`,
+ * which silently labels ANY future device "Analog Four MKII". Today the type is
+ * a two-literal union so nothing else can reach it, but the moment a device is
+ * added to `CockpitDeviceId` (a Digitakt, say) that ternary starts producing
+ * confidently wrong data with no compile error and no test failure.
+ *
+ * The `never` default turns that from a silent mislabel into a build failure
+ * naming the unhandled id, so widening the union forces this map to be updated
+ * in the same change.
+ */
 function deviceName(deviceId: CockpitDeviceId): string {
-  return deviceId === RYTM_DEVICE_ID ? 'Analog Rytm MKII' : 'Analog Four MKII';
+  switch (deviceId) {
+    case RYTM_DEVICE_ID:
+      return 'Analog Rytm MKII';
+    case ANALOG_FOUR_DEVICE_ID:
+      return 'Analog Four MKII';
+    default: {
+      const unhandled: never = deviceId;
+      throw new Error(`KitCapturePanel.deviceName: unhandled device ${String(unhandled)}`);
+    }
+  }
 }
 
+/** Exhaustive for the same reason as {@link deviceName}. */
 function hardwareInstruction(deviceId: CockpitDeviceId): string {
-  if (deviceId === RYTM_DEVICE_ID) {
-    return 'On the Rytm: GLOBAL SETTINGS → SYSEX DUMP → SYSEX SEND → KIT.';
+  switch (deviceId) {
+    case RYTM_DEVICE_ID:
+      return 'On the Rytm: GLOBAL SETTINGS → SYSEX DUMP → SYSEX SEND → KIT.';
+    case ANALOG_FOUR_DEVICE_ID:
+      return 'On the A4: open SYSEX DUMP, choose the currently loaded KIT, then send it.';
+    default: {
+      const unhandled: never = deviceId;
+      throw new Error(
+        `KitCapturePanel.hardwareInstruction: unhandled device ${String(unhandled)}`,
+      );
+    }
   }
-  return 'On the A4: open SYSEX DUMP, choose the currently loaded KIT, then send it.';
 }
 
 function readinessCopy(capture: KitCaptureResult): string {

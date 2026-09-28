@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, TypeAlias, TypedDict
 
+from ..cli_registry import CliCommand, make_passive_report_command, register
 from ..devices import Device, all_devices
 from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_report_lines
 
@@ -236,10 +237,29 @@ def format_live_gui_device_inventory_model_report(
     return passive_report_lines(_HEADER, _live_gui_device_inventory_body_lines(source_model))
 
 
+#: The device roster as an operator-runnable command.
+#:
+#: This model already rendered every registered device with its track count,
+#: default MIDI channel and manufacturer id — the exact facts a hardware
+#: verifier is asked to confirm — but it was reachable only from Python. A
+#: non-technical verifier could not run it, so Digitakt validation had to be
+#: routed through the performance-console report, which shows the same facts
+#: less directly. One registration closes that.
+LIVE_GUI_DEVICE_INVENTORY_CLI_COMMAND: Final[CliCommand] = make_passive_report_command(
+    "live-gui-device-inventory-report",
+    "Print the passive device inventory (every registered device and its facts).",
+    format_lines=format_live_gui_device_inventory_model_report,
+    build_payload=live_gui_device_inventory_model_payload,
+)
+
+register(LIVE_GUI_DEVICE_INVENTORY_CLI_COMMAND)
+
+
 __all__ = [
     "BLOCKED_ACTIONS",
     "CAPABILITY_BADGES",
     "DEVICE_INVENTORY_MODEL_VERSION",
+    "LIVE_GUI_DEVICE_INVENTORY_CLI_COMMAND",
     "LiveGuiDeviceInventoryCard",
     "LiveGuiDeviceInventoryCardDict",
     "LiveGuiDeviceInventoryModel",
