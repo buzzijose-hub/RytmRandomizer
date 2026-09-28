@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Release closeout state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "updated_at",
+    "phase",
+    "source_checkpoint",
+    "incoming_author_head",
+    "replacement_pr",
+    "original_updater_prs",
+    "workstreams",
+    "verification_checkpoints",
+    "studio",
+    "resource_contract",
+    "remaining_limits",
+    "recovery"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "phase": {
+      "enum": [
+        "integration-and-final-validation",
+        "review-required",
+        "completed",
+        "blocked"
+      ]
+    },
+    "source_checkpoint": {
+      "type": "string"
+    },
+    "incoming_author_head": {
+      "type": "string"
+    },
+    "replacement_pr": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "original_updater_prs": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "uniqueItems": true
+    },
+    "workstreams": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "pr",
+          "head",
+          "status",
+          "remaining"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "pr": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1
+          },
+          "head": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "remaining": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "verification_checkpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "boundary",
+          "result",
+          "scope",
+          "receipt"
+        ],
+        "properties": {
+          "boundary": {
+            "type": "string"
+          },
+          "result": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "receipt": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "studio": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "source",
+        "identical_tree",
+        "workflow_run",
+        "smoke_at",
+        "handoff_files_verified",
+        "handoff_manifest_sha256",
+        "shell_sha256",
+        "sidecar_sha256",
+        "physical_validation",
+        "unsigned"
+      ],
+      "properties": {
+        "directory": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "identical_tree": {
+          "type": "string"
+        },
+        "workflow_run": {
+          "type": "integer"
+        },
+        "smoke_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "handoff_files_verified": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "handoff_manifest_sha256": {
+          "type": "string"
+        },
+        "shell_sha256": {
+          "type": "string"
+        },
+        "sidecar_sha256": {
+          "type": "string"
+        },
+        "physical_validation": {
+          "type": "boolean"
+        },
+        "unsigned": {
+          "type": "boolean"
+        }
+      }
+    },
+    "resource_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "heavy_jobs",
+        "implementation_agents",
+        "pytest_workers",
+        "cargo_jobs",
+        "frontend_workers",
+        "playwright_workers",
+        "free_memory_reserve_gb"
+      ],
+      "properties": {
+        "heavy_jobs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "implementation_agents": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pytest_workers": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cargo_jobs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "frontend_workers": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "playwright_workers": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "free_memory_reserve_gb": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "remaining_limits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "recovery": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

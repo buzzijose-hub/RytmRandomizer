@@ -11,21 +11,72 @@ name: installers
 # WHY NOT REQUIRED-CHECK: installer builds take ~20 minutes per OS and
 # don't add useful signal on day-to-day PRs. The existing test / e2e /
 # architecture jobs continue to gate PR merges (see .github/workflows/
-# test.yml). This workflow only fires on:
+# test.yml). This workflow fires on:
 #
-#   - v* tag pushes (alongside release.yml's wheel publish)
-#   - workflow_dispatch (manual release dry-run from the Actions tab)
+#   - workflow_call  (release.yml's shared build step — the release train)
+#   - workflow_dispatch (manual no-tag rehearsal from the Actions tab)
+#
+# WHY NO `push: tags: v*` TRIGGER. It was removed when release.yml became
+# the release train. release.yml owns the `v*` tag and calls this file via
+# `uses: ./.github/workflows/installers.yml`; leaving the tag trigger in
+# place would fire a SECOND, independent installer build for every release
+# — double the CI minutes and two divergent artifact sets for the same
+# tag, with no way for the release job to tell which one it should
+# publish. `tests/architecture/test_ci_workflow.py` pins the absence.
 #
 # Artifacts are uploaded to the workflow run (not the GitHub Release)
-# so the release engineer can download, sign locally (Windows EV cert,
-# macOS Developer ID + notarization), and attach to the Release manually.
-# Doing signing in CI requires storing private keys in GitHub Secrets,
-# which is a posture decision the project owner has not yet made.
+# so the caller (or a release engineer on a dispatch rehearsal) can
+# download, sign, and attach them. Doing OS code-signing in CI requires
+# storing private keys in GitHub Secrets, which is a posture decision
+# gated on the certificate purchase (spec §0.2 / U6).
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_call:
+    inputs:
+      sign:
+        description: >-
+          Whether the caller has the OS code-signing material available.
+          Reserved for U6: today every path builds adhoc-signed artifacts,
+          and a `true` value only records the intent in the step summary.
+          Wiring real signing here is the U6 change, not a flag flip.
+        type: boolean
+        required: false
+        default: false
+      updater_artifacts:
+        description: >-
+          Build signed native updater artifacts when the signing secret
+          exists; otherwise build normal unsigned distributions only.
+        type: boolean
+        required: false
+        default: false
+      updater_public_key:
+        description: Public key matching the updater signing secret, embedded in signed bundles.
+        type: string
+        required: false
+        default: ""
+      ref:
+        description: >-
+          Git ref to build. Empty string means the ref that triggered the
+          calling workflow (checkout's default), which is what a tag-driven
+          release wants.
+        type: string
+        required: false
+        default: ""
+    secrets:
+      TAURI_SIGNING_PRIVATE_KEY:
+        required: false
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD:
+        required: false
+    outputs:
+      installer_artifacts:
+        description: Comma-separated names of the uploaded briefcase installer artifacts.
+        value: ${{ jobs.installer.outputs.artifact_names }}
+      sidecar_artifacts:
+        description: Comma-separated names of the uploaded standalone sidecar artifacts.
+        value: ${{ jobs['desktop-bundle'].outputs.sidecar_artifact_names }}
+      bundle_artifacts:
+        description: Comma-separated names of the uploaded Tauri cockpit-bundle artifacts.
+        value: ${{ jobs['desktop-bundle'].outputs.bundle_artifact_names }}
   workflow_dispatch:
     inputs:
       studio_windows:
@@ -43,6 +94,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     # 30 min cap: installer builds are slow but should never hang.
     timeout-minutes: 30
+    # Artifact names are a fixed function of the matrix, so the output is a
+    # constant rather than a matrix-derived value: a matrix job's outputs
+    # are last-writer-wins across shards, which would report one OS's name
+    # as if it were the whole set. The `if-no-files-found: error` upload
+    # guard below is what actually proves each name exists.
+    outputs:
+      artifact_names: >-
+        rytm-randomizer-installer-Windows,rytm-randomizer-installer-macOS,rytm-randomizer-installer-Linux
     strategy:
       fail-fast: false
       matrix:
@@ -63,6 +122,30 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # Empty on workflow_dispatch (and on a caller that omits the
+          # input), which is checkout's own default — the triggering ref.
+          ref: ${{ inputs.ref }}
+
+      - name: Record build context
+        shell: bash
+        # `inputs.ref` is a free-text string a caller supplies. Bound
+        # through `env:` rather than interpolated into the script body,
+        # because `${{ }}` substitutes into the script TEXT before bash
+        # parses it — a crafted ref would run as code, not print as data.
+        env:
+          BUILD_REF: ${{ inputs.ref || github.ref }}
+          BUILD_SIGN: ${{ inputs.sign || false }}
+          BUILD_UPDATER_ARTIFACTS: ${{ inputs.updater_artifacts || false }}
+          RUNNER_OS_LABEL: ${{ runner.os }}
+        run: |
+          {
+            echo "### installer (${RUNNER_OS_LABEL})"
+            echo ""
+            echo "- ref: \`${BUILD_REF}\`"
+            echo "- sign requested: \`${BUILD_SIGN}\` (adhoc-sign until U6 certificates land)"
+            echo "- updater artifacts requested: \`${BUILD_UPDATER_ARTIFACTS}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Set up Python 3.11
         if: runner.os != 'Linux'
@@ -165,14 +248,41 @@ jobs:
     # 30 min cap: the first build per cache key compiles the entire
     # Tauri + wry + webview2-com tree; cached runs are ~5 minutes.
     timeout-minutes: 30
+    # Constant, not matrix-derived — see the note on `installer.outputs`.
+    outputs:
+      sidecar_artifact_names: >-
+        rytm-sidecar-windows-x86_64,rytm-sidecar-darwin-x86_64,rytm-sidecar-darwin-aarch64,rytm-sidecar-linux-x86_64
+      bundle_artifact_names: >-
+        release-bundle-windows-x86_64,release-bundle-darwin-x86_64,release-bundle-darwin-aarch64,release-bundle-linux-x86_64
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(inputs.studio_windows && '["windows-latest"]' || '["ubuntu-latest", "macos-latest", "windows-latest"]') }}
+        include: ${{ fromJSON(inputs.studio_windows && '[{"os":"windows-latest","target":"windows-x86_64"}]' || '[{"os":"ubuntu-latest","target":"linux-x86_64"},{"os":"macos-15-intel","target":"darwin-x86_64"},{"os":"macos-15","target":"darwin-aarch64"},{"os":"windows-latest","target":"windows-x86_64"}]') }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Record build context
+        shell: bash
+        # See the note on the installer job's copy of this step: caller
+        # inputs are bound through `env:`, never interpolated into the
+        # script body.
+        env:
+          BUILD_REF: ${{ inputs.ref || github.ref }}
+          BUILD_SIGN: ${{ inputs.sign || false }}
+          BUILD_UPDATER_ARTIFACTS: ${{ inputs.updater_artifacts || false }}
+          RUNNER_OS_LABEL: ${{ runner.os }}
+        run: |
+          {
+            echo "### desktop-bundle (${RUNNER_OS_LABEL})"
+            echo ""
+            echo "- ref: \`${BUILD_REF}\`"
+            echo "- sign requested: \`${BUILD_SIGN}\` (adhoc-sign until U6 certificates land)"
+            echo "- updater artifacts requested: \`${BUILD_UPDATER_ARTIFACTS}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Set up Node 20
         uses: actions/setup-node@v7
@@ -223,9 +333,8 @@ jobs:
       # dev fallback. libasound2-dev above is needed on Linux because the
       # editable install builds python-rtmidi's C extension against ALSA.
       #
-      # NO signing here (matching the briefcase job): artifacts are
-      # unsigned/dev-signed by design until the signing posture decision
-      # lands. See docs/BUILDING_INSTALLERS.md § Signing.
+      # No OS code-signing here. The later Tauri bundler signs updater
+      # artifacts separately when the updater keypair is configured.
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v7
@@ -286,7 +395,7 @@ jobs:
         # the sidecar half without unpacking the full Tauri bundle.
         uses: actions/upload-artifact@v7
         with:
-          name: rytm-sidecar-${{ runner.os }}
+          name: rytm-sidecar-${{ matrix.target }}
           path: desktop/shell/binaries/rytm-sidecar*
           if-no-files-found: error
           retention-days: 30
@@ -305,9 +414,28 @@ jobs:
         working-directory: desktop/shell
         run: npm exec --yes --package=@tauri-apps/cli@${{ env.TAURI_CLI_VERSION }} -- tauri --version
 
+      - name: Configure updater signing posture and bundle format
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PUBLIC_KEY: ${{ inputs.updater_public_key }}
+          UPDATER_REQUESTED: ${{ inputs.updater_artifacts || false }}
+          RELEASE_TARGET: ${{ matrix.target }}
+        run: >-
+          python scripts/release_artifacts.py configure
+          --config desktop/shell/tauri.conf.json
+          --target "$RELEASE_TARGET"
+          --updater-requested "$UPDATER_REQUESTED"
+
+      - name: Clear previous bundle output while retaining compilation cache
+        run: python scripts/release_artifacts.py clean-bundle --shell-root desktop/shell
+
       - name: Build Tauri bundle
         if: ${{ !inputs.studio_windows }}
         working-directory: desktop/shell
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: npm exec --yes --package=@tauri-apps/cli@${{ env.TAURI_CLI_VERSION }} -- tauri build
 
       - name: Build Windows studio executable
@@ -368,7 +496,7 @@ jobs:
               "build_command": build_command,
               "source_clean_before_build": True,
               "source_cleanliness_check": "git diff --ignore-cr-at-eol --exit-code; ignores only CR at line endings; fixtures are not rewritten",
-              "build_config_overrides": ["sidecar resource", "prebuilt frontend hook", "optional studio window title"],
+              "build_config_overrides": ["sidecar resource", "prebuilt frontend hook", "optional studio window title", "updater signing posture"],
               "tracked_build_changes": tracked_build_changes,
               "resources": ["binaries/rytm-sidecar.exe"],
               "sha256": hashes,
@@ -396,11 +524,23 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Upload Tauri bundle artifact
+      - name: Collect native release artifacts
+        if: ${{ !inputs.studio_windows }}
+        shell: bash
+        env:
+          RELEASE_TARGET: ${{ matrix.target }}
+        run: |
+          python scripts/release_artifacts.py collect \
+            --config desktop/shell/tauri.conf.json \
+            --bundle-root desktop/shell/target/release/bundle \
+            --output release-bundle --target "$RELEASE_TARGET" \
+            --version "$(tr -d '[:space:]' < VERSION)"
+
+      - name: Upload indexed Tauri release artifacts
         if: ${{ !inputs.studio_windows }}
         uses: actions/upload-artifact@v7
         with:
-          name: cockpit-bundle-${{ matrix.os }}
-          path: desktop/shell/target/release/bundle/**/*
+          name: release-bundle-${{ matrix.target }}
+          path: release-bundle/*
           if-no-files-found: error
           retention-days: 30

@@ -1,5 +1,7 @@
 import { useCockpitStore } from '../state';
 
+import { OperatorLogList } from './OperatorLogList';
+
 export function SafetyRail(): JSX.Element {
   const session = useCockpitStore((s) => s.sessionStatus);
   const sendPlan = useCockpitStore((s) => s.sendPlan);
@@ -50,17 +52,12 @@ export function SafetyRail(): JSX.Element {
 
       <section className="safety-card">
         <div className="rail-section-title">Operator Log</div>
-        {operatorLog.length === 0 ? (
-          <div className="operator-log-empty">No connection or command errors yet.</div>
-        ) : (
-          <ol className="operator-log-list" data-testid="operator-log-list">
-            {operatorLog.map((entry) => (
-              <li key={entry.id} className={`operator-log-entry ${entry.level}`}>
-                {entry.message}
-              </li>
-            ))}
-          </ol>
-        )}
+        <OperatorLogList
+          entries={operatorLog}
+          emptyText="No connection or command errors yet."
+          testId="operator-log-list"
+          label="Operator log"
+        />
       </section>
     </aside>
   );

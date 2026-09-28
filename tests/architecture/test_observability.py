@@ -430,6 +430,17 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # pattern.
         "ProfileAlreadyExistsError",
         "ProfileRegistryAccessError",
+        # Auto-update spec §11 Contract A (the persisted-state downgrade
+        # refusal). Multi-inherits :class:`DataError` + :class:`ValueError`
+        # and is raised by every config-dir store whose on-disk payload
+        # declares a ``schema_version`` newer than this build's — an
+        # operator who tried a newer build and rolled back keeps their
+        # state instead of having it truncated. Deliberately ONE shared
+        # class across every store rather than a per-store subclass:
+        # fingerprints are globally unique and the spec names exactly one
+        # code for the condition, so which store refused travels in
+        # ``context["store_id"]``.
+        "PersistedStateVersionError",
         # Wave 4 ArmedApply seam (senders/armed_apply.py): re-homed under
         # MidiError + RuntimeError so ``except RuntimeError`` callers still
         # work AND the conformance check sees a taxonomy member. Mirrors

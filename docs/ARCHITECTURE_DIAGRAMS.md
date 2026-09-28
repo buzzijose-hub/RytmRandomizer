@@ -60,6 +60,12 @@ flowchart TB
     CI[".github/workflows/test.yml<br/>3 OS × py3.11 matrix<br/>+ codeql, release, installers"]
     Docs["Project docs<br/>CONTRIBUTING.md, docs/*.md<br/>.claude/{rules,skills}/"]
 
+    Desktop["Native shell + Cockpit IPC updater"]
+    Releases["Verified artifact assembly + GitHub manifests"]
+    User -->|"uses installed app"| Desktop
+    Desktop -->|"supervises Cockpit sidecar"| Package
+    Desktop -->|"pulls signed update metadata/artifacts"| Releases
+    CI -->|"builds and verifies"| Releases
     User -->|"runs CLI / dev loop"| Package
     User -->|"opens PRs"| CI
     User -->|"reads"| Docs
@@ -103,6 +109,7 @@ flowchart TB
         DataScenes["data/scenes.py + scene_display.py"]
         DataPlans["data/plans.py"]
         DataModes["data/modes.py<br/>Literal aliases + Final tuples"]
+        DataPersisted["data/persisted_state.py<br/>schema + migration + refusal vocabulary"]
         DataAL16Rytm["data/al16_rytm.py<br/>AL16 bank + Rytm proof facts"]
         DataStyleProfiles["data/style_profiles.py<br/>passive techno style intent catalog"]
         DataStyleTargets["data/style_targets.py<br/>passive numeric style target vectors"]
@@ -273,6 +280,17 @@ flowchart TB
         SAPatchCodesigner["analog_four_patch_codesigner.py<br/>patch genome -> staged AI review packet"]
     end
 
+    subgraph UpdateBoundaries["Desktop metadata and update boundaries"]
+        PyVersion["_version.py<br/>installed metadata / VERSION fallback"]
+        VersionBootstrap["cockpit/ws/app_version.py"]
+        PersistedStores["cockpit library / profiles<br/>I/O + categorical metrics"]
+        NativeUpdate["desktop/shell<br/>policy / driver / transport / journal"]
+        UpdateClient["desktop/web/updateProtocol<br/>native snapshot + consent acknowledgment"]
+    end
+    VersionBootstrap --> PyVersion
+    PersistedStores --> DataPersisted
+    PersistedStores --> ObservabilityPkg
+    UpdateClient -. "native IPC, not Python imports" .-> NativeUpdate
     Init -.-> Constants
     App --> Shell
     App --> CLI
@@ -938,7 +956,7 @@ flowchart TB
         SourceFiles["rytm_randomizer/**/*.py<br/>tests/**/*.py<br/>docs/**/*.md"]
     end
 
-    subgraph Gates["61 architecture-test modules"]
+    subgraph Gates["Architecture invariants; totals in current run report"]
         Gate1["test_no_any_escape_hatches<br/>(Gate 6)"]
         Gate2["test_no_new_top_level_modules<br/>(Gate 9)"]
         Gate3["test_no_string_literal_mode_dispatch<br/>(Gate 10)"]
@@ -953,7 +971,10 @@ flowchart TB
         Gate12["test_observability<br/>(Gate 7)"]
         Gate13["test_ci_workflow"]
         Gate14["test_data_not_code<br/>(data vs code)"]
-        Gate15["test_device_protocol_enforcement<br/>(NEW in PR #43)<br/>7 sub-tests for Device Protocol"]
+        Gate15["test_device_protocol_enforcement<br/>(introduced in PR #43)"]
+        Gate16["test_version_single_source<br/>test_persisted_state_registry"]
+        Gate17["test_cross_language_event_seams_agree<br/>test_workflow_script_invocations_resolve"]
+        Gate18["test_no_forked_sibling_scripts<br/>test_scripts_directory_case<br/>test_plan_index_rows"]
     end
 
     subgraph Allowlists["Drained-allowlist mechanic"]
@@ -1127,7 +1148,7 @@ flowchart TB
         ParityWorker["tests/_parity_worker.py<br/>capture / diff modes"]
     end
 
-    subgraph Layer2["Layer 2 — Unit / behavior (~1500 tests)"]
+    subgraph Layer2["Layer 2 — Unit / behavior"]
         BehaviorTests["test_behavior_*.py"]
         EngineUnits["test_engines_*.py<br/>(non-parity)"]
         DataTests["test_data_layer.py<br/>test_profiles_lookup.py"]
@@ -1144,12 +1165,13 @@ flowchart TB
         ArchTests["tests/architecture/<br/>(Gates 6, 9, 10, 11, etc.)<br/>+ NEW test_device_protocol_enforcement<br/>(7 sub-tests)"]
     end
 
-    subgraph Layer4["Layer 4 — E2E (43 tests)"]
-        E2ETests["tests/test_*_e2e.py<br/>(MockMidiSender end-to-end;<br/>no real hardware)"]
+    subgraph Layer4["Layer 4 — End-to-end boundaries"]
+        E2ETests["tests/test_*_e2e.py<br/>(MockMidiSender; no real hardware)"]
+        NativeE2E["desktop/web/native-e2e + native-install-e2e<br/>real WebView / IPC / plugin verifier<br/>recorder + isolated Windows PE handoff"]
     end
 
     subgraph Layer5["Layer 5 — Coverage ratchet"]
-        CovScript["scripts/coverage_ratchet.py<br/>fails if pure-branch < 95%<br/>auto-commits floor bumps"]
+        CovScript["scripts/coverage_ratchet.py<br/>enforces configured pure-branch floor"]
     end
 
     subgraph CIJobs["CI job mapping"]
@@ -1169,7 +1191,7 @@ flowchart TB
     ParityTests -->|"uses"| ParityWorker
 ```
 
-**Markers:** `pytest.mark.fast` is applied to every test that is not in Layer 1 (parity goldens). `pytest -m fast` runs Layers 2+3+4 in ~25s (parity goldens skipped). Bare `pytest` runs everything in ~30s with `-n auto` xdist parallelization (see CONTRIBUTING.md "Running tests fast").
+**Markers:** Python fast tests exclude frozen parity. Native acceptance has its own explicit target and prerequisites; it is not implied by a Python run. Current counts and timings belong in the dated closeout report.
 
 ---
 
@@ -1754,6 +1776,7 @@ flowchart TB
         DataPlans["data/plans.py<br/>PAD_PROFILE_PLANS, ..."]
         DataScenes["data/scenes.py + scene_display.py<br/>SCENE_COMMANDS, scene_menu_lines()"]
         DataModes["data/modes.py<br/>Literal aliases + Final tuples"]
+        DataPersisted["data/persisted_state.py<br/>schema + migration + refusal vocabulary"]
         DataStyleProfiles["data/style_profiles.py<br/>STYLE_PROFILES"]
         DataStyleTargets["data/style_targets.py<br/>STYLE_TARGET_VECTORS"]
         DataStyleDiscovery["data/style_discovery.py<br/>STYLE_DISCOVERY_BANDS"]
@@ -3238,3 +3261,57 @@ before any physical observation is recorded. The frozen preparation report
 always has `ready=false` and `hardware_send_validated=false`. Saved-KIT Q8.8
 evidence does not establish a paired-CC/NRPN transport conversion; the existing
 seven-bit CC audition seam and persistent-KIT refusal remain unchanged.
+
+<a id="38-auto-update-flow-designed--spec-complete-implementation-pending"></a>
+<a id="37-auto-update-flow-designed--spec-complete-implementation-pending"></a>
+<a id="desktop-update-components"></a>
+
+## 38. Desktop update components — software closeout
+
+The implementation is published in [PR #248](https://github.com/buzzijose-hub/RytmRandomizer/pull/248).
+Local combined gates passed; hosted checks passed at `e2e46d6e`, including 32 native
+recorder cases and two actual Windows PE handoffs. Required protected review,
+production credentials and production installer evidence remain pending. The stable
+`desktop-update-components` anchor survives integration with independently
+numbered Forge diagrams. Historical links to the design-only heading are retained.
+
+```mermaid
+flowchart LR
+    Version["VERSION"] --> Release["release_lib + thin CLIs"]
+    Release --> Assembly["release_artifacts<br/>hash / provenance / signature / target verification"]
+    Assembly --> Published["GitHub manifests + signed artifacts<br/>production publication not performed"]
+    Version --> PyVersion["_version -> WS app_version"]
+    Stores["library / profiles I/O"] --> Registry["data.persisted_state<br/>pure schema/refusal policy"]
+    Published --> Transport["PluginTransport<br/>actual metadata + checked artifact"]
+    Transport --> Policy["update_policy<br/>SemVer / cohort / consent"]
+    Schedule["updater<br/>launch + four-hour schedule"] --> Policy
+    Policy --> Effects["ShellSink effects"]
+    Effects --> Transport
+    Effects --> Journal["bounded update journal"]
+    Bridge["updateProtocol<br/>subscribe then snapshot"] --> Commands["native commands / snapshot"]
+    Commands --> Policy
+    Journal --> Commands
+    Commands --> Bridge
+    Bridge --> UI["UpdatePanel<br/>PanelRenderer + OperatorLogList"]
+    UI --> Bridge
+    Doctor["Connection Doctor export<br/>bounded update_journal or unavailable"] --> Bridge
+    Effects --> Exit["shared backend teardown"]
+    Exit --> Install["consented verified-byte install<br/>key + platform evidence required"]
+    Transport -. "optional separate request" .-> Counters["GitHub counters -> fleet snapshot -> dashboard"]
+    Fixture["debug native-test recorder<br/>real verifier; 32 recorded terminal cases"] -. "acceptance boundary" .-> Transport
+    Handoff["native-install-e2e<br/>2 actual signed Windows PE handoffs<br/>temporary fixture copy only"] -. "plugin install boundary" .-> Install
+```
+
+No key means metadata discovery with an explicit unavailable-download message,
+not staged bytes or install consent. Channel/freeze are native launch settings.
+Consent and skips are process-local. The activity tail is diagnostic; asynchronous
+beacon completion records a closed outcome without gating updates. Fleet estimates
+cannot grant installation authority. No part of this graph authorizes MIDI
+output, hardware saving or physical validation.
+
+The [current run report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md)
+separates passing combined gates, 32 native recorder cases and two actual Windows
+PE handoffs from unverified production NSIS/MSI, macOS/Linux installation,
+publisher signing and production distribution. See [release assembly](BUILDING_INSTALLERS.md#verified-updater-release-assembly)
+for the four target formats and [native acceptance](../desktop/web/native-e2e/README.md)
+for the isolated fixture contract.

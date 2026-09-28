@@ -9,32 +9,41 @@ New or modified production code reaches 100% **branch** coverage (not line cover
 
 ## How to compute and run
 
-```bash
-# 1. Compute the touched-file set against the base branch.
-touched=$(git diff --name-only origin/modularize-v1.34...HEAD -- 'rytm_randomizer/*.py')
-
-# 2. Turn each path into a coverage source argument (path -> dotted module).
-cov_args=$(for f in $touched; do
-  printf -- '--cov=%s ' "$(echo "$f" | sed -e 's#/#.#g' -e 's#\.py$##')"
-done)
-
-# 3. Run with branch coverage AND fail-under set to 100.
-.venv/bin/python -m pytest $cov_args --cov-branch --cov-fail-under=100 --cov-report=term-missing
-```
-
-For final closeout, prefer the same whole-package collection and per-file check
-used by CI. This also catches touched files that were never imported and reports
-the missing lines/branches per file (an aggregate percentage alone can hide gaps):
+Use the same script CI runs — `scripts/check_touched_coverage.py`, invoked
+from `.github/workflows/test.yml`:
 
 ```bash
-python -m pytest --cov=rytm_randomizer --cov-branch --cov-report=xml
-python scripts/check_touched_coverage.py coverage.xml
+just gate1
+# == python -m pytest --cov=rytm_randomizer --cov-branch --cov-report=xml -q
+#    python scripts/check_touched_coverage.py coverage.xml
 ```
 
-The focused dotted-module command above remains useful for a single-module inner
-loop. On Windows use the actual virtual-environment Python path and `-n 0` for a
-single test file; preserve xdist for broad runs. Do not disable or lower either
-coverage gate.
+It computes the touched set from the diff, reads `coverage.xml`, and fails
+listing every touched file with a missed line or partial branch. A touched
+production file **absent** from the report fails too — an untested new
+module is exactly what this gate exists to catch.
+
+### Do not hand-roll a `--cov` command
+
+The recipe this rule used to document did not work, and failed *silently*:
+
+```bash
+# BROKEN — kept here so nobody reinvents it.
+cov_args=$(… --cov=<dotted.module> …)
+python -m pytest $cov_args --cov-branch --cov-fail-under=100
+```
+
+`.coveragerc` declares `source = rytm_randomizer`, which overrides per-run
+`--cov` arguments; the two combine to measure nothing. pytest-cov reports
+"No data was collected" as a **warning**, so the command exits 0 and the
+gate reads as satisfied. **A gate that cannot fail is not a gate** — and
+this is the gate every contributor's work is judged against. Verified
+broken on 2026-09-08.
+
+Two related traps if you measure a single file ad hoc: pass
+`--rcfile=/dev/null` so the repo config does not override the scope, and
+keep the test files out of the measured set or `--fail-under` scores the
+tests instead of the code.
 
 If `--cov-fail-under=100` fails, the orchestrator re-dispatches `tdd-guide` with the missing-branch output. Max 2 retries before escalating to `architect`.
 

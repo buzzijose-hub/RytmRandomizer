@@ -1,0 +1,79 @@
+name: manifest-validate
+
+# The last line of defence on the `releases` branch.
+#
+# `releases` holds the channel manifests (`stable.json`, `beta.json`) that
+# every installed client polls. Nothing else in CI watches that branch —
+# test.yml explicitly ignores it (a full test matrix on every one-line
+# manifest commit would be pure waste), so without this workflow a
+# hand-edited or hand-reverted manifest would reach the fleet ungated.
+#
+# release.yml and promote.yml both validate before they commit. This
+# workflow catches what those cannot: a manual commit, a revert, a
+# force-push, a web-UI edit. Same validator, same rules, one
+# implementation (reuse contract R1/R5) — so a manifest that passes here
+# is byte-identically acceptable to the client that fetches it.
+#
+# Read-only permissions: this job's job is to say no, never to fix. A
+# failing run plus a step summary naming the offending rule is the alert;
+# the operator reverts the commit.
+
+on:
+  push:
+    branches:
+      - releases
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: validate channel manifests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout releases branch
+        uses: actions/checkout@v7
+
+      # scripts/ lives on the code branch, not on `releases` (which holds
+      # only manifests and the dashboard). Fetch the validator from the
+      # integration branch so this workflow validates the branch content
+      # with the current rules.
+      - name: Checkout validator from the integration branch
+        uses: actions/checkout@v7
+        with:
+          ref: modularize-v1.34
+          path: .validator
+          sparse-checkout: |
+            scripts
+            pyproject.toml
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          # The `releases` branch has no pyproject.toml; the cache key
+          # comes from the validator checkout instead.
+          cache-dependency-path: .validator/pyproject.toml
+
+      - name: Validate every channel manifest present
+        shell: bash
+        run: |
+          set -euo pipefail
+          manifests=()
+          for candidate in stable.json beta.json; do
+            if [ -f "$candidate" ]; then
+              manifests+=("$candidate")
+            fi
+          done
+          if [ ${#manifests[@]} -eq 0 ]; then
+            {
+              echo "## manifest-validate"
+              echo ""
+              echo "No channel manifest present on \`releases\` yet — nothing to validate."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python .validator/scripts/validate_manifest.py "${manifests[@]}" --summary

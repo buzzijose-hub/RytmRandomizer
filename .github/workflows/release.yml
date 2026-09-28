@@ -1,33 +1,134 @@
 name: release
 
-# Triggered by pushing a version tag (e.g. v1.34.0). The tag is expected to
-# match the [project] version in pyproject.toml, which is the single source of
-# version truth. See the "Releasing" section of CONTRIBUTING.md.
-#
-# NOTE: artifact checksums (e.g. SHA256SUMS) and code-signing for any future
-# bundled native installers are a documented follow-up and are intentionally
-# out of scope here. This workflow performs the pip-based release only:
-# it builds the wheel + sdist from pyproject.toml and publishes a GitHub Release.
-#
-# Recommended manual pre-release step: run the hardware-side validation
-# checklist documented in docs/MANUAL_HARDWARE_VALIDATION.md. The WS-R E2E
-# suite already gates merges against the canonical operator-command flow
-# in --dry-run mode, but a human-driven sweep on a real Analog Rytm MK2 is
-# the final confirmation that the MIDI stream actually behaves on hardware.
+# One release train: native builds -> exact-byte signature verification -> release assets.
+# Missing updater secrets produce unsigned drafts and no fleet manifest.
+# workflow_dispatch defaults to rehearsal; it never publishes with dry_run=true.
 
 on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: >-
+          Build and validate the whole train without publishing: the
+          GitHub Release step is skipped and the generated manifest is
+          uploaded as a run artifact instead of being committed to the
+          `releases` branch.
+        type: boolean
+        required: false
+        default: true
+      hardware_revalidation:
+        description: >-
+          Add the hardware-revalidation warning. Detected wire-path or hardware-pin
+          changes and [hw-reval] tag annotations always set it, regardless of this input.
+        type: boolean
+        required: false
+        default: false
+
+# One release at a time, and never cancel one in flight: a cancelled run
+# can leave a Release created but its manifest uncommitted, which is the
+# one state that makes the fleet's view disagree with the Releases page.
+# promote.yml shares this group so a promote can never race a release.
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 permissions:
   contents: write
 
 jobs:
-  release:
-    name: build and publish release
+  verify-tag:
+    name: verify tag matches VERSION
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      dry_run: ${{ steps.resolve.outputs.dry_run }}
+      source_epoch: ${{ steps.resolve.outputs.source_epoch }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # Full history: the ancestry check below needs the integration
+          # branch and the tagged commit in the same object database, and
+          # the default shallow clone has neither.
+          fetch-depth: 0
 
+      - name: Resolve and verify version
+        id: resolve
+        shell: bash
+        # Untrusted-shaped values (a tag name, a dispatch input) reach this
+        # script through `env:` rather than `${{ }}` interpolation. Direct
+        # interpolation splices the value into the script TEXT before bash
+        # ever sees it, so a crafted ref name would run as code; through an
+        # env var it is only ever data.
+        env:
+          DRY_RUN_INPUT: ${{ inputs.dry_run }}
+          REF_TYPE: ${{ github.ref_type }}
+          EVENT_NAME: ${{ github.event_name }}
+          INTEGRATION_BRANCH: modularize-v1.34
+        run: |
+          set -euo pipefail
+
+          if [ ! -f VERSION ]; then
+            echo "::error::VERSION file is missing; it is the single source of version truth (spec §2)."
+            exit 1
+          fi
+          file_version="$(tr -d '[:space:]' < VERSION)"
+
+          dry_run="${DRY_RUN_INPUT:-false}"
+
+          if [ "$REF_TYPE" = "tag" ]; then
+            tag_version="${GITHUB_REF_NAME#v}"
+            if [ "$tag_version" != "$file_version" ]; then
+              echo "::error::Tag ${GITHUB_REF_NAME} declares version '${tag_version}' but VERSION at this commit says '${file_version}'. Refusing: a release whose tag and VERSION disagree produces a manifest that points at artifacts named for a different version. Fix VERSION (or retag) and push again."
+              exit 1
+            fi
+
+            # Spec §2.5: the tagged commit must be an ancestor of the
+            # integration branch. Without this, a tag pushed onto ANY
+            # commit -- an abandoned branch, an unreviewed fork merge, a
+            # commit that never passed required-checks -- would ship to the
+            # fleet. The tag-name check above only proves the tag agrees
+            # with itself; this is the check that proves the code was
+            # reviewed.
+            git fetch --no-tags origin "$INTEGRATION_BRANCH"
+            if ! git merge-base --is-ancestor HEAD "origin/${INTEGRATION_BRANCH}"; then
+              echo "::error::Tag ${GITHUB_REF_NAME} points at a commit that is not an ancestor of origin/${INTEGRATION_BRANCH}. Refusing: only reviewed, merged code may be released. Merge the commit to the integration branch first, then retag."
+              exit 1
+            fi
+          fi
+
+          # A manual non-dry run must satisfy the same reviewed-code boundary.
+          if [ "$dry_run" != "true" ]; then
+            git fetch --no-tags origin "$INTEGRATION_BRANCH"
+            git merge-base --is-ancestor HEAD "origin/${INTEGRATION_BRANCH}"
+          fi
+
+          version="$file_version"
+
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "dry_run=${dry_run}" >> "$GITHUB_OUTPUT"
+          echo "source_epoch=$(git show -s --format=%ct HEAD)" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## verify-tag"
+            echo ""
+            echo "- version: \`${version}\`"
+            echo "- trigger: \`${EVENT_NAME}\` (ref type \`${REF_TYPE}\`)"
+            echo "- dry run: \`${dry_run}\`"
+            if [ "$REF_TYPE" = "tag" ]; then
+              echo "- tag matches VERSION, and the tagged commit is an ancestor of \`${INTEGRATION_BRANCH}\`"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  wheel:
+    name: build wheel and sdist
+    needs: verify-tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -54,9 +155,179 @@ jobs:
       - name: Run test gate
         run: pytest
 
+      - name: Upload wheel and sdist
+        uses: actions/upload-artifact@v7
+        with:
+          name: python-dist
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Summarize wheel build
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## wheel"
+            echo ""
+            echo "- version: \`${{ needs.verify-tag.outputs.version }}\`"
+            echo "- test gate: \`${{ job.status }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    name: installers and bundles
+    needs: verify-tag
+    # The shared build. installers.yml deliberately has no tag trigger of
+    # its own, so this call is the only installer build a release fires.
+    uses: ./.github/workflows/installers.yml
+    with:
+      updater_artifacts: true
+      updater_public_key: ${{ vars.TAURI_SIGNING_PUBLIC_KEY }}
+      ref: ${{ github.ref }}
+    secrets:
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
+  publish:
+    name: verify artifacts and assemble release
+    needs: [verify-tag, wheel, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      signed: ${{ steps.assemble.outputs.signed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install reference signature verifier
+        run: sudo apt-get update && sudo apt-get install -y minisign
+      - name: Verify real signature and reject modified artifact
+        run: python scripts/release_artifacts.py verify-self-test --fixture tests/fixtures/release_signature.json
+      - name: Download wheel and sdist
+        uses: actions/download-artifact@v7
+        with:
+          name: python-dist
+          path: release-inputs/python
+      - name: Download indexed desktop bundles
+        uses: actions/download-artifact@v7
+        with:
+          pattern: release-bundle-*
+          path: release-inputs/bundles
+      - name: Download Briefcase installers
+        uses: actions/download-artifact@v7
+        with:
+          pattern: rytm-randomizer-installer-*
+          path: release-inputs/installers
+      - name: Download standalone sidecars
+        uses: actions/download-artifact@v7
+        with:
+          pattern: rytm-sidecar-*
+          path: release-inputs/sidecars
+      - name: Derive release notes and conservative hardware warning
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ needs.verify-tag.outputs.version }}
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+          HARDWARE_REVALIDATION: ${{ inputs.hardware_revalidation || false }}
+        run: |
+          python scripts/release_artifacts.py metadata \
+            --repo-root . --version "$RELEASE_VERSION" --tag "$RELEASE_TAG" \
+            --hardware-revalidation "$HARDWARE_REVALIDATION" --output release-metadata.json
+      - name: Verify signatures and assemble exact release assets
+        id: assemble
+        shell: bash
+        env:
+          TAURI_SIGNING_PUBLIC_KEY: ${{ vars.TAURI_SIGNING_PUBLIC_KEY }}
+          RELEASE_VERSION: ${{ needs.verify-tag.outputs.version }}
+          SOURCE_EPOCH: ${{ needs.verify-tag.outputs.source_epoch }}
+        run: |
+          python scripts/release_artifacts.py assemble \
+            --inputs release-inputs --output assembled \
+            --version "$RELEASE_VERSION" --source-epoch "$SOURCE_EPOCH" \
+            --metadata release-metadata.json
+      - name: Validate verified fleet manifest
+        if: steps.assemble.outputs.signed == 'true'
+        run: python scripts/validate_manifest.py assembled/beta.json --summary
+      - name: Upload assembled release evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: assembled-release
+          path: assembled/**
+          if-no-files-found: error
+          retention-days: 30
+      - name: Generate release notes
+        shell: bash
+        env:
+          RELEASE_SIGNED: ${{ steps.assemble.outputs.signed }}
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          metadata = json.loads(Path("release-metadata.json").read_text(encoding="utf-8"))
+          notes = metadata["notes"] + "\n"
+          if metadata["hardware_revalidation"]:
+              notes += "\nHardware revalidation is required before relying on changed wire behavior.\n"
+          Path("release-notes.md").write_text(notes, encoding="utf-8")
+          PY
+          if [ "$RELEASE_SIGNED" != "true" ]; then
+            printf '\nUnsigned draft: no verified updater artifacts or fleet manifest were produced.\n' >> release-notes.md
+          fi
       - name: Create GitHub Release
+        if: needs.verify-tag.outputs.dry_run != 'true'
         uses: softprops/action-gh-release@v3
         with:
-          files: dist/*
-          body_path: CHANGELOG.md
+          tag_name: v${{ needs.verify-tag.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          files: assembled/dist/*
+          body_path: release-notes.md
           fail_on_unmatched_files: true
+          draft: ${{ steps.assemble.outputs.signed != 'true' }}
+      - name: Summarize release assembly
+        if: always()
+        shell: bash
+        env:
+          RELEASE_SIGNED: ${{ steps.assemble.outputs.signed }}
+          RELEASE_DRY_RUN: ${{ needs.verify-tag.outputs.dry_run }}
+        run: |
+          printf 'Verified updater signatures: %s\nDry run: %s\n' "$RELEASE_SIGNED" "$RELEASE_DRY_RUN" >> "$GITHUB_STEP_SUMMARY"
+
+  manifest:
+    name: publish verified beta manifest
+    needs: [verify-tag, publish]
+    # Keyless drafts and all rehearsals leave the fleet channel unchanged.
+    if: needs.verify-tag.outputs.dry_run != 'true' && needs.publish.outputs.signed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Download verified release assembly
+        uses: actions/download-artifact@v7
+        with:
+          name: assembled-release
+          path: assembled
+      - name: Commit verified manifest to releases branch
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ needs.verify-tag.outputs.version }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin releases
+          git checkout releases
+          cp assembled/beta.json beta.json
+          git add beta.json
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(release): beta.json -> ${RELEASE_VERSION}"
+            git push origin releases
+          fi

@@ -1,0 +1,16 @@
+{
+  "library_store": {
+    "store_id": "library_store",
+    "schema_version": 1,
+    "owner_module": "rytm_randomizer.cockpit.library.store",
+    "description": "Captured kit/sound records under {config}/library.",
+    "migrations": []
+  },
+  "profile_registry": {
+    "store_id": "profile_registry",
+    "schema_version": 1,
+    "owner_module": "rytm_randomizer.cockpit.profiles.registry",
+    "description": "Operator-authored cockpit profiles under {config}/profiles/user.",
+    "migrations": []
+  }
+}

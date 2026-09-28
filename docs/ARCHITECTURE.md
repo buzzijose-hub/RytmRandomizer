@@ -248,6 +248,26 @@ may read from `data/` and `state/` but they may not import `engines`, `shell`,
 
 ---
 
+### Version, persisted state and desktop updates
+
+| Module/surface | Responsibility |
+| --- | --- |
+| `_version.py` | Read installed distribution metadata, with repository `VERSION` fallback for source checkouts; explicit root-module exception under owner review. |
+| `data/persisted_state.py` | Immutable schema declarations, legacy-shape classification, forward-migration decisions and canonical refusal-label mapping; stdlib-only leaf. |
+| `cockpit/ws/app_version.py` | Add version metadata to authenticated session bootstrap. |
+| `cockpit/library/store.py`, `cockpit/profiles/registry.py` | Apply schema policy at the owning I/O boundary and report categorical refusals. |
+| `desktop/shell/src/update_policy.rs` | Typed update transitions, native SemVer eligibility, cohort selection and process-local consent. |
+| `desktop/shell/src/updater.rs` | Resolve launch settings, schedule checks and interpret policy effects through a sink. |
+| `desktop/shell/src/update_transport.rs` | Preserve checked manifest metadata, bind version/URL/signature and delegate verified-byte download/install to the Tauri plugin. |
+| `desktop/shell/src/update_journal.rs` | Persist bounded categorical events and replay a closed-vocabulary tail. |
+| `desktop/shell/src/update_commands.rs`, `main.rs` | Native command/snapshot adaptation and shared backend teardown/install lifecycle. |
+| `desktop/web/src/updateProtocol.ts` | Native IPC subscription, snapshot/state parsing and journal-to-operator-log adapter. |
+| `desktop/web/src/cockpit/panels/UpdatePanel.tsx` | Render shell-owned state through `PanelRenderer`/`OperatorLogList` and await accepted consent. |
+| `scripts/release_lib.py` and thin release CLIs | Shared Python version/manifest validation and generation. |
+| `scripts/release_artifacts.py` | Configure, collect and verify native updater artifacts; check signatures, provenance and complete targets before release assembly. |
+| `scripts/fleet_snapshot.py`, `dashboard/index.html` | Paginated release-counter collection and explicitly approximate fleet activity. |
+| `desktop/shell/src/native_fixture.rs`, `desktop/web/native-e2e/`, `desktop/web/native-install-e2e/` | Debug-feature-only native acceptance: real WebView/IPC/plugin verification with a terminal recorder, plus signed Windows PE installer/successor handoffs confined to a temporary fixture copy. |
+
 ## 3. Dependency direction rules (machine-enforced)
 
 These are the rules that `tests/architecture/test_import_direction.py` and
@@ -314,6 +334,15 @@ rule, change it here first, then update the test.
     [§6.6](#66-show-kit-forge-paired-preparation-layer-2026-09).
 
 ---
+
+### Updater metadata exceptions under review
+
+The updater bundle preserves the explicit owner-signoff requests for
+`_version.py` at package root, the `cockpit.ws -> _version` matrix edge and
+`releases_branch_seed/` at repository root. Their allowlist entries make the
+exceptions visible; this documentation does not grant approval. All other
+new Python imports retain the existing direction rules. Persisted-state
+policy stays in `data/`; store I/O and metrics remain above that leaf.
 
 ## 4. House-style rules (machine-enforced)
 
@@ -1458,6 +1487,69 @@ for the still-unperformed physical gates.
 
 ---
 
+<a id="66-desktop-updater-and-release-boundaries"></a>
+
+## 6.7 Desktop updater and release boundaries
+
+The native updater is independent of the passive Python CLI/report import
+graph. `VERSION` is the release version source; installed distribution
+metadata identifies the running Python package. The pure persisted-state
+registry currently declares the library and profile stores; adding a store
+requires its schema/migration registration and drift-guard coverage. Registry
+existence does not imply that Forge, session or every other store is enrolled.
+
+The shell attaches transport before launch/four-hour scheduling. Typed policy
+validates the actual manifest, preserves hardware/rollout metadata and uses
+SemVer precedence. The transport retains the checked artifact's version, URL
+and signature, then retains the verified bytes through a consented install.
+Installation follows confirmed backend exit. Consent and skipped-version
+state are process-local; the diagnostic journal does not restore them.
+
+React subscribes before requesting `update_snapshot`, then refreshes after
+state events. The snapshot contains native channel/freeze posture and at most
+50 recent journal rows. The event subscription rejects malformed/stale replies.
+Connection Doctor independently calls the same `readUpdateSnapshot` adapter on
+export, so its diagnostic packet includes `update_journal` even when the Updates
+panel has never mounted. The projection contains at most 50 native-sanitized
+rows; unavailable native IPC yields `null`, not a claimed empty history. It adds
+no backend WebSocket command and initiates no network update check. A consent
+form remains retryable until native acknowledgment for its version/choice;
+missing signing keys and failed/skipped states are displayed truthfully.
+Mounting the panel reads local state, not a network update check. The ordinary
+browser development loop cannot execute native update commands.
+
+Without a bundled verification key, valid eligible metadata remains visible
+with `signature_key_missing`, but the policy emits no artifact download and
+cannot accept installation consent. The key comes from the actual bundled
+`tauri.conf.json`. Release tooling rewrites that configuration before building,
+then verifies signed bytes, signature sidecars, source/version, hashes and all
+four desktop targets before setting a signed-release result. OS code signing,
+notarization and real platform installation are separate evidence.
+
+The native acceptance target compiles the real shell, IPC, driver, journal,
+supervisor and plugin verifier. Its `native-test` feature is rejected in
+release builds and requires an explicit temporary-root/loopback fixture with
+MIDI off. The recorder matrix covers 32 actual Wry/WebView2 cases with terminal
+installation/restart recorded. The separate `native-install-e2e` suite performs
+both install-on-quit and install-now through the real Windows plugin using a
+signed PE installer and successor confined to a marked temporary shell copy.
+Both suites passed locally and in Windows CI at the published #248 checkpoint
+`e2e46d6e`. These tests do not prove production NSIS/MSI, macOS/Linux installation,
+publisher signing or production GitHub/CDN delivery. Unit counts,
+signature-vector verification and harness compilation remain separate proofs.
+See [native acceptance](../desktop/web/native-e2e/README.md),
+[release assembly](BUILDING_INSTALLERS.md#verified-updater-release-assembly) and
+the [current run report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md).
+
+The local journal rotates at 256 KiB and retains one prior generation. Closed
+fields exclude free-form paths and identifiers. Check-ins are separate optional
+requests; their asynchronous completion feeds `ping_ok`/`ping_failed` journal
+rows without retries or update-state gating. A shared writer lock covers journal
+rotation plus append. The missing-key refusal also emits its typed reason into
+history. These diagnostic repairs passed the 186-test Rust suite and the native
+recorder matrix. Fleet
+estimates can undercount or overcount and never grant installation authority.
+
 ## 7. Enforcement summary
 
 The rules above are mechanically enforced by:
@@ -1489,6 +1581,19 @@ The rules above are mechanically enforced by:
   persisted Analog Four audio-patch run state conforms to its declared JSON
   schema, including required fields, closed objects, enums, and scalar
   constraints)
+
+* `tests/architecture/test_version_single_source.py` and
+  `test_persisted_state_registry.py` (version synchronization and store/schema ownership).
+* `test_cross_language_event_seams_agree.py` and
+  `test_workflow_script_invocations_resolve.py` (actual IPC call form and executable workflow targets).
+* `test_no_forked_sibling_scripts.py`, `test_scripts_directory_case.py` and
+  `test_plan_index_rows.py` (shared script ownership, portable paths and plan discoverability).
+
+The updater also extends the existing CI-workflow, import-matrix,
+root-module/perimeter and observability guards. These structural checks
+complement executable native tests; they do not prove signed installation or
+platform restart. Release-artifact regressions and a genuine Minisign
+positive/modified-byte negative control verify a separate release boundary.
 
 These tests are run by `pytest tests/architecture/` and are wired into the
 `test` job of `.github/workflows/test.yml` so a violation fails the build.

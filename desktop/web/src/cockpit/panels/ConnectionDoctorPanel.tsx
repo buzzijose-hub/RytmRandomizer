@@ -2,12 +2,13 @@
  * ConnectionDoctorPanel — read-only health surface over the `diagnostics`
  * WS command. The checklist / journal render through the generic
  * PanelRenderer; the bespoke strip provides Refresh (re-runs the command)
- * and Export (copies the raw packet to the clipboard).
+ * and Export (copies backend diagnostics plus the local updater journal).
  */
 
 import { useState } from 'react';
 
 import { useCockpitStore } from '../../state';
+import { readUpdateSnapshot } from '../../updateProtocol';
 import { useCockpitClient } from '../context';
 
 import { connectionDoctorPanelSpec } from './connectionDoctorPanelSpec';
@@ -39,8 +40,21 @@ export function ConnectionDoctorPanel(): JSX.Element {
       setNote('clipboard unavailable');
       return;
     }
-    clip
-      .writeText(JSON.stringify(diagnostics, null, 2))
+    readUpdateSnapshot()
+      .then((snapshot) =>
+        clip.writeText(
+          JSON.stringify(
+            {
+              ...diagnostics,
+              // null means unavailable, rather than claiming an empty native
+              // journal when exporting from a browser or a failed shell IPC.
+              update_journal: snapshot?.journal ?? null,
+            },
+            null,
+            2,
+          ),
+        ),
+      )
       .then(() => setNote('diagnostics copied'))
       .catch(() => setNote('copy failed'));
   };

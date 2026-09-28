@@ -1,0 +1,274 @@
+[
+  {
+    "date": "2026-08-24",
+    "counts": {
+      "1.34.0": {
+        "darwin-aarch64": 252,
+        "linux-x86_64": 36,
+        "windows-x86_64": 168
+      }
+    },
+    "stable": {
+      "version": "1.34.0",
+      "rollout_percent": 100
+    },
+    "beta": {
+      "version": "1.34.0",
+      "rollout_percent": 100
+    }
+  },
+  {
+    "date": "2026-08-25",
+    "counts": {
+      "1.34.0": {
+        "darwin-aarch64": 498,
+        "linux-x86_64": 72,
+        "windows-x86_64": 336
+      },
+      "1.35.0-beta.1": {
+        "darwin-aarch64": 18,
+        "linux-x86_64": 6
+      }
+    },
+    "stable": {
+      "version": "1.34.0",
+      "rollout_percent": 100
+    },
+    "beta": {
+      "version": "1.35.0-beta.1",
+      "rollout_percent": 100
+    }
+  },
+  {
+    "date": "2026-08-26",
+    "counts": {
+      "1.34.0": {
+        "darwin-aarch64": 732,
+        "linux-x86_64": 108,
+        "windows-x86_64": 498
+      },
+      "1.35.0-beta.1": {
+        "darwin-aarch64": 54,
+        "linux-x86_64": 12,
+        "windows-x86_64": 12
+      }
+    },
+    "stable": {
+      "version": "1.34.0",
+      "rollout_percent": 100
+    },
+    "beta": {
+      "version": "1.35.0-beta.1",
+      "rollout_percent": 100
+    }
+  },
+  {
+    "date": "2026-08-27",
+    "counts": {
+      "1.34.0": {
+        "darwin-aarch64": 948,
+        "linux-x86_64": 144,
+        "windows-x86_64": 654
+      },
+      "1.35.0": {
+        "darwin-aarch64": 24,
+        "windows-x86_64": 12
+      },
+      "1.35.0-beta.1": {
+        "darwin-aarch64": 96,
+        "linux-x86_64": 18,
+        "windows-x86_64": 30
+      }
+    },
+    "stable": {
+      "version": "1.35.0",
+      "rollout_percent": 10
+    },
+    "beta": {
+      "version": "1.35.0-beta.1",
+      "rollout_percent": 100
+    }
+  },
+  {
+    "date": "2026-08-28",
+    "counts": {
+      "1.34.0": {
+        "darwin-aarch64": 1134,
+        "linux-x86_64": 174,
+        "windows-x86_64": 798
+      },
+      "1.35.0": {
+        "darwin-aarch64": 96,
+        "linux-x86_64": 6,
+        "windows-x86_64": 54
+      },
+      "1.35.0-beta.1": {
+        "darwin-aarch64": 138,
+        "linux-x86_64": 24,
+        "windows-x86_64": 48
+      }
+    },
+    "stable": {
+      "version": "1.35.0",
+      "rollout_percent": 10
+    },
+    "beta": {
+      "version": "1.35.0-beta.1",
+      "rollout_percent": 100
+    }
+  },
+  {
+    "date": "2026-08-29",
+    "counts": {
+      "1.34.0": {
+        "darwin-aarch64": 1266,
+        "linux-x86_64": 198,
+        "windows-x86_64": 912
+      },
+      "1.35.0": {
+        "darwin-aarch64": 252,
+        "linux-x86_64": 18,
+        "windows-x86_64": 138
+      },
+      "1.35.0-beta.1": {
+        "darwin-aarch64": 174,
+        "linux-x86_64": 30,
+        "windows-x86_64": 66
+      }
+    },
+    "stable": {
+      "version": "1.35.0",
+      "rollout_percent": 50
+    },
+    "beta": {
+      "version": "1.35.0-beta.1",
+      "rollout_percent": 100
+    }
+  },
+  {
+    "date": "2026-08-30",
+    "counts": {
+      "1.34.0": {
+        "darwin-aarch64": 1350,
+        "linux-x86_64": 216,
+        "windows-x86_64": 990
+      },
+      "1.35.0": {
+        "darwin-aarch64": 486,
+        "linux-x86_64": 36,
+        "windows-x86_64": 270
+      },
+      "1.35.0-beta.1": {
+        "darwin-aarch64": 204,
+        "linux-x86_64": 36,
+        "windows-x86_64": 78
+      }
+    },
+    "stable": {
+      "version": "1.35.0",
+      "rollout_percent": 50
+    },
+    "beta": {
+      "version": "1.35.1-beta.1",
+      "rollout_percent": 100
+    }
+  },
+  {
+    "date": "2026-08-31",
+    "counts": {
+      "1.34.0": {
+        "darwin-aarch64": 1404,
+        "linux-x86_64": 234,
+        "windows-x86_64": 1050
+      },
+      "1.35.0": {
+        "darwin-aarch64": 774,
+        "linux-x86_64": 66,
+        "windows-x86_64": 438
+      },
+      "1.35.0-beta.1": {
+        "darwin-aarch64": 210,
+        "linux-x86_64": 36,
+        "windows-x86_64": 84
+      },
+      "1.35.1-beta.1": {
+        "darwin-aarch64": 24,
+        "linux-x86_64": 6
+      }
+    },
+    "stable": {
+      "version": "1.35.0",
+      "rollout_percent": 100
+    },
+    "beta": {
+      "version": "1.35.1-beta.1",
+      "rollout_percent": 100
+    }
+  },
+  {
+    "date": "2026-09-01",
+    "counts": {
+      "1.34.0": {
+        "darwin-aarch64": 1446,
+        "linux-x86_64": 252,
+        "windows-x86_64": 1104
+      },
+      "1.35.0": {
+        "darwin-aarch64": 1104,
+        "linux-x86_64": 102,
+        "windows-x86_64": 636
+      },
+      "1.35.0-beta.1": {
+        "darwin-aarch64": 210,
+        "linux-x86_64": 36,
+        "windows-x86_64": 84
+      },
+      "1.35.1-beta.1": {
+        "darwin-aarch64": 60,
+        "linux-x86_64": 12,
+        "windows-x86_64": 12
+      }
+    },
+    "stable": {
+      "version": "1.35.0",
+      "rollout_percent": 100
+    },
+    "beta": {
+      "version": "1.35.1-beta.1",
+      "rollout_percent": 100
+    }
+  },
+  {
+    "date": "2026-09-02",
+    "counts": {
+      "1.34.0": {
+        "darwin-aarch64": 1482,
+        "linux-x86_64": 270,
+        "windows-x86_64": 1158
+      },
+      "1.35.0": {
+        "darwin-aarch64": 1440,
+        "linux-x86_64": 138,
+        "windows-x86_64": 840
+      },
+      "1.35.0-beta.1": {
+        "darwin-aarch64": 210,
+        "linux-x86_64": 36,
+        "windows-x86_64": 84
+      },
+      "1.35.1-beta.1": {
+        "darwin-aarch64": 102,
+        "linux-x86_64": 18,
+        "windows-x86_64": 30
+      }
+    },
+    "stable": {
+      "version": "1.35.0",
+      "rollout_percent": 100
+    },
+    "beta": {
+      "version": "1.35.1-beta.1",
+      "rollout_percent": 100
+    }
+  }
+]

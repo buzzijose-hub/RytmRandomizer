@@ -386,11 +386,15 @@ recording, and ranking commands for one bounded session.
    shipped (PR #106)                      atomic writes, never-raises verifier,
                                           CLI driver, passive rehearsal report.
 
-🔄 Rival program                          Live-but-Passive connection manager,
-   in flight (branch rival-program)       ArmedApply seam, double-click launch,
+✅ Rival program                          Live-but-Passive connection manager,
+   shipped (PR #217)                      ArmedApply seam, double-click launch,
                                           live monitor, doctor, sound library,
                                           morphing + scoped randomization,
-                                          WCAG 2.2 AA gate. One bundle PR.
+                                          WCAG 2.2 AA gate.
+
+🚧 Auto-updates                           Shell/client and verified release tooling;
+   software closeout                     composed suites and native handoff pass;
+                                          hosted review/owner approval/production key pending.
 
 🔮 Phase 4 · Hardware Runtime             Dedicated device that loads .rymp
    next                                   from flash, runs an embedded C port
@@ -399,6 +403,54 @@ recording, and ranking commands for one bounded session.
 ```
 
 See [`docs/STATUS.md`](docs/STATUS.md) for the dated snapshot and the per-phase implementation plans indexed at [`docs/superpowers/plans/INDEX.md`](docs/superpowers/plans/INDEX.md).
+
+### Desktop updates
+
+The desktop shell checks at launch and every four hours while running;
+“Check now” requests another check. The Updates panel reads native state and
+accepts a per-version choice only after the shell acknowledges it. Channel
+and freeze are launch settings: set `RYTM_RAND_UPDATE_CHANNEL=stable` or
+`beta`, or `RYTM_RAND_UPDATES=off`, then restart. The browser development
+loop has no native updater.
+
+With a configured verification key, eligible artifacts are downloaded and
+signature-verified before a choice to install now, install when quitting,
+or skip. Installation waits for the bundled backend to exit. Consent and
+skip state currently last for the process; restarting requires a new choice.
+Hardware-revalidation warnings and rollout percentages survive manifest
+validation. These controls do not authorize MIDI output or hardware saving.
+
+The checked-in public key is empty. This build can display eligible release
+metadata and its hardware warning, but explains that downloading and
+installing are unavailable. Release tooling now verifies actual signatures,
+artifact hashes, source/version and the complete target set before assembly;
+a genuine Minisign vector and modified-byte control passed. The current 32-case
+native Wry/WebView2 matrix passed in 53.5 seconds, and both actual signed Windows
+PE handoff scenarios passed in 8.2 seconds. Combined Python, frontend and browser
+suites also passed. Final local static checks passed; hosted review gates, production keys and
+production NSIS/macOS/Linux installer evidence remain pending; the
+[closeout report](docs/superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md)
+records the exact scope. [PR #248](https://github.com/buzzijose-hub/RytmRandomizer/pull/248)
+contains the complete updater replacement and its current review/check status.
+This closeout publishes no production update.
+
+The optional check-in is a separate GitHub release-asset request for the
+running version/platform. `RYTM_RAND_UPDATE_BEACON=off` disables it while
+retaining checks; freeze disables both. No application installation identifier
+or MIDI data is included; ordinary HTTP connection metadata reaches the host.
+Fleet graphs estimate activity from download counters. Opt-outs can undercount
+and repeated/public requests can overcount; these are not unique-device counts
+and never authorize an update. Asynchronous check-in outcomes now feed the local
+closed-vocabulary journal; they never gate an update or retry a check-in.
+
+Connection Doctor's explicit clipboard export also reads the local updater
+journal, whether or not Updates has been opened. It includes at most 50
+sanitized rows; a browser or unavailable shell reports `update_journal: null`.
+
+See [the closeout plan](docs/superpowers/plans/2026-09-08-release-closeout.md),
+[verification checkpoint](docs/superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md),
+[environment reference](docs/LOCAL_DEV_TOOLING_NOTES.md) and
+[verified release assembly](docs/BUILDING_INSTALLERS.md#verified-updater-release-assembly).
 
 ---
 

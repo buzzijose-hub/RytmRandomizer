@@ -84,6 +84,19 @@ vulture:
     python -m vulture rytm_randomizer/ tests/ --min-confidence 80
 
 # ─────────────────────────────────────────────────────────────────────────
+# VERSION (single source of truth: the repo-root VERSION file)
+# ─────────────────────────────────────────────────────────────────────────
+
+# Propagate VERSION into every derived declaration ([tool.briefcase] version,
+# Cargo.toml, tauri.conf.json, package.json). Idempotent — safe to re-run.
+version-sync:
+    python scripts/sync_version.py
+
+# Verify the derived declarations match VERSION; write nothing, fail on drift.
+version-check:
+    python scripts/sync_version.py --check
+
+# ─────────────────────────────────────────────────────────────────────────
 # CLOSEOUT (the pre-PR verification gate)
 # ─────────────────────────────────────────────────────────────────────────
 
@@ -95,8 +108,8 @@ closeout:
 closeout-ps:
     powershell -ExecutionPolicy Bypass -File Scripts/closeout_check.ps1
 
-# Full pre-PR check: lint + strict production typing + arch + full test suite + coverage
-check: lint typecheck arch test cov
+# Full pre-PR check: version drift + lint + strict production typing + arch + full test suite + coverage
+check: version-check lint typecheck arch test cov
     @echo "✓ All checks passed. Ready to push."
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -236,5 +249,27 @@ diagrams:
     @grep '^## ' docs/ARCHITECTURE_DIAGRAMS.md | head -30
 
 # Show the 18 plan-requirement gates
+# Gate 17 — does this already exist? Run BEFORE writing a new module.
+# An instruction with no command is the kind you skip while believing you
+# complied; this one takes a second.
+#   just survey check_touched_branch_coverage
+#   just survey "manifest validation" --keywords
+survey +QUERY:
+    @python scripts/survey_before_writing.py {{QUERY}}
+
+# Gate 1 — 100% BRANCH coverage on every touched production file, locally.
+# Same script CI runs (test.yml); it reads coverage.xml rather than fighting
+# --cov args, which is why it works where the hand-rolled recipe did not.
+gate1:
+    python -m pytest --cov=rytm_randomizer --cov-branch --cov-report=xml -q
+    python scripts/check_touched_coverage.py coverage.xml
+
+# Classify a parallel agent's test output: RAN/PASSED, RAN/FAILED, or DID NOT RUN.
+# An agent whose suite errored at collection (a sibling's module absent) reports
+# "green" to an orchestrator reading prose. Pipe the runner's output here instead.
+#   pytest -q 2>&1 | just agent-report pytest
+agent-report RUNNER:
+    @python scripts/check_agent_report.py --runner {{RUNNER}}
+
 gates:
     @grep -A 1 '^### ' docs/PLAN_REQUIREMENTS.md 2>/dev/null | head -50 || cat docs/PLAN_REQUIREMENTS.md | head -80

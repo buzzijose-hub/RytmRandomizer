@@ -85,6 +85,7 @@ __all__ = [
     "MidiError",
     "MidiEventPlanSendError",
     "MockMessageMappingError",
+    "PersistedStateVersionError",
     "RealMidiDependencyError",
     "RealMidiPortError",
     "RealMidiSendError",
@@ -198,6 +199,34 @@ class ElektronKitRecipeError(DataError, ValueError):
     """Base error for malformed or unsafe saved-Kit recipes."""
 
     fingerprint: ClassVar[str] = "data.elektron.kit_recipe"
+
+
+class PersistedStateVersionError(DataError, ValueError):
+    """Persisted operator state was written by a NEWER app than this build.
+
+    The auto-update spec's §11 Contract A downgrade path. An operator who
+    installed a newer build and rolled back must keep their state:
+    reading a payload whose ``schema_version`` exceeds this build's would
+    mean guessing at fields this code does not know, and *skipping* it
+    would present a silently shorter library or profile list — the silent
+    data loss the contract forbids. So every store refuses loudly and
+    leaves the bytes exactly as found.
+
+    **One class, not one per store.** Fingerprints are globally unique
+    (``test_taxonomy_fingerprints_are_globally_unique``), and the spec
+    names exactly one code — ``persisted_state.schema_newer_than_app`` —
+    for this condition across every store. A per-store subclass would
+    either collide on the fingerprint or invent codes the spec does not
+    have. Which store refused travels in ``context["store_id"]``, where
+    the metrics label and the journal already read it from.
+
+    Dual-inheritance with :class:`ValueError` matches
+    ``ProfileAlreadyExistsError``'s shape: taxonomy membership for the
+    observability conformance test, stdlib ``except ValueError:``
+    compatibility for existing callers.
+    """
+
+    fingerprint: ClassVar[str] = "persisted_state.schema_newer_than_app"
 
 
 class BoundaryError(RytmRandomizerError):
