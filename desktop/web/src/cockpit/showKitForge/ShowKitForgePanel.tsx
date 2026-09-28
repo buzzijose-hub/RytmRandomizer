@@ -1522,7 +1522,7 @@ export function ShowKitForgePanel(): JSX.Element {
               <label>Export package ID<input value={artifactName} pattern={SAFE_ARTIFACT_NAME.source} maxLength={96} autoCapitalize="none" onChange={(event) => setArtifactName(event.currentTarget.value.toLowerCase())} placeholder="my-show" /></label>
               <button
                 type="button"
-                disabled={actionDisabled || !validArtifactName}
+                disabled={actionDisabled || !validArtifactName || activeBank.entries.length === 0}
                 onClick={() =>
                   void issue(
                     { type: 'show_bank_export', bank_id: activeBank.bank_id, artifact_name: artifactName, expected_revision: activeBank.revision },
@@ -1537,6 +1537,9 @@ export function ShowKitForgePanel(): JSX.Element {
               >
                 Export {!stale && activeBank.readiness.show_ready ? 'show-ready' : 'draft'} local pack
               </button>
+              {activeBank.entries.length === 0 && (
+                <p className="show-kit-forge-help">Add a paired cue before exporting this bank.</p>
+              )}
             </>
           )}
         </div>
