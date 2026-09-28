@@ -1,15 +1,21 @@
 """Desktop shell Cargo resolver pins.
 
-The Tauri shell is a Rust application, but this repo intentionally does not
-commit ``desktop/shell/Cargo.lock`` yet. That means CI resolves transitive
-crates from crates.io on every run. On 2026-06-14, a fresh
-``alloc-no-stdlib`` 3.x release entered the ``brotli`` transitive graph through
-``brotli-decompressor`` / ``alloc-stdlib`` and broke ``desktop-shell`` before
-any project Rust code compiled.
+``desktop/shell/Cargo.lock`` **is** committed now, so CI no longer re-resolves
+transitive crates from crates.io on every run. That changes what this guard is
+for, so read the history before touching it.
 
-Keep this test narrow: it is a tripwire for the explicit resolver pin in
-``desktop/shell/Cargo.toml``. When the upstream ``brotli`` graph is compatible
-again, remove both the pin and this guard in the same PR.
+This file was written after 2026-06-14, when a fresh ``alloc-no-stdlib`` 3.x
+release entered the ``brotli`` graph through ``brotli-decompressor`` /
+``alloc-stdlib`` and broke ``desktop-shell`` before any project Rust code
+compiled. The same shape recurred on 2026-09-28: the tauri crates published
+releases requiring ``rustc 1.90`` while CI pins 1.88.0, and every Rust job on
+every branch went red with no Rust change anywhere. Twice is a pattern, and the
+lockfile is the general fix the ``=`` pins below were a per-crate workaround for.
+
+The pins are kept because they are load-bearing for a *different* reason: they
+document which exact versions the brotli allocator bridge needs, and a lockfile
+records that without explaining it. Removing them is safe only once the upstream
+graph is compatible again — and that is a deliberate PR, not a drive-by.
 """
 
 from __future__ import annotations
