@@ -374,6 +374,18 @@ jobs:
           cache: "pip"
           cache-dependency-path: pyproject.toml
 
+      # tests/test_fleet_dashboard.py executes the dashboard's own render
+      # module under node (`shutil.which("node")`), so this job needs a node on
+      # PATH. It previously relied on whatever the runner image happened to
+      # ship, which is not a guarantee: on PR #243 the windows-latest runner
+      # produced a subprocess result with no captured stdout, and the suite
+      # failed with a TypeError that never mentioned node. No npm cache here --
+      # this job installs no packages, it just needs the binary.
+      - name: Set up Node 20
+        uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+
       - name: Install ALSA dev headers (Linux)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libasound2-dev
@@ -756,10 +768,10 @@ jobs:
         run: cargo fmt --check
 
       - name: cargo test
-        run: cargo test
+        run: cargo test --locked
 
       - name: clippy
-        run: cargo clippy --all-targets -- -D warnings
+        run: cargo clippy --locked --all-targets -- -D warnings
 
       - name: Set up Python for native updater backend
         uses: actions/setup-python@v7
@@ -773,7 +785,7 @@ jobs:
         run: python -m pip install -e ".[dev]"
 
       - name: Build debug-only native updater acceptance shell
-        run: cargo build --features native-test
+        run: cargo build --locked --features native-test
 
       - name: Type-check native acceptance driver
         working-directory: desktop/web

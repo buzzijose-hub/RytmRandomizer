@@ -425,6 +425,18 @@ def _render(tmp_path: Path, page_source: str, history: object) -> dict[str, str]
         check=False,
     )
     assert completed.returncode == 0, completed.stderr
+    # `stdout` is typed `str` for a completed capture, but Windows CI produced
+    # `None` here on PR #243: the repo-wide `timeout_method = "thread"` cannot
+    # kill a blocked child, so an interrupted `communicate()` can hand back a
+    # result object with no captured streams. Reading that as JSON raised a
+    # bare `TypeError: the JSON object must be str, bytes or bytearray, not
+    # NoneType`, which says nothing about node and sent the first investigation
+    # down the wrong path entirely. Name the real condition instead.
+    assert completed.stdout, (
+        "node produced no stdout for the dashboard render "
+        f"(returncode={completed.returncode}, stderr={completed.stderr!r}). "
+        "This is an environment failure, not a dashboard defect."
+    )
     rendered = json.loads(completed.stdout)
     assert set(rendered) == {"composition", "adoption", "promotions"}
     return rendered
