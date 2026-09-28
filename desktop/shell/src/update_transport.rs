@@ -383,8 +383,16 @@ impl Operations {
         if self.closed.load(Ordering::SeqCst) {
             return;
         }
-        // Keep the newest handle so `close()` can still abort on shutdown; an
-        // already-finished predecessor's handle is simply dropped.
+        // Keep the newest handle so `close()` can still abort on shutdown.
+        //
+        // The trade this makes, stated rather than left to be discovered: when
+        // two beacons genuinely overlap, only the newer handle is retained, so
+        // `close()` cannot abort the older one. That is bounded and harmless —
+        // a beacon is a bare GET under a 10s client timeout, it carries no
+        // state, and it reports through a `Weak<ShellSink>` that no-ops once
+        // the sink is gone. Worst case is one extra journal row written up to
+        // ten seconds into shutdown. The alternative was losing a check-in's
+        // evidence entirely, every time two checks overlapped.
         tasks[BEACON_SLOT] = Some(tauri::async_runtime::spawn(task));
     }
 
