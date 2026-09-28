@@ -44,8 +44,8 @@ DIGITAKT_KIT_NAME_OFFSET: Final[int] = 4
 DIGITAKT_KIT_NAME_LENGTH: Final[int] = 16
 
 #: Flipped to ``True`` only by the change set that lands hardware-verified
-#: offsets together with their capture fixtures. The mutation planners read
-#: this flag and refuse to emit sendable events while it is ``False``.
+#: offsets together with their capture fixtures. The current planner is
+#: independently hard-blocked; changing this flag alone cannot enable sends.
 DIGITAKT_OFFSETS_PROMOTED: Final[bool] = False
 
 #: Operator-facing explanation used verbatim as a plan ``readiness_reason``.
