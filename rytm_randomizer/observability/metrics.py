@@ -66,6 +66,7 @@ __all__ = [
     "AnalogFourPatchRenderRankErrorCode",
     "AnalogFourPatchSendErrorCode",
     "MidiMetrics",
+    "PersistedStateRefusalCode",
     "get_metrics",
     "reset_metrics",
 ]
@@ -164,6 +165,24 @@ AnalogFourPatchSendErrorCode: TypeAlias = Literal[
 ]
 """Bounded failure categories for armed A4 patch-plan delivery."""
 
+PersistedStateRefusalCode: TypeAlias = Literal[
+    "migration_failed",
+    "schema_newer_than_app",
+    "unknown_shape",
+    "unknown_store",
+    "unreadable",
+]
+"""Bounded refusal reasons for a persisted operator-state load (spec §11).
+
+Mirrors the refusing half of
+:data:`rytm_randomizer.data.persisted_state.PersistedStateCode` with the
+shared ``persisted_state.`` prefix stripped — the prefix is implied by
+the counter name, and the bare code keeps the ``format_summary`` line
+readable. The two accepting outcomes are not refusals and are counted by
+``record_persisted_state_migration`` (``migrated``) or not at all
+(``ok`` — the uneventful path needs no counter).
+"""
+
 _CounterKey = TypeVar("_CounterKey", int, str)
 
 
@@ -259,6 +278,14 @@ class MidiMetrics:
         default_factory=lambda: Counter[AnalogFourPatchSendErrorCode]()
     )
     a4_patch_send_duration_ms_total: float = 0.0
+
+    # Spec §11 Contract A — persisted operator state surviving a binary
+    # swap. ``persisted_state_migrations`` is keyed ``"<store>:<from>-><to>"``
+    # so an operator can see exactly which store moved which way; the
+    # refusal counter is keyed by the bounded reason code. Both are
+    # deliberately path-free — store ids, integers, and codes only.
+    persisted_state_migrations: Counter[str] = field(default_factory=lambda: Counter[str]())
+    persisted_state_refusals_by_code: Counter[str] = field(default_factory=lambda: Counter[str]())
 
     def record_cc_sent(self, channel: int) -> None:
         """Increment the per-channel CC-sent counter for ``channel``.
@@ -435,6 +462,34 @@ class MidiMetrics:
 
         self.a4_active_operation_errors_by_code[error_code] += 1
 
+    def record_persisted_state_migration(self, store: str, from_v: int, to_v: int) -> None:
+        """Record one persisted-state store migrating forward across an update.
+
+        Called by a store's loader after
+        :func:`rytm_randomizer.data.persisted_state.classify_payload`
+        returns ``persisted_state.migrated``. ``store`` is the registry
+        ``store_id`` (never a path); ``from_v`` / ``to_v`` are the
+        on-disk and app schema versions. The composite key keeps every
+        distinct hop visible instead of collapsing them into a single
+        per-store total.
+        """
+
+        self.persisted_state_migrations[f"{store}:{from_v}->{to_v}"] += 1
+
+    def record_persisted_state_refusal(
+        self,
+        store: str,
+        error_code: PersistedStateRefusalCode,
+    ) -> None:
+        """Record one refused persisted-state load (spec §11 rule: never reset).
+
+        ``error_code`` is the bounded reason the load was refused. The
+        ``Literal`` alias keeps the vocabulary finite at type-check time,
+        the same discipline the A4 error codes use.
+        """
+
+        self.persisted_state_refusals_by_code[f"{store}:{error_code}"] += 1
+
     def format_summary(self) -> str:
         """Return a multi-line human-readable summary of every counter.
 
@@ -479,7 +534,10 @@ class MidiMetrics:
             f"{_format_counter(self.a4_active_operation_duration_ms_total)}, "
             f"a4_patch_send_count={self.a4_patch_send_count}, "
             f"a4_patch_send_errors={_format_counter(self.a4_patch_send_errors_by_code)}, "
-            f"a4_patch_send_duration_ms={self.a4_patch_send_duration_ms_total:.1f}"
+            f"a4_patch_send_duration_ms={self.a4_patch_send_duration_ms_total:.1f}, "
+            f"persisted_state_migrations={_format_counter(self.persisted_state_migrations)}, "
+            f"persisted_state_refusals="
+            f"{_format_counter(self.persisted_state_refusals_by_code)}"
         )
 
 
@@ -552,3 +610,5 @@ def reset_metrics() -> None:
     _METRICS.a4_patch_send_count = 0
     _METRICS.a4_patch_send_errors_by_code.clear()
     _METRICS.a4_patch_send_duration_ms_total = 0.0
+    _METRICS.persisted_state_migrations.clear()
+    _METRICS.persisted_state_refusals_by_code.clear()

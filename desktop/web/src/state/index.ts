@@ -131,6 +131,11 @@ export function bindClientToStore(
         connection_phase: ev.connection_phase,
         unsaved_sends: ev.unsaved_sends,
         capture_enabled: ev.capture_enabled,
+        // Contract I1 — forwarded verbatim; the store derives its
+        // read-only `appVersion` slice from it. Deliberately absent
+        // from the announcement below: a version string is not an
+        // operator event worth reading aloud on every refresh.
+        app_version: ev.app_version,
       });
       announce(
         `Session status updated, mode ${ev.mode}, ${ev.armed ? 'armed' : 'passive'}`,

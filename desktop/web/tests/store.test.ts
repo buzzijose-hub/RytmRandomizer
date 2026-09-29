@@ -210,6 +210,9 @@ describe('cockpit store — actions write each slice', () => {
       performanceConsole: null,
       sendPlan: null,
       sessionStatus: null,
+      // Contract I1 — read-only, populated only by the handshake frame.
+      // Full slice behaviour lives in tests/appVersion.test.ts.
+      appVersion: null,
       sessionStatusStale: true,
       sessionGeneration: 0,
       connectionStatus: 'closed',
@@ -222,6 +225,13 @@ describe('cockpit store — actions write each slice', () => {
       midiActivityPaused: false,
       libraryRecords: null,
       diagnostics: null,
+      update: {
+        state: null,
+        journal: [],
+        channel: 'stable',
+        frozen: false,
+        confirmedChoice: null,
+      },
       showBank: null,
       showBankStale: true,
     });

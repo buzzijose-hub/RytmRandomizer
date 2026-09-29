@@ -1,0 +1,7 @@
+{
+  "persisted_state.migration_failed": "migration_failed",
+  "persisted_state.schema_newer_than_app": "schema_newer_than_app",
+  "persisted_state.unknown_shape": "unknown_shape",
+  "persisted_state.unknown_store": "unknown_store",
+  "persisted_state.unreadable": "unreadable"
+}

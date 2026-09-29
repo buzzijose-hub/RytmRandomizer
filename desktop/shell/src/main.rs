@@ -8,7 +8,7 @@
 use std::path::PathBuf;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
-    Arc, Mutex,
+    Arc, Mutex, Weak,
 };
 use std::thread;
 use std::thread::JoinHandle;
@@ -17,13 +17,267 @@ use std::time::{Duration, Instant};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
-    Manager, WebviewWindow, WindowEvent,
+    Emitter, Manager, WebviewWindow, WindowEvent,
 };
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
 use rytm_randomizer_shell_lib::sidecar::{self, SidecarLaunch};
+use rytm_randomizer_shell_lib::update_commands;
+use rytm_randomizer_shell_lib::update_journal::{self, UpdateJournal};
+use rytm_randomizer_shell_lib::update_policy::{
+    Config as UpdateConfig, ConsentChoice, ErrorCode, JournalRecord, UpdateEvent,
+    UpdateStatePayload, UPDATE_STATE_EVENT,
+};
+use rytm_randomizer_shell_lib::update_transport::{
+    PluginTransport, SharedTransport, TransportOutcome,
+};
+use rytm_randomizer_shell_lib::updater::{self, EffectSink, Updater};
+
+#[cfg(feature = "native-test")]
+use rytm_randomizer_shell_lib::native_fixture::{self, NativeFixture};
 
 const TOKEN_BRIDGE_POLL_MS: u64 = 250;
+
+/// This build's version, from Cargo. `sync_version.py` (PR-A) keeps
+/// `Cargo.toml` equal to the repo-root `VERSION` file, and
+/// `test_version_single_source.py` fails CI if they drift — so this is the
+/// single source of truth reaching the updater, not a second declaration.
+const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+/// The production [`EffectSink`].
+///
+/// Performs policy effects through the signed transport and journals outcomes.
+struct ShellSink {
+    journal: UpdateJournal,
+    window: Mutex<Option<WebviewWindow>>,
+    /// The network half. Held behind the [`Transport`] trait so the driver
+    /// loop is exercised in tests without a network or a running app.
+    transport: Mutex<Option<SharedTransport>>,
+    /// A weak handle to this same sink, for transport callbacks.
+    weak_self: Mutex<Weak<ShellSink>>,
+    /// Feeds transport outcomes back in as [`UpdateEvent`]s.
+    ///
+    /// Attached after construction and detached after the shutdown decision.
+    /// Network callbacks hold only a weak sink reference.
+    driver: Mutex<Option<Updater<Arc<ShellSink>>>>,
+}
+
+impl ShellSink {
+    fn new(journal: UpdateJournal) -> Self {
+        Self {
+            journal,
+            window: Mutex::new(None),
+            transport: Mutex::new(None),
+            weak_self: Mutex::new(Weak::new()),
+            driver: Mutex::new(None),
+        }
+    }
+
+    fn attach_window(&self, window: WebviewWindow) {
+        *self.window.lock().expect("update window slot poisoned") = Some(window);
+    }
+
+    /// Break the callback cycle after the final sidecar/install outcome.
+    fn detach(&self) {
+        self.driver.lock().expect("driver slot poisoned").take();
+        if let Some(transport) = self
+            .transport
+            .lock()
+            .expect("transport slot poisoned")
+            .take()
+        {
+            transport.shutdown();
+        }
+        self.window.lock().expect("window slot poisoned").take();
+    }
+
+    /// Install the transport and the driver the outcomes feed back into.
+    fn attach_transport(
+        &self,
+        transport: SharedTransport,
+        driver: Updater<Arc<ShellSink>>,
+        weak_self: Weak<ShellSink>,
+    ) {
+        *self.weak_self.lock().expect("weak self slot poisoned") = weak_self;
+        *self.transport.lock().expect("transport slot poisoned") = Some(transport);
+        *self.driver.lock().expect("driver slot poisoned") = Some(driver);
+    }
+
+    /// The attached transport, if any.
+    fn transport(&self) -> Option<SharedTransport> {
+        self.transport
+            .lock()
+            .expect("transport slot poisoned")
+            .as_ref()
+            .map(Arc::clone)
+    }
+
+    /// A weak self-reference for transport callbacks.
+    ///
+    /// Weak so a completing download cannot keep the sink — and through it the
+    /// window and journal — alive past shutdown.
+    fn self_handle(&self) -> Weak<ShellSink> {
+        self.weak_self
+            .lock()
+            .expect("weak self slot poisoned")
+            .clone()
+    }
+
+    /// Hand one transport outcome back to the state machine.
+    ///
+    /// Every network result re-enters through here, so the policy stays the
+    /// only thing that decides what an outcome MEANS — the transport reports
+    /// facts, never decisions.
+    fn report(&self, outcome: TransportOutcome) {
+        let driver = self
+            .driver
+            .lock()
+            .expect("driver slot poisoned")
+            .as_ref()
+            .cloned();
+        let Some(driver) = driver else {
+            log::warn!("update transport reported before the driver was attached");
+            return;
+        };
+        driver.handle(match outcome {
+            TransportOutcome::Manifest { body, duration_ms } => {
+                UpdateEvent::ManifestFetched { body, duration_ms }
+            }
+            TransportOutcome::ManifestFailed { code } => UpdateEvent::ManifestFetchFailed { code },
+            TransportOutcome::Staged {
+                version,
+                bytes,
+                duration_ms,
+            } => UpdateEvent::DownloadStaged {
+                version,
+                bytes,
+                duration_ms,
+            },
+            TransportOutcome::DownloadFailed { version, code } => {
+                UpdateEvent::DownloadFailed { version, code }
+            }
+            TransportOutcome::SignatureRejected { version } => {
+                UpdateEvent::SignatureRejected { version }
+            }
+            TransportOutcome::BeaconCompleted { ok } => UpdateEvent::BeaconCompleted { ok },
+        });
+    }
+}
+
+impl EffectSink for ShellSink {
+    fn fetch_manifest(&self, channel: &str) {
+        let Some(transport) = self.transport() else {
+            // No transport attached is a wiring bug, not a network condition.
+            // Reporting it as a typed failure keeps the panel honest instead
+            // of leaving it spinning on a check that will never resolve.
+            self.report(TransportOutcome::ManifestFailed {
+                code: ErrorCode::NetworkUnavailable,
+            });
+            return;
+        };
+        let sink = self.self_handle();
+        transport.fetch_manifest(
+            channel,
+            Box::new(move |outcome| {
+                if let Some(sink) = sink.upgrade() {
+                    sink.report(outcome);
+                }
+            }),
+        );
+    }
+
+    fn download_artifact(&self, version: &str, url: &str, signature: &str) {
+        let Some(transport) = self.transport() else {
+            self.report(TransportOutcome::DownloadFailed {
+                version: version.to_string(),
+                code: ErrorCode::NetworkUnavailable,
+            });
+            return;
+        };
+        let sink = self.self_handle();
+        transport.download(
+            version,
+            url,
+            signature,
+            Box::new(move |outcome| {
+                if let Some(sink) = sink.upgrade() {
+                    sink.report(outcome);
+                }
+            }),
+        );
+    }
+
+    fn install_staged(&self, version: &str, choice: ConsentChoice) {
+        // Only ever reached after the graceful sidecar shutdown confirmed the
+        // child exited — the policy emits this effect on `SidecarExited` and
+        // nowhere else, so the swap never races a live MIDI session.
+        let Some(transport) = self.transport() else {
+            log::error!("install requested for {version} ({choice:?}) with no transport attached");
+            return;
+        };
+        let outcome = transport.install_with_choice(version, choice);
+        let driver = self
+            .driver
+            .lock()
+            .expect("driver slot poisoned")
+            .as_ref()
+            .cloned();
+        if let Some(driver) = driver {
+            driver.handle(match outcome {
+                Ok(()) => UpdateEvent::InstallSucceeded {
+                    version: version.to_string(),
+                },
+                Err(code) => UpdateEvent::InstallFailed {
+                    version: version.to_string(),
+                    code,
+                },
+            });
+        }
+        if let Err(code) = outcome {
+            // A failed install must leave the RUNNING app intact and say so.
+            // Silently swallowing it would strand the operator on a version
+            // they were told had updated.
+            log::error!("install of {version} refused: {code:?}");
+        }
+    }
+
+    fn send_beacon(&self, version: &str, target: &str) {
+        // Fire-and-forget by construction: no retry, no error surfaced, no
+        // identifying data. The policy has already decided a beacon is
+        // permitted (freeze and BEACON=off suppress the effect entirely), so
+        // reaching here means the operator's settings allow the check-in.
+        let Some(transport) = self.transport() else {
+            return;
+        };
+        let sink = self.self_handle();
+        transport.beacon(
+            &updater::beacon_asset_url(version, target),
+            Box::new(move |outcome| {
+                if let Some(sink) = sink.upgrade() {
+                    sink.report(outcome);
+                }
+            }),
+        );
+    }
+
+    fn journal(&self, record: &JournalRecord) {
+        updater::write_journal_row(&self.journal, record);
+    }
+
+    fn emit_state(&self, payload: &UpdateStatePayload) {
+        // Contract I2: one typed event carries the whole update surface.
+        if let Some(window) = self
+            .window
+            .lock()
+            .expect("update window slot poisoned")
+            .as_ref()
+        {
+            if let Err(err) = window.emit(UPDATE_STATE_EVENT, payload) {
+                log::warn!("failed to emit {UPDATE_STATE_EVENT}: {err}");
+            }
+        }
+    }
+}
 
 fn supervise<F>(
     shutdown: Arc<AtomicBool>,
@@ -121,7 +375,13 @@ where
         let mut injected: Option<String> = None;
         while !shutdown.load(Ordering::SeqCst) {
             match sidecar::read_token_file(&credential_file) {
-                Ok(Some(value)) if injected.as_deref() != Some(value.as_str()) => {
+                Ok(current)
+                    if sidecar::should_inject_credential(
+                        current.as_deref(),
+                        injected.as_deref(),
+                    ) =>
+                {
+                    let value = current.expect("should_inject_credential implies Some");
                     let script = build_script(&value);
                     match window.eval(&script) {
                         Ok(()) => {
@@ -129,6 +389,10 @@ where
                             log::info!("bridged sidecar {label} into cockpit webview");
                         }
                         Err(err) => {
+                            // Deliberately do NOT record the value as
+                            // injected: a failed eval must be retried on the
+                            // next poll, or a transient webview error would
+                            // strand the cockpit without its credential.
                             log::warn!("failed to inject sidecar {label}: {err}");
                         }
                     }
@@ -143,24 +407,166 @@ where
     })
 }
 
+/// The driver handle the update commands dispatch into.
+type UpdateCommands = update_commands::UpdateCommandState<Arc<ShellSink>>;
+
+// ---------------------------------------------------------------------------
+// The update command surface (what the panel's buttons actually invoke)
+// ---------------------------------------------------------------------------
+//
+// Each command is a two-line adapter: turn a gesture into an UpdateEvent and
+// hand it to the driver. No command decides anything — whether an update
+// exists, whether freeze applies, whether a consent is still valid are all the
+// policy's calls. Keeping these thin is what stops a second, divergent state
+// machine growing in the IPC layer.
+
+/// "Check now". Idempotent: the policy ignores a check while one is running.
+#[tauri::command]
+fn update_check_now(state: tauri::State<'_, UpdateCommands>) -> bool {
+    if !state.driver.config().updates_enabled {
+        return false;
+    }
+    state.driver.handle(UpdateEvent::CheckRequested);
+    true
+}
+
+/// Lifecycle closure shared by window close, tray quit and consented restart.
+struct UpdateShutdown(Arc<dyn Fn() + Send + Sync>);
+
+#[tauri::command]
+fn update_snapshot(
+    state: tauri::State<'_, UpdateCommands>,
+    journal: tauri::State<'_, UpdateJournal>,
+) -> serde_json::Value {
+    serde_json::json!({
+        "state": state.driver.payload(),
+        "channel": state.driver.config().channel,
+        "frozen": !state.driver.config().updates_enabled,
+        "journal": journal.recent_rows(50),
+    })
+}
+
+/// "Confirm choice" — install now, install on quit, or skip this version.
+///
+/// Returns `Err` on an unrecognised choice rather than defaulting, so a
+/// malformed invocation surfaces in the panel instead of silently installing
+/// or silently suppressing.
+#[tauri::command]
+fn update_confirm_choice(
+    version: String,
+    choice: String,
+    state: tauri::State<'_, UpdateCommands>,
+    shutdown: tauri::State<'_, UpdateShutdown>,
+    app: tauri::AppHandle,
+) -> bool {
+    if !state.driver.confirm_choice(&version, &choice) {
+        return false;
+    }
+    if choice == "install_now" {
+        let teardown = Arc::clone(&shutdown.0);
+        tauri::async_runtime::spawn_blocking(move || {
+            teardown();
+            // Windows' installer exits/restarts on success. Else relaunch the
+            // installed build (or the intact old build after a refused swap).
+            #[cfg(not(feature = "native-test"))]
+            app.restart();
+            #[cfg(feature = "native-test")]
+            app.state::<Arc<NativeFixture>>().record_restart();
+        });
+    }
+    true
+}
+
+// NOTE: there is deliberately no `update_set_frozen` command.
+//
+// Freeze is a PROCESS-LIFETIME posture read from `RYTM_RAND_UPDATES` at
+// startup, not runtime state. Adding a command to flip it would mean the
+// policy's freeze short-circuit could change mid-flight — so a check already
+// in the air could complete after the operator froze updates, which is
+// exactly the guarantee freeze exists to make. The panel displays the
+// resolved setting and explains that changing it requires restarting.
+
 fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
+    #[cfg(feature = "native-test")]
+    let native_fixture = NativeFixture::from_env();
     let shutdown = Arc::new(AtomicBool::new(false));
     let child_slot: Arc<Mutex<Option<std::process::Child>>> = Arc::new(Mutex::new(None));
     let token_bridge_slot: Arc<Mutex<Option<JoinHandle<()>>>> = Arc::new(Mutex::new(None));
     let arm_bridge_slot: Arc<Mutex<Option<JoinHandle<()>>>> = Arc::new(Mutex::new(None));
+    let supervisor_slot: Arc<Mutex<Option<JoinHandle<()>>>> = Arc::new(Mutex::new(None));
     let token_file = sidecar::resolve_token_file_path();
     let arm_secret_file = sidecar::resolve_arm_secret_file_path();
+
+    // Update subsystem. The config dir is resolved once and shared by the
+    // journal and the install id; the driver holds all update state.
+    let update_config_dir = update_journal::default_config_dir();
+    let update_config: UpdateConfig = updater::resolve_config_from_env(
+        APP_VERSION,
+        &updater::resolve_install_id(&update_config_dir),
+    );
+    #[cfg(feature = "native-test")]
+    let update_config = {
+        let mut config = update_config;
+        config.signing_key_present = native_fixture.signing_key_present();
+        config.install_id = native_fixture.install_id().to_string();
+        config
+    };
+    log::info!(
+        "updates: enabled={} beacon={} channel={} install_permitted={}",
+        update_config.updates_enabled,
+        update_config.beacon_enabled,
+        update_config.channel,
+        update_config.install_permitted()
+    );
+    let update_sink = Arc::new(ShellSink::new(UpdateJournal::new(update_config_dir)));
+    updater::confirm_running_installation(&update_sink.journal, APP_VERSION);
+    let updater_driver = Updater::new(update_config, Arc::clone(&update_sink));
+
+    let teardown_done = Arc::new(Mutex::new(false));
     let teardown = {
         let shutdown = Arc::clone(&shutdown);
         let slot = Arc::clone(&child_slot);
         let bridge_slot = Arc::clone(&token_bridge_slot);
         let arm_slot = Arc::clone(&arm_bridge_slot);
+        let updater_driver = updater_driver.clone();
+        let sink = Arc::clone(&update_sink);
+        let supervisor_slot = Arc::clone(&supervisor_slot);
+        let teardown_done = Arc::clone(&teardown_done);
         move || {
-            shutdown.store(true, Ordering::SeqCst);
-            if let Some(mut child) = slot.lock().expect("child slot poisoned").take() {
-                sidecar::shutdown_child(&mut child);
+            let mut done = teardown_done.lock().expect("teardown lock poisoned");
+            if *done {
+                return;
             }
+            *done = true;
+            shutdown.store(true, Ordering::SeqCst);
+            // Wait for any in-progress spawn to publish its child before
+            // deciding that there is no process left to protect from a swap.
+            if let Some(handle) = supervisor_slot
+                .lock()
+                .expect("supervisor slot poisoned")
+                .take()
+            {
+                let _ = handle.join();
+            }
+            if let Some(mut child) = slot.lock().expect("child slot poisoned").take() {
+                // Spec §5: an install-on-quit runs ONLY after this sequence
+                // confirms the sidecar exited — never concurrently with it.
+                // The outcome, not the mere fact that we asked, is what
+                // decides: a SIGKILL after the grace window is not a
+                // confirmed clean exit, so it feeds the refusal event and the
+                // pending install is journalled as failed rather than run.
+                let outcome = sidecar::shutdown_child(&mut child);
+                updater_driver.handle(if outcome.is_clean_exit() {
+                    UpdateEvent::SidecarExited
+                } else {
+                    UpdateEvent::QuitWithoutSidecarExit
+                });
+            } else {
+                // No child was running, so there is nothing to race with.
+                updater_driver.handle(UpdateEvent::SidecarExited);
+            }
+            sink.detach();
             if let Some(handle) = bridge_slot
                 .lock()
                 .expect("token bridge slot poisoned")
@@ -178,9 +584,40 @@ fn main() {
         }
     };
     let teardown_for_close = teardown.clone();
-    tauri::Builder::default()
+    #[cfg(feature = "native-test")]
+    native_fixture.attach_lifecycle(
+        Arc::new(teardown.clone()),
+        Arc::clone(&child_slot),
+        Arc::clone(&shutdown),
+    );
+    #[cfg(feature = "native-test")]
+    let fixture_for_setup = Arc::clone(&native_fixture);
+
+    // Both builds register the same production commands through this one list.
+    macro_rules! command_handler {
+        ($($extra:path),* $(,)?) => {
+            tauri::generate_handler![update_check_now, update_snapshot, update_confirm_choice, $($extra),*]
+        };
+    }
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
+        // The updater plugin owns the signed download/stage/swap transport.
+        // Registering it is inert until `tauri.conf.json`'s
+        // `plugins.updater.pubkey` is non-empty (operator action item 1): with
+        // no key the plugin cannot verify — and therefore cannot install — any
+        // artifact, which is the structural half of "check-and-notify-only".
+        // The policy half is `Config::install_permitted()`, which is false for
+        // the same reason and stops an install effect being emitted at all.
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        // Without this the panel's buttons are decorative: "Check now" set a
+        // note and "Confirm choice" updated React state, and neither reached
+        // the driver. Same class of defect as the IPC/DOM mismatch, one layer
+        // up — everything looked wired and nothing was.
+        .manage(UpdateCommands::new(updater_driver.clone()))
+        .manage(update_sink.journal.clone())
+        .manage(UpdateShutdown(Arc::new(teardown.clone())))
+        .invoke_handler(command_handler!())
         .setup(move |app| {
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&quit])?;
@@ -201,13 +638,18 @@ fn main() {
             // (production double-click) with a PATH-python dev fallback,
             // plus a dynamically-selected WS port so an occupied 4317 can
             // never brick the launch.
-            let exe_dir = std::env::current_exe()
-                .ok()
-                .and_then(|p| p.parent().map(std::path::Path::to_path_buf));
-            let resource_dir = app.path().resource_dir().ok();
-            let candidates = sidecar::bundled_sidecar_candidates(exe_dir, resource_dir);
-            let bin_override = std::env::var(sidecar::SIDECAR_BIN_ENV_VAR).ok();
-            let launch = sidecar::resolve_sidecar_launch(bin_override.as_deref(), &candidates);
+            #[cfg(not(feature = "native-test"))]
+            let launch = {
+                let exe_dir = std::env::current_exe()
+                    .ok()
+                    .and_then(|p| p.parent().map(std::path::Path::to_path_buf));
+                let resource_dir = app.path().resource_dir().ok();
+                let candidates = sidecar::bundled_sidecar_candidates(exe_dir, resource_dir);
+                let bin_override = std::env::var(sidecar::SIDECAR_BIN_ENV_VAR).ok();
+                sidecar::resolve_sidecar_launch(bin_override.as_deref(), &candidates)
+            };
+            #[cfg(feature = "native-test")]
+            let launch = fixture_for_setup.sidecar_launch();
             let port_override = std::env::var(sidecar::PORT_ENV_VAR).ok();
             let port = sidecar::pick_ws_port(port_override.as_deref());
             log::info!("sidecar launch mode: {} (ws port {port})", launch.describe());
@@ -239,7 +681,7 @@ fn main() {
                 let slot = Arc::clone(&child_slot);
                 let token_file = token_file.clone();
                 let arm_secret_file = arm_secret_file.clone();
-                thread::spawn(move || {
+                let handle = thread::spawn(move || {
                     supervise(
                         shutdown,
                         slot,
@@ -250,9 +692,49 @@ fn main() {
                         on_spawn_failure,
                     )
                 });
+                *supervisor_slot.lock().expect("supervisor slot poisoned") = Some(handle);
             }
 
             if let Some(window) = app.get_webview_window("main") {
+                // Contract I2: give the sink the window it publishes
+                // `rytm-update-state` on, then emit the current state once so
+                // the cockpit renders the right body (frozen / up-to-date /
+                // dev-loop) from first paint instead of an empty panel.
+                update_sink.attach_window(window.clone());
+
+                // Attach the network half. Keyless builds can discover release
+                // metadata; policy reports the missing key before any download
+                // or consent, and the same transport enforces that boundary.
+                #[cfg(not(feature = "native-test"))]
+                let transport: SharedTransport = Arc::new(PluginTransport::new(
+                    app.handle().clone(), updater::signing_key_present(),
+                ));
+                #[cfg(feature = "native-test")]
+                let transport: SharedTransport = Arc::new(PluginTransport::with_native_fixture(
+                    app.handle().clone(), Arc::clone(&fixture_for_setup),
+                ));
+                update_sink.attach_transport(
+                    transport,
+                    updater_driver.clone(),
+                    Arc::downgrade(&update_sink),
+                );
+
+                update_sink.emit_state(&updater_driver.payload());
+                // Initial dispatch occurs only after the transport is attached.
+                // Monotonic time avoids wall-clock changes and resume bursts.
+                let periodic_shutdown = Arc::clone(&shutdown);
+                let periodic_driver = updater_driver.clone();
+                thread::spawn(move || {
+                    let started = Instant::now();
+                    let mut schedule = updater::CheckSchedule::default();
+                    while !periodic_shutdown.load(Ordering::SeqCst) {
+                        if schedule.due(started.elapsed()) {
+                            periodic_driver.handle(UpdateEvent::CheckRequested);
+                        }
+                        thread::sleep(Duration::from_millis(250));
+                    }
+                });
+
                 let handle = start_credential_bridge(
                     Arc::clone(&shutdown),
                     window.clone(),
@@ -287,7 +769,32 @@ fn main() {
                 teardown_for_close();
                 window.app_handle().exit(0);
             }
-        })
-        .run(tauri::generate_context!())
+        });
+    #[cfg(feature = "native-test")]
+    let builder = {
+        let script = native_fixture.bootstrap_script();
+        builder
+            .manage(Arc::clone(&native_fixture))
+            .invoke_handler(command_handler!(
+                native_fixture::control,
+                native_fixture::report
+            ))
+            .on_page_load(move |webview, payload| {
+                if payload.event() == tauri::webview::PageLoadEvent::Finished {
+                    webview
+                        .eval(&script)
+                        .expect("load native acceptance driver");
+                }
+            })
+    };
+    let context = tauri::generate_context!();
+    #[cfg(feature = "native-test")]
+    let context = {
+        let mut context = context;
+        native_fixture.configure(context.config_mut());
+        context
+    };
+    builder
+        .run(context)
         .expect("error while running RytmRandomizer Cockpit");
 }

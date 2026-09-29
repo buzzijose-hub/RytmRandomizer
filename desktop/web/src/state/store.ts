@@ -20,6 +20,16 @@
 import { create } from 'zustand';
 
 import type { LiveGuiPerformanceConsoleModelDict } from '../types/live_gui_protocol';
+import {
+  UPDATE_JOURNAL_LIMIT,
+  isMirroredFailure,
+  mirroredFailureMessage,
+  type UpdateChannel,
+  type UpdateConsentChoice,
+  type UpdateJournalRow,
+  type UpdateSlice,
+  type UpdateStateEvent,
+} from '../updateProtocol';
 import type { ConnectionStatus } from '../ws/client';
 import type {
   AnalogFourPatchGenomePayload,
@@ -51,6 +61,14 @@ export interface SessionStatus {
   unsaved_sends: number;
   /** Additive capability flag; absent on older sidecar/session fixtures. */
   capture_enabled?: boolean;
+  /**
+   * Auto-update contract I1: the sidecar's running version, strict SemVer.
+   *
+   * Optional for the same reason `capture_enabled` is: a sidecar predating
+   * the version spine simply omits it, and the update panel says "unknown"
+   * rather than inventing a number.
+   */
+  app_version?: string;
 }
 
 /** One monitor row with a client-side id (React key for the bounded ring). */
@@ -91,6 +109,16 @@ export interface CockpitState {
   performanceConsole: LiveGuiPerformanceConsoleModelDict | null;
   sendPlan: CockpitSendPlan | null;
   sessionStatus: SessionStatus | null;
+  /**
+   * Auto-update contract I1 — the sidecar's SemVer, read-only.
+   *
+   * Populated exclusively by `setSessionStatus` from the `session_status`
+   * handshake frame; there is deliberately **no** `setAppVersion` action,
+   * so no UI surface can write it. `null` until the handshake completes
+   * (or permanently, against a pre-I1 sidecar that omits the field).
+   * Nothing renders it yet — the update chip and panel are a later PR.
+   */
+  appVersion: string | null;
   /** Cached session data cannot authorize commands after transport loss. */
   sessionStatusStale: boolean;
   /** Advances on the first session_status received after each disconnect. */
@@ -112,6 +140,13 @@ export interface CockpitState {
   libraryRecords: LibraryRecord[] | null;
   /** Latest read-only diagnostics packet ← the diagnostics command ack. */
   diagnostics: DiagnosticsPayload | null;
+  /**
+   * Auto-update surface ← the shell's `rytm-update-state` event (I2) and
+   * journal tail (I8). Purely a mirror of what the shell pushed plus the
+   * shell's launch settings and accepted consent — the cockpit never
+   * derives update state on its own and never initiates a check on mount.
+   */
+  update: UpdateSlice;
   /** Authoritative whole-state Show Kit Forge projection ← show_bank_changed. */
   showBank: ShowBankState | null;
   /** Read-only until a whole-state bank packet arrives on the current transport. */
@@ -143,6 +178,23 @@ export interface CockpitActions {
   clearMidiActivity: () => void;
   setLibraryRecords: (records: LibraryRecord[]) => void;
   setDiagnostics: (diagnostics: DiagnosticsPayload) => void;
+  /**
+   * Apply one I2 payload from the shell. A payload naming a version other
+   * than the one the operator consented to voids that consent (§5: consent
+   * is per-version and never carries across).
+   */
+  setUpdateState: (state: UpdateStateEvent) => void;
+  /**
+   * Replace the journal tail (I8, oldest first). Failure rows the operator
+   * must not miss are mirrored into the operator log (§5.1 honesty floor).
+   */
+  setUpdateJournal: (journal: ReadonlyArray<UpdateJournalRow>) => void;
+  /** Apply the channel reported by the shell, never a local preference. */
+  setUpdateChannel: (channel: UpdateChannel) => void;
+  /** Apply the frozen posture reported by the shell at launch. */
+  setUpdateFrozen: (frozen: boolean) => void;
+  /** Record consent only after the shell accepted it for the staged version. */
+  confirmUpdateChoice: (choice: UpdateConsentChoice) => void;
   setShowBank: (showBank: ShowBankState | null) => void;
   /** Reset all slices back to null (used on disconnect / shutdown). */
   reset: () => void;
@@ -169,6 +221,7 @@ export const INITIAL_STATE: CockpitState = {
   performanceConsole: null,
   sendPlan: null,
   sessionStatus: null,
+  appVersion: null,
   sessionStatusStale: true,
   sessionGeneration: 0,
   connectionStatus: 'closed',
@@ -181,6 +234,13 @@ export const INITIAL_STATE: CockpitState = {
   midiActivityPaused: false,
   libraryRecords: null,
   diagnostics: null,
+  update: {
+    state: null,
+    journal: [],
+    channel: 'stable',
+    frozen: false,
+    confirmedChoice: null,
+  },
   showBank: null,
   showBankStale: true,
 };
@@ -191,6 +251,15 @@ let nextOperatorLogId = 0;
 function makeOperatorLogId(): string {
   nextOperatorLogId += 1;
   return `operator-log-${nextOperatorLogId}`;
+}
+
+/**
+ * Identity of a journal row for de-duplication when the shell re-sends an
+ * overlapping tail. The shell assigns no row ids, so the tuple the row
+ * already carries is the key.
+ */
+function journalRowKey(row: UpdateJournalRow): string {
+  return `${row.ts}|${row.event}|${row.version}|${row.detail}`;
 }
 
 /** Client-side bound on the monitor ring (the server ring is 256/batch). */
@@ -333,11 +402,20 @@ export function createCockpitStore() {
       }),
     setPerformanceConsole: (model) => set({ performanceConsole: model }),
     setSendPlan: (sendPlan) => set({ sendPlan }),
-    setSessionStatus: (status) => set((state) => ({
-      sessionStatus: status,
-      sessionStatusStale: false,
-      sessionGeneration: state.sessionGeneration + (state.sessionStatusStale ? 1 : 0),
-    })),
+    // Contract I1: `appVersion` is derived here and nowhere else — the
+    // store exposes no `setAppVersion`, so the handshake frame is the
+    // slice's only writer. A later `session_status` refresh that omits
+    // `app_version` (pre-I1 sidecar, or a frame built by an older
+    // handler) leaves the last known value in place rather than
+    // flickering it to null; the version of a running sidecar cannot
+    // change without a reconnect, and `reset()` clears it on disconnect.
+    setSessionStatus: (status) =>
+      set((state) => ({
+        sessionStatus: status,
+        appVersion: status.app_version ?? state.appVersion,
+        sessionStatusStale: false,
+        sessionGeneration: state.sessionGeneration + (state.sessionStatusStale ? 1 : 0),
+      })),
     setConnectionStatus: (status) =>
       set((state) =>
         status === 'connected'
@@ -394,6 +472,49 @@ export function createCockpitStore() {
       set({ midiActivityRows: [], midiActivityMeta: null, midiActivityBatchCount: 0 }),
     setLibraryRecords: (records) => set({ libraryRecords: records }),
     setDiagnostics: (diagnostics) => set({ diagnostics }),
+    setUpdateState: (updateState) =>
+      set((state) => {
+        // Consent is per-version (§5). A payload naming a different version
+        // than the one the operator confirmed voids that confirmation, so a
+        // superseding release always re-asks rather than inheriting a yes.
+        const previous = state.update.state;
+        const versionChanged = previous !== null && previous.version !== updateState.version;
+        return {
+          update: {
+            ...state.update,
+            state: updateState,
+            confirmedChoice: versionChanged ? null : state.update.confirmedChoice,
+          },
+        };
+      }),
+    setUpdateJournal: (journal) =>
+      set((state) => {
+        const bounded = journal.slice(-UPDATE_JOURNAL_LIMIT);
+        // §5.1 failure-honesty floor: check_failed / signature_rejected also
+        // surface in the operator log so a failing updater is never silent.
+        // Only rows new to this batch are mirrored — re-sending the same tail
+        // must not duplicate log entries.
+        const known = new Set(state.update.journal.map(journalRowKey));
+        const mirrored = bounded
+          .filter((row) => isMirroredFailure(row) && !known.has(journalRowKey(row)))
+          .map((row) => ({
+            id: makeOperatorLogId(),
+            level: 'error' as const,
+            message: mirroredFailureMessage(row),
+          }));
+        return {
+          update: { ...state.update, journal: bounded },
+          operatorLog:
+            mirrored.length > 0
+              ? [...state.operatorLog, ...mirrored].slice(-OPERATOR_LOG_LIMIT)
+              : state.operatorLog,
+        };
+      }),
+    setUpdateChannel: (channel) =>
+      set((state) => ({ update: { ...state.update, channel } })),
+    setUpdateFrozen: (frozen) => set((state) => ({ update: { ...state.update, frozen } })),
+    confirmUpdateChoice: (choice) =>
+      set((state) => ({ update: { ...state.update, confirmedChoice: choice } })),
     setShowBank: (showBank) => set((state) => ({
       showBank,
       showBankStale: state.connectionStatus !== 'connected',
