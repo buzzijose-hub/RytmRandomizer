@@ -1,8 +1,13 @@
 # Digitakt verification — step-by-step
 
 **For:** Steve
-**Time needed:** about 20 minutes
+**Time needed:** about 20 minutes for Part A, plus 15 for Part B
 **What you need:** your Digitakt (or Digitakt II), a USB cable, and a computer
+
+**This is two separate jobs.** Part A checks four numbers on a screen and needs
+no cable. Part B captures a backup file from your machine and sends it to us.
+Do Part A first — if you only have time for one, Part A is the one we need
+most.
 
 ---
 
@@ -35,11 +40,16 @@ you could accidentally flip; it is built into the code.
 You can leave your Digitakt on with your own project loaded. Nothing will
 touch it.
 
-**You do not even need to plug it in for most of this test.** Steps 1–3 read
-numbers out of the app. Step 4 is the only one where your hardware matters,
-and it is just you looking at your machine.
+**Part A does not need the cable at all.** Steps 1–3 read numbers out of the
+app; Step 4 is just you looking at your machine.
+
+**Part B does use the cable, and it is still safe.** Data flows one way only —
+*from* your Digitakt *to* your computer. You press the send button on the
+Digitakt itself; the computer only listens. Nothing is written back.
 
 ---
+
+# PART A — Check the four numbers
 
 ## Step 1 — Open a Terminal
 
@@ -163,6 +173,137 @@ answer to what you think we want.
 
 ---
 
+# PART B — Capture a backup file from your Digitakt
+
+**Why we need this.** Part A checks facts we read from the manual. This part
+gets us something no manual can give: **the actual bytes your Digitakt
+produces.** We need those to teach the app how your machine stores its
+settings. Until someone sends us a real file, that work cannot start — this is
+the missing piece, and you are the person who can supply it.
+
+**You are not installing anything or changing your Digitakt.** You are asking
+it to send a copy of a project, the same way you would make a backup, and
+saving that copy as a file.
+
+---
+
+## What Part B is, in one sentence
+
+Your Digitakt can send a copy of a project over USB. You catch that copy with
+a free program and save it as a file ending in `.syx`. Then you send us the
+file.
+
+---
+
+## Step 6 — Get a program that can catch the file
+
+You need one free program. Pick the one for your computer:
+
+| Your computer | Program | Where |
+|---|---|---|
+| **Mac** | SysEx Librarian | `https://www.snoize.com/SysExLibrarian/` |
+| **Windows** | MIDI-OX | `http://www.midiox.com/` |
+
+Download it, install it, open it. Both are small, long-established free tools.
+
+> **If you already own something that records SysEx** — Elektron Transfer, a
+> DAW, anything — use that instead. Any tool that saves a `.syx` file is fine.
+
+---
+
+## Step 7 — Connect the Digitakt
+
+1. Plug the Digitakt into your computer with the USB cable.
+2. Turn the Digitakt on.
+3. In the program from Step 6, set the **input / source** to your Digitakt.
+   It will appear by name in a dropdown — "Elektron Digitakt" or similar.
+
+> **If the Digitakt does not appear in the list:** try a different USB cable
+> first. Some cables are charge-only and carry no data — this is by far the
+> most common cause, and it is not something you did wrong.
+
+---
+
+## Step 8 — Tell the program to start listening
+
+- **SysEx Librarian (Mac):** click **Record One** (or **Record Many**). It
+  will say it is waiting.
+- **MIDI-OX (Windows):** open **View → SysEx**, then **Command Window →
+  Receive Manual Dump**.
+
+The program now sits waiting. Nothing happens until you do Step 9.
+
+---
+
+## Step 9 — Send the project from the Digitakt
+
+On the Digitakt itself:
+
+1. Press **`SETTINGS`**.
+2. Go to **`SYSEX DUMP`**.
+3. Choose **`SYSEX SEND`**.
+4. Choose **`PROJECT`** (send the whole current project).
+5. Press **`YES`** to send.
+
+The Digitakt shows a progress bar. The program on your computer should show
+data arriving — a size in bytes, or a new row in a list.
+
+> **Honest note:** these menu names are from the Rytm and Analog Four, which
+> use the same scheme. **We have not confirmed them on a Digitakt.** If your
+> menus differ, that is useful information — tell us what you actually see and
+> we will correct the instructions. You are the first person doing this.
+
+> **If nothing arrives:** check the program is still in "waiting/record" mode
+> — some tools time out after 30 seconds and need restarting before you press
+> `YES`.
+
+---
+
+## Step 10 — Save the file and send it
+
+1. In the program, **save** what it caught. Choose a filename ending in
+   **`.syx`**.
+2. Name it so we can tell what it is:
+   - `digitakt-mk1-project-steve.syx`, or
+   - `digitakt-ii-project-steve.syx`
+3. **Email or message the file to Eddie.**
+
+The file will be somewhere between a few kilobytes and a few hundred
+kilobytes. That is normal.
+
+---
+
+## Optional but genuinely useful — a second capture
+
+If you have another ten minutes, this doubles the value of Part B:
+
+1. Do Steps 8–10 again, but **before** sending, change **one single thing** on
+   the Digitakt — turn the **filter frequency** knob on **track 1** noticeably.
+2. Save it as `digitakt-...-project-steve-filter-moved.syx`.
+
+**Why this matters so much:** with two files that differ in exactly one known
+way, we can find where that setting lives in the file by comparing them. With
+only one file we would be guessing. This one extra capture is worth more than
+anything else in this document.
+
+Tell us **which knob you moved and roughly how far** ("track 1 filter
+frequency, turned most of the way up").
+
+---
+
+## What we do with your files
+
+We compare the bytes, find where each setting lives, and write that into the
+app with your files kept as the evidence. Nothing is sent back to your
+Digitakt.
+
+**Your files contain your project** — pattern and sound settings. They do not
+contain audio samples, and they carry nothing personal. If your project is
+private, send a throwaway one instead: make a new empty project, tweak a
+couple of knobs, and capture that. It works just as well for our purposes.
+
+---
+
 ## Things that might go wrong
 
 | What you see | What it means | What to do |
@@ -173,8 +314,89 @@ answer to what you think we want.
 | Only Rytm and Analog Four are listed, no Digitakt | You are on an older version | Send Eddie a screenshot |
 | Terminal output looks like a wall of nonsense | Normal — most of it is irrelevant | Scroll to your `Device digitakt_...` block |
 
+### Part B problems
+
+| What you see | What it means | What to do |
+|---|---|---|
+| Digitakt not in the program's device list | Usually a charge-only USB cable | Try a different cable first |
+| Program catches nothing when you press `YES` | It stopped waiting | Restart the record/receive step, then send again |
+| Menu names on the Digitakt do not match Step 9 | Expected — we have not confirmed these on a Digitakt | **Tell us what you actually see.** This is useful, not a failure |
+| Saved file is 0 bytes | Nothing was captured | Redo Steps 8–9; make sure recording starts *before* you press `YES` |
+
 **Any error at all: copy the text, paste it in a message, send it.** Do not try
 to fix it. A screenshot works too.
+
+---
+
+## Stuck? Paste this into ChatGPT or Claude
+
+You do not have to wait on Eddie to get unstuck. Copy everything in the box
+below into ChatGPT, Claude, or whichever assistant you use, then describe your
+problem underneath it.
+
+The prompt tells the assistant what you are doing, what is safe, and — most
+importantly — **to say "I don't know" rather than guess about your hardware.**
+That last part matters: a confident wrong answer about a menu path will waste
+more of your time than a plain "ask Eddie".
+
+```text
+I am helping test a music-software project. I am not a programmer, so please
+explain things simply and one step at a time.
+
+MY HARDWARE: an Elektron Digitakt (or Digitakt II) drum machine/sampler,
+connected to my computer by USB.
+
+WHAT I AM DOING, in two parts:
+
+PART A - I run one command in a terminal and read four facts off the screen,
+then check them against my actual machine:
+  1. the device name
+  2. the number of tracks (should be 8 on a Digitakt, 16 on a Digitakt II)
+  3. the default MIDI channel (Auto Channel, in SETTINGS > MIDI CONFIG >
+     CHANNELS)
+  4. the manufacturer ID (00 20 3c - I do not need to check this one)
+
+The command is one of these, run from the project folder:
+  macOS/Linux:  .venv/bin/python -m rytm_randomizer.cli live-gui-device-inventory-report
+  Windows:      .venv\Scripts\python.exe -m rytm_randomizer.cli live-gui-device-inventory-report
+
+PART B - I capture a SysEx dump from the Digitakt and save it as a .syx file:
+  - a free catcher program (SysEx Librarian on Mac, MIDI-OX on Windows)
+  - set its MIDI input to the Digitakt, put it in record/receive mode
+  - on the Digitakt: SETTINGS > SYSEX DUMP > SYSEX SEND > PROJECT > YES
+  - save the result as a .syx file and send it to the project owner
+
+IMPORTANT SAFETY FACTS - please do not suggest anything that contradicts these:
+  - This software CANNOT send anything to my Digitakt. It is receive-only by
+    design. My patterns, samples and projects cannot be altered by it.
+  - In Part B the data flows one way only: FROM the Digitakt TO my computer.
+  - I should never be asked to install firmware, reset my device, factory
+    reset, or overwrite a project. If a step seems to ask for that, stop and
+    tell me to check with the project owner.
+
+HOW I WANT YOU TO HELP:
+  - Explain terminal commands before I run them, in plain language.
+  - Help me read error messages and tell me what they mean.
+  - Help me find menus on the Digitakt and set up the catcher program.
+  - Ask me what I see on screen rather than assuming.
+
+CRITICAL - WHEN YOU DO NOT KNOW:
+  The exact Digitakt menu path for SysEx dump has NOT been confirmed on real
+  hardware by the project. It is an educated guess based on other Elektron
+  devices. If my menus do not match, DO NOT invent a path that sounds
+  plausible. Say you are not certain, and tell me to report what I actually
+  see. A wrong guess here costs more time than saying "I don't know".
+
+  The same applies to anything else you are unsure about. I would much rather
+  hear "I'm not sure, ask Eddie" than a confident answer that turns out wrong.
+
+MY PROBLEM IS:
+[describe what happened, and paste any error text or what your screen shows]
+```
+
+**One thing to watch for:** if the assistant tells you to do something that
+writes *to* the Digitakt — install, update, reset, overwrite, restore — stop
+and ask Eddie. Nothing in this test requires that.
 
 ---
 
@@ -193,8 +415,11 @@ one thing again. That is a five-minute follow-up, not a repeat of everything.
 Being straight about the limits, so nobody later thinks this proved more than
 it did:
 
-- It does **not** verify the Digitakt's saved-project byte layout. Those
-  offsets are still unverified and the code refuses to use them.
+- **Part A** does not verify the Digitakt's saved-project byte layout. Those
+  offsets stay unverified and the code refuses to use them.
+- **Part B does not verify them either** — it *collects the evidence* that
+  lets us do that work later. Sending the files does not make the app able to
+  control your Digitakt; that is a separate change with its own review.
 - It does **not** test sending anything to the device, because that capability
   deliberately does not exist yet.
 - It does **not** test capture, mutation, or any performance feature for the
