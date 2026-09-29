@@ -17,6 +17,65 @@ function check(condition: unknown, label: string): asserts condition {
   if (!condition) throw new Error(label);
 }
 
+const MAX_PAGE_ERRORS = 3;
+const pageErrors: string[] = [];
+
+/**
+ * Strip absolute paths before anything reaches CI logs. The shell forwards
+ * `detail` verbatim, and an error message can carry a local file path.
+ */
+export function redact(text: string): string {
+  return text
+    .replace(/[A-Za-z]:\\[^\s'"]+/g, '<path>')
+    .replace(/\/(?:Users|home|private|tmp|var)\/[^\s'"]*/g, '<path>')
+    .slice(0, 160);
+}
+
+/**
+ * Record uncaught errors from the moment the driver starts. A render error
+ * that unmounts React, or a rejected dynamic import, otherwise leaves only
+ * "Timed out: React cockpit mounted" behind -- the exact receipt #251 could
+ * not diagnose.
+ */
+export function recordPageErrors(target: Window = window): void {
+  const push = (message: string): void => {
+    if (pageErrors.length < MAX_PAGE_ERRORS) pageErrors.push(redact(message));
+  };
+  target.addEventListener('error', (event) => push(event.message || 'error event'));
+  target.addEventListener('unhandledrejection', (event) => {
+    const reason: unknown = event.reason;
+    push(reason instanceof Error ? reason.message : String(reason));
+  });
+}
+
+/**
+ * What the page looked like when a wait timed out, as bounded JSON.
+ *
+ * Distinguishes the two ways React can fail to show `cockpit-root` after the
+ * page has loaded: the app's entry module never ran (empty `#root`, usually
+ * with a failed module request), or React rendered and then an error
+ * unmounted it (the app error boundary's message). Resource entries keep the
+ * path only -- never a query string or host.
+ */
+export function describePage(doc: Document = document): string {
+  const root = doc.getElementById('root');
+  const renderError = doc.querySelector('[data-testid="app-render-error"]');
+  const entries: PerformanceEntry[] =
+    typeof performance.getEntriesByType === 'function' ? performance.getEntriesByType('resource') : [];
+  const failedResources = entries
+    .map((entry) => ({ entry, status: (entry as PerformanceEntry & { responseStatus?: number }).responseStatus ?? 0 }))
+    .filter(({ status }) => status >= 400)
+    .slice(0, 5)
+    .map(({ entry, status }) => `${status} ${redact(new URL(entry.name, 'http://x').pathname)}`);
+  return JSON.stringify({
+    readyState: doc.readyState,
+    rootChildren: root === null ? -1 : root.childElementCount,
+    renderError: renderError === null ? null : redact(renderError.textContent ?? ''),
+    failedResources,
+    pageErrors: [...pageErrors],
+  });
+}
+
 export async function until(label: string, predicate: () => boolean | Promise<boolean>): Promise<void> {
   const deadline = Date.now() + 25_000;
   while (Date.now() < deadline) {
@@ -27,7 +86,7 @@ export async function until(label: string, predicate: () => boolean | Promise<bo
       const matched = await Promise.race([
         Promise.resolve().then(predicate),
         new Promise<never>((_, reject) => {
-          timer = setTimeout(() => reject(new Error(`Timed out: ${label}`)), Math.max(0, deadline - Date.now()));
+          timer = setTimeout(() => reject(new Error(`Timed out: ${label} ${describePage()}`)), Math.max(0, deadline - Date.now()));
         }),
       ]);
       if (matched) return;
@@ -36,7 +95,7 @@ export async function until(label: string, predicate: () => boolean | Promise<bo
     }
     await new Promise((resolve) => setTimeout(resolve, Math.min(75, Math.max(0, deadline - Date.now()))));
   }
-  throw new Error(`Timed out: ${label}`);
+  throw new Error(`Timed out: ${label} ${describePage()}`);
 }
 
 async function snapshot(): Promise<UpdateSnapshot> {
@@ -72,21 +131,59 @@ async function clickConfirm(choice: string, waitForConsent = true): Promise<void
   if (waitForConsent) await until('consent reached native journal', async () => (await snapshot()).journal.some((row) => row.event === 'consent_granted'));
 }
 
-async function staleHandshakeRejected(token: string): Promise<boolean> {
-  const port = window.localStorage.getItem('rytm-rand-ws-port');
+/**
+ * What a restarted backend did with a stale token.
+ *
+ * `unreachable` is the case the old boolean helper got wrong. The sidecar
+ * writes its credential files during app setup and only binds its port later
+ * (`uvicorn.run`), so the shell's bridge routinely delivers the NEW token to
+ * the page before the new backend is listening. Probing in that window gets a
+ * refused connection (close 1006), which the old helper reported as "old
+ * token not rejected" -- a false failure that depended only on how long app
+ * construction took on the runner (issue #251).
+ */
+export type HandshakeOutcome = 'rejected' | 'accepted' | 'unreachable' | 'no_verdict';
+
+export function staleHandshakeOutcome(
+  token: string,
+  port: string | null = window.localStorage.getItem('rytm-rand-ws-port'),
+  timeoutMs = 5000,
+): Promise<HandshakeOutcome> {
   return new Promise((resolve) => {
+    let opened = false;
+    let settled = false;
     const ws = new WebSocket(`ws://127.0.0.1:${port}/ws`, WS_SUBPROTOCOL);
-    const deadline = setTimeout(() => { ws.close(); resolve(false); }, 5000);
-    ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', token }));
+    const finish = (outcome: HandshakeOutcome): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(deadline);
+      ws.close();
+      resolve(outcome);
+    };
+    const deadline = setTimeout(() => finish('no_verdict'), timeoutMs);
+    ws.onopen = () => {
+      opened = true;
+      ws.send(JSON.stringify({ type: 'hello', token }));
+    };
     ws.onmessage = (message) => {
       const payload = JSON.parse(String(message.data)) as { code?: string };
-      if (payload.code === 'auth_failed') { clearTimeout(deadline); ws.close(); resolve(true); }
+      // auth_failed is the server's answer to a well-formed hello with the
+      // wrong token. Any other `code` means our hello was not understood, so
+      // it proves nothing either way; a frame with no code is the session
+      // bootstrap, i.e. the stale token was ACCEPTED -- a real failure.
+      if (payload.code === 'auth_failed') finish('rejected');
+      else if (payload.code !== undefined) finish('no_verdict');
+      else finish('accepted');
     };
-    ws.onclose = (event) => { clearTimeout(deadline); resolve(event.code === 1008); };
+    ws.onclose = (event) => {
+      if (event.code === 1008) finish('rejected');
+      else finish(opened ? 'no_verdict' : 'unreachable');
+    };
   });
 }
 
 export async function run(scenario: string, origin: string): Promise<void> {
+  recordPageErrors();
   let eventCount = 0;
   let hydrated: UpdateSnapshot | null = null;
   const stop = subscribeUpdateState(() => { eventCount += 1; }, (value) => { hydrated = value; });
@@ -236,7 +333,15 @@ export async function run(scenario: string, origin: string): Promise<void> {
         await until('native bridge rotates both credentials', () =>
           Boolean(window.__RYTM_RAND_WS_TOKEN__ && window.__RYTM_RAND_WS_TOKEN__ !== oldToken &&
             window.__RYTM_RAND_ARM_SECRET__ && window.__RYTM_RAND_ARM_SECRET__ !== oldSecret));
-        check(await staleHandshakeRejected(oldToken), 'old token rejected by restarted backend');
+        // Wait only through `unreachable` -- the restarted backend not yet
+        // listening, which is the precondition this assertion needs. An
+        // accepted stale token fails at once, and says so.
+        let outcome = 'unreachable' as HandshakeOutcome;
+        await until('restarted backend answers the stale token', async () => {
+          outcome = await staleHandshakeOutcome(oldToken);
+          return outcome !== 'unreachable';
+        });
+        check(outcome === 'rejected', `old token rejected by restarted backend (got ${outcome})`);
         await connected();
         check(await requestUpdateCheck(), 'same page still invokes native after backend restart');
       }
