@@ -235,15 +235,20 @@ The program now sits waiting. Nothing happens until you do Step 9.
 
 ---
 
-## Step 9 — Send the project from the Digitakt
+## Step 9 — Send the kit from the Digitakt
 
 On the Digitakt itself:
 
 1. Press **`SETTINGS`**.
 2. Go to **`SYSEX DUMP`**.
 3. Choose **`SYSEX SEND`**.
-4. Choose **`PROJECT`** (send the whole current project).
+4. Choose **`KIT`** — the currently loaded kit, **not** the whole project.
 5. Press **`YES`** to send.
+
+> **Why a kit and not the whole project:** a kit is a few kilobytes; a whole
+> project can be hundreds of times larger. These files get committed into the
+> project's history permanently, so smaller is genuinely better. A kit is also
+> exactly what the software models.
 
 The Digitakt shows a progress bar. The program on your computer should show
 data arriving — a size in bytes, or a new row in a list.
@@ -259,35 +264,104 @@ data arriving — a size in bytes, or a new row in a list.
 
 ---
 
-## Step 10 — Save the file and send it
+## Step 10 — Save the file
 
 1. In the program, **save** what it caught. Choose a filename ending in
    **`.syx`**.
-2. Name it so we can tell what it is:
-   - `digitakt-mk1-project-steve.syx`, or
-   - `digitakt-ii-project-steve.syx`
-3. **Email or message the file to Eddie.**
+2. Name it exactly like this, so the files sort and read cleanly:
+   - `digitakt_mk1_kit_filter_000.syx` — or `digitakt_ii_...` if you have a II
+3. Note the file size. **A kit should be a few kilobytes.** If you got
+   hundreds of kilobytes you probably sent the whole project — redo Step 9 and
+   choose `KIT`.
 
-The file will be somewhere between a few kilobytes and a few hundred
-kilobytes. That is normal.
+Where the files go is Step 11.
 
 ---
 
-## Optional but genuinely useful — a second capture
+## Step 11 — Run one command; it does the rest
+
+You do **not** have to create folders, compute checksums, or write the
+provenance note by hand. One command does all of it.
+
+Capture **both** files first (Step 13 explains the second one), then run:
+
+```
+.venv/bin/python scripts/intake_digitakt_capture.py \
+  --device digitakt_mk1 \
+  --low  ~/Desktop/low.syx \
+  --high ~/Desktop/high.syx \
+  --captured-by "Steve" \
+  --os-version "1.52A" \
+  --menu-path "SETTINGS > SYSEX DUMP > SYSEX SEND > KIT"
+```
+
+Change these to match you:
+
+| Part | What to put |
+|---|---|
+| `--device` | `digitakt_mk1` or `digitakt_ii` |
+| `--low` / `--high` | where you saved the two files |
+| `--captured-by` | your name |
+| `--os-version` | from `SETTINGS > SYSTEM > OS VERSION` on the Digitakt |
+| `--menu-path` | **the exact menu names you actually pressed** |
+
+> **On Windows,** start the command with `.venv\Scripts\python.exe` instead of
+> `.venv/bin/python`, and put it all on one line.
+
+### What it does for you
+
+- Checks the files really are Digitakt dumps — and tells you plainly if you
+  sent the whole project by mistake, or if the capture tool caught nothing.
+- Checks the two files actually differ, so "I forgot to move the knob" is
+  caught immediately rather than three weeks later.
+- Creates `tests/fixtures/digitakt_saved_kit/`, copies the files in with
+  consistent names, computes the SHA256s.
+- Writes the provenance note automatically.
+
+**If anything is wrong it stops and writes nothing**, so a failed run never
+leaves a half-finished mess behind. Read the message — it says what to redo.
+
+It is **passive**: it reads your files and writes into the project folder. It
+never opens a MIDI port and never contacts your Digitakt.
+
+---
+
+## Step 12 — Send it
+
+The command prints where it put everything. Then either:
+
+- **Simplest:** send Eddie the whole `tests/fixtures/digitakt_saved_kit`
+  folder. Done.
+- **If you use git:** commit that folder on a new branch and open a pull
+  request. Do **not** commit to `main` or `modularize-v1.34`.
+
+### One thing that really matters
+
+**Use a disposable kit, not your real work.** Make a new kit, leave it
+initialized, change only what Step 13 asks. This keeps your own material out of
+a public repository and makes the file far easier for us to read.
+
+---
+
+## Step 13 — The second capture (this is the important one)
 
 If you have another ten minutes, this doubles the value of Part B:
 
-1. Do Steps 8–10 again, but **before** sending, change **one single thing** on
-   the Digitakt — turn the **filter frequency** knob on **track 1** noticeably.
-2. Save it as `digitakt-...-project-steve-filter-moved.syx`.
+1. Do Steps 8–10 again, but **before** sending, change **exactly one thing**:
+   turn **track 1's filter frequency** knob to its **highest** setting. Change
+   nothing else.
+2. Save it as `digitakt_mk1_kit_filter_127.syx` (or `digitakt_ii_...`).
+
+So you end up with a matched pair: the same kit, differing only in one knob.
 
 **Why this matters so much:** with two files that differ in exactly one known
 way, we can find where that setting lives in the file by comparing them. With
 only one file we would be guessing. This one extra capture is worth more than
 anything else in this document.
 
-Tell us **which knob you moved and roughly how far** ("track 1 filter
-frequency, turned most of the way up").
+Record in the Step 12 note **which knob you moved and what the display showed**
+(e.g. "track 1 FILTER FREQ, 0 in the first file, 127 in the second"). The
+on-screen number is more useful to us than "most of the way up".
 
 ---
 
@@ -363,8 +437,20 @@ The command is one of these, run from the project folder:
 PART B - I capture a SysEx dump from the Digitakt and save it as a .syx file:
   - a free catcher program (SysEx Librarian on Mac, MIDI-OX on Windows)
   - set its MIDI input to the Digitakt, put it in record/receive mode
-  - on the Digitakt: SETTINGS > SYSEX DUMP > SYSEX SEND > PROJECT > YES
-  - save the result as a .syx file and send it to the project owner
+  - on the Digitakt: SETTINGS > SYSEX DUMP > SYSEX SEND > KIT > YES
+    (a KIT, not the whole PROJECT - a kit is a few kilobytes, a project is
+    hundreds of times larger and these files get committed permanently)
+  - save the result as a .syx file
+  - do it twice: once with track 1 filter frequency at its LOWEST, once at its
+    HIGHEST, changing nothing else between them
+  - then I run ONE command that validates the files, files them, computes
+    checksums and writes the provenance note for me:
+      .venv/bin/python scripts/intake_digitakt_capture.py --device digitakt_mk1
+        --low <low.syx> --high <high.syx> --captured-by "Steve"
+        --os-version "<from SETTINGS > SYSTEM>" --menu-path "<what I pressed>"
+    (Windows: .venv\Scripts\python.exe instead of .venv/bin/python)
+    If it prints an error it has written nothing -- the message says what to
+    redo. Help me read it rather than working around it.
 
 IMPORTANT SAFETY FACTS - please do not suggest anything that contradicts these:
   - This software CANNOT send anything to my Digitakt. It is receive-only by

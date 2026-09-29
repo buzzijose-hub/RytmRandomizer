@@ -1,0 +1,236 @@
+"""Validate and file Digitakt SysEx captures, so a verifier does not have to.
+
+A hardware verifier's job is to press buttons on the instrument. Everything
+after the ``.syx`` file lands on disk is mechanical, error-prone and exactly
+the part a non-technical person should not be doing by hand: checking the file
+is really an Elektron dump, computing SHA256s, creating the fixture folder,
+naming files consistently, and writing the provenance note that makes a
+capture usable at all.
+
+This script does that half. It is **passive**: it reads files, writes into
+``tests/fixtures/digitakt_saved_kit/``, and never opens a MIDI port or touches
+the instrument. It cannot capture for you -- catching the dump needs a MIDI
+listener and a human pressing ``YES`` on the Digitakt -- but it takes over the
+moment a file exists.
+
+Usage::
+
+    python scripts/intake_digitakt_capture.py \\
+        --device digitakt_mk1 \\
+        --low  ~/Desktop/low.syx \\
+        --high ~/Desktop/high.syx \\
+        --captured-by "Steve" \\
+        --os-version "1.52A" \\
+        --menu-path "SETTINGS > SYSEX DUMP > SYSEX SEND > KIT"
+
+``--high`` is optional but strongly encouraged: a matched pair differing in one
+known parameter is what makes offset discovery possible by comparison rather
+than by guesswork. With a single file there is nothing to compare against.
+
+Nothing here promotes any offset. Landing fixtures is evidence collection;
+promotion is a separate, reviewed change that must satisfy
+``.claude/rules/targeted-mutation-safety.md`` #6.
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import shutil
+import sys
+from datetime import date
+from pathlib import Path
+from typing import Final
+
+PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
+FIXTURE_DIR: Final[Path] = PROJECT_ROOT / "tests" / "fixtures" / "digitakt_saved_kit"
+
+#: Bigger than any plausible single kit. A whole-project dump is the common
+#: mistake, and these files are committed permanently, so refuse loudly rather
+#: than quietly adding megabytes to the repository's history.
+MAX_REASONABLE_KIT_BYTES: Final[int] = 64 * 1024
+
+_DEVICE_CHOICES: Final[tuple[str, ...]] = ("digitakt_mk1", "digitakt_ii")
+
+
+def _fail(message: str) -> None:
+    """Print an operator-readable error and exit non-zero."""
+
+    print(f"error: {message}", file=sys.stderr)
+    raise SystemExit(1)
+
+
+def sha256_of(path: Path) -> str:
+    """Return the SHA256 of ``path`` as lowercase hex."""
+
+    digest = hashlib.sha256()
+    digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+
+def validate_capture(path: Path, device_id: str) -> bytes:
+    """Read ``path`` and check it looks like a Digitakt kit dump.
+
+    Validation routes through the registered device's own decoder rather than
+    re-typing byte rules here: the decoder is the single place that knows what
+    a Digitakt payload looks like, and a second copy would drift from it.
+    """
+
+    if not path.is_file():
+        _fail(f"no such file: {path}")
+    raw = path.read_bytes()
+    if not raw:
+        _fail(f"{path.name} is empty -- the capture tool caught nothing. Redo the dump.")
+    if len(raw) > MAX_REASONABLE_KIT_BYTES:
+        _fail(
+            f"{path.name} is {len(raw):,} bytes, which is far too large for a single kit. "
+            "You probably sent the whole PROJECT instead of the KIT. Redo the dump and "
+            "choose KIT."
+        )
+
+    from rytm_randomizer.devices import registry
+
+    device = registry.get_device(device_id)
+    try:
+        device.decode_snapshot(raw, 0)
+    except ValueError as error:
+        # The decoder's message already names the specific problem (missing
+        # manufacturer id, wrong family byte, ...). Surfacing it verbatim beats
+        # a generic "invalid file".
+        _fail(f"{path.name} is not a readable Digitakt dump: {error}")
+    return raw
+
+
+def _note(
+    *,
+    device_id: str,
+    captured_by: str,
+    os_version: str,
+    menu_path: str,
+    entries: tuple[tuple[str, str, str], ...],
+) -> str:
+    """Render the provenance note that must accompany the fixtures."""
+
+    display = "Digitakt II" if device_id == "digitakt_ii" else "Digitakt (MK1)"
+    lines = [
+        "# Digitakt saved-kit wire fixtures",
+        "",
+        f"Captured by: {captured_by}",
+        f"Date: {date.today().isoformat()}",
+        f"Device: {display} (`{device_id}`)",
+        f"OS version: {os_version}",
+        f"Dump menu path: {menu_path}",
+        "",
+        "## Files",
+        "",
+    ]
+    for filename, description, digest in entries:
+        lines += [f"- `{filename}`: {description}; SHA256 `{digest}`."]
+    lines += [
+        "",
+        "## Status",
+        "",
+        "These are **candidate** captures. They are evidence for a future",
+        "offset-promotion workstream and grant no send authority: Digitakt",
+        "saved-project byte offsets remain unpromoted",
+        "(`DIGITAKT_OFFSETS_PROMOTED = False`), and promotion requires",
+        "fixture-backed byte isolation, checksum and exact re-decode evidence",
+        "per `.claude/rules/targeted-mutation-safety.md` #6.",
+        "",
+        "## Provenance",
+        "",
+        f"{captured_by} created these from a disposable initialized kit on their own",
+        "hardware specifically for this repository's verification work. They contain",
+        "no commercial sample-pack content and no personal performance material, and",
+        "may be redistributed under the repository licence for test and verification",
+        "use.",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Validate the captures, copy them into the fixture dir, write the note."""
+
+    parser = argparse.ArgumentParser(
+        description="Validate and file Digitakt SysEx captures (passive; no MIDI I/O).",
+    )
+    parser.add_argument("--device", required=True, choices=_DEVICE_CHOICES)
+    parser.add_argument("--low", required=True, type=Path, help="capture with the parameter LOW")
+    parser.add_argument("--high", type=Path, help="matched capture with the parameter HIGH")
+    parser.add_argument("--captured-by", required=True, help="who made the capture")
+    parser.add_argument("--os-version", required=True, help="instrument OS version")
+    parser.add_argument(
+        "--menu-path",
+        required=True,
+        help="the EXACT menu path used, as seen on the instrument",
+    )
+    parser.add_argument(
+        "--parameter",
+        default="track 1 filter frequency",
+        help="which parameter differs between the two captures",
+    )
+    args = parser.parse_args(argv)
+
+    sources: list[tuple[Path, str, str]] = [
+        (args.low, f"{args.device}_kit_filter_low.syx", f"initialized kit, {args.parameter} LOW")
+    ]
+    if args.high is not None:
+        sources.append(
+            (
+                args.high,
+                f"{args.device}_kit_filter_high.syx",
+                f"same kit, ONLY {args.parameter} changed to HIGH",
+            )
+        )
+
+    # Validate and hash EVERYTHING before writing anything. A partial intake
+    # that copies one file and then fails leaves the fixture dir in a state the
+    # verifier has to clean up by hand, and prints advice above the error that
+    # actually matters.
+    checked: list[tuple[Path, str, str, bytes, str]] = []
+    for source, target_name, description in sources:
+        raw = validate_capture(source, args.device)
+        checked.append((source, target_name, description, raw, sha256_of(source)))
+
+    if len(checked) == 2 and checked[0][4] == checked[1][4]:
+        _fail(
+            "both captures are byte-identical, so the parameter never changed.\n"
+            "       Move the knob before the second dump, then capture it again."
+        )
+
+    entries: list[tuple[str, str, str]] = []
+    FIXTURE_DIR.mkdir(parents=True, exist_ok=True)
+    for source, target_name, description, raw, digest in checked:
+        shutil.copyfile(source, FIXTURE_DIR / target_name)
+        entries.append((target_name, description, digest))
+        print(f"ok  {target_name}  {len(raw):,} bytes  sha256={digest[:16]}...")
+
+    if args.high is None:
+        print(
+            "\nnote: no --high capture given. A single file cannot be compared against\n"
+            "      anything, so offset discovery stays blocked. The matched pair is the\n"
+            "      whole point -- please capture the second one if you can.",
+            file=sys.stderr,
+        )
+
+    note_path = FIXTURE_DIR / "README.md"
+    note_path.write_text(
+        _note(
+            device_id=args.device,
+            captured_by=args.captured_by,
+            os_version=args.os_version,
+            menu_path=args.menu_path,
+            entries=tuple(entries),
+        ),
+        encoding="utf-8",
+    )
+    print(f"ok  {note_path.relative_to(PROJECT_ROOT)}")
+    print()
+    print("Done. Next: commit these on a branch and open a pull request, or send")
+    print(f"the whole {FIXTURE_DIR.relative_to(PROJECT_ROOT)} folder to the project owner.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
