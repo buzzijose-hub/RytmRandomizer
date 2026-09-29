@@ -22,45 +22,35 @@ export interface KitCapturePanelProps {
 }
 
 /**
- * Exhaustive over `CockpitDeviceId`, deliberately — not a two-branch ternary.
+ * Per-device copy, as records keyed by EVERY `CockpitDeviceId`.
  *
- * The previous form was `deviceId === RYTM_DEVICE_ID ? 'Rytm' : 'Analog Four'`,
- * which silently labels ANY future device "Analog Four MKII". Today the type is
- * a two-literal union so nothing else can reach it, but the moment a device is
- * added to `CockpitDeviceId` (a Digitakt, say) that ternary starts producing
- * confidently wrong data with no compile error and no test failure.
+ * A `Record<CockpitDeviceId, string>` is exhaustive at compile time: widen the
+ * union (add a Digitakt, say) and TypeScript refuses to build until each record
+ * has an entry for it. That is the guarantee the old two-branch ternary lacked
+ * - `deviceId === RYTM ? 'Rytm' : 'Analog Four'` silently labelled any new
+ * device "Analog Four MKII".
  *
- * The `never` default turns that from a silent mislabel into a build failure
- * naming the unhandled id, so widening the union forces this map to be updated
- * in the same change.
+ * A `switch` with a `never` default gave the same compile-time guarantee but
+ * left an unreachable runtime branch behind, which the 100% coverage gate
+ * rightly counted as untested code. A lookup has no such branch.
  */
+const DEVICE_NAME: Readonly<Record<CockpitDeviceId, string>> = {
+  [RYTM_DEVICE_ID]: 'Analog Rytm MKII',
+  [ANALOG_FOUR_DEVICE_ID]: 'Analog Four MKII',
+};
+
+const HARDWARE_INSTRUCTION: Readonly<Record<CockpitDeviceId, string>> = {
+  [RYTM_DEVICE_ID]: 'On the Rytm: GLOBAL SETTINGS → SYSEX DUMP → SYSEX SEND → KIT.',
+  [ANALOG_FOUR_DEVICE_ID]:
+    'On the A4: open SYSEX DUMP, choose the currently loaded KIT, then send it.',
+};
+
 function deviceName(deviceId: CockpitDeviceId): string {
-  switch (deviceId) {
-    case RYTM_DEVICE_ID:
-      return 'Analog Rytm MKII';
-    case ANALOG_FOUR_DEVICE_ID:
-      return 'Analog Four MKII';
-    default: {
-      const unhandled: never = deviceId;
-      throw new Error(`KitCapturePanel.deviceName: unhandled device ${String(unhandled)}`);
-    }
-  }
+  return DEVICE_NAME[deviceId];
 }
 
-/** Exhaustive for the same reason as {@link deviceName}. */
 function hardwareInstruction(deviceId: CockpitDeviceId): string {
-  switch (deviceId) {
-    case RYTM_DEVICE_ID:
-      return 'On the Rytm: GLOBAL SETTINGS → SYSEX DUMP → SYSEX SEND → KIT.';
-    case ANALOG_FOUR_DEVICE_ID:
-      return 'On the A4: open SYSEX DUMP, choose the currently loaded KIT, then send it.';
-    default: {
-      const unhandled: never = deviceId;
-      throw new Error(
-        `KitCapturePanel.hardwareInstruction: unhandled device ${String(unhandled)}`,
-      );
-    }
-  }
+  return HARDWARE_INSTRUCTION[deviceId];
 }
 
 function readinessCopy(capture: KitCaptureResult): string {

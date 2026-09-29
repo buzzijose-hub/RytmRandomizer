@@ -508,6 +508,7 @@ def test_analog_four_audio_patch_refine_help_is_exact_and_passive():
         "controller-brain-rehearsal-report",
         "rytm-live-macro-hardware-rehearsal-report",
         "live-gui-performance-flow-model-report",
+        "live-gui-device-inventory-report",
         "live-gui-performance-console-report",
         "oxi-live-set-strategy-report",
         "scoped-randomization-preview",

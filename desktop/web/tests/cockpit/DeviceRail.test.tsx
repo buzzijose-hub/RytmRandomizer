@@ -20,6 +20,7 @@ import {
   sessionMock,
   snapshot,
 } from './_fixtures';
+import { performanceConsolePayloadFixture } from './performanceConsoleFixture';
 
 const connectionSearching: ConnectionStateDict = {
   phase: 'searching',
@@ -519,5 +520,68 @@ describe('DeviceRail', () => {
       });
     });
     expect(screen.getByTestId('device-card-analog-rytm-mk2')).toHaveTextContent('Stage idle');
+  });
+});
+
+describe('DeviceRail passive devices', () => {
+  // The real backend payload, not a hand-typed stand-in: it is what the
+  // sidecar actually emits, and it already carries every registered device.
+  const consoleFixture = performanceConsolePayloadFixture.live_gui_performance_console;
+
+  beforeEach(() => {
+    act(() => {
+      useCockpitStore.getState().reset();
+    });
+  });
+
+  it('shows every registered device beyond the Rytm and Analog Four', () => {
+    // The rail used to be a fourth hardcoded roster, so a registered Digitakt
+    // never appeared in the app at all. It now renders from the backend's
+    // registry-derived inventory, so a new device family appears with no
+    // frontend change.
+    act(() => {
+      useCockpitStore.getState().setPerformanceConsole(consoleFixture);
+    });
+    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
+
+    const mk1 = screen.getByTestId('device-card-digitakt-mk1');
+    expect(within(mk1).getByText('Elektron Digitakt')).toBeInTheDocument();
+    expect(within(mk1).getByText('8 tracks · MIDI channel 1')).toBeInTheDocument();
+    const ii = screen.getByTestId('device-card-digitakt-ii');
+    expect(within(ii).getByText('16 tracks · MIDI channel 1')).toBeInTheDocument();
+  });
+
+  it('gives a passive device no View or Capture button', () => {
+    // Those actions do not exist for these devices. A button that does
+    // nothing, or pretends to capture, would be less honest than the note.
+    act(() => {
+      useCockpitStore.getState().setPerformanceConsole(consoleFixture);
+    });
+    render(
+      <DeviceRail
+        activeDeviceId={RYTM_DEVICE_ID}
+        onSelectDevice={() => undefined}
+        onCaptureDevice={() => undefined}
+      />,
+    );
+    const card = screen.getByTestId('device-card-digitakt-mk1');
+    expect(within(card).queryByRole('button')).toBeNull();
+    expect(within(card).getByText(/not available for this device yet/)).toBeInTheDocument();
+  });
+
+  it('does not duplicate the Rytm or Analog Four as passive cards', () => {
+    act(() => {
+      useCockpitStore.getState().setPerformanceConsole(consoleFixture);
+    });
+    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
+    // The hand-built cards already own these ids; passive cards use the same
+    // naming, so a duplicate would show up as a second match.
+    expect(screen.getAllByTestId('device-card-analog-rytm-mk2')).toHaveLength(1);
+    expect(screen.getAllByTestId('device-card-analog-four-mk2')).toHaveLength(1);
+  });
+
+  it('renders no passive cards before the console payload arrives', () => {
+    render(<DeviceRail activeDeviceId={RYTM_DEVICE_ID} onSelectDevice={() => undefined} />);
+    expect(screen.queryByTestId('device-card-digitakt-mk1')).toBeNull();
   });
 });
