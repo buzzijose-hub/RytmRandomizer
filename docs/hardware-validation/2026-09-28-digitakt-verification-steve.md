@@ -182,16 +182,16 @@ settings. Until someone sends us a real file, that work cannot start — this is
 the missing piece, and you are the person who can supply it.
 
 **You are not installing anything or changing your Digitakt.** You are asking
-it to send a copy of a project, the same way you would make a backup, and
-saving that copy as a file.
+it to send a copy of one kit, the same way you would make a backup, and saving
+that copy as a file.
 
 ---
 
 ## What Part B is, in one sentence
 
-Your Digitakt can send a copy of a project over USB. You catch that copy with
-a free program and save it as a file ending in `.syx`. Then you send us the
-file.
+Your Digitakt can send a copy of a kit over USB. You catch that copy with a
+free program and save it as a file ending in `.syx`. You do that twice — once
+with a knob low, once with it high — then one command files them for us.
 
 ---
 
