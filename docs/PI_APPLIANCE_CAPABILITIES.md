@@ -81,6 +81,10 @@ because it shares the pitch word. Unknown selector domains also remain
 immutable. Display strings use integer arithmetic, independent of the active
 Decimal precision. The calibrated Filter 1 domain remains 0..127.00; broader
 codec ranges are labeled as software evidence, not hardware validation.
+The immutable `data.analog_four_kit_fields.A4_NATIVE_FIELD_DOMAINS` table is the
+single native-format authority for these scales, centers and bounds. Both the
+matrix and projection derive from it; the typed codec imports the same pitch,
+FIN and modulation constants. Field-specific calibration remains separate.
 
 This metadata grants offline preview eligibility only. The row's default
 protections, categorical choice restrictions, OXI AMP locks and explicit

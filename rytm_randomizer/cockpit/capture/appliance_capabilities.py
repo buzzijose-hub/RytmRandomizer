@@ -13,11 +13,9 @@ from enum import IntEnum
 from typing import Final, Literal
 
 from ...data.analog_four_kit_fields import (
-    A4_BIPOLAR_FIELDS,
-    A4_FIXED_8_8_RAW_MAX,
-    A4_MOD_DEPTH_FIELDS,
+    A4_NATIVE_FIELD_DOMAINS,
     A4_TRACK_OFFSETS,
-    A4_TWO_BYTE_FIELDS,
+    format_a4_native_number,
 )
 from ...data.analog_four_midi import (
     ANALOG_FOUR_MANUAL_CC,
@@ -359,25 +357,26 @@ def _rytm_capability(mapping: AnalogRytmCcMapping) -> ApplianceParameterCapabili
 
 
 def _a4_enum(field: str) -> type[IntEnum] | None:
+    enum_type: type[IntEnum] | None = None
     if "destination" in field:
-        return A4Destination
-    if field.endswith("waveform"):
-        return A4Waveform if field.startswith("osc") else A4LfoWave
-    if field.endswith("sub"):
-        return A4SubOscillator
-    if field == "sync_mode":
-        return A4SyncMode
-    if field == "filter2_type":
-        return A4Filter2Type
-    if field.endswith("shape"):
-        return A4EnvelopeShape
-    if field.endswith("multiplier"):
-        return A4LfoMultiplier
-    if field.startswith("lfo") and field.endswith("mode"):
-        return A4LfoMode
-    if field == "portamento":
-        return A4Portamento
-    return None
+        enum_type = A4Destination
+    elif field.endswith("waveform"):
+        enum_type = A4Waveform if field.startswith("osc") else A4LfoWave
+    elif field.endswith("sub"):
+        enum_type = A4SubOscillator
+    elif field == "sync_mode":
+        enum_type = A4SyncMode
+    elif field == "filter2_type":
+        enum_type = A4Filter2Type
+    elif field.endswith("shape"):
+        enum_type = A4EnvelopeShape
+    elif field.endswith("multiplier"):
+        enum_type = A4LfoMultiplier
+    elif field.startswith("lfo") and field.endswith("mode"):
+        enum_type = A4LfoMode
+    elif field == "portamento":
+        enum_type = A4Portamento
+    return enum_type
 
 
 def _a4_domains(field: str | None) -> tuple[CapabilityDomain, CapabilityDomain, bool]:
@@ -399,60 +398,42 @@ def _a4_domains(field: str | None) -> tuple[CapabilityDomain, CapabilityDomain, 
             "Existing typed recipe enum; choose listed values without interpolation.",
         )
         return domain, domain, True
-    if field in A4_TWO_BYTE_FIELDS:
-        return (
-            CapabilityDomain(
-                "unsigned-big-endian-q8.8",
-                "0",
-                str(A4_FIXED_8_8_RAW_MAX),
-                "1",
-                authority="codec_range",
-            ),
-            CapabilityDomain(
-                "fixed_point",
-                "0",
-                "127.99609375",
-                "0.00390625",
-                authority="codec_range",
-                note="Native 1/256 precision; calibrated ranges may be narrower. Live CC conversion is unproven.",
-            ),
-            False,
-        )
-    if field in A4_MOD_DEPTH_FIELDS:
-        return (
-            CapabilityDomain("centered-q8.7", "0", "32767", "1", authority="codec_range"),
-            CapabilityDomain(
-                "fixed_point", "-128", "127.9921875", "0.0078125", authority="codec_range"
-            ),
-            False,
-        )
-    if field in {"osc1_tune", "osc2_tune", "osc1_fine", "osc2_fine"}:
-        return (
-            CapabilityDomain(
-                "centered-pitch-word",
-                "0",
-                "32767",
-                "1",
-                authority="codec_range",
-                note="TUN and FIN share a word; preserve the hidden half-step and validate their pair.",
-            ),
-            CapabilityDomain(
-                "fine_display" if field.endswith("fine") else "semitones",
-                "-64",
-                "63" if field.endswith("fine") else "63.99609375",
-                "1" if field.endswith("fine") else "0.00390625",
-                authority="codec_range",
-                note="Two native residual codes share each FIN display integer.",
-            ),
-            False,
-        )
-    native = CapabilityDomain("u7", "0", "127", "1", authority="codec_range")
-    if field in A4_BIPOLAR_FIELDS:
-        return native, CapabilityDomain("bipolar", "-64", "63", "1", authority="codec_range"), False
+    facts = A4_NATIVE_FIELD_DOMAINS[field]
+    pitch = facts.encoding in {"pitch_word", "fine_component"}
+    native = CapabilityDomain(
+        facts.native_encoding,
+        str(facts.native_minimum),
+        str(facts.native_maximum),
+        "1",
+        authority="codec_range",
+        note=(
+            "TUN and FIN share a word; preserve the hidden half-step and validate their pair."
+            if pitch
+            else ""
+        ),
+    )
     # Boolean-like fields without a typed legal enum cannot become continuous.
-    if field.endswith(("_am", "_tracking", "_retrigger", "_drift", "_mode", "_boost")):
+    if facts.encoding == "u7" and field.endswith(
+        ("_am", "_tracking", "_retrigger", "_drift", "_mode", "_boost")
+    ):
         return native, CapabilityDomain("unverified_selector", authority="unknown"), True
-    return native, native, False
+    display = CapabilityDomain(
+        facts.display_encoding,
+        format_a4_native_number(
+            facts.value_minimum, scale=facts.display_scale, offset=facts.display_offset
+        ),
+        format_a4_native_number(
+            facts.value_maximum, scale=facts.display_scale, offset=facts.display_offset
+        ),
+        format_a4_native_number(1, scale=facts.display_scale),
+        authority="codec_range",
+        note=(
+            "Native 1/256 precision; calibrated ranges may be narrower. Live CC conversion is unproven."
+            if facts.encoding == "q8.8"
+            else "Two native residual codes share each FIN display integer." if pitch else ""
+        ),
+    )
+    return native, display, False
 
 
 def _a4_capability(

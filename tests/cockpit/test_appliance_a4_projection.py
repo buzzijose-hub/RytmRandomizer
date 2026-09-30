@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from rytm_randomizer import data as public_data
 from rytm_randomizer.cockpit.capture import appliance_a4 as projection
 from rytm_randomizer.cockpit.capture.appliance_a4 import (
     A4ApplianceFieldEncoding,
@@ -16,7 +17,15 @@ from rytm_randomizer.cockpit.capture.appliance_a4 import (
 from rytm_randomizer.cockpit.capture.appliance_capabilities import parameter_capabilities
 from rytm_randomizer.cockpit.capture.service import KitCaptureResult, decode_kit_capture_frame
 from rytm_randomizer.cockpit.data.stage import ANALOG_FOUR_DEVICE_ID, ANALOG_RYTM_DEVICE_ID
+from rytm_randomizer.data.analog_four_kit_fields import (
+    A4_MOD_DEPTH_FIELDS,
+    A4_NATIVE_FIELD_DOMAINS,
+    A4_NATIVE_FORMAT_DOMAINS,
+    format_a4_native_number,
+    parse_a4_fixed_8_8,
+)
 from rytm_randomizer.devices import A4Kit, AnalogFourKitSnapshot
+from rytm_randomizer.devices.strategies import analog_four_kit_fields as codec
 from rytm_randomizer.devices.strategies.analog_four_saved_kit_codec import (
     decode_analog_four_saved_kit_payload,
     encode_analog_four_saved_kit_payload,
@@ -129,6 +138,49 @@ def test_bipolar_detune_is_not_a_pitch_word_and_shared_fine_is_immutable() -> No
         assert row.blockers == ("shared_pitch_component_requires_pair_edit",)
     assert not _field("osc1_tracking").offline_mutable
     assert _field("osc1_tracking").blockers == ("legal_values_unproven",)
+
+
+def test_native_domain_metadata_is_canonical_immutable_and_shared_with_codec() -> None:
+    assert public_data.A4_NATIVE_FIELD_DOMAINS is A4_NATIVE_FIELD_DOMAINS
+    for constant in (
+        "A4_PITCH_ZERO",
+        "A4_PITCH_UNITS_PER_SEMITONE",
+        "A4_FINE_NATIVE_MIN",
+        "A4_FINE_NATIVE_MAX",
+        "A4_FINE_DISPLAY_MIN",
+        "A4_FINE_DISPLAY_MAX",
+        "A4_MOD_DEPTH_ZERO",
+        "A4_MOD_DEPTH_UNITS_PER_DISPLAY",
+    ):
+        assert getattr(public_data, constant) == getattr(codec, constant)
+    for encoding in appliance_a4_parameter_encodings():
+        facts = A4_NATIVE_FIELD_DOMAINS[encoding.field]
+        assert encoding.encoding == facts.encoding
+        assert encoding.display_scale == facts.display_scale
+        assert encoding.display_offset == facts.display_offset
+        assert (
+            facts.value_minimum
+            <= encoding.raw_minimum
+            <= encoding.raw_maximum
+            <= facts.value_maximum
+        )
+        if not facts.offline_mutable:
+            assert not encoding.offline_mutable
+    assert not set(A4_MOD_DEPTH_FIELDS.values()) & A4_NATIVE_FIELD_DOMAINS.keys()
+    with pytest.raises(TypeError):
+        A4_NATIVE_FIELD_DOMAINS["osc1_tune"] = A4_NATIVE_FORMAT_DOMAINS["u7"]
+    with pytest.raises(AttributeError):
+        A4_NATIVE_FORMAT_DOMAINS["q8.7"].display_scale = 1
+    assert (
+        format_a4_native_number(
+            public_data.A4_NATIVE_WORD_MAX,
+            scale=public_data.A4_MOD_DEPTH_UNITS_PER_DISPLAY,
+            offset=public_data.A4_MOD_DEPTH_ZERO,
+        )
+        == "127.9921875"
+    )
+    with pytest.raises(ValueError, match="unsupported screen value"):
+        parse_a4_fixed_8_8("1.1")
 
 
 @pytest.mark.parametrize(
