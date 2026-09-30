@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "PR #252 computer-first safety guards integrated; exact source acceptance in continuation receipts; physical mutation/recovery and Pi touring gates not run",
+  "status": "PR #252 computer-first guards and maintainer Studio lifecycle fixes integrated; replacement source acceptance in continuation receipts; physical mutation/recovery and Pi touring gates not run",
   "starting_sha": "892aaffca2484d1939ba3e133263aaadde2f22de",
   "original_checkout_sha": "a73aded67211b1e4a4cf294eb13ecfd3887de7e8",
   "integration_branch": "codex/pi-performance-appliance",
@@ -321,7 +321,11 @@
     "5f911385f58fb0453813484df9678ef3797c14a2",
     "788958f6",
     "a545d33f",
-    "6f00f8d2"
+    "6f00f8d2",
+    "c0e0dcc8",
+    "025e2551",
+    "4d674d5f",
+    "577993dd"
   ],
   "blockers": [
     "physical Raspberry Pi unavailable",
@@ -338,7 +342,7 @@
     "disk_free_gib_initial": 432,
     "python": "3.12.14 Windows x64",
     "lint_tools": "ruff0.15.13 black26.3.1 isort8.0.1 pyright1.1.411 isolated under ignored output/local/pi-appliance/venv/python-tools",
-    "frontend_dependencies": "npm ci,396 locked packages in pi-appliance-capabilities worktree; original node_modules preserved"
+    "frontend_dependencies": "Fresh npm ci,396 locked packages under ignored touring-readiness frontend-deps; clean final verification tree uses its own junction; original checkout and old preview dependencies preserved"
   },
   "review": {
     "architecture": "canonical facts870d3227; public native type facade preserves frozen AL02 source; independent reviewer approved narrow downward dual_machine-to-data matrix declarationa0db2724",
@@ -351,7 +355,7 @@
     "maintainability": "Independent review complete: wheelhouse source identity, retained immutable inventory, prior-release service activation, UTF8 metadata and compact modal action visibility repaired and regression-tested through a685df2d and99a0e419.",
     "visual": "Independent pixel review found compact modal actions clipped;99a0e419 repaired fixed header/footer with scrollingbody. Actual80productionbundlechecks and independent8shot originalresolutionrecheck pass.",
     "security": "Exact retained file inventory and identity; previous release service templates; fresh wheelhouse receipt; standalonebytecode refusal; explicitUTF8 metadata reads/writes repaired througha685df2d with regressiontests. No unresolved material finding in implemented scope.",
-    "computer_continuation": "Eight independent dimensions inspect continuation; architecture enum drift guard and failure-safe shared metrics fixture added after review. See continuation reviews and consolidated verdict; exact replacement-source tests/package remain externally source-bound."
+    "computer_continuation": "Eight independent dimensions inspect continuation; architecture enum drift guard and failure-safe shared metrics fixture added after review. Maintainer passive disconnect and unarmed DISARM repairs merged; exact saved-content fields and public deterministic supported/refused lifecycle seeds tested. Packaging is unsigned integrity checking with pending native target validation. See continuation reviews and consolidated verdict; replacement-source tests/package remain externally source-bound."
   },
   "source_bound_acceptance_directory": "output/local/touring-readiness-2026-09-30/"
 }
