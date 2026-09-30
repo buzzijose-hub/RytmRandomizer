@@ -25,6 +25,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { LiveRegion, useDocumentTitle, useFocusOnRouteChange } from './a11y';
+import { Appliance } from './appliance/Appliance';
 import {
   Cockpit,
   PerformanceConsole,
@@ -75,6 +76,7 @@ export function App({ client: injected, performanceConsole }: AppProps = {}): JS
   const route = useHashRoute();
   const routeRootRef = useRef<HTMLDivElement>(null);
   const isConsoleRoute = isPerformanceConsoleRoute(route);
+  const isApplianceRoute = route === '#/appliance' || ((route === '' || route === '#') && window.location.pathname === '/appliance');
   const performanceConsoleModel = isConsoleRoute
     ? performanceConsole ?? storePerformanceConsole ?? performanceConsoleDemoModel
     : undefined;
@@ -99,7 +101,9 @@ export function App({ client: injected, performanceConsole }: AppProps = {}): JS
   }, [client]);
 
   useDocumentTitle(
-    showPerformanceConsole
+    isApplianceRoute
+      ? 'RytmRandomizer · Performance Appliance'
+      : showPerformanceConsole
       ? 'RytmRandomizer · Performance Console'
       : isWizardRoute(route)
         ? 'RytmRandomizer · Profile Wizard'
@@ -107,6 +111,10 @@ export function App({ client: injected, performanceConsole }: AppProps = {}): JS
   );
 
   useFocusOnRouteChange(routeRootRef, [route]);
+
+  if (isApplianceRoute) {
+    return <><LiveRegion /><div ref={routeRootRef} tabIndex={-1}><Appliance client={client} /></div></>;
+  }
 
   if (showPerformanceConsole) {
     return (
