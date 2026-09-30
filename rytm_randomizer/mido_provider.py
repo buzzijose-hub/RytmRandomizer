@@ -19,9 +19,10 @@ from abc import abstractmethod
 from collections.abc import Callable, Iterable
 from threading import Event
 from time import monotonic, sleep
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, Final, Protocol, cast
 
 from .observability.logging import get_logger
+from .observability.metrics import get_metrics
 from .observability.tracing import operation
 from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError, RealMidiSendError
 
@@ -36,6 +37,7 @@ __all__ = [
 ]
 
 _logger = get_logger(__name__)
+_AMBIGUOUS_INPUT_ERROR: Final[str] = "ambiguous_midi_input_port"
 
 
 class RealMidiInputPort(Protocol):
@@ -192,6 +194,34 @@ def _require_mido_port_name(value: object, *, direction: str) -> str:
     if not isinstance(value, str) or not value:
         raise RealMidiPortError(f"midi_{direction}_port_required")
     return value
+
+
+def _require_unambiguous_input_port(port_name: str, available: tuple[str, ...]) -> None:
+    """Refuse duplicate exact matches before either input backend opens."""
+
+    matches = available.count(port_name)
+    if matches > 1:
+        get_metrics().record_error(_AMBIGUOUS_INPUT_ERROR)
+        _logger.warning(
+            _AMBIGUOUS_INPUT_ERROR,
+            extra={
+                "match_count": matches,
+                "outcome": "refused",
+                "fingerprint": "midi.input.port_ambiguous",
+            },
+        )
+        raise RealMidiPortError(_AMBIGUOUS_INPUT_ERROR)
+
+
+def _close_raw_input(port: _RtMidiInput) -> None:
+    """Release a raw input after capture or a duplicate-name refusal."""
+
+    close_port = getattr(port, "close_port", None)
+    if callable(close_port):
+        try:
+            close_port()
+        except (OSError, RuntimeError, AttributeError):
+            _logger.debug("rtmidi_sysex_capture_close_failed_best_effort")
 
 
 def _require_7bit(value: object, *, field: str) -> int:
@@ -408,6 +438,7 @@ class MidoMidiPortProvider:
             available = self.list_input_names()
             if checked_port_name not in available:
                 raise RealMidiPortError(f"unknown_midi_input_port: {checked_port_name}")
+            _require_unambiguous_input_port(checked_port_name, available)
             try:
                 port = mido.open_input(checked_port_name)
             except (
@@ -469,6 +500,12 @@ class MidoMidiPortProvider:
                 raise RealMidiPortError(f"unknown_midi_input_port: {checked_port_name}")
 
             try:
+                _require_unambiguous_input_port(checked_port_name, available)
+            except RealMidiPortError:
+                _close_raw_input(midi_in)
+                raise
+
+            try:
                 midi_in.ignore_types(sysex=False, timing=True, active_sense=True)
                 midi_in.open_port(available.index(checked_port_name))
                 deadline = monotonic() + timeout_seconds
@@ -501,12 +538,7 @@ class MidoMidiPortProvider:
                     context={"underlying": repr(exc)},
                 ) from exc
             finally:
-                close_port = getattr(midi_in, "close_port", None)
-                if callable(close_port):
-                    try:
-                        close_port()
-                    except (OSError, RuntimeError, AttributeError):  # pragma: no cover
-                        _logger.debug("rtmidi_sysex_capture_close_failed_best_effort")
+                _close_raw_input(midi_in)
 
         raise RealMidiPortError("midi_sysex_capture_timeout")
 
