@@ -18,8 +18,8 @@ from typing import Final, cast
 
 from ..observability.logging import get_logger
 from ..snapshot.mutation_scope import MutationScope, registered_mutation_ids
-from .appliance_capabilities import ApplianceParameterCapability, parameter_capabilities
 from .capture.appliance_a4 import appliance_a4_parameter_encodings
+from .capture.appliance_capabilities import ApplianceParameterCapability, parameter_capabilities
 from .data import (
     MutationCandidate,
     PadState,
