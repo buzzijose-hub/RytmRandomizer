@@ -211,6 +211,22 @@ def test_packaging_missing_git_is_actionable_before_output(
     assert not (tmp_path / "artifact.tar").exists()
 
 
+def test_source_identity_refuses_untracked_frontend_inputs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    monkeypatch.setattr(cli.shutil, "which", lambda _name: "/full/git")
+    monkeypatch.setattr(
+        cli,
+        "checked",
+        lambda command, **_kwargs: (
+            "?? desktop/web/public/untracked.png" if command[1] == "status" else ""
+        ),
+    )
+    with pytest.raises(ValueError, match="untracked files"):
+        cli.committed_source()
+
+
 def web_project(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     web = tmp_path / "desktop/web"
     web.mkdir(parents=True)

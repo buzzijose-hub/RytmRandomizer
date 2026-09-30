@@ -80,6 +80,12 @@ def committed_source() -> tuple[str, str]:
     if git is None:
         raise ValueError("Git is required to package exact committed source; install Git first")
     checked([git, "diff", "--exit-code", "HEAD"], cwd=ROOT)
+    if checked(
+        [git, "status", "--porcelain", "--untracked-files=all", "--", "desktop/web"], cwd=ROOT
+    ):
+        raise ValueError(
+            "Frontend source has uncommitted or untracked files; commit it before building"
+        )
     source_sha = checked([git, "rev-parse", "HEAD"], cwd=ROOT)
     return git, source_sha
 
