@@ -27,6 +27,7 @@ export type SendPlanReadinessReason =
   | 'candidate_high_risk'
   | 'profile_mismatch'
   | 'source_snapshot_mismatch'
+  | 'paired_control_precision_unverified'
   | 'no_sendable_changes';
 
 export type HistoryEntryKind = 'auto' | 'saved';

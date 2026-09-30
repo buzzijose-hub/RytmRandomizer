@@ -83,6 +83,7 @@ ReadinessReason = Literal[
     "candidate_high_risk",
     "profile_mismatch",
     "source_snapshot_mismatch",
+    "paired_control_precision_unverified",
     "no_sendable_changes",
 ]
 READINESS_REASON_VALUES: Final[tuple[ReadinessReason, ...]] = (
@@ -90,6 +91,7 @@ READINESS_REASON_VALUES: Final[tuple[ReadinessReason, ...]] = (
     "candidate_high_risk",
     "profile_mismatch",
     "source_snapshot_mismatch",
+    "paired_control_precision_unverified",
     "no_sendable_changes",
 )
 

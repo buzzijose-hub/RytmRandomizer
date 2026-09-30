@@ -48,6 +48,12 @@ export function SafetyRail(): JSX.Element {
           <span>Readiness</span>
           <strong>{readyLabel}</strong>
         </div>
+        {sendPlan?.blocked_reasons.includes('paired_control_precision_unverified') && (
+          <p role="status">
+            Paired-control precision is unverified. No part of this plan will be sent.
+            Choose a candidate without changed paired controls.
+          </p>
+        )}
       </section>
 
       <section className="safety-card">
