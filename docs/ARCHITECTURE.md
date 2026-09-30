@@ -333,6 +333,12 @@ rule, change it here first, then update the test.
     optional offline A4 capability are described in
     [§6.6](#66-show-kit-forge-paired-preparation-layer-2026-09).
 
+11. **Dual-machine target aliases come from the shared data leaf.**
+    `dual_machine/targets.py` may import the immutable alias table from
+    `data/device_targets.py`. Concrete devices still come only from the public
+    registry. This reviewed downward edge is declared by the import matrix and
+    described with the appliance consumers in [§6.2](#62-cockpit--profile-model-layer-phase-1).
+
 ---
 
 ### Updater metadata exceptions under review

@@ -184,6 +184,16 @@
       "passed": 90,
       "duration_seconds": 3.83,
       "note": "Real temp archive/files; OS services/processes faked, Linux symlinks represented by test pointer facade. Not on-Pi acceptance."
+    },
+    {
+      "scope": "final integrated code backend",
+      "tree": "8dd16377b776d39fdf946f487d9c17cf647f0746",
+      "result": "passed",
+      "passed": 10620,
+      "skipped": 5,
+      "duration_seconds": 199.484,
+      "command": "python -m pytest -n4 -o faulthandler_timeout=90 --cov=rytm_randomizer --cov-branch --cov-report=term-missing --cov-report=xml --cov-report=json --junitxml=backend-tests.xml -q",
+      "note": "Subsequent docs-only review corrections preserve production/test trees exactly; final receipts record both source SHAs and equality proof."
     }
   ],
   "integration_shas": [
@@ -232,7 +242,7 @@
     "abstraction": "HistoryStore pointers authoritative, canonicaltargetfacts; rollback2993393 restores previous release service assets throughsharedrender/activationhelpers and preserves autostartchoice.",
     "tests": "Full backend10608pass at3f1c2ba1; Gate1 all23modules100%; frontend1075pass100%; lifecycle90focusedpass ata685df2d. Final clean-commit rerun recorded in external source-bound receipts.",
     "docs": "Operator/deployment/CONTRIBUTING and architecture/diagram updated; lessons capture source binding, native precision, modal visibility and release recovery.",
-    "maintainability": "independent review found wheelhouse source identity gap; runtime repair pending merge",
+    "maintainability": "Independent review complete: wheelhouse source identity, retained immutable inventory, prior-release service activation, UTF8 metadata and compact modal action visibility repaired and regression-tested through a685df2d and99a0e419.",
     "visual": "Independent pixel review found compact modal actions clipped;99a0e419 repaired fixed header/footer with scrollingbody. Actual80productionbundlechecks and independent8shot originalresolutionrecheck pass.",
     "security": "Exact retained file inventory and identity; previous release service templates; fresh wheelhouse receipt; standalonebytecode refusal; explicitUTF8 metadata reads/writes repaired througha685df2d with regressiontests. No unresolved material finding in implemented scope."
   },
