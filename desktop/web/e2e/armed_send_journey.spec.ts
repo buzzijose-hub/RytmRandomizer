@@ -60,9 +60,22 @@ const PAIRED_CONTROL_MESSAGE =
 
 async function openCockpit(page: Page, sidecar: SidecarHandle): Promise<WebSocket> {
   const connected = page.waitForEvent('websocket', {
-    predicate: (socket) => {
+    predicate: async (socket) => {
       const url = new URL(socket.url());
-      return url.hostname === sidecar.host && url.port === String(sidecar.port);
+      if (url.hostname !== sidecar.host || url.port !== String(sidecar.port)) return false;
+      // Development StrictMode creates and closes a throwaway connection.
+      // Own the authenticated socket that actually hydrates this UI, rather
+      // than the first matching URL. Unexpected loss after bootstrap fails.
+      try {
+        await socket.waitForEvent('framereceived', {
+          predicate: ({ payload }) => readEvent(payload)?.type === 'session_status',
+          timeout: ENUMERATION_TIMEOUT_MS,
+        });
+        return !socket.isClosed();
+      } catch (error: unknown) {
+        if (socket.isClosed()) return false;
+        throw error;
+      }
     },
   });
   await page.goto('/');
