@@ -1,8 +1,8 @@
 """Tests for ``rytm_randomizer.cockpit.ws.protocol`` — schema/typing surface.
 
 The protocol module is the wire-format authority for the cockpit
-WebSocket transport: it declares the 7 cockpit event TypedDicts, the 11
-command TypedDicts, the envelope/ack wrappers, and the matching
+WebSocket transport: it declares the cockpit event/command payloads,
+the envelope/ack wrappers, and the matching
 EVENT_TYPES/COMMAND_TYPES constants. These tests verify the
 type-system contract holds:
 
@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from rytm_randomizer.cockpit.ws import protocol
+from rytm_randomizer.cockpit.ws import protocol, wizard_protocol
 
 pytestmark = pytest.mark.fast
 
@@ -33,8 +33,7 @@ def test_event_types_frozenset_lists_every_event_constant() -> None:
 
     ``EVENT_TYPES`` is the union of the cockpit + wizard event surfaces
     (the wizard set is folded in from :mod:`wizard_protocol`), so this
-    test asserts the cockpit constants are a subset, not strict equality.
-    The wizard test file asserts the wizard subset separately.
+    test pins the exact union of the independently enumerated surfaces.
     """
 
     individual = {
@@ -55,11 +54,13 @@ def test_event_types_frozenset_lists_every_event_constant() -> None:
         protocol.EVENT_MIDI_ACTIVITY,
         protocol.EVENT_LIBRARY_CHANGED,
         protocol.EVENT_SHOW_BANK_CHANGED,
+        protocol.EVENT_APPLIANCE_CHANGED,
+        protocol.APPLIANCE_CONTROL_EVENT,
     }
-    assert individual <= protocol.EVENT_TYPES
+    assert individual | wizard_protocol.WIZARD_EVENT_TYPES == protocol.EVENT_TYPES
     assert isinstance(protocol.EVENT_TYPES, frozenset)
-    # 17 cockpit events + 3 wizard events (folded in from wizard_protocol)
-    assert len(protocol.EVENT_TYPES) == 20
+    # 19 cockpit events + 3 wizard events (folded in from wizard_protocol)
+    assert len(protocol.EVENT_TYPES) == 22
 
 
 def test_command_types_frozenset_lists_every_command_constant() -> None:
@@ -67,8 +68,8 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
 
     ``COMMAND_TYPES`` is the union of the cockpit + wizard command
     surfaces; the wizard subset is folded in from :mod:`wizard_protocol`
-    and asserted in the wizard test file. This test verifies the
-    16 cockpit-native commands remain present.
+    and asserted in the wizard test file. This test verifies all
+    50 cockpit-native commands and the exact combined inventory.
     """
 
     individual = {
@@ -121,11 +122,12 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
         protocol.COMMAND_SHOW_BANK_RETAIN_CAPTURE,
         protocol.COMMAND_SHOW_BANK_IMPORT,
         protocol.COMMAND_SHOW_BANK_EXPORT,
+        protocol.COMMAND_APPLIANCE,
     }
-    assert individual <= protocol.COMMAND_TYPES
+    assert individual | wizard_protocol.WIZARD_COMMAND_TYPES == protocol.COMMAND_TYPES
     assert isinstance(protocol.COMMAND_TYPES, frozenset)
-    # 49 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
-    assert len(protocol.COMMAND_TYPES) == 57
+    # 50 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
+    assert len(protocol.COMMAND_TYPES) == 58
 
 
 def test_event_and_command_constants_match_spec_strings() -> None:
@@ -144,8 +146,11 @@ def test_event_and_command_constants_match_spec_strings() -> None:
     assert protocol.EVENT_PERFORMANCE_CONSOLE_CHANGED == "performance_console_changed"
     assert protocol.EVENT_SESSION_STATUS == "session_status"
     assert protocol.EVENT_CONNECTION_CHANGED == "connection_changed"
+    assert protocol.EVENT_APPLIANCE_CHANGED == "appliance_changed"
+    assert protocol.APPLIANCE_CONTROL_EVENT == "appliance_control_intent"
 
     assert protocol.COMMAND_ANALYZE_PATCH_GENOME == "analyze_patch_genome"
+    assert protocol.COMMAND_APPLIANCE == "appliance"
     assert protocol.COMMAND_SELECT_PROFILE == "select_profile"
     assert protocol.COMMAND_SET_DEPTH == "set_depth"
     assert protocol.COMMAND_SET_PAD_LOCK == "set_pad_lock"
