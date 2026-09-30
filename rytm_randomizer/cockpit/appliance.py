@@ -29,6 +29,14 @@ from .data import (
     new_ulid,
     require_schema_version,
 )
+from .data.appliance import (
+    ApplianceCandidateRecord,
+    ApplianceChangeRecord,
+    ApplianceProfileRecord,
+    ApplianceReceiptRecord,
+    ApplianceScopeRecord,
+    ApplianceTarget,
+)
 from .data.rytm_parameter_map import cockpit_parameter_mapping
 from .data.stage import STAGE_DEVICE_IDS, StageDeviceId
 from .device import MockDeviceAdapter
@@ -86,6 +94,22 @@ def _depth(value: object) -> float:
     return result
 
 
+def _target(value: object) -> ApplianceTarget:
+    if not isinstance(value, str) or value not in TARGETS:
+        raise ValueError("unknown target")
+    return cast(ApplianceTarget, value)
+
+
+def _fingerprints(value: object) -> dict[StageDeviceId, str | None]:
+    fingerprints = validated_object(value)
+    if set(fingerprints) != set(DEVICE_IDS) or any(
+        item is not None and (not isinstance(item, str) or len(item) > 128)
+        for item in fingerprints.values()
+    ):
+        raise ValueError("invalid profile identity")
+    return {device: cast(str | None, fingerprints[device]) for device in DEVICE_IDS}
+
+
 def _strings(value: object, available: set[str]) -> tuple[str, ...]:
     if not isinstance(value, list):
         raise ValueError("expected a string list")
@@ -108,7 +132,7 @@ class ApplianceScope:
     page_depths: tuple[tuple[str, float], ...] = ()
     parameter_locks: tuple[str, ...] = ()
 
-    def to_dict(self) -> dict[str, object]:
+    def to_dict(self) -> ApplianceScopeRecord:
         return {
             "target_ids": list(self.target_ids),
             "locked_ids": list(self.locked_ids),
@@ -172,7 +196,7 @@ class ApplianceWorkspace:
         self.simulation = simulation
         self.profile_file = profile_file
         self.revision = 0
-        self.target = "rytm"
+        self.target: ApplianceTarget = "rytm"
         self.master_depth = 0.45
         self.scopes: dict[StageDeviceId, ApplianceScope] = {}
         for device_id in DEVICE_IDS:
@@ -189,10 +213,10 @@ class ApplianceWorkspace:
         self.cursor = 0
         self.anchor: dict[StageDeviceId, Snapshot] | None = None
         self.candidates: dict[StageDeviceId, MutationCandidate] = {}
-        self.candidate: dict[str, object] | None = None
+        self.candidate: ApplianceCandidateRecord | None = None
         self.context: str | None = None
-        self.last_receipt: dict[str, object] | None = None
-        self.profiles: dict[str, dict[str, object]] = {}
+        self.last_receipt: ApplianceReceiptRecord | None = None
+        self.profiles: dict[str, ApplianceProfileRecord] = {}
         self.storage_error: str | None = None
         self._load_profiles()
 
@@ -211,7 +235,7 @@ class ApplianceWorkspace:
         except (OSError, ValueError, TypeError):
             self.storage_error = "profile_storage_corrupt_or_unreadable"
 
-    def _validated_profiles(self, document: object) -> dict[str, dict[str, object]]:
+    def _validated_profiles(self, document: object) -> dict[str, ApplianceProfileRecord]:
         raw = validated_object(document)
         if raw.get("schema_version") != SCHEMA_VERSION or isinstance(
             raw.get("schema_version"), bool
@@ -220,35 +244,31 @@ class ApplianceWorkspace:
         profiles = validated_object(raw.get("profiles"))
         if len(profiles) > PROFILE_LIMIT:
             raise ValueError("too many profiles")
-        result: dict[str, dict[str, object]] = {}
+        result: dict[str, ApplianceProfileRecord] = {}
         for name, item in profiles.items():
             self._name(name)
             profile = validated_object(item)
-            if profile.get("target") not in TARGETS:
-                raise ValueError("unknown target")
+            target = _target(profile.get("target"))
             lanes = validated_object(profile.get("lanes"))
             if set(lanes) != set(DEVICE_IDS):
                 raise ValueError("profile requires both explicit lanes")
-            checked = {
+            checked: dict[StageDeviceId, ApplianceScopeRecord] = {
                 device: ApplianceScope.parse(lanes[device], device).to_dict()
                 for device in DEVICE_IDS
             }
             association = validated_object(profile.get("association"))
-            fingerprints = validated_object(association.get("fingerprints"))
-            if set(fingerprints) != set(DEVICE_IDS) or any(
-                value is not None and (not isinstance(value, str) or len(value) > 128)
-                for value in fingerprints.values()
-            ):
-                raise ValueError("invalid profile identity")
+            fingerprints = _fingerprints(association.get("fingerprints"))
             result[name] = {
-                "target": profile["target"],
+                "target": target,
                 "master_depth": _depth(profile.get("master_depth")),
                 "lanes": checked,
                 "association": {"device_ids": list(DEVICE_IDS), "fingerprints": dict(fingerprints)},
             }
         return result
 
-    def _publish(self, profiles: dict[str, dict[str, object]], *, recovery: bool = False) -> None:
+    def _publish(
+        self, profiles: dict[str, ApplianceProfileRecord], *, recovery: bool = False
+    ) -> None:
         data = json.dumps(
             {"schema_version": SCHEMA_VERSION, "profiles": profiles}, allow_nan=False
         ).encode()
@@ -333,9 +353,7 @@ class ApplianceWorkspace:
         self.anchor = None
 
     def change_scope(self, payload: Mapping[str, object]) -> None:
-        target = payload.get("target", self.target)
-        if not isinstance(target, str) or target not in TARGETS:
-            raise ValueError("unknown target")
+        target = _target(payload.get("target", self.target))
         depth = _depth(payload.get("master_depth", self.master_depth))
         lanes = validated_object(payload.get("lanes", {}))
         if not set(lanes) <= set(DEVICE_IDS):
@@ -374,7 +392,7 @@ class ApplianceWorkspace:
             ],
         ] = {}
         candidates: dict[StageDeviceId, MutationCandidate] = {}
-        changes: list[dict[str, object]] = []
+        changes: list[ApplianceChangeRecord] = []
         native_encodings = {
             encoding.parameter_id: encoding for encoding in appliance_a4_parameter_encodings()
         }
@@ -575,7 +593,10 @@ class ApplianceWorkspace:
                 "target": self.target,
                 "master_depth": self.master_depth,
                 "lanes": {device: scope.to_dict() for device, scope in self.scopes.items()},
-                "association": {"device_ids": list(DEVICE_IDS), "fingerprints": dict(fingerprints)},
+                "association": {
+                    "device_ids": list(DEVICE_IDS),
+                    "fingerprints": _fingerprints(fingerprints),
+                },
             }
             if len(profiles) > PROFILE_LIMIT:
                 raise ValueError("profile limit reached")
@@ -589,13 +610,12 @@ class ApplianceWorkspace:
             self._publish(profiles)
         else:
             profile = profiles[name]
-            association = validated_object(profile["association"])
-            saved = validated_object(association["fingerprints"])
+            saved = profile["association"]["fingerprints"]
             if not self.simulation and (
-                any(saved.get(device) is None for device in TARGETS[str(profile["target"])])
+                any(saved.get(device) is None for device in TARGETS[profile["target"]])
                 or any(
                     saved.get(device) != fingerprints.get(device)
-                    for device in TARGETS[str(profile["target"])]
+                    for device in TARGETS[profile["target"]]
                 )
             ):
                 raise ValueError(
@@ -606,7 +626,7 @@ class ApplianceWorkspace:
         return None
 
     def state(
-        self, *, provenance: Mapping[str, dict[str, object]], armed: bool
+        self, *, provenance: Mapping[str, Mapping[str, object]], armed: bool
     ) -> dict[str, object]:
         lanes: dict[str, object] = {}
         native_encodings = {

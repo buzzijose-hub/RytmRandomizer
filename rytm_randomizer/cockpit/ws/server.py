@@ -649,7 +649,7 @@ async def _reader_loop(
             command = envelope.get("command")
             if (
                 isinstance(command, dict)
-                and command.get("type") == COMMAND_CAPTURE_CURRENT_KIT
+                and cast("dict[str, object]", command).get("type") == COMMAND_CAPTURE_CURRENT_KIT
                 and (capture_task is None or capture_task.done())
             ):
                 # Input capture is the one long operation allowed off this reader.
