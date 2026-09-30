@@ -117,3 +117,11 @@ bounce cannot repeatedly fire mutation. Polling is bounded to 128 events and
 128 remembered identities. Shutdown drops transient input state. Mock-adapter
 tests verify explicit configuration, bounded polling, remapping, release,
 failure cleanup and the absence of implicit pin activity.
+
+Lifecycle logs report start, bounded poll counts and stop. DEBUG input logs use
+only finite outcomes such as accepted, duplicate, stale, debounced or
+unconfigured, with the fixed control source. Event identities, timestamps,
+board identity and wiring are omitted. Actual adapter/sink failures increment
+bounded error counters; normal filtering does not count as an error or a MIDI
+send. A failed configuration attempts to close partially acquired input lines
+and keeps the original failure if cleanup also fails.
