@@ -208,3 +208,18 @@ socket that delivers actual session bootstrap. No production shortcut, plan
 rewrite, timeout increase or assertion removal was used. Both failed browser
 attempts remain preserved. Final browser/build/package and hosted gates must
 still validate the replacement delivery source.
+
+## 2026-09-30 — blocked-plan UI composition regression
+
+The focused `61815097` attempt observed the real authenticated socket and
+reported two failures and one existing skip. Both running cases exposed an
+actual reducer bug: `send_plan_changed` retained a refused plan, then the
+following blocked stage erased it, hiding the explanation. The narrow frontend
+repair retains only a current blocked plan whose candidate, source, profile
+and exact scope still match, while stale/disconnected state clears and SEND
+authority remains unchanged. Announcements distinguish ready from blocked.
+The failed browser receipt is preserved under `checkpoint-61815097-browser/`;
+replacement frontend coverage and complete browser/build/package checks must
+still run before publication. The previous frontend coverage receipt and report
+are preserved under `checkpoint-569a3214-frontend/` before rerunning changed
+frontend production code.

@@ -69,3 +69,9 @@ close a throwaway connection. When no public seed control exists, a bounded
 public REGEN/inspection/Target workflow may select a genuinely supported scope.
 Assert the refused broad plan, retained seed/source/proposed values and exact
 supported packet subset; never add a production test backdoor or replay SEND.
+
+Validate consecutive public events as a composition: a blocked `send_plan_changed`
+followed by a blocked stage must leave current refusal evidence visible. Retain
+only identity-, source-, profile- and scope-matching evidence; disconnected or
+stale evidence still clears. Inspection never grants SEND, and accessibility
+announcements must describe the blocked state accurately.

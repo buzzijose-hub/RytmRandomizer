@@ -312,7 +312,7 @@
       "result": "passed; statements/branches/functions/lines 100%; final source applicability is separately verified",
       "passed": 1076,
       "files": 78,
-      "receipt": "output/local/touring-readiness-2026-09-30/frontend-coverage-receipt.json"
+      "receipt": "output/local/touring-readiness-2026-09-30/checkpoint-569a3214-frontend/frontend-coverage-receipt.json"
     }
   ],
   "integration_shas": [
