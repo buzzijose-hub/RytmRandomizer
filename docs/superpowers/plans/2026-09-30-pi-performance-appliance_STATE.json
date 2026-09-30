@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "status": "implementation",
+  "starting_sha": "892aaffc",
+  "original_checkout_sha": "a73aded67211b1e4a4cf294eb13ecfd3887de7e8",
+  "integration_branch": "codex/pi-performance-appliance",
+  "base": "modularize-v1.34",
+  "codex_version": "0.159.2",
+  "agents": ["touch_ui", "runtime", "capabilities"],
+  "heavy_job_budget": {"concurrent": 1, "pytest_workers": 4, "browser_workers": 1},
+  "receipts": [],
+  "integration_shas": [],
+  "blockers": ["physical Raspberry Pi unavailable", "A4 live authority unvalidated", "unsaved working-state readback not established"],
+  "resume": "Inspect current branch diff and agent branches; finish shared backend contract, integrate each committed agent branch with --no-ff, run coordinated checks and independent reviews. Preserve original dirty checkout."
+}

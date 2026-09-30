@@ -235,6 +235,9 @@ It is intentionally requested after panel mount rather than added to the
 fixed bootstrap, preserving the existing passive eleven-event handshake.
 """
 
+EVENT_APPLIANCE_CHANGED: Final[str] = "appliance_changed"
+COMMAND_APPLIANCE: Final[str] = "appliance"
+
 EVENT_TYPES: Final[frozenset[str]] = (
     frozenset(
         {
@@ -255,6 +258,7 @@ EVENT_TYPES: Final[frozenset[str]] = (
             EVENT_MIDI_ACTIVITY,
             EVENT_LIBRARY_CHANGED,
             EVENT_SHOW_BANK_CHANGED,
+            EVENT_APPLIANCE_CHANGED,
         }
     )
     | WIZARD_EVENT_TYPES
@@ -424,6 +428,7 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_SHOW_BANK_RETAIN_CAPTURE,
             COMMAND_SHOW_BANK_IMPORT,
             COMMAND_SHOW_BANK_EXPORT,
+            COMMAND_APPLIANCE,
         }
     )
     | WIZARD_COMMAND_TYPES

@@ -2782,6 +2782,10 @@ def _resolve_handler(cmd_type: str) -> HandlerFn | None:
 
     if cmd_type in _CORE_HANDLERS:
         return _CORE_HANDLERS[cmd_type]
+    if cmd_type == "appliance":
+        from .appliance_handlers import handle_appliance  # noqa: PLC0415
+
+        return handle_appliance
     if cmd_type.startswith("show_bank_"):
         # Show Kit Forge is loaded only when its panel requests state, keeping
         # the fixed eleven-event bootstrap and ordinary passive edit path

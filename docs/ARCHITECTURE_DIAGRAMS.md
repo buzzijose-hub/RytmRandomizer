@@ -1,5 +1,21 @@
 # RytmRandomizer Architecture Diagrams
 
+## Touch appliance sharing and authority
+
+```mermaid
+flowchart LR
+  Touch[Adaptive touch route] --> WS[Authenticated Cockpit WS]
+  Studio[Existing Studio] --> WS
+  Kiosk[Private local browser bootstrap] --> Touch
+  WS --> Scope[Revision-bound scope and local history]
+  Scope --> Engine[Existing deterministic engine]
+  Scope --> Catalog[Canonical parameter evidence]
+  WS --> Capture[Existing input-only KIT capture]
+  Capture --> Saved[Saved-state evidence]
+  WS --> Armed[Existing ArmedApply boundary]
+  Scope --> Block[Scoped live APPLY awaits working-state and restore evidence]
+```
+
 ## Purpose
 
 This document maps the current application architecture using only the real

@@ -55,6 +55,7 @@ from ..stage import DualMachineStageCoordinator
 from .wizard_session import WizardSession
 
 if TYPE_CHECKING:
+    from ..appliance import ApplianceWorkspace
     from ..show_bank.export import ShowPackService
     from ..show_bank.workspace import ShowKitForgeWorkspace
 
@@ -102,6 +103,7 @@ class CockpitSession:
     profile_registry: ProfileRegistry
     history_store: HistoryStore
     device: DeviceAdapter
+    appliance: ApplianceWorkspace | None = None
     kit_capture_service: KitCaptureService = field(default_factory=KitCaptureService.disabled)
     kit_captures: dict[KitCaptureDeviceId, KitCaptureResult] = field(
         default_factory=dict[KitCaptureDeviceId, KitCaptureResult]

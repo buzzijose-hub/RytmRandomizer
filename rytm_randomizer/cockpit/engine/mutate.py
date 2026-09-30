@@ -27,6 +27,8 @@ See :doc:`spec.md <./spec>` for the normative algorithm. Hard rules:
 
 from __future__ import annotations
 
+import math
+from collections.abc import Mapping
 from typing import Final
 
 from ...observability.logging import get_logger
@@ -169,6 +171,8 @@ def mutate(
     seed: int,
     target_pad_ids: frozenset[int] = frozenset(),
     locked_pad_ids: frozenset[int] = frozenset(),
+    *,
+    parameter_depths: Mapping[tuple[int, str], float] | None = None,
 ) -> MutationCandidate:
     """Generate a ``MutationCandidate`` from a snapshot, profile, depth, seed.
 
@@ -205,6 +209,10 @@ def mutate(
         ``estimated_midi_msgs`` is the total ``changed_keys`` count.
     """
 
+    if parameter_depths is not None:
+        for value in parameter_depths.values():
+            if isinstance(value, bool) or not math.isfinite(value) or not 0 <= value <= 1:
+                raise ValueError("parameter depth must be finite and between zero and one")
     scope = MutationTargets(rytm_pad_targets=target_pad_ids).rytm_scope(locked_pad_ids)
     effective_pad_ids = scope.effective_ids(pad.pad_id for pad in snapshot.pads)
     state = _PRNG_SEED_FOR_ZERO if seed == 0 else (seed & 0xFFFFFFFF)
@@ -236,7 +244,12 @@ def mutate(
             raw, state = xorshift32(state)
             # raw is a 32-bit unsigned int; r is in [0.0, 1.0).
             r = raw / _PRNG_NORMALIZER
-            delta = (r - 0.5) * 2.0 * scale
+            effective_scale = scale
+            if parameter_depths is not None:
+                effective_scale = (
+                    parameter_depths.get((pad.pad_id, key), 0.0) * _CC_RANGE * (_BIAS_FLOOR + bias)
+                )
+            delta = (r - 0.5) * 2.0 * effective_scale
             # round-half-away-from-zero is the spec'd rounding; Python's
             # built-in round() does banker's rounding, which is locale-
             # independent but disagrees with C's round() on half-values.
@@ -247,6 +260,8 @@ def mutate(
                 machine=pad.machine,
                 parameter=key,
             )
+            if parameter_depths is not None and parameter_depths.get((pad.pad_id, key), 0) == 0:
+                new_value = value
             proposed[key] = new_value
             if new_value != value:
                 changed.add(key)

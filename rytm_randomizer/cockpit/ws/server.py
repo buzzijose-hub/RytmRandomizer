@@ -787,6 +787,11 @@ def create_app(
 
     app.router.add_event_handler("shutdown", _disarm_on_shutdown)
 
+    if os.environ.get("RYTM_RAND_APPLIANCE_WEB_ROOT"):
+        from ..appliance_runtime import install_appliance_routes
+
+        install_appliance_routes(app, token=expected_token, arm_secret=session.arm_secret)
+
     return app
 
 

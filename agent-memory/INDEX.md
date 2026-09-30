@@ -45,6 +45,8 @@ Memories about the human's hardware setup, personal preferences across multiple 
 
 ### Project facts (load-bearing context about this codebase)
 
+- [Pi appliance evidence](project_pi_appliance.md) — explicit touch scope, shared kiosk/session, live-state/restore limits.
+
 - [Analog Rytm SysEx project](project_rytm_sysex.md) — kit-first generator, offline-only, file-drop loading workflow.
 - [Python tooling pitfalls](python_tooling_pitfalls.md) — black target-version must match CI py3.11; don't suppress xdist with `-o addopts=''` for normal runs (3× slowdown); only suppress for `PARITY_CAPTURE_MODE=1`.
 - [Armed entry-point seam](project_armed_entry_point_seam.md) — Live-but-Passive MIDI boundary: inputs open freely, all transmit routes through the `senders` ArmedApply seam; enforced by `test_armed_entry_points.py` + `test_repo_root_perimeter.py`.

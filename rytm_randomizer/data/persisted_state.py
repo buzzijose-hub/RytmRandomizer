@@ -316,6 +316,12 @@ class PersistedStateDecision:
 
 _REGISTERED_STORES: Final[tuple[PersistedStateStore, ...]] = (
     PersistedStateStore(
+        store_id="appliance_scopes",
+        schema_version=1,
+        owner_module="rytm_randomizer.cockpit.appliance",
+        description="Bounded touch scope presets; no transient hardware authority.",
+    ),
+    PersistedStateStore(
         store_id="profile_registry",
         schema_version=1,
         owner_module="rytm_randomizer.cockpit.profiles.registry",

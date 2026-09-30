@@ -666,6 +666,23 @@ as a snapshot mutation, move it through the `Device` strategies instead.
 
 ## 6.2 Cockpit & Profile-Model layer (Phase 1)
 
+### Touch appliance presentation
+
+`desktop/web/src/appliance/` (`#/appliance`) is an adaptive touch presentation of
+the same Cockpit. `cockpit/appliance.py` adds revision-bound explicit scope, bounded
+local history and registered versioned preset associations. It consumes Snapshot,
+HistoryStore, MockDeviceAdapter, the deterministic engine and registered mutation
+domains. `cockpit/appliance_capabilities.py` projects canonical catalogs and codec
+facts into parameter evidence without granting output authority. The `appliance`
+WS command and `appliance_changed` whole-state event are requested on demand,
+retaining Studio's fixed bootstrap. Context changes revoke candidates. Touch empty
+targets mean none before invoking legacy MutationScope. Optional controls emit
+touch intents. `cockpit/appliance_runtime.py` serves the same production bundle
+on authenticated loopback with a private browser bootstrap. Scripts/assets live
+under existing `scripts/` and `installer-assets/`. No sender is introduced; scoped
+live APPLY awaits working-state/readback/restore evidence and Studio ArmedApply
+policy stays unchanged. See `PI_APPLIANCE_OPERATOR.md` and `PI_APPLIANCE_DEPLOYMENT.md`.
+
 The `rytm_randomizer.cockpit` subpackage is the live-performance GUI surface
 and the home of the portable mutation engine. It hosts the actual
 WebSocket Protocol the desktop shell drives. (The live `live_gui_*_model`
