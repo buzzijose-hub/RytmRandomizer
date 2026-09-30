@@ -18,6 +18,7 @@ from ...data.digitakt_saved_kit_layout import (
     DIGITAKT_CANDIDATE_KIT_TYPE_BYTE,
     DIGITAKT_KIT_NAME_LENGTH,
     DIGITAKT_KIT_NAME_OFFSET,
+    DIGITAKT_MK1_FAMILY_BYTE,
     DIGITAKT_SNAPSHOT_LAYOUT_CANDIDATE,
     DIGITAKT_SNAPSHOT_LAYOUT_SAVED_KIT,
 )
@@ -117,7 +118,7 @@ def _satisfies_snapshot_decoder(value: object) -> bool:
 def _assert_decoder_protocol_conformance() -> None:
     """Document structural conformance to the WS-S6 ``SnapshotDecoder``."""
 
-    probe = DigitaktSnapshotDecoder(family_byte=0x0C, device_id="_probe")
+    probe = DigitaktSnapshotDecoder(family_byte=DIGITAKT_MK1_FAMILY_BYTE, device_id="_probe")
     if not _satisfies_snapshot_decoder(probe):
         # Structural-typing invariant; see docs/ARCHITECTURE.md §8.
         raise AssertionError(  # pragma: no cover - structural-typing invariant

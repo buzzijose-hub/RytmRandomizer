@@ -89,10 +89,14 @@ def validate_capture(path: Path, device_id: str) -> bytes:
         )
 
     from rytm_randomizer.devices import registry
+    from rytm_randomizer.snapshot.sysex_file import extract_sysex_payloads
 
     device = registry.get_device(device_id)
     try:
-        device.decode_snapshot(raw, 0)
+        payloads = extract_sysex_payloads(raw)
+        if len(payloads) != 1:
+            raise ValueError(f"expected exactly one SysEx message, found {len(payloads)}")
+        device.decode_snapshot(payloads[0], 0)
     except ValueError as error:
         # The decoder's message already names the specific problem (missing
         # manufacturer id, wrong family byte, ...). Surfacing it verbatim beats

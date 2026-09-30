@@ -26,7 +26,7 @@ from typing import Final
 
 #: Candidate family selectors, used only by synthetic-layout intake.
 #: Real captures must validate these values and positions before promotion.
-DIGITAKT_MK1_FAMILY_BYTE: Final[int] = 0x0C
+DIGITAKT_MK1_FAMILY_BYTE: Final[int] = 0x0A  # verified: real MK1 kit dump, OS 1.52A
 DIGITAKT_II_FAMILY_BYTE: Final[int] = 0x10
 
 #: Candidate payload type byte, mirroring the A4 candidate-kit convention.
