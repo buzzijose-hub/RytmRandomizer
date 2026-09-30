@@ -9,12 +9,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Literal
 
 from ...data.analog_four_kit_fields import (
-    A4_BIPOLAR_FIELDS,
-    A4_MOD_DEPTH_FIELDS,
-    A4_TWO_BYTE_FIELDS,
+    A4_NATIVE_FIELD_DOMAINS,
+    A4NativeEncoding,
+    format_a4_native_number,
 )
 from ...data.analog_four_saved_kit_layout import A4_SNAPSHOT_LAYOUT_SAVED_KIT
 from ...devices import A4Kit, A4Sound, AnalogFourKitSnapshot
@@ -30,7 +29,7 @@ class A4ApplianceFieldEncoding:
 
     parameter_id: str
     field: str
-    encoding: Literal["u7", "bipolar", "q8.8", "q8.7", "pitch_word", "fine_component"]
+    encoding: A4NativeEncoding
     raw_minimum: int
     raw_maximum: int
     display_scale: int = 1
@@ -55,15 +54,7 @@ class A4ApplianceFieldEncoding:
         for enum_value, label in self.legal_values:
             if raw == enum_value:
                 return label
-        delta = raw - self.display_offset
-        sign = "-" if delta < 0 else ""
-        integer, fraction = divmod(abs(delta), self.display_scale)
-        if fraction == 0:
-            return f"{sign}{integer}"
-        # Existing scales 128 and 256 divide 10**8 exactly, so no rounding or
-        # ambient Decimal context can discard a native bit.
-        decimal_fraction = fraction * (10**8 // self.display_scale)
-        return f"{sign}{integer}.{decimal_fraction:08d}".rstrip("0")
+        return format_a4_native_number(raw, scale=self.display_scale, offset=self.display_offset)
 
     def read(self, sound: A4Sound) -> int:
         """Use the public typed field accessors, never hand-read offsets."""
@@ -108,37 +99,32 @@ def _encoding_for_row(row: ApplianceParameterCapability) -> A4ApplianceFieldEnco
         return None
     field = row.native_fields[0]
     domain = row.legal_domain
-    minimum = int(Decimal(domain.minimum)) if domain.minimum is not None else 0
-    maximum = int(Decimal(domain.maximum)) if domain.maximum is not None else 127
-    mutable = domain.authority != "unknown"
-    encoding: Literal["u7", "bipolar", "q8.8", "q8.7", "pitch_word", "fine_component"] = "u7"
-    scale, offset = 1, 0
-    blockers: tuple[str, ...] = () if mutable else ("legal_values_unproven",)
-    if field in A4_TWO_BYTE_FIELDS:
-        encoding, scale = "q8.8", 256
-        # Multiplication by powers of two is exact for the finite domain text;
-        # use integer-ratio arithmetic instead of context-dependent Decimal ops.
-        lower = Decimal(domain.minimum or "0").as_integer_ratio()
-        upper = Decimal(domain.maximum or "127.99609375").as_integer_ratio()
-        minimum = lower[0] * scale // lower[1]
-        maximum = upper[0] * scale // upper[1]
-    elif field in A4_MOD_DEPTH_FIELDS:
-        encoding, minimum, maximum, scale, offset = "q8.7", 0, 32767, 128, 16384
-    elif field in {"osc1_tune", "osc2_tune"}:
-        encoding, minimum, maximum, scale, offset = "pitch_word", 0, 32767, 256, 16384
-    elif field.endswith("fine"):
-        encoding, minimum, maximum, mutable = "fine_component", -64, 63, False
-        blockers = ("shared_pitch_component_requires_pair_edit",)
-    elif field in A4_BIPOLAR_FIELDS:
-        encoding, minimum, maximum = "bipolar", -64, 63
+    facts = A4_NATIVE_FIELD_DOMAINS[field]
+
+    def bound(screen_value: str | None, fallback: int) -> int:
+        if screen_value is None:
+            return fallback
+        # Exact canonical display bounds, including field-specific calibration
+        # limits, become native integers without Decimal context arithmetic.
+        numerator, denominator = Decimal(screen_value).as_integer_ratio()
+        return numerator * facts.display_scale // denominator + facts.display_offset
+
+    minimum = bound(domain.minimum, facts.value_minimum)
+    maximum = bound(domain.maximum, facts.value_maximum)
+    mutable = domain.authority != "unknown" and facts.offline_mutable
+    blockers: tuple[str, ...] = (
+        ("shared_pitch_component_requires_pair_edit",)
+        if not facts.offline_mutable
+        else () if mutable else ("legal_values_unproven",)
+    )
     return A4ApplianceFieldEncoding(
         row.parameter_id,
         field,
-        encoding,
+        facts.encoding,
         minimum,
         maximum,
-        scale,
-        offset,
+        facts.display_scale,
+        facts.display_offset,
         row.categorical,
         domain.legal_values,
         mutable,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
 from types import MappingProxyType
-from typing import Final
+from typing import Final, Literal, NamedTuple
 
 from .analog_four_saved_kit_layout import wire_address_to_track_raw_offset
 
@@ -133,7 +133,58 @@ A4_TWO_BYTE_FIELDS: Final[frozenset[str]] = frozenset({"filter1_frequency", "fil
 A4_FIXED_8_8_ENCODING: Final[str] = "unsigned-big-endian-q8.8"
 A4_FIXED_8_8_WIDTH: Final[int] = 2
 A4_FIXED_8_8_SCALE: Final[int] = 0x100
-A4_FIXED_8_8_RAW_MAX: Final[int] = 0x7FFF
+A4_NATIVE_WORD_MIN: Final[int] = 0
+A4_NATIVE_WORD_MAX: Final[int] = 0x7FFF
+A4_NATIVE_BYTE_MIN: Final[int] = 0
+A4_NATIVE_BYTE_MAX: Final[int] = 0x7F
+A4_FIXED_8_8_RAW_MAX: Final[int] = A4_NATIVE_WORD_MAX
+A4_BIPOLAR_ZERO: Final[int] = 0x40
+A4_BIPOLAR_MIN: Final[int] = A4_NATIVE_BYTE_MIN - A4_BIPOLAR_ZERO
+A4_BIPOLAR_MAX: Final[int] = A4_NATIVE_BYTE_MAX - A4_BIPOLAR_ZERO
+
+# OSC TUN and FIN share a centered pitch word. Controlled target-unit captures
+# prove TUN 0 / FIN +1 -> 0x4003, +2 -> 0x4004, -1 -> 0x3FFE, -2 -> 0x3FFC.
+# FIN uses signed residuals around the nearest coarse semitone; two neighboring
+# codes share a displayed FIN integer. Untouched dumps preserve the hidden bit.
+A4_PITCH_ZERO: Final[int] = 0x4000
+A4_PITCH_UNITS_PER_SEMITONE: Final[int] = 0x0100
+A4_FINE_NATIVE_MIN: Final[int] = -128
+A4_FINE_NATIVE_MAX: Final[int] = 127
+A4_FINE_DISPLAY_MIN: Final[int] = -64
+A4_FINE_DISPLAY_MAX: Final[int] = 63
+A4_FINE_UNITS_PER_DISPLAY: Final[int] = 2
+A4_PITCH_COARSE_MIN: Final[int] = -A4_PITCH_ZERO // A4_PITCH_UNITS_PER_SEMITONE
+A4_PITCH_COARSE_MAX: Final[int] = (
+    A4_NATIVE_WORD_MAX - A4_PITCH_ZERO
+) // A4_PITCH_UNITS_PER_SEMITONE
+
+# ENV/LFO destination depths are centered Q8.7: +1.00 = 0x4080 and -1.00 =
+# 0x3F80 in the controlled target-unit captures. These are codec facts only.
+A4_MOD_DEPTH_ZERO: Final[int] = 0x4000
+A4_MOD_DEPTH_UNITS_PER_DISPLAY: Final[int] = 0x0080
+A4_MOD_DEPTH_DISPLAY_MIN: Final[float] = (
+    A4_NATIVE_WORD_MIN - A4_MOD_DEPTH_ZERO
+) / A4_MOD_DEPTH_UNITS_PER_DISPLAY
+A4_MOD_DEPTH_DISPLAY_MAX: Final[float] = (
+    A4_NATIVE_WORD_MAX - A4_MOD_DEPTH_ZERO
+) / A4_MOD_DEPTH_UNITS_PER_DISPLAY
+
+
+def format_a4_native_number(value: int, *, scale: int, offset: int = 0) -> str:
+    """Format a validated canonical integer domain without Decimal rounding.
+
+    The caller supplies one of the power-of-two scales in the immutable native
+    domain table. Value validation belongs to the field codec or projection.
+    """
+
+    delta = value - offset
+    sign = "-" if delta < 0 else ""
+    integer, fraction = divmod(abs(delta), scale)
+    if fraction == 0:
+        return f"{sign}{integer}"
+    digits = scale.bit_length() - 1
+    decimal_fraction = fraction * (10**digits // scale)
+    return f"{sign}{integer}.{decimal_fraction:0{digits}d}".rstrip("0")
 
 
 def format_a4_fixed_8_8(
@@ -145,9 +196,7 @@ def format_a4_fixed_8_8(
         raise TypeError("Q8.8 value must be an integer")
     if not minimum <= raw <= maximum:
         raise ValueError(f"Q8.8 value must be in 0x{minimum:04X}..0x{maximum:04X}")
-    integer, fraction = divmod(raw, A4_FIXED_8_8_SCALE)
-    decimal_fraction = fraction * (10**8 // A4_FIXED_8_8_SCALE)
-    return f"{integer}.{decimal_fraction:08d}".rstrip("0").rstrip(".")
+    return format_a4_native_number(raw, scale=A4_FIXED_8_8_SCALE)
 
 
 def parse_a4_fixed_8_8(
@@ -163,7 +212,7 @@ def parse_a4_fixed_8_8(
         raise ValueError(f"unsupported screen value {screen_value!r} for unsigned Q8.8") from exc
     lower = Decimal(format_a4_fixed_8_8(minimum))
     upper = Decimal(format_a4_fixed_8_8(maximum))
-    smallest = Decimal("0.00390625")
+    smallest = Decimal(format_a4_native_number(1, scale=A4_FIXED_8_8_SCALE))
     if not parsed.is_finite() or parsed < lower or parsed > upper or 0 < parsed < smallest:
         raise ValueError(f"unsupported screen value {screen_value!r} for unsigned Q8.8")
     numerator, denominator = parsed.as_integer_ratio()
@@ -208,7 +257,148 @@ A4_MOD_DEPTH_FIELDS: Final[MappingProxyType[str, str]] = MappingProxyType(
     }
 )
 
+A4_OSCILLATOR_PITCH_FIELDS: Final[frozenset[str]] = frozenset({"osc1_tune", "osc2_tune"})
+A4_OSCILLATOR_FINE_FIELDS: Final[frozenset[str]] = frozenset({"osc1_fine", "osc2_fine"})
+A4NativeEncoding = Literal["u7", "bipolar", "q8.8", "q8.7", "pitch_word", "fine_component"]
+
+
+class A4NativeFieldDomain(NamedTuple):
+    """One codec domain, distinguishing stored bits from projected integers."""
+
+    encoding: A4NativeEncoding
+    native_encoding: str
+    native_minimum: int
+    native_maximum: int
+    value_minimum: int
+    value_maximum: int
+    display_encoding: str
+    display_scale: int = 1
+    display_offset: int = 0
+    offline_mutable: bool = True
+
+
+A4_NATIVE_FORMAT_DOMAINS: Final[MappingProxyType[A4NativeEncoding, A4NativeFieldDomain]] = (
+    MappingProxyType(
+        {
+            "u7": A4NativeFieldDomain(
+                "u7",
+                "u7",
+                A4_NATIVE_BYTE_MIN,
+                A4_NATIVE_BYTE_MAX,
+                A4_NATIVE_BYTE_MIN,
+                A4_NATIVE_BYTE_MAX,
+                "u7",
+            ),
+            "bipolar": A4NativeFieldDomain(
+                "bipolar",
+                "u7",
+                A4_NATIVE_BYTE_MIN,
+                A4_NATIVE_BYTE_MAX,
+                A4_BIPOLAR_MIN,
+                A4_BIPOLAR_MAX,
+                "bipolar",
+            ),
+            "q8.8": A4NativeFieldDomain(
+                "q8.8",
+                A4_FIXED_8_8_ENCODING,
+                A4_NATIVE_WORD_MIN,
+                A4_FIXED_8_8_RAW_MAX,
+                A4_NATIVE_WORD_MIN,
+                A4_FIXED_8_8_RAW_MAX,
+                "fixed_point",
+                A4_FIXED_8_8_SCALE,
+            ),
+            "q8.7": A4NativeFieldDomain(
+                "q8.7",
+                "centered-q8.7",
+                A4_NATIVE_WORD_MIN,
+                A4_NATIVE_WORD_MAX,
+                A4_NATIVE_WORD_MIN,
+                A4_NATIVE_WORD_MAX,
+                "fixed_point",
+                A4_MOD_DEPTH_UNITS_PER_DISPLAY,
+                A4_MOD_DEPTH_ZERO,
+            ),
+            "pitch_word": A4NativeFieldDomain(
+                "pitch_word",
+                "centered-pitch-word",
+                A4_NATIVE_WORD_MIN,
+                A4_NATIVE_WORD_MAX,
+                A4_NATIVE_WORD_MIN,
+                A4_NATIVE_WORD_MAX,
+                "semitones",
+                A4_PITCH_UNITS_PER_SEMITONE,
+                A4_PITCH_ZERO,
+            ),
+            "fine_component": A4NativeFieldDomain(
+                "fine_component",
+                "centered-pitch-word",
+                A4_NATIVE_WORD_MIN,
+                A4_NATIVE_WORD_MAX,
+                A4_FINE_DISPLAY_MIN,
+                A4_FINE_DISPLAY_MAX,
+                "fine_display",
+                offline_mutable=False,
+            ),
+        }
+    )
+)
+
+# Fraction bytes are members of their exact modulation-depth word. They have
+# no independently projected or mutable control domain.
+A4_NATIVE_FIELD_DOMAINS: Final[MappingProxyType[str, A4NativeFieldDomain]] = MappingProxyType(
+    {
+        field: A4_NATIVE_FORMAT_DOMAINS[
+            (
+                "bipolar"
+                if field in A4_BIPOLAR_FIELDS
+                else (
+                    "q8.8"
+                    if field in A4_TWO_BYTE_FIELDS
+                    else (
+                        "q8.7"
+                        if field in A4_MOD_DEPTH_FIELDS
+                        else (
+                            "pitch_word"
+                            if field in A4_OSCILLATOR_PITCH_FIELDS
+                            else "fine_component" if field in A4_OSCILLATOR_FINE_FIELDS else "u7"
+                        )
+                    )
+                )
+            )
+        ]
+        for field in A4_TRACK_OFFSETS
+        if field not in A4_MOD_DEPTH_FIELDS.values()
+    }
+)
+
 __all__ = [
+    "A4_BIPOLAR_ZERO",
+    "A4_BIPOLAR_MIN",
+    "A4_BIPOLAR_MAX",
+    "A4_NATIVE_WORD_MIN",
+    "A4_NATIVE_WORD_MAX",
+    "A4_NATIVE_BYTE_MIN",
+    "A4_NATIVE_BYTE_MAX",
+    "A4_PITCH_ZERO",
+    "A4_PITCH_UNITS_PER_SEMITONE",
+    "A4_PITCH_COARSE_MIN",
+    "A4_PITCH_COARSE_MAX",
+    "A4_FINE_NATIVE_MIN",
+    "A4_FINE_NATIVE_MAX",
+    "A4_FINE_DISPLAY_MIN",
+    "A4_FINE_DISPLAY_MAX",
+    "A4_FINE_UNITS_PER_DISPLAY",
+    "A4_MOD_DEPTH_ZERO",
+    "A4_MOD_DEPTH_UNITS_PER_DISPLAY",
+    "A4_MOD_DEPTH_DISPLAY_MIN",
+    "A4_MOD_DEPTH_DISPLAY_MAX",
+    "A4_OSCILLATOR_PITCH_FIELDS",
+    "A4_OSCILLATOR_FINE_FIELDS",
+    "A4_NATIVE_FIELD_DOMAINS",
+    "A4_NATIVE_FORMAT_DOMAINS",
+    "A4NativeEncoding",
+    "A4NativeFieldDomain",
     "A4_BIPOLAR_FIELDS",
     "A4_FIXED_8_8_ENCODING",
     "A4_FIXED_8_8_RAW_MAX",
@@ -223,5 +413,6 @@ __all__ = [
     "A4_TWO_BYTE_FIELDS",
     "A4_WIRE_ADDRESSES",
     "format_a4_fixed_8_8",
+    "format_a4_native_number",
     "parse_a4_fixed_8_8",
 ]
