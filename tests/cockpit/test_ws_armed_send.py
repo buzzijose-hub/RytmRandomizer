@@ -24,15 +24,17 @@ not move).
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 from cockpit.conftest import TEST_WS_TOKEN, _make_default_snapshot, complete_handshake
 from fastapi.testclient import TestClient
 
-from rytm_randomizer.cockpit.data import CockpitSendPlan, SendPlanPacket
+from rytm_randomizer.cockpit.data import CockpitSendPlan, PadDelta, SendPlanPacket
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
+from rytm_randomizer.cockpit.device.connection import ConnectionPhase, ConnectionState
 from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws import handlers
@@ -145,6 +147,50 @@ def _stage_send(session: CockpitSession, *, ready: bool = True) -> CockpitSendPl
     plan = _plan(ready=ready)
     session.current_send_plan = plan
     return plan
+
+
+@pytest.mark.usefixtures("isolated_observability")
+def test_armed_send_refuses_whole_plan_when_paired_control_is_changed(tmp_path: Path) -> None:
+    from rytm_randomizer.observability.metrics import get_metrics
+
+    session = _make_session(tmp_path)
+    provider = _FakeProvider()
+    session.arm_port_provider = provider
+    assert _arm(session)["ok"] is True
+    _stage_send(session)
+    candidate = session.current_candidate
+    assert candidate is not None
+    session.current_candidate = replace(
+        candidate,
+        pad_deltas=(
+            PadDelta(
+                pad_id=1,
+                proposed_params={"tun": 45, "lfo_depth": 81},
+                changed_keys=frozenset({"tun", "lfo_depth"}),
+            ),
+        ),
+        estimated_midi_msgs=2,
+    )
+    before_snapshot = session.device.capture_snapshot()
+    before_history = session.history_store.current
+
+    prepared = _dispatch(session, {"type": "prepare_send_plan"})
+    assert prepared["ok"] is True
+    assert prepared["send_plan"]["readiness_reason"] == "paired_control_precision_unverified"
+    assert prepared["send_plan"]["packets"] == [
+        {"pad_id": 1, "parameter": "tun", "channel": 0, "control": 17, "value": 45}
+    ]
+    refused = _dispatch(
+        session,
+        {"type": "send", "confirm": True, "send_plan_id": prepared["send_plan"]["plan_id"]},
+    )
+
+    assert refused["ok"] is False
+    assert provider.port.sent == []
+    assert get_metrics().cc_sent_by_channel == {}
+    assert session.device.capture_snapshot() == before_snapshot
+    assert session.history_store.current == before_history
+    assert _dispatch(session, {"type": "disarm"})["ok"] is True
 
 
 # ---------------------------------------------------------------------------
@@ -660,6 +706,88 @@ def test_a_partially_delivered_armed_send_reports_how_far_it_got(tmp_path: Path)
 # ---------------------------------------------------------------------------
 # Auto-disarm must never silently downgrade a live SEND to a mock write.
 # ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("phase", ["disconnected", "searching", "fault"])
+def test_passive_watchdog_preserves_studio_preview_and_send_plan(
+    tmp_path: Path, phase: ConnectionPhase
+) -> None:
+    session = _make_session(tmp_path)
+    assert (
+        _dispatch(session, {"type": "select_profile", "profile_id": "scene-industrial"})["ok"]
+        is True
+    )
+    assert _dispatch(session, {"type": "set_depth", "depth": 0.45})["ok"] is True
+    assert _dispatch(session, {"type": "prepare_send_plan"})["ok"] is True
+    candidate, plan = session.current_candidate, session.current_send_plan
+    assert candidate is not None and plan is not None
+    snapshot = session.device.capture_snapshot()
+    history = session.history_store.current
+    stage = session.stage_coordinator.state
+    events: list[dict[str, object]] = []
+
+    handlers.build_armed_watchdog(session, events.append)(
+        ConnectionState(
+            phase=phase,
+            available_inputs=(),
+            available_outputs=(),
+            selected_input=None,
+            selected_output=None,
+            last_error_fingerprint=None,
+            changed_at=datetime.now(timezone.utc),
+        )
+    )
+
+    assert session.current_candidate is candidate
+    assert session.current_send_plan is plan
+    assert session.device.capture_snapshot() == snapshot
+    assert session.history_store.current == history
+    assert session.stage_coordinator.state == stage
+    assert events == []
+
+
+@pytest.mark.parametrize("auto_disarmed", [False, True])
+def test_rejected_unarmed_disarm_preserves_studio_work_and_hardware_intent(
+    tmp_path: Path, auto_disarmed: bool
+) -> None:
+    session = _make_session(tmp_path)
+    if auto_disarmed:
+        provider = _FakeProvider()
+        session.arm_port_provider = provider
+        assert _arm(session)["ok"] is True
+        handlers._teardown_armed_state(session)
+        assert provider.port.closed == 1
+    _stage_send(session)
+    candidate, plan = session.current_candidate, session.current_send_plan
+    assert candidate is not None and plan is not None
+    snapshot = session.device.capture_snapshot()
+    history = session.history_store.current
+    stage = session.stage_coordinator.state
+    generation = session.capture_generation
+    assert session.hardware_intent is auto_disarmed
+
+    ack = _dispatch(session, {"type": "disarm"})
+
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert ack["message"] == "session is not armed"
+    assert session.pending_events == []
+    assert session.hardware_intent is auto_disarmed
+    assert session.current_candidate is candidate
+    assert session.current_send_plan is plan
+    assert session.device.capture_snapshot() == snapshot
+    assert session.history_store.current == history
+    assert session.stage_coordinator.state == stage
+    assert session.capture_generation == generation
+    send_ack = _dispatch(session, {"type": "send"})
+    if auto_disarmed:
+        assert send_ack["ok"] is False
+        assert "re-arm" in send_ack["message"]
+        assert "new_snapshot_id" not in send_ack
+        assert provider.port.sent == [] and provider.port.closed == 1
+    else:
+        assert send_ack["ok"] is True
+        assert "new_snapshot_id" in send_ack
 
 
 def test_send_after_involuntary_auto_disarm_is_refused_not_silently_mocked(

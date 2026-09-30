@@ -27,7 +27,9 @@ See :doc:`spec.md <./spec>` for the normative algorithm. Hard rules:
 
 from __future__ import annotations
 
-from typing import Final
+import math
+from collections.abc import Mapping
+from typing import Final, cast
 
 from ...observability.logging import get_logger
 from ..data import (
@@ -169,6 +171,9 @@ def mutate(
     seed: int,
     target_pad_ids: frozenset[int] = frozenset(),
     locked_pad_ids: frozenset[int] = frozenset(),
+    *,
+    parameter_depths: Mapping[tuple[int, str], float] | None = None,
+    parameter_bounds: Mapping[tuple[int, str], tuple[int, int]] | None = None,
 ) -> MutationCandidate:
     """Generate a ``MutationCandidate`` from a snapshot, profile, depth, seed.
 
@@ -198,6 +203,12 @@ def mutate(
             are enforced while generating the candidate as well as by the
             final send-plan boundary. If every available pad is locked, the
             candidate contains no deltas.
+        parameter_depths: Optional per-cell effective depths. Missing cells are
+            preserved exactly. The legacy path remains unchanged when omitted.
+        parameter_bounds: Optional validated native-integer domains. A domain's
+            span scales the draw before one integer rounding, preserving native
+            fixed-point precision. Values outside these domains are never sent
+            by this pure engine; transport authority remains a separate boundary.
 
     Returns:
         A fully-formed ``MutationCandidate`` with one ``PadDelta`` per
@@ -205,6 +216,22 @@ def mutate(
         ``estimated_midi_msgs`` is the total ``changed_keys`` count.
     """
 
+    if parameter_depths is not None:
+        for value in parameter_depths.values():
+            if isinstance(value, bool) or not math.isfinite(value) or not 0 <= value <= 1:
+                raise ValueError("parameter depth must be finite and between zero and one")
+    if parameter_bounds is not None:
+        available_cells = {(pad.pad_id, key) for pad in snapshot.pads for key in pad.params}
+        for cell, (minimum, maximum) in parameter_bounds.items():
+            if (
+                cell not in available_cells
+                or isinstance(minimum, bool)
+                or isinstance(maximum, bool)
+                or not isinstance(cast(object, minimum), int)
+                or not isinstance(cast(object, maximum), int)
+                or minimum > maximum
+            ):
+                raise ValueError("parameter bounds require a known cell and ordered integer limits")
     scope = MutationTargets(rytm_pad_targets=target_pad_ids).rytm_scope(locked_pad_ids)
     effective_pad_ids = scope.effective_ids(pad.pad_id for pad in snapshot.pads)
     state = _PRNG_SEED_FOR_ZERO if seed == 0 else (seed & 0xFFFFFFFF)
@@ -236,7 +263,16 @@ def mutate(
             raw, state = xorshift32(state)
             # raw is a 32-bit unsigned int; r is in [0.0, 1.0).
             r = raw / _PRNG_NORMALIZER
-            delta = (r - 0.5) * 2.0 * scale
+            effective_scale = scale
+            bounds = None if parameter_bounds is None else parameter_bounds.get((pad.pad_id, key))
+            if bounds is not None:
+                effective_scale = depth * (bounds[1] - bounds[0]) * (_BIAS_FLOOR + bias)
+            if parameter_depths is not None:
+                span = _CC_RANGE if bounds is None else bounds[1] - bounds[0]
+                effective_scale = (
+                    parameter_depths.get((pad.pad_id, key), 0.0) * span * (_BIAS_FLOOR + bias)
+                )
+            delta = (r - 0.5) * 2.0 * effective_scale
             # round-half-away-from-zero is the spec'd rounding; Python's
             # built-in round() does banker's rounding, which is locale-
             # independent but disagrees with C's round() on half-values.
@@ -247,6 +283,12 @@ def mutate(
                 machine=pad.machine,
                 parameter=key,
             )
+            if bounds is not None:
+                new_value = min(
+                    bounds[1], max(bounds[0], value + _round_half_away_from_zero(delta))
+                )
+            if parameter_depths is not None and parameter_depths.get((pad.pad_id, key), 0) == 0:
+                new_value = value
             proposed[key] = new_value
             if new_value != value:
                 changed.add(key)

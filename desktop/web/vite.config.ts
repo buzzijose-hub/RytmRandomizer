@@ -41,6 +41,7 @@ export default defineConfig({
         'src/ws/**',
         'src/state/**',
         'src/cockpit/**',
+        'src/appliance/**',
         'src/wizard/**',
         'src/types/wizard_protocol.ts',
         'src/updateProtocol.ts',

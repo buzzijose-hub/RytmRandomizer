@@ -498,6 +498,22 @@ def test_armed_show_send_rejects_stale_source_before_any_output(tmp_path: Path) 
         analog_four_locks=(),
     )
     source = workspace.source_snapshot(harness.bank_id, harness.entry_id)
+    source_pad = source.pads[0]
+    before_frequency = source_pad.params["flt"]
+    supported_candidate = replace(
+        candidate.rytm_candidate,
+        pad_deltas=(
+            replace(
+                candidate.rytm_candidate.pad_deltas[0],
+                proposed_params={
+                    **source_pad.params,
+                    "flt": before_frequency - 1 if before_frequency > 0 else 1,
+                },
+                changed_keys=frozenset({"flt"}),
+            ),
+        ),
+        estimated_midi_msgs=1,
+    )
     session = CockpitSession(
         profile_registry=ProfileRegistry(tmp_path / "profiles"),
         history_store=HistoryStore(),
@@ -505,7 +521,7 @@ def test_armed_show_send_rejects_stale_source_before_any_output(tmp_path: Path) 
         show_kit_forge=workspace,
         kit_captures=harness.captures,
         active_profile=harness.profile,
-        current_candidate=candidate.rytm_candidate,
+        current_candidate=supported_candidate,
         rytm_pad_targets={1},
     )
     session.history_store.initial(source)
@@ -532,7 +548,7 @@ def test_armed_show_send_rejects_stale_source_before_any_output(tmp_path: Path) 
     sent_count = len(recorder.sent)
     assert sent_count > 0
     session.device.adopt_snapshot(source)
-    session.current_candidate = candidate.rytm_candidate
+    session.current_candidate = supported_candidate
     assert dispatch({"type": "prepare_send_plan"})["ok"] is True
     send["send_plan_id"] = session.current_send_plan.plan_id
     assert dispatch(send)["ok"] is False

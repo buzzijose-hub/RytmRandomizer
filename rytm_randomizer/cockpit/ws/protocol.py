@@ -36,6 +36,7 @@ from __future__ import annotations
 
 from typing import Final, Literal, NotRequired, TypedDict
 
+from ..appliance_controls import APPLIANCE_CONTROL_EVENT
 from ..capture import KitCaptureDeviceId, KitCaptureResultDict
 from ..data.a4_preparation import A4PreparationReportDict
 from ..data.show_bank import ShowBankWorkspaceStateDict
@@ -235,6 +236,9 @@ It is intentionally requested after panel mount rather than added to the
 fixed bootstrap, preserving the existing passive eleven-event handshake.
 """
 
+EVENT_APPLIANCE_CHANGED: Final[str] = "appliance_changed"
+COMMAND_APPLIANCE: Final[str] = "appliance"
+
 EVENT_TYPES: Final[frozenset[str]] = (
     frozenset(
         {
@@ -255,6 +259,8 @@ EVENT_TYPES: Final[frozenset[str]] = (
             EVENT_MIDI_ACTIVITY,
             EVENT_LIBRARY_CHANGED,
             EVENT_SHOW_BANK_CHANGED,
+            EVENT_APPLIANCE_CHANGED,
+            APPLIANCE_CONTROL_EVENT,
         }
     )
     | WIZARD_EVENT_TYPES
@@ -424,6 +430,7 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_SHOW_BANK_RETAIN_CAPTURE,
             COMMAND_SHOW_BANK_IMPORT,
             COMMAND_SHOW_BANK_EXPORT,
+            COMMAND_APPLIANCE,
         }
     )
     | WIZARD_COMMAND_TYPES

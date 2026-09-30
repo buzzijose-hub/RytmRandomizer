@@ -11,13 +11,32 @@ import math
 from collections.abc import Iterator
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Final
 
 from ...data.analog_four_kit_fields import (
     A4_BIPOLAR_FIELDS,
+    A4_BIPOLAR_MAX,
+    A4_BIPOLAR_MIN,
+    A4_BIPOLAR_ZERO,
+    A4_FINE_DISPLAY_MAX,
+    A4_FINE_DISPLAY_MIN,
+    A4_FINE_NATIVE_MAX,
+    A4_FINE_NATIVE_MIN,
+    A4_FINE_UNITS_PER_DISPLAY,
     A4_FIXED_8_8_RAW_MAX,
     A4_FIXED_8_8_SCALE,
+    A4_MOD_DEPTH_DISPLAY_MAX,
+    A4_MOD_DEPTH_DISPLAY_MIN,
     A4_MOD_DEPTH_FIELDS,
+    A4_MOD_DEPTH_UNITS_PER_DISPLAY,
+    A4_MOD_DEPTH_ZERO,
+    A4_NATIVE_BYTE_MAX,
+    A4_NATIVE_BYTE_MIN,
+    A4_NATIVE_WORD_MAX,
+    A4_NATIVE_WORD_MIN,
+    A4_PITCH_COARSE_MAX,
+    A4_PITCH_COARSE_MIN,
+    A4_PITCH_UNITS_PER_SEMITONE,
+    A4_PITCH_ZERO,
     A4_SOUND_FORMAT_MARKER,
     A4_SOUND_NAME_LENGTH,
     A4_SOUND_NAME_OFFSET,
@@ -49,19 +68,21 @@ def _check_u8(value: int, label: str = "value") -> int:
 
 
 def _check_a4_u7(value: int, label: str = "value") -> int:
-    if not 0 <= value <= 127:
+    if not A4_NATIVE_BYTE_MIN <= value <= A4_NATIVE_BYTE_MAX:
         raise ElektronKitFieldError(f"{label} must be in 0..127, got {value}")
     return value
 
 
-def encode_bipolar(value: int, *, minimum: int = -64, maximum: int = 63) -> int:
+def encode_bipolar(
+    value: int, *, minimum: int = A4_BIPOLAR_MIN, maximum: int = A4_BIPOLAR_MAX
+) -> int:
     if not minimum <= value <= maximum:
         raise ElektronKitFieldError(f"bipolar value must be in {minimum}..{maximum}, got {value}")
-    return value + 64
+    return value + A4_BIPOLAR_ZERO
 
 
 def decode_bipolar(value: int) -> int:
-    return value - 64
+    return value - A4_BIPOLAR_ZERO
 
 
 # OSC TUN and FIN are adjacent parts of one centered 16-bit pitch word. One
@@ -77,20 +98,6 @@ def decode_bipolar(value: int) -> int:
 # select the other member of some two-code display buckets. Generation uses the
 # canonical even residual 2*n; untouched dumps preserve their exact hidden half
 # step.
-A4_PITCH_ZERO: Final[int] = 0x4000
-A4_PITCH_UNITS_PER_SEMITONE: Final[int] = 0x0100
-A4_FINE_NATIVE_MIN: Final[int] = -128
-A4_FINE_NATIVE_MAX: Final[int] = 127
-A4_FINE_DISPLAY_MIN: Final[int] = -64
-A4_FINE_DISPLAY_MAX: Final[int] = 63
-
-# ENV/LFO modulation depths use a signed Q8.7-style representation centered at
-# 0x4000: one displayed unit equals 0x0080 native units. Controlled target-unit
-# captures prove +1.00 = 0x4080 and -1.00 = 0x3F80.
-A4_MOD_DEPTH_ZERO: Final[int] = 0x4000
-A4_MOD_DEPTH_UNITS_PER_DISPLAY: Final[int] = 0x0080
-
-
 def decode_a4_pitch_components(raw: int) -> tuple[int, int, int, int]:
     """Return ``(TUN, FIN, hidden_half_step, native_fine_residual)``.
 
@@ -99,10 +106,10 @@ def decode_a4_pitch_components(raw: int) -> tuple[int, int, int, int]:
     of the two native values representing the same displayed FIN number was
     present in the source dump.
     """
-    if not 0 <= raw <= 0x7FFF:
+    if not A4_NATIVE_WORD_MIN <= raw <= A4_NATIVE_WORD_MAX:
         raise ElektronKitFieldError("raw oscillator pitch must be in 0x0000..0x7FFF")
     delta = raw - A4_PITCH_ZERO
-    tune = math.floor((delta + 128) / A4_PITCH_UNITS_PER_SEMITONE)
+    tune = math.floor((delta - A4_FINE_NATIVE_MIN) / A4_PITCH_UNITS_PER_SEMITONE)
     residual = delta - tune * A4_PITCH_UNITS_PER_SEMITONE
     # The floor-based decomposition above proves this range; retain the guard
     # as a backstop if the pitch constants ever change.
@@ -110,8 +117,8 @@ def decode_a4_pitch_components(raw: int) -> tuple[int, int, int, int]:
         not A4_FINE_NATIVE_MIN <= residual <= A4_FINE_NATIVE_MAX
     ):  # pragma: no cover - proven by floor decomposition; guards future constant changes
         raise AssertionError(f"pitch decomposition produced invalid residual {residual}")
-    fine = residual // 2
-    hidden_half_step = residual - fine * 2
+    fine = residual // A4_FINE_UNITS_PER_DISPLAY
+    hidden_half_step = residual - fine * A4_FINE_UNITS_PER_DISPLAY
     return tune, fine, hidden_half_step, residual
 
 
@@ -122,7 +129,7 @@ def encode_a4_pitch_raw(tune_semitones: int, fine_value: int, *, hidden_half_ste
     even representative. Use 1 only when reproducing an observed encoder state
     byte-for-byte.
     """
-    if not -64 <= tune_semitones <= 63:
+    if not A4_PITCH_COARSE_MIN <= tune_semitones <= A4_PITCH_COARSE_MAX:
         raise ElektronKitFieldError(f"TUN must be in -64..63, got {tune_semitones}")
     if not A4_FINE_DISPLAY_MIN <= fine_value <= A4_FINE_DISPLAY_MAX:
         raise ElektronKitFieldError(
@@ -130,9 +137,9 @@ def encode_a4_pitch_raw(tune_semitones: int, fine_value: int, *, hidden_half_ste
         )
     if hidden_half_step not in (0, 1):
         raise ElektronKitFieldError("hidden_half_step must be 0 or 1")
-    residual = fine_value * 2 + hidden_half_step
+    residual = fine_value * A4_FINE_UNITS_PER_DISPLAY + hidden_half_step
     raw = A4_PITCH_ZERO + tune_semitones * A4_PITCH_UNITS_PER_SEMITONE + residual
-    if not 0 <= raw <= 0x7FFF:
+    if not A4_NATIVE_WORD_MIN <= raw <= A4_NATIVE_WORD_MAX:
         raise ElektronKitFieldError(
             f"TUN {tune_semitones:+d} / FIN {fine_value:+d} is outside native range"
         )
@@ -140,14 +147,14 @@ def encode_a4_pitch_raw(tune_semitones: int, fine_value: int, *, hidden_half_ste
 
 
 def decode_a4_pitch_semitones(raw: int) -> float:
-    if not 0 <= raw <= 0x7FFF:
+    if not A4_NATIVE_WORD_MIN <= raw <= A4_NATIVE_WORD_MAX:
         raise ElektronKitFieldError("raw oscillator pitch must be in 0x0000..0x7FFF")
     return (raw - A4_PITCH_ZERO) / A4_PITCH_UNITS_PER_SEMITONE
 
 
 def encode_a4_mod_depth(value: float) -> int:
     """Encode ENV/LFO destination depth in the confirmed native Q8.7 format."""
-    if not -128.0 <= value <= 127.9921875:
+    if not A4_MOD_DEPTH_DISPLAY_MIN <= value <= A4_MOD_DEPTH_DISPLAY_MAX:
         raise ElektronKitFieldError("modulation depth must be in -128.0..127.9921875")
     scaled = value * A4_MOD_DEPTH_UNITS_PER_DISPLAY
     rounded = int(round(scaled))
@@ -156,7 +163,7 @@ def encode_a4_mod_depth(value: float) -> int:
     raw = A4_MOD_DEPTH_ZERO + rounded
     # The accepted display range and exact 1/128 quantization prove this range.
     if (
-        not 0 <= raw <= 0x7FFF
+        not A4_NATIVE_WORD_MIN <= raw <= A4_NATIVE_WORD_MAX
     ):  # pragma: no cover - proven by validated display range and exact quantization
         raise ElektronKitFieldError(
             f"encoded modulation depth is outside native range: 0x{raw:04X}"
@@ -165,7 +172,7 @@ def encode_a4_mod_depth(value: float) -> int:
 
 
 def decode_a4_mod_depth(raw: int) -> float:
-    if not 0 <= raw <= 0x7FFF:
+    if not A4_NATIVE_WORD_MIN <= raw <= A4_NATIVE_WORD_MAX:
         raise ElektronKitFieldError("raw modulation depth must be in 0x0000..0x7FFF")
     return (raw - A4_MOD_DEPTH_ZERO) / A4_MOD_DEPTH_UNITS_PER_DISPLAY
 
@@ -448,7 +455,7 @@ class A4Sound:
 
     def set_oscillator_pitch_raw(self, oscillator: int, raw: int) -> None:
         self._validate_oscillator(oscillator)
-        if not 0 <= raw <= 0x7FFF:
+        if not A4_NATIVE_WORD_MIN <= raw <= A4_NATIVE_WORD_MAX:
             raise ElektronKitFieldError("raw oscillator pitch must be in 0x0000..0x7FFF")
         offset = self.offset(f"osc{oscillator}_tune")
         self._data[offset] = (raw >> 8) & 0xFF
@@ -534,12 +541,14 @@ class A4Sound:
     def set_fixed_8_8(self, field: str, value: float) -> None:
         if field not in A4_TWO_BYTE_FIELDS:
             raise ElektronKitFieldError(f"{field!r} is not a mapped 8.8 fixed-point field")
-        if not 0.0 <= value <= 127.99609375:
+        if not A4_NATIVE_WORD_MIN <= value <= A4_FIXED_8_8_RAW_MAX / A4_FIXED_8_8_SCALE:
             raise ElektronKitFieldError("8.8 display value must be between 0.0 and 127.99609375")
-        scaled = int(round(value * 256.0))
+        scaled = int(round(value * A4_FIXED_8_8_SCALE))
         # The validated maximum is exactly 0x7FFF after 8.8 conversion.
-        if scaled > 0x7FFF:  # pragma: no cover - roundoff backstop at the validated 8.8 maximum
-            scaled = 0x7FFF
+        if (
+            scaled > A4_FIXED_8_8_RAW_MAX
+        ):  # pragma: no cover - roundoff backstop at the validated 8.8 maximum
+            scaled = A4_FIXED_8_8_RAW_MAX
         self.set_fixed_8_8_raw(field, scaled)
 
     def set_destination(self, field: str, destination: A4Destination | int) -> None:

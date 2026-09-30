@@ -1,8 +1,26 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-09-21. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-09-30. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
+
+The Pi touch appliance is implemented on `codex/pi-performance-appliance`
+from `892aaffc`. It reuses the shared Cockpit frontend, authenticated sidecar,
+deterministic mutation engine, capture codecs and persistence writer. Its
+complete sound-page catalog separates saved-state native A4 previews from live
+authority. Its desktop-host production preview uses explicit simulation without
+output authority, or a disconnected production session. Checkpoint `3f1c2ba1`
+passed 10,608 Python tests with five documented platform/reference skips and
+100% line/branch coverage on all 23 touched production modules. Subsequent
+deployment and compact-dialog repairs have additional focused checks. Final
+source-bound receipts and screenshots are generated from the clean integration
+commit under `output/local/pi-appliance/`; physical Pi acceptance is separate.
+Scoped hardware APPLY, precise device restoration, general A4 live SEND and
+unsaved working-state readback remain blocked. See the
+[operator guide](PI_APPLIANCE_OPERATOR.md), [deployment guide](PI_APPLIANCE_DEPLOYMENT.md)
+and [current execution ledger](superpowers/plans/2026-09-30-pi-performance-appliance_STATE.json)
+for current source-bound receipts; the historical results below do not validate
+this new branch.
 
 Show Kit Forge merged through PR #238 on September 8 as one
 versioned, paired Analog Rytm/Analog Four preparation workflow. It keeps
@@ -92,6 +110,23 @@ Digitakt #240 remains a separate passive device PR; it is not included as merged
 support in this updater checkpoint.
 
 ## Recent Cleanup
+
+- 2026-09-30: Prepared the first computer hardware gate before Pi and full-set
+  rehearsal. The Rytm plan guard marks the complete plan unready when a changed,
+  in-scope, unlocked control needs unverified paired precision; it never sends
+  just that control's MSB or silently applies the remaining subset. Supported
+  packets may remain for inspection, with zero transmission. The capture
+  provider requires one exact raw input-name match before open.
+  App-owned input-name discovery at `b613fb3b` reported Rytm MKII and A4 MKII
+  endpoints with no duplicate exact names, output unarmed, no selected output,
+  and `unsaved_sends=0`; no capture or mutation was performed. These endpoint
+  names do not establish firmware, track channels, current values or backups.
+  The [first computer gate](COCKPIT_QUICKSTART.md#first-computer-hardware-gate)
+  retains guarded Show Kit Rytm audition/manual recovery and a separately
+  supervised, single-CC A4 app probe as distinct paths. Physical mutation,
+  recovery, Pi and full-set acceptance remain unperformed; scoped appliance,
+  general A4 and BOTH live APPLY remain blocked. New repair verification is
+  recorded separately from the earlier source-bound software receipts.
 
 - 2026-09-21: Resumed the six-PR closeout and verified #248's hosted checks at
   `e2e46d6e`, including both required aggregates and actual Windows acceptance.

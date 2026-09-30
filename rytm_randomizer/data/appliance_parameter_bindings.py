@@ -1,0 +1,160 @@
+"""Catalog labels bound to existing saved-KIT fields, without new wire facts.
+
+Every offset, enum and encoding is owned by the existing device catalogs and
+codecs. These names are a projection only; they confer no MIDI authority.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from types import MappingProxyType
+from typing import Final
+
+A4_APPLIANCE_PARAMETER_FIELDS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
+    {
+        "OSC1 Pitch": ("osc1_tune", "osc1_fine"),
+        "OSC2 Pitch": ("osc2_tune", "osc2_fine"),
+        "OSC1 Detune": ("osc1_detune",),
+        "OSC2 Detune": ("osc2_detune",),
+        "OSC1 Keytracking": ("osc1_tracking",),
+        "OSC2 Keytracking": ("osc2_tracking",),
+        "OSC1 Level": ("osc1_level",),
+        "OSC2 Level": ("osc2_level",),
+        "OSC1 Waveform": ("osc1_waveform",),
+        "OSC2 Waveform": ("osc2_waveform",),
+        "OSC1 Sub Oscillator": ("osc1_sub",),
+        "OSC2 Sub Oscillator": ("osc2_sub",),
+        "OSC1 Pulsewidth": ("osc1_pw",),
+        "OSC2 Pulsewidth": ("osc2_pw",),
+        "OSC1 PWM Speed": ("osc1_pwm_speed",),
+        "OSC2 PWM Speed": ("osc2_pwm_speed",),
+        "OSC1 PWM Depth": ("osc1_pwm_depth",),
+        "OSC2 PWM Depth": ("osc2_pwm_depth",),
+        "Noise S&H": ("noise_sample_hold",),
+        "Noise Fade": ("noise_fade",),
+        "Noise Level": ("noise_level",),
+        "OSC1 AM": ("osc1_am",),
+        "OSC2 AM": ("osc2_am",),
+        "Sync Mode": ("sync_mode",),
+        "Sync Amount": ("sync_amount",),
+        "Bend Amount": ("bend_depth",),
+        "Slide Time": ("slide_time",),
+        "Note Sync": ("osc_retrigger",),
+        "Vibrato Fade": ("vibrato_fade",),
+        "Vibrato Speed": ("vibrato_speed",),
+        "Vibrato Depth": ("vibrato_depth",),
+        "Filter1 Frequency": ("filter1_frequency",),
+        "Filter1 Resonance": ("filter1_resonance",),
+        "Filter Overdrive": ("filter1_overdrive",),
+        "Filter1 Keytracking": ("filter1_tracking",),
+        "Filter1 Envelope Amount": ("filter1_env_depth",),
+        "Filter2 Frequency": ("filter2_frequency",),
+        "Filter2 Resonance": ("filter2_resonance",),
+        "Filter2 Type": ("filter2_type",),
+        "Filter2 Keytracking": ("filter2_tracking",),
+        "Filter2 Envelope Amount": ("filter2_env_depth",),
+        "Chorus Send Level": ("amp_chorus_send",),
+        "Delay Send Level": ("amp_delay_send",),
+        "Reverb Send Level": ("amp_reverb_send",),
+        "Pan": ("amp_pan",),
+        "Volume": ("amp_volume",),
+        "EnvA Attack Time": ("amp_attack",),
+        "EnvA Decay Time": ("amp_decay",),
+        "EnvA Sustain Level": ("amp_sustain",),
+        "EnvA Release Time": ("amp_release",),
+        "EnvA Env Shape": ("amp_shape",),
+        "EnvF Attack Time": ("envf_attack",),
+        "EnvF Decay Time": ("envf_decay",),
+        "EnvF Sustain Level": ("envf_sustain",),
+        "EnvF Release Time": ("envf_release",),
+        "EnvF Env Shape": ("envf_shape",),
+        "EnvF Gate Length": ("envf_length",),
+        "EnvF Destination A": ("envf_destination_a",),
+        "EnvF Destination B": ("envf_destination_b",),
+        "EnvF Depth A": ("envf_depth_a", "envf_depth_a_fraction"),
+        "EnvF Depth B": ("envf_depth_b", "envf_depth_b_fraction"),
+        "Env2 Attack Time": ("env2_attack",),
+        "Env2 Decay Time": ("env2_decay",),
+        "Env2 Sustain Level": ("env2_sustain",),
+        "Env2 Release Time": ("env2_release",),
+        "Env2 Env Shape": ("env2_shape",),
+        "Env2 Gate Length": ("env2_length",),
+        "Env2 Destination A": ("env2_destination_a",),
+        "Env2 Destination B": ("env2_destination_b",),
+        "Env2 Depth A": ("env2_depth_a", "env2_depth_a_fraction"),
+        "Env2 Depth B": ("env2_depth_b", "env2_depth_b_fraction"),
+        "LFO1 Speed": ("lfo1_speed",),
+        "LFO2 Speed": ("lfo2_speed",),
+        "LFO1 Speed Multiplier": ("lfo1_multiplier",),
+        "LFO2 Speed Multiplier": ("lfo2_multiplier",),
+        "LFO1 Fade": ("lfo1_fade",),
+        "LFO2 Fade": ("lfo2_fade",),
+        "LFO1 Start Phase": ("lfo1_phase",),
+        "LFO2 Start Phase": ("lfo2_phase",),
+        "LFO1 Mode": ("lfo1_mode",),
+        "LFO2 Mode": ("lfo2_mode",),
+        "LFO1 Waveform": ("lfo1_waveform",),
+        "LFO2 Waveform": ("lfo2_waveform",),
+        "LFO1 Destination A": ("lfo1_destination_a",),
+        "LFO1 Destination B": ("lfo1_destination_b",),
+        "LFO2 Destination A": ("lfo2_destination_a",),
+        "LFO2 Destination B": ("lfo2_destination_b",),
+        "LFO1 Depth A": ("lfo1_depth_a", "lfo1_depth_a_fraction"),
+        "LFO1 Depth B": ("lfo1_depth_b", "lfo1_depth_b_fraction"),
+        "LFO2 Depth A": ("lfo2_depth_a", "lfo2_depth_a_fraction"),
+        "LFO2 Depth B": ("lfo2_depth_b", "lfo2_depth_b_fraction"),
+    }
+)
+
+# Saved-KIT controls absent from the manual-backed MIDI catalog remain visible
+# with no guessed CC/NRPN addresses. FIN is a component of the OSC pitch word.
+A4_APPLIANCE_NATIVE_ONLY_PARAMETERS: Final[Mapping[str, tuple[str, str]]] = MappingProxyType(
+    {
+        "OSC1 Fine": ("OSC 1", "osc1_fine"),
+        "OSC2 Fine": ("OSC 2", "osc2_fine"),
+        "Noise Color": ("NOISE", "noise_color"),
+        "Oscillator Drift": ("OSC COMMON", "oscillator_drift"),
+        "Portamento": ("OSC COMMON", "portamento"),
+        "Legato Mode": ("OSC COMMON", "legato_mode"),
+        "Filter1 Resonance Boost": ("FILTERS", "filter1_resonance_boost"),
+    }
+)
+
+RYTM_APPLIANCE_FX_FIELDS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "Delay Time": "delay_time",
+        "Delay Pingpong": "delay_pingpong",
+        "Delay Stereo Width": "delay_width",
+        "Delay Feedback": "delay_feedback",
+        "Delay Highpass Filter": "delay_hpf",
+        "Delay Lowpass Filter": "delay_lpf",
+        "Delay Reverb Send": "delay_reverb_send",
+        "Delay Mix Volume": "delay_volume",
+        "Reverb Predelay": "reverb_predelay",
+        "Reverb Decay Time": "reverb_decay",
+        "Reverb Shelving Freq": "reverb_shelving_frequency",
+        "Reverb Shelving Gain": "reverb_shelving_gain",
+        "Reverb Highpass Filter": "reverb_hpf",
+        "Reverb Lowpass Filter": "reverb_lpf",
+        "Reverb Mix Volume": "reverb_volume",
+        "Dist Amount": "distortion_amount",
+        "Dist Symmetry": "distortion_symmetry",
+        "Delay Overdrive": "delay_overdrive",
+        "Delay Dist/Comp Routing (pre/post)": "delay_dist_comp_route",
+        "Reverb Dist/Comp Routing (pre/post)": "reverb_dist_comp_route",
+        "Compressor Threshold": "compressor_threshold",
+        "Compressor Attack Time": "compressor_attack",
+        "Compressor Release Time": "compressor_release",
+        "Compressor Makeup Gain": "compressor_makeup_gain",
+        "Compressor Ratio": "compressor_ratio",
+        "Compressor Sidechain EQ": "compressor_sidechain_eq",
+        "Compressor Dry/Wet Mix": "compressor_mix",
+        "Compressor Output Volume": "compressor_volume",
+    }
+)
+
+__all__ = [
+    "A4_APPLIANCE_NATIVE_ONLY_PARAMETERS",
+    "A4_APPLIANCE_PARAMETER_FIELDS",
+    "RYTM_APPLIANCE_FX_FIELDS",
+]

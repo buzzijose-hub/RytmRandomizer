@@ -1,0 +1,29 @@
+[Unit]
+Description=RytmRandomizer authenticated local appliance backend
+PartOf=rytm-appliance.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart="@PYTHON@" "@LAUNCHER@" serve --web-root "@PREFIX@/current/web" --runtime-dir %t/rytm-appliance --log-file "%h/.local/state/rytm-appliance/backend.log"
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=15
+KillSignal=SIGTERM
+KillMode=control-group
+UMask=0077
+RuntimeDirectory=rytm-appliance
+RuntimeDirectoryMode=0700
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.config/rytm-randomizer %h/.local/state/rytm-appliance %t/rytm-appliance
+RestrictAddressFamilies=AF_UNIX AF_INET
+Environment=PYTHONUNBUFFERED=1
+LogRateLimitIntervalSec=60
+LogRateLimitBurst=500
+
+[Install]
+WantedBy=rytm-appliance.target

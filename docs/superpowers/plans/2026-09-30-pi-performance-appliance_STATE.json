@@ -1,0 +1,382 @@
+{
+  "schema_version": 1,
+  "status": "PR #252 computer-first guards and maintainer Studio lifecycle fixes integrated; replacement source acceptance in continuation receipts; physical mutation/recovery and Pi touring gates not run",
+  "starting_sha": "892aaffca2484d1939ba3e133263aaadde2f22de",
+  "original_checkout_sha": "a73aded67211b1e4a4cf294eb13ecfd3887de7e8",
+  "integration_branch": "codex/pi-performance-appliance",
+  "base": "modularize-v1.34",
+  "codex_version": "0.159.2",
+  "agents": [
+    "touch_ui",
+    "runtime",
+    "capabilities"
+  ],
+  "heavy_job_budget": {
+    "concurrent": 1,
+    "pytest_workers": 4,
+    "browser_workers": 1
+  },
+  "receipts": [
+    {
+      "count": "110 modules",
+      "note": "Windows x64 production frontend, existing dependency Vite8.0.14; bundle-size and mixed-import warnings",
+      "scope": "integration",
+      "command": "npm run build",
+      "result": "passed",
+      "tree": "59a4bb7b plus root source fixes"
+    },
+    {
+      "count": 30,
+      "duration_seconds": 0.63,
+      "scope": "integration",
+      "command": "python -m pytest tests/cockpit/test_appliance.py -n 0 -q",
+      "result": "passed",
+      "tree": "59a4bb7b plus native-domain and profile-path fixes"
+    },
+    {
+      "count": 28,
+      "note": "Agent reported runtime 100% statement/branch coverage; not full integrated verification",
+      "tree": "a4e0114a",
+      "scope": "runtime isolated branch",
+      "command": "targeted runtime and packaging tests",
+      "result": "passed"
+    },
+    {
+      "count": 572,
+      "note": "Agent reviewed import side effects, house style, perimeter, armed entrypoints",
+      "duration_seconds": 81.45,
+      "scope": "runtime integrated review",
+      "command": "targeted architecture -n 0",
+      "result": "passed",
+      "tree": "59a4bb7b"
+    },
+    {
+      "count": 505,
+      "note": "Agent reported three modules 100% statement/branch coverage",
+      "tree": "48e5f46a",
+      "scope": "capability isolated branch",
+      "command": "capability and optional-controls tests",
+      "result": "passed"
+    },
+    {
+      "scope": "root focused",
+      "tree": "0a0b1281",
+      "command": "pytest tests/cockpit/test_appliance.py tests/cockpit/test_appliance_safety.py tests/cockpit/test_capture_cancellation.py -n0 -q",
+      "result": "passed",
+      "count": 88,
+      "duration_seconds": 2.12
+    },
+    {
+      "scope": "root focused lane extraction",
+      "tree": "d68dc3a9 plus lane extraction",
+      "command": "pytest appliance+appliance_safety --cov appliance/handlers/DTO --cov-branch --cov-fail-under=100 -n0",
+      "result": "passed",
+      "count": 79,
+      "coverage": "498 statements178branches100%"
+    },
+    {
+      "scope": "agent frontend",
+      "tree": "746eea41",
+      "result": "passed",
+      "count": 49,
+      "coverage": "100% of416 statements452branches169functions241lines"
+    },
+    {
+      "scope": "full integrated frontend",
+      "tree": "3d0b3c92542535d04a8d9592f1e79c99442169e4",
+      "command": "npm run test:coverage -- --maxWorkers=2",
+      "result": "passed",
+      "count": 1074,
+      "files": 78,
+      "coverage": "100%:3939 statements,3095 branches,1375 functions,3399 lines",
+      "duration_seconds": 61.57
+    },
+    {
+      "scope": "first combined backend",
+      "tree": "3d0b3c92542535d04a8d9592f1e79c99442169e4",
+      "command": "python -m pytest -n4 --cov=rytm_randomizer --cov-branch -q",
+      "result": "failed; retained for audit",
+      "passed": 10502,
+      "failed": 40,
+      "skipped": 5,
+      "duration_seconds": 210.94,
+      "repairs": "canonical data snapshots; exact wire inventories and real roundtrips; preserved native evidence hash; reviewed canonical target-fact edge; early auto-disarm refusal; cancellation race coverage"
+    },
+    {
+      "scope": "integrated architecture",
+      "tree": "c4dbee6a",
+      "command": "python -m pytest tests/architecture -n4 -q",
+      "result": "passed",
+      "count": 873,
+      "duration_seconds": 34.49
+    },
+    {
+      "scope": "whole repository lint",
+      "tree": "c4dbee6a",
+      "command": "pinned ruff check .; black --check --target-version=py311 .; isort --profile black --check-only .",
+      "result": "passed",
+      "exit_codes": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "scope": "combined backend",
+      "tree": "3f1c2ba1aea623348b17040b41c14ab63bfe2dea",
+      "command": "python -m pytest -n4 --cov=rytm_randomizer --cov-branch --cov-report=xml --cov-report=json -q",
+      "result": "passed",
+      "passed": 10608,
+      "skipped": 5,
+      "duration_seconds": 197.26,
+      "touched_coverage": "23 production modules at100% lines+branches",
+      "project_pure_branch_percent": 99.38698522477209
+    },
+    {
+      "scope": "combined frontend after compact-dialog repair",
+      "tree": "abf0ea6117fe3930ee8313d64c2818da850be9e7",
+      "command": "npm run test:coverage -- --maxWorkers=2",
+      "result": "passed",
+      "passed": 1075,
+      "files": 78,
+      "coverage": "100%:3939 statements,3097 branches,1375 functions,3399 lines"
+    },
+    {
+      "scope": "production-bundle visual and touch checks",
+      "tree": "abf0ea6117fe3930ee8313d64c2818da850be9e7",
+      "result": "passed",
+      "checks": 80,
+      "viewports": [
+        [
+          800,
+          480
+        ],
+        [
+          480,
+          320
+        ],
+        [
+          1024,
+          600
+        ]
+      ],
+      "modes": [
+        "explicit simulation",
+        "disconnected production"
+      ],
+      "browser": "Chromium148.0.7778.96",
+      "note": "58 simulation+22 production checks,2 further Studio screenshots; all touch targets>=44px, modal actions fully visible, fonts loaded, no browser errors. Independent corrected-dialog pixel review passed."
+    },
+    {
+      "scope": "combined browser regression",
+      "tree": "3f1c2ba1aea623348b17040b41c14ab63bfe2dea",
+      "command": "npm run e2e -- --workers=1",
+      "result": "passed",
+      "passed": 33,
+      "skipped": 2,
+      "duration_seconds": 56.2,
+      "note": "Existing skeleton keyboard skip; real armed-send skip because no output port enumerated. No hardware output authorized."
+    },
+    {
+      "scope": "runtime agent lifecycle",
+      "tree": "a685df2dd3da3ea318cc783fd5f2f4f748b72b74",
+      "result": "passed",
+      "passed": 90,
+      "duration_seconds": 3.83,
+      "note": "Real temp archive/files; OS services/processes faked, Linux symlinks represented by test pointer facade. Not on-Pi acceptance."
+    },
+    {
+      "scope": "pre-final typed-state backend checkpoint",
+      "tree": "8dd16377b776d39fdf946f487d9c17cf647f0746",
+      "result": "passed",
+      "passed": 10620,
+      "skipped": 5,
+      "duration_seconds": 199.484,
+      "command": "python -m pytest -n4 -o faulthandler_timeout=90 --cov=rytm_randomizer --cov-branch --cov-report=term-missing --cov-report=xml --cov-report=json --junitxml=backend-tests.xml -q",
+      "note": "Later typed-record/canonical-validator/native-iterator repairs require final backend rerun; its exact source-bound receipt is in the ignored acceptance directory."
+    },
+    {
+      "scope": "final unchanged frontend tree",
+      "tree": "34fa5ae020098867b5b62525756da2fa04a2cf4a",
+      "result": "passed",
+      "passed": 1075,
+      "files": 78,
+      "coverage": "100%:3939 statements,3097 branches,1375 functions,3399 lines",
+      "duration_seconds": 48.093
+    },
+    {
+      "scope": "browser regression",
+      "tree": "34fa5ae020098867b5b62525756da2fa04a2cf4a",
+      "result": "passed",
+      "passed": 33,
+      "skipped": 2,
+      "duration_seconds": 56.5
+    },
+    {
+      "scope": "hosted Python CI on Linux, macOS and Windows",
+      "tree": "13b0000311620677b7a4d1ab22a1796d9de8581b",
+      "result": "failed; retained for audit",
+      "note": "Same auth-refusal log capture assertion: 14 records instead of exactly 7. Windows reported 10619 passed and 5 skipped alongside the failure. Runtime agent reproduced inherited propagation and stale closed ancestor-handler state before the test-only repair."
+    },
+    {
+      "scope": "runtime agent local CI-isolation repair",
+      "tree": "e36979a93a925c1886138593b3d7ef364137a330",
+      "result": "focused checks passed; hosted CI rerun pending",
+      "passed": 19,
+      "ordered_neighbor_passed": 48,
+      "note": "Both ambient propagation variants covered. Monkeypatch restores handler/propagation state; exact 7 records, privacy, metrics and zero-MIDI assertions preserved, category/stderr assertions strengthened. Lint clean; production source unchanged."
+    },
+    {
+      "scope": "hosted desktop-shell job",
+      "tree": "13b0000311620677b7a4d1ab22a1796d9de8581b",
+      "result": "failed; separate investigation pending",
+      "passed": 31,
+      "failed": 1,
+      "note": "backend_restart failure is being investigated separately; the auth-log test repair does not establish complete CI success."
+    },
+    {
+      "scope": "capability agent native CI readiness investigation",
+      "tree": "13b0000311620677b7a4d1ab22a1796d9de8581b",
+      "result": "pre-existing harness race evidenced; production regression not proven; replacement CI pending",
+      "note": "native_update_driver.ts is unchanged from baseline 892aaffc and waits for rotated credentials, which Python writes before uvicorn listens; the immediate stale-token probe can race socket readiness. Baseline job 109149261285 passed 32 native + 2 installer cases; exact 13b PR job 109992075623 passed 32 + 2 while push job 109991619778 passed 31 native cases with 1 failure. No retry, relaxed assertion or harness change claimed."
+    },
+    {
+      "scope": "integrated backend after auth-log isolation repair",
+      "tree": "5f911385f58fb0453813484df9678ef3797c14a2",
+      "result": "passed",
+      "passed": 10621,
+      "skipped": 5,
+      "warnings": 8,
+      "duration_seconds": 192.92,
+      "wall_seconds": 195.094,
+      "workers": 4,
+      "note": "Includes the auth-log isolation regression cases. Hosted replacement CI remains pending; no physical Pi, native ARM64 or live-hardware acceptance claim."
+    },
+    {
+      "scope": "hosted POSIX privacy assertion portability",
+      "tree": "b5a7e43237d63a3601fb35c2e0c5e7a8b61a4979",
+      "result": "failed; retained for audit",
+      "passed": 10622,
+      "failed": 2,
+      "skipped": 2,
+      "note": "macOS job 109999524103 and Ubuntu job 109999522862 passed exact seven-event assertions, then both variants failed a broad /appliance substring exclusion because standard LogRecord.pathname ends in /appliance_runtime.py. Source metadata must be distinguished from request data while retaining whole-record credential and unique request-path exclusion. Replacement hosted acceptance remains pending."
+    },
+    {
+      "scope": "runtime agent POSIX pathname regression repair",
+      "tree": "f4ff03e7cc9a232238d8a0bb8b9388abc8798f1a",
+      "result": "focused checks passed; hosted CI pending",
+      "passed": 19,
+      "ordered_neighbor_passed": 48,
+      "note": "Reproduced both failures with POSIX-normalized source metadata on Windows. Verifies source pathname resolves to runtime module and exempts only that field from broad route exclusion. Original-record credential scan includes a unique actually requested path sentinel; seven-event/category/metric/zero-MIDI assertions remain. Lint and independent review clean; production unchanged."
+    },
+    {
+      "scope": "hosted Ubuntu explicit platform branch coverage",
+      "tree": "1837f15eca12516332386327be81d045de07d24a",
+      "result": "all tests passed; touched coverage gate failed",
+      "passed": 10624,
+      "skipped": 2,
+      "note": "Job 110005425665 coverage XML reports appliance_runtime.py:151->153 uncovered on POSIX. Windows local coverage had both platform outcomes, but the Linux suite lacked an explicit non-POSIX permission setup case. Add both platform behavior cases without changing global os.name, production code, exclusions or threshold; replacement acceptance pending."
+    },
+    {
+      "scope": "runtime agent explicit platform permissions",
+      "tree": "7b3009bf3bb3305b374bfa23cc1f5a348e88d9d5",
+      "result": "focused checks passed; integrated and hosted checks pending",
+      "passed": 21,
+      "statements": 131,
+      "branches": 36,
+      "coverage_percent": 100,
+      "note": "Fresh runtimes under module-local posix/nt OS views assert real delegated chmod0700 only for POSIX directory and chmod0600 for launch on both, bootstrap/auth refusal and authenticated document. Global os.name/pathlib untouched. Original containment/log/privacy tests retained; lint and independent review clean. No production/exclusion/threshold changes."
+    },
+    {
+      "scope": "computer-first input discovery",
+      "tree": "b613fb3bf997a72e9d60deb68c80b89a32d73060",
+      "command": "app --arm --cockpit-kit-capture-sidecar; authenticated list_capture_inputs only",
+      "result": "passed; unarmed, no output selected, unsaved_sends=0; process stopped; no capture or hardware mutation",
+      "count": 2,
+      "receipt": "output/local/touring-readiness-2026-09-30/usb-input-discovery.json"
+    },
+    {
+      "scope": "computer continuation integrated backend",
+      "tree": "2b63621b67bac7809308f513bf4064bcfba75364",
+      "command": "full pytest -n4 branch coverage; touched coverage; lint/types/dead code",
+      "result": "passed; all 25 touched production modules 100% lines/branches; eight serial checks exit zero; no real hardware actions",
+      "passed": 10653,
+      "skipped": 5,
+      "duration_seconds": 197.02,
+      "receipt": "output/local/touring-readiness-2026-09-30/backend-verification.json"
+    },
+    {
+      "scope": "computer continuation frontend unit coverage",
+      "tree": "569a3214cc4ec0e0432f286ec693233959ec7bba",
+      "command": "npm run test:coverage -- --maxWorkers=2 --cache=false",
+      "result": "passed; statements/branches/functions/lines 100%; final source applicability is separately verified",
+      "passed": 1076,
+      "files": 78,
+      "receipt": "output/local/touring-readiness-2026-09-30/checkpoint-569a3214-frontend/frontend-coverage-receipt.json"
+    }
+  ],
+  "integration_shas": [
+    "913ad1ba",
+    "7135e002",
+    "a08521a8",
+    "59a4bb7b",
+    "c029600a",
+    "9051e849",
+    "d68dc3a9",
+    "c32f6207",
+    "0a0b1281",
+    "09b1fe6e",
+    "d7f62648",
+    "3d0b3c92",
+    "a0db2724",
+    "3028ea30",
+    "2e4b32ef",
+    "c4dbee6a",
+    "3f1c2ba1",
+    "abf0ea61",
+    "a685df2d",
+    "8067387e",
+    "226aa0f0",
+    "5f911385f58fb0453813484df9678ef3797c14a2",
+    "788958f6",
+    "a545d33f",
+    "6f00f8d2",
+    "c0e0dcc8",
+    "025e2551",
+    "4d674d5f",
+    "577993dd",
+    "6c36f9ae",
+    "61815097"
+  ],
+  "blockers": [
+    "physical Raspberry Pi unavailable",
+    "A4 live authority unvalidated",
+    "unsaved working-state readback not established",
+    "ARM64 native dependency build unavailable (no Docker/Rust, no configured WSL distribution)",
+    "automatic approval review blocked obsolete credential directory deletion and original node_modules junction unlink; both preserved; clean isolated dependency installation used"
+  ],
+  "resume": "Read this ledger and continuation receipts; reconcile PR #252 exact head and tests; obtain instrument OS/channel/current-value/backup evidence; execute existing first-computer and studio forms without output before reviewed ready plan confirmation. Pi native/offline/touch/startup and full-set recovery remain physical acceptance, never simulated passes.",
+  "resources": {
+    "logical_cpus": 24,
+    "ram_total_gib": 31.75,
+    "ram_available_gib_latest": 15.76,
+    "disk_free_gib_initial": 432,
+    "python": "3.12.14 Windows x64",
+    "lint_tools": "ruff0.15.13 black26.3.1 isort8.0.1 pyright1.1.411 isolated under ignored output/local/pi-appliance/venv/python-tools",
+    "frontend_dependencies": "Fresh npm ci,396 locked packages under ignored touring-readiness frontend-deps; clean final verification tree uses its own junction; original checkout and old preview dependencies preserved"
+  },
+  "review": {
+    "architecture": "canonical facts870d3227; public native type facade preserves frozen AL02 source; independent reviewer approved narrow downward dual_machine-to-data matrix declarationa0db2724",
+    "types": "Final scoped review repaired fixed state/lane/parameter/provenance/history/profile-summary/document contracts in226aa0f0; strict23modules and94focusedtests pass, changed facade modules100%branchcoverage.",
+    "safety": "passive capture touch cancel repaired746eea41",
+    "observability": "runtime d3e934ce, root0a0b1281, controls eeffe1a9",
+    "abstraction": "HistoryStore pointers authoritative, canonicaltargetfacts; rollback2993393 restores previous release service assets throughsharedrender/activationhelpers and preserves autostartchoice. Final review reused canonical require_object in226aa0f0 and public A4Kit.iter_sounds in8067387e;126nativeprojection tests pass.",
+    "tests": "Full backend10608pass at3f1c2ba1; Gate1 all23modules100%; frontend1075pass100%; lifecycle90focusedpass ata685df2d. Final clean-commit rerun recorded in external source-bound receipts.",
+    "docs": "Operator/deployment/CONTRIBUTING and architecture/diagram updated; lessons capture source binding, native precision, modal visibility and release recovery.",
+    "maintainability": "Independent review complete: wheelhouse source identity, retained immutable inventory, prior-release service activation, UTF8 metadata and compact modal action visibility repaired and regression-tested through a685df2d and99a0e419.",
+    "visual": "Independent pixel review found compact modal actions clipped;99a0e419 repaired fixed header/footer with scrollingbody. Actual80productionbundlechecks and independent8shot originalresolutionrecheck pass.",
+    "security": "Exact retained file inventory and identity; previous release service templates; fresh wheelhouse receipt; standalonebytecode refusal; explicitUTF8 metadata reads/writes repaired througha685df2d with regressiontests. No unresolved material finding in implemented scope.",
+    "computer_continuation": "Eight independent dimensions inspect continuation; architecture enum drift guard and failure-safe shared metrics fixture added after review. Maintainer passive disconnect and unarmed DISARM repairs merged; exact saved-content fields and public deterministic supported/refused lifecycle seeds tested. Packaging is unsigned integrity checking with pending native target validation. See continuation reviews and consolidated verdict; replacement-source tests/package remain externally source-bound."
+  },
+  "source_bound_acceptance_directory": "output/local/touring-readiness-2026-09-30/"
+}

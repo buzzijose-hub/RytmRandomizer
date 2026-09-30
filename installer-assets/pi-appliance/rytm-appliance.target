@@ -1,0 +1,7 @@
+[Unit]
+Description=RytmRandomizer local performance appliance
+Wants=rytm-appliance-backend.service rytm-appliance-kiosk.service
+After=graphical-session.target
+
+[Install]
+WantedBy=graphical-session.target

@@ -25,12 +25,16 @@ Spec reference: see ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-mode
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from cockpit.conftest import collect_initial_events, complete_handshake, drain_events, send_cmd
 from fastapi.testclient import TestClient
 
+from rytm_randomizer.cockpit.ws.appliance_handlers import PROFILE_FILE_ENV, SIMULATION_ENV
 from rytm_randomizer.cockpit.ws.protocol import (
     COMMAND_ANALYZE_PATCH_GENOME,
+    COMMAND_APPLIANCE,
     COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
     COMMAND_CLEAR_MUTATION_TARGETS,
     COMMAND_EXPORT_PROFILE_MODEL,
@@ -50,6 +54,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     COMMAND_TOGGLE_PREVIEW,
     COMMAND_TYPES,
     COMMAND_UNDO,
+    EVENT_APPLIANCE_CHANGED,
     WS_SUBPROTOCOL,
 )
 
@@ -61,6 +66,78 @@ _COMMAND_MOCK_APPLY_OPERATOR_PACKAGE = "mock_apply_operator_package"
 # ---------------------------------------------------------------------------
 # Per-command round-trip: request_id echo + ok=True + command-specific fields.
 # ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("simulation", [False, True])
+def test_appliance_state_and_scope_roundtrip_with_revision_validation(
+    cockpit_ws: object,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    simulation: bool,
+) -> None:
+    """Authenticated commands return matching state events and reject stale writes."""
+
+    profile_file = tmp_path / "wire-appliance-scopes.json"
+    monkeypatch.setenv(PROFILE_FILE_ENV, str(profile_file))
+    monkeypatch.setenv(SIMULATION_ENV, "1" if simulation else "0")
+    ack = send_cmd(
+        cockpit_ws, COMMAND_APPLIANCE, request_id="rt-appliance-state", operation="state"
+    )
+    event = drain_events(cockpit_ws, 1)[0]
+    assert ack["request_id"] == "rt-appliance-state" and ack["ok"] is True
+    state = ack["appliance"]
+    assert event == {"type": EVENT_APPLIANCE_CHANGED, "state": state}
+    assert state["mode"] == ("simulation" if simulation else "production")
+    assert state["candidate"] is None and state["last_receipt"] is None
+    assert state["armed"] is False and state["history"]["hardware_restore_supported"] is False
+    assert set(state["lanes"]) == {"analog_rytm_mk2", "analog_four_mk2"}
+    expected_source = "simulation" if simulation else "disconnected"
+    assert all(
+        lane["provenance"]["source_type"] == expected_source
+        and lane["provenance"]["working_state_verified"] is False
+        for lane in state["lanes"].values()
+    )
+    before_revision = state["revision"]
+    changed = send_cmd(
+        cockpit_ws,
+        COMMAND_APPLIANCE,
+        request_id="rt-appliance-scope",
+        operation="scope",
+        expected_revision=before_revision,
+        payload={"master_depth": 0.2, "target": "both"},
+    )
+    assert changed["request_id"] == "rt-appliance-scope" and changed["ok"] is True
+    assert changed["appliance"]["revision"] > before_revision
+    assert changed["appliance"]["master_depth"] == 0.2
+    assert changed["appliance"]["target"] == "both"
+    assert drain_events(cockpit_ws, 1) == [
+        {"type": EVENT_APPLIANCE_CHANGED, "state": changed["appliance"]}
+    ]
+    refused = send_cmd(
+        cockpit_ws,
+        COMMAND_APPLIANCE,
+        request_id="rt-appliance-stale",
+        operation="scope",
+        expected_revision=before_revision,
+        payload={"master_depth": 1.0},
+    )
+    assert refused["request_id"] == "rt-appliance-stale" and refused["ok"] is False
+    assert refused["code"] == "validation_error"
+    # Read the next frame directly: the rejected write must not have queued a
+    # state event that a helper could skip while looking for this ack.
+    cockpit_ws.send_json(  # type: ignore[attr-defined]
+        {
+            "request_id": "rt-appliance-after-stale",
+            "command": {"type": COMMAND_APPLIANCE, "operation": "state"},
+        }
+    )
+    current = cockpit_ws.receive_json()  # type: ignore[attr-defined]
+    assert current["request_id"] == "rt-appliance-after-stale" and current["ok"] is True
+    assert current["appliance"] == changed["appliance"]
+    assert drain_events(cockpit_ws, 1) == [
+        {"type": EVENT_APPLIANCE_CHANGED, "state": current["appliance"]}
+    ]
+    assert not profile_file.exists()
 
 
 def test_analyze_patch_genome_roundtrips_with_passive_payload(cockpit_ws: object) -> None:
@@ -469,17 +546,18 @@ def test_all_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
     """Pin invariant: every cockpit-native command has a matching round-trip test above.
 
     ``COMMAND_TYPES`` is the union of the cockpit + wizard command surfaces
-    (49 cockpit + 8 wizard = 57 total). This test pins the legacy cockpit-native
+    (50 cockpit + 8 wizard = 58 total). This test pins the cockpit-native
     commands; the wizard subset is exercised end-to-end in
     ``test_integration_wizard_flow.py``. If a new cockpit command lands and
     this assertion is not extended, the file falls out of sync silently —
     this test makes that drift visible at the integration boundary.
     """
 
-    # 22 commands round-trip here; the 8 arm/diagnostics/library commands
+    # 23 commands round-trip here; the 8 arm/diagnostics/library commands
     # are exercised in tests/cockpit/test_ws_arm_and_library_handlers.py.
-    assert len(COMMAND_TYPES) == 57
+    assert len(COMMAND_TYPES) == 58
     cockpit_native = {
+        COMMAND_APPLIANCE,
         COMMAND_SELECT_PROFILE,
         COMMAND_SET_DEPTH,
         COMMAND_SET_PAD_LOCK,
@@ -504,7 +582,7 @@ def test_all_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
         "capture_current_kit",
     }
     assert cockpit_native <= COMMAND_TYPES
-    assert len(cockpit_native) == 22
+    assert len(cockpit_native) == 23
 
 
 # ---------------------------------------------------------------------------

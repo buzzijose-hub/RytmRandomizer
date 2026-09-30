@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import secrets
 from dataclasses import dataclass, field
+from threading import Event
 from typing import TYPE_CHECKING, Final
 
 from ...observability.logging import get_logger
@@ -55,6 +56,7 @@ from ..stage import DualMachineStageCoordinator
 from .wizard_session import WizardSession
 
 if TYPE_CHECKING:
+    from ..appliance import ApplianceWorkspace
     from ..show_bank.export import ShowPackService
     from ..show_bank.workspace import ShowKitForgeWorkspace
 
@@ -102,10 +104,15 @@ class CockpitSession:
     profile_registry: ProfileRegistry
     history_store: HistoryStore
     device: DeviceAdapter
+    appliance: ApplianceWorkspace | None = None
     kit_capture_service: KitCaptureService = field(default_factory=KitCaptureService.disabled)
     kit_captures: dict[KitCaptureDeviceId, KitCaptureResult] = field(
         default_factory=dict[KitCaptureDeviceId, KitCaptureResult]
     )
+    capture_cancel: Event | None = None
+    """Cancellation signal for the one owned input capture, never output authority."""
+    capture_generation: int = 0
+    """Incremented on context loss so a late input result cannot restore revoked state."""
     active_profile: ProfileModel | None = None
     depth: float = DEFAULT_DEPTH
     seed: int = field(default_factory=fresh_seed)

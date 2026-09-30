@@ -27,6 +27,7 @@ export type SendPlanReadinessReason =
   | 'candidate_high_risk'
   | 'profile_mismatch'
   | 'source_snapshot_mismatch'
+  | 'paired_control_precision_unverified'
   | 'no_sendable_changes';
 
 export type HistoryEntryKind = 'auto' | 'saved';
@@ -977,6 +978,104 @@ export interface LibraryChangedEvent {
   library: { records: LibraryRecord[] };
 }
 
+/** Revision-bound appliance projection. Captured saved state never implies RAM authority. */
+export type ApplianceDeviceId = 'analog_rytm_mk2' | 'analog_four_mk2';
+export type ApplianceTarget = 'rytm' | 'a4' | 'both';
+export interface ApplianceScope {
+  target_ids: number[];
+  locked_ids: number[];
+  page_ids: string[];
+  track_depths: Record<string, number>;
+  page_depths: Record<string, number>;
+  parameter_locks: string[];
+}
+export interface ApplianceParameter {
+  parameter_id: string;
+  page: string;
+  parameter: string;
+  cockpit_key: string | null;
+  value: number | null;
+  machine_key: string | null;
+  values_by_track: Record<string, number>;
+  display_value?: string | null;
+  display_values_by_track?: Record<string, string>;
+  default_protected: boolean;
+  categorical?: boolean;
+  protection_reasons?: string[];
+  blockers: string[];
+}
+export interface ApplianceLane {
+  device_id: ApplianceDeviceId;
+  reference_track_id: number | null;
+  scope: ApplianceScope;
+  provenance: {
+    source_type: 'simulation' | 'saved_kit' | 'disconnected';
+    fingerprint: string | null;
+    captured_at: string | null;
+    kit_name: string | null;
+    working_state_verified: false;
+  };
+  parameters: ApplianceParameter[];
+  blocked_reasons: string[];
+}
+export interface ApplianceChange {
+  device_id: ApplianceDeviceId;
+  track_id: number;
+  parameter_id: string;
+  parameter: string;
+  page: string;
+  before: number;
+  after: number;
+  before_display?: string;
+  after_display?: string;
+}
+export interface ApplianceCandidate {
+  candidate_id: string;
+  revision: number;
+  changes: ApplianceChange[];
+  send_plan_id: string | null;
+  live_ready: boolean;
+  blocked_reasons: string[];
+}
+export interface ApplianceState {
+  schema_version: 1;
+  revision: number;
+  mode: 'simulation' | 'production';
+  target: ApplianceTarget;
+  master_depth: number;
+  armed: boolean;
+  lanes: Record<ApplianceDeviceId, ApplianceLane>;
+  candidate: ApplianceCandidate | null;
+  history: {
+    can_undo: boolean;
+    can_redo: boolean;
+    count: number;
+    anchor_captured: boolean;
+    hardware_restore_supported: false;
+  };
+  profiles: Array<{
+    name: string;
+    association: { device_ids: string[]; fingerprints: Record<string, string | null> };
+  }>;
+  last_receipt: {
+    status: string;
+    sent_count: number;
+    expected_count: number;
+    hardware_verified: false;
+  } | null;
+  blocked_reasons: string[];
+}
+export interface ApplianceChangedEvent {
+  type: 'appliance_changed';
+  state: ApplianceState;
+}
+export interface ApplianceControlIntentEvent {
+  type: 'appliance_control_intent';
+  action: 'focus_step' | 'activate_focus' | 'mutate' | 'undo' | 'capture_anchor';
+  delta: number;
+  source: 'physical_input';
+}
+
 export type Event =
   | SnapshotChangedEvent
   | MutationPreviewedEvent
@@ -995,6 +1094,8 @@ export type Event =
   | ConnectionChangedEvent
   | MidiActivityEvent
   | LibraryChangedEvent
+  | ApplianceChangedEvent
+  | ApplianceControlIntentEvent
   | WizardEvent;
 
 export type EventType = Event['type'];
@@ -1167,6 +1268,14 @@ export interface ArmCommand {
 /** `disarm {}` — tear down the armed seam, restore the passive device. */
 export interface DisarmCommand {
   type: 'disarm';
+}
+
+export type ApplianceOperation = 'state' | 'scope' | 'mutate' | 'anchor' | 'undo' | 'redo' | 'return_anchor' | 'profile_save' | 'profile_load' | 'profile_delete' | 'profile_import' | 'profile_export' | 'apply';
+export interface ApplianceCommand {
+  type: 'appliance';
+  operation: ApplianceOperation;
+  expected_revision?: number;
+  payload?: Record<string, unknown>;
 }
 
 /** `diagnostics {}` — read-only health query (journal + metrics + hints). */
@@ -1396,6 +1505,7 @@ export type Command =
   | BuildOperatorPackageReceiptCommand
   | ArmCommand
   | DisarmCommand
+  | ApplianceCommand
   | DiagnosticsCommand
   | LibraryListCommand
   | LibrarySearchCommand
@@ -1439,6 +1549,8 @@ export interface CommandEnvelope<C extends Command = Command> {
 export interface CommandAck {
   request_id: string;
   ok: boolean;
+  appliance?: ApplianceState;
+  document?: Record<string, unknown>;
   // Optional contextual payload returned with the ack (e.g. new candidate after set_depth).
   candidate?: MutationCandidate;
   send_plan?: CockpitSendPlan | null;
@@ -1510,6 +1622,8 @@ export function isEvent(msg: unknown): msg is Event {
     'connection_changed',
     'midi_activity',
     'library_changed',
+    'appliance_changed',
+    'appliance_control_intent',
     'wizard_state_changed',
     'analysis_progress',
     'profile_created',

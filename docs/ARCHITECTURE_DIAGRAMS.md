@@ -1,5 +1,41 @@
 # RytmRandomizer Architecture Diagrams
 
+## Touch appliance sharing and authority
+
+```mermaid
+flowchart LR
+  Touch[Adaptive touch route] --> WS[Authenticated Cockpit WS]
+  Studio[Existing Studio] --> WS
+  Kiosk[Private local browser bootstrap] --> Touch
+  WS --> Scope[Revision-bound scope and local history]
+  Scope --> Engine[Existing deterministic engine]
+  Scope --> Catalog[Canonical parameter evidence]
+  Scope --> Aliases[data/device_targets immutable aliases]
+  Resolver[Existing dual_machine target resolver] --> Aliases
+  Resolver --> Registry[Existing devices registry]
+  WS --> Capture[Existing input-only KIT capture]
+  WS --> Cancel[DISARM or owner disconnect]
+  Cancel --> Generation[Revoke capture generation]
+  Cancel --> Provider[Optional CancellableSysexCaptureProvider]
+  Capture --> InputIdentity[Provider requires one selected raw input-name match]
+  InputIdentity -->|one match| Provider
+  InputIdentity -->|missing or ambiguous| InputRefusal[Refuse before input open]
+  Generation --> Late[Discard late capture results]
+  Capture --> Saved[Saved-state evidence]
+  Saved --> Native[Public typed A4 field facade and Rytm promotion]
+  Native --> Scope
+  Pins[Explicit optional input adapter] --> Queue[One kiosk bounded event queue]
+  Queue --> Touch
+  WS --> Armed[Existing ArmedApply boundary]
+  WS --> DisarmCheck[Check DISARM authority before mutation]
+  DisarmCheck -->|plain unarmed Studio| UnarmedRefusal[Refuse without state changes]
+  DisarmCheck -->|armed or capture or appliance| Cancel
+  Drop[Passive Studio connection loss] --> KeepOffline[Preserve offline candidate and plan]
+  Drop --> Generation
+  Scope --> Block[Scoped live APPLY awaits working-state and restore evidence]
+  Scope --> History[Existing per-lane HistoryStore pointers]
+```
+
 ## Purpose
 
 This document maps the current application architecture using only the real
@@ -3146,7 +3182,9 @@ sequenceDiagram
 flowchart LR
     Operator["Operator"] --> CaptureUI["Capture Current Kit<br/>exact input selection"]
     CaptureUI --> InputBoundary["app --arm<br/>--cockpit-kit-capture-sidecar<br/>INPUT ONLY"]
-    InputBoundary --> Codecs["Rytm/A4 saved-KIT codecs<br/>family + checksum + length<br/>exact decode/re-encode"]
+    InputBoundary --> InputIdentity["provider checks selected raw input name<br/>exactly one match before open"]
+    InputIdentity -->|"one match"| Codecs["Rytm/A4 saved-KIT codecs<br/>family + checksum + length<br/>exact decode/re-encode"]
+    InputIdentity -->|"missing or ambiguous"| InputRefusal["refuse before input open"]
 
     Codecs --> RytmAnchor["Verified Rytm anchor"]
     Codecs --> A4Anchor["Verified A4 anchor"]
@@ -3159,7 +3197,9 @@ flowchart LR
     Coordinator["DualMachineStageCoordinator<br/>whole-state revision"] --> RytmLane
     Coordinator --> A4Lane
 
-    RytmLane --> Prepare["PREPARE<br/>exact plan id + pads + count"]
+    RytmLane --> Precision["canonical changed-field transport check<br/>in-scope and unlocked only"]
+    Precision -->|"paired precision unverified"| PlanRefusal["paired_control_precision_unverified<br/>whole plan unready · zero transmitted packets"]
+    Precision -->|"supported seven-bit controls"| Prepare["PREPARE<br/>exact plan id + pads + count"]
     Prepare --> Confirm["per-action confirm:true<br/>same current plan id"]
     Confirm --> ArmedApply["senders/armed_apply.py<br/>sole Cockpit output handle"]
     ArmedApply --> Rytm["Analog Rytm RAM-only CC"]
@@ -3187,7 +3227,13 @@ Capture authority and send authority are deliberately separate. A failure in
 one lane cannot promote, arm, or corrupt the other lane. Rytm physical
 connection state comes from the armed-output manager; A4 capture/session state
 does not claim continuous hot-plug monitoring. Rytm plans are bound
-to the captured source, effective scope, candidate, and exact plan id. A4
+to the captured source, effective scope, candidate, and exact plan id. The
+canonical plan guard marks the whole plan unready for a changed, in-scope,
+unlocked paired control. Supported packets remain available for inspection;
+none is transmitted, no MSB-only approximation is made and no subset is applied.
+The real input provider refuses a missing or duplicate exact raw name before
+open; the capture service delegates that check. Neither guard establishes
+physical mutation or recovery. A4
 remains useful for capture, target/lock rehearsal, and narrow offline Filter 1
 Frequency file generation, while its live output authority is structurally
 blocked.

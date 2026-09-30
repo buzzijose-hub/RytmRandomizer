@@ -333,6 +333,12 @@ rule, change it here first, then update the test.
     optional offline A4 capability are described in
     [§6.6](#66-show-kit-forge-paired-preparation-layer-2026-09).
 
+11. **Dual-machine target aliases come from the shared data leaf.**
+    `dual_machine/targets.py` may import the immutable alias table from
+    `data/device_targets.py`. Concrete devices still come only from the public
+    registry. This reviewed downward edge is declared by the import matrix and
+    described with the appliance consumers in [§6.2](#62-cockpit--profile-model-layer-phase-1).
+
 ---
 
 ### Updater metadata exceptions under review
@@ -666,6 +672,54 @@ as a snapshot mutation, move it through the `Device` strategies instead.
 
 ## 6.2 Cockpit & Profile-Model layer (Phase 1)
 
+### Touch appliance presentation
+
+`desktop/web/src/appliance/` (`#/appliance`) is an adaptive touch presentation of
+the same Cockpit. `cockpit/appliance.py` adds revision-bound explicit scope, bounded
+local history and registered versioned preset associations. It consumes Snapshot,
+HistoryStore, MockDeviceAdapter, the deterministic engine and registered mutation
+domains. `cockpit/capture/appliance_capabilities.py` projects canonical catalogs and codec
+facts into parameter evidence without granting output authority. The `appliance`
+WS command and `appliance_changed` whole-state event are requested on demand,
+retaining Studio's fixed bootstrap. Context changes revoke candidates. Touch empty
+targets mean none before invoking legacy MutationScope. Optional controls emit
+touch intents. `cockpit/appliance_runtime.py` serves the same production bundle
+on authenticated loopback with a private browser bootstrap. Scripts/assets live
+under existing `scripts/` and `installer-assets/`. No sender is introduced; scoped
+live APPLY awaits working-state/readback/restore evidence and Studio ArmedApply
+policy stays unchanged. See `PI_APPLIANCE_OPERATOR.md` and `PI_APPLIANCE_DEPLOYMENT.md`.
+
+The A4 projection in `cockpit/capture/appliance_a4.py` re-decodes the retained
+canonical frame, then uses typed native field accessors for all four tracks.
+The public `devices/analog_four_fields.py` facade exposes those existing codec
+types; capture code does not import the private strategy implementation.
+Integer bounds travel alongside per-cell depth into the shared engine; Q8.8 and
+Q8.7 display strings are exact. Shared pitch fine components remain protected.
+The optional `appliance_control_intent` event goes to one authenticated kiosk's
+bounded queue and invokes the same touch handlers. It cannot confirm ARM/APPLY.
+
+`CancellableSysexCaptureProvider` is an optional input-only Protocol in
+`cockpit/capture/service.py`. The WebSocket reader owns one capture task while
+continuing to accept DISARM; cancellation signals the cooperative provider and
+revokes the capture generation. Owner disconnect and connection loss use the
+same revocation. A late result from a non-cooperative provider is discarded;
+it cannot adopt a snapshot or revive device authority. No output method is added.
+The real capture provider requires exactly one occurrence of the selected raw
+input name in the freshly enumerated backend list before opening it. Missing
+and ambiguous names refuse; selecting the first duplicate cannot establish
+source identity. The capture service validates the request, owns cancellation
+and frame validation, and delegates port opening to that provider; it does not
+independently enforce name uniqueness. This input-only check grants no output
+or unsaved-state authority.
+Per-lane `HistoryStore` pointers own local current snapshots; the bounded joint
+timeline contains snapshot IDs only and coordinates both lanes without claiming
+hardware restoration. Target aliases come from `data/device_targets.py`, shared
+with the existing dual-machine target resolver.
+That resolver retains its public home in `dual_machine/targets.py` and adds one
+reviewed downward dependency on the stdlib-only `data` leaf. It still obtains
+device instances only through the registry. The import-direction matrix declares
+this shared-fact dependency explicitly; no concrete family dependency is added.
+
 The `rytm_randomizer.cockpit` subpackage is the live-performance GUI surface
 and the home of the portable mutation engine. It hosts the actual
 WebSocket Protocol the desktop shell drives. (The live `live_gui_*_model`
@@ -864,6 +918,12 @@ report. It sits **alongside** them:
   Persistent kit/sound writes are refused outright
   (`KitMutationUnsupportedError`); only RAM-only live-dial CC sends
   transmit.
+- **Shared Studio lifecycle remains coherent.** A passive connection drop
+  cancels input capture and revokes Forge hardware evidence, but preserves its
+  offline candidate and prepared plan. Appliance context or armed authority
+  uses the existing revocation events and teardown. A plain unarmed DISARM
+  refusal occurs before changing intent, candidate, plan or stage state;
+  accepted capture/appliance cancellation and armed DISARM broadcast the result.
 - **Architecture invariants apply unchanged.** `data/` stays a leaf
   (cockpit code may read `data/profiles.py` for CC-number lookups but
   never re-defines a fact table). The `cockpit/` subpackage satisfies
@@ -1433,6 +1493,13 @@ then select the candidate again, preview it, and prepare its exact plan before
 arming and confirming SEND. The server requires a matching source capture
 newer than the preceding hardware attempt or disconnect, plus explicit manual
 reload acknowledgment; a saved-KIT dump alone cannot prove restored RAM state.
+The existing `cockpit/engine/send_plan.py` boundary also inspects canonical
+transport metadata for each changed, in-scope, unlocked Rytm field. An
+unverified paired control makes the complete plan `ready=false` with
+`paired_control_precision_unverified`. Supported packets remain available for
+inspection, but zero packets are transmitted and no subset is applied. The
+paired field is not reduced to its MSB. Locked, untargeted or unchanged
+controls do not create that blocker. No new renderer or output seam is added.
 The path is implemented, but automated tests do not establish that a physical
 one-pad audition and restoration occurred. Persistent SAVE is never issued by
 Cockpit. The operator saves the favorite on the instrument, then requests a

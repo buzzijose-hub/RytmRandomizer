@@ -11,11 +11,81 @@ The Cockpit is a desktop window that gives you a single-screen view of your
 Elektron rig's current state and lets you generate new kits from your own
 authored intelligence. Capture a current kit, select targets and locks, pick a
 profile and depth, PREPARE an exact plan, confirm SEND, audition, and recover
-from history. The
+through the documented manual source reload and fresh verification. History
+navigation changes local Cockpit state; it does not restore instrument RAM. The
 whole point is to keep you at the rig, not at the laptop.
 
 This guide gets you from a clean clone to a working cockpit window on your
 machine.
+
+## First computer hardware gate
+
+Complete a narrow computer trial before treating Pi installation or a full-set
+rehearsal as hardware acceptance. USB/PnP discovery can identify MKII-named
+endpoints; it does not establish firmware, configured track channels, current
+parameter values or a recoverable backup. Confirm those facts on the instruments,
+preserve valuable unsaved work, and prepare disposable saved source KITs first.
+Record the current source/build and freshly enumerated exact ports; numeric
+indices and names from an earlier session are not routing authority.
+
+- **Input first:** the existing
+  `python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar`
+  composition permits selected input-only capture and leaves output unarmed.
+  A selected raw input name must occur exactly once in the available inputs;
+  missing or duplicate matches refuse before opening a port. A successful
+  enumeration is neither a captured baseline nor a mutation/recovery receipt.
+  For the first dedicated input-only receiver, set the documented
+  `RYTM_RAND_MIDI_BACKEND=off` in that child process before this app command.
+  This disables automatic background monitoring while the explicitly injected
+  capture service still lists and opens the selected real input. The resulting
+  connection-status indicator is not hot-plug proof. The Pi launcher's
+  `serve --hardware-input` selects `auto` and is not this isolated configuration.
+- **Rytm:** use the guarded **Show Kit Forge** audition described in
+  [§6a](#6a-remaining-operator-present-studio-rehearsal) and the existing
+  [studio checklist](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md).
+  Manually reload the preserved saved source, make a fresh matching capture,
+  reselect the candidate and prepare a new exact plan before arming/confirming.
+  Target one pad at 10% depth and lock/protect the other pads. Inspect every
+  changed field and value in the exact plan; proceed only when `ready` is true
+  and every proposed change is supported, small and approved for this trial.
+  **Show Kit Forge has pad locks, not individual control locks**; appliance
+  per-control protection does not carry into this workflow. If a changed,
+  in-scope, unlocked field requires paired
+  precision, PREPARE marks the **whole plan unready** with
+  `paired_control_precision_unverified`. Supported packets may remain visible
+  for inspection, but none is transmitted; the paired control is not reduced
+  to its MSB and no subset is applied. Review another candidate, or leave the
+  generated audition pending if none meets the bounded test criterion. Do not
+  remove captured fields or inject a hand-edited plan to make it sendable.
+  A single-field transport probe can instead use the existing app-only
+  `--validate-one-cc` procedure in
+  [manual hardware validation](MANUAL_HARDWARE_VALIDATION.md); its separately
+  verified channel/control/current value and manual recovery do not validate
+  generated Forge candidates. After an accepted trial, DISARM, manually reload
+  the saved source, inspect the actual sound/values and require a fresh
+  whole-payload fingerprint match. Local reset/UNDO is not the recovery step.
+- **A4:** the smallest separate computer probe is the legacy app-only
+  `--arm --a4-send-param` path for **OSC1 PWM Depth**, single CC74, with no LSB.
+  It is not Cockpit/APPLY authority. Before using it, verify model/firmware,
+  backup/disposable saved KIT, the intended track's channel and observed current
+  seven-bit value. Review one nearby value and select the freshly verified
+  exact A4 output; do not use a historical port index. Observe the intended
+  track and untouched tracks, then manually reload without saving the mutation
+  and verify the original value returned. The command template below is a
+  supervised trial only after those prerequisites, not a completed validation:
+
+  ```text
+  python -m rytm_randomizer.app --arm --a4-send-param --parameter "OSC1 PWM Depth" --channel <verified-zero-based-0..3> --value <reviewed-0..127>
+  ```
+
+Keep requested values, host-send counts, physical observations and manual
+recovery results as separate fields in the existing studio evidence record.
+If a send is interrupted, partial or uncertain, stop and recover the saved
+source before a new trial; do not retry a stale plan. No physical mutation or
+recovery acceptance follows from discovery or passing software tests. General
+A4, BOTH and scoped appliance live APPLY remain blocked, and a successful
+single-CC A4 probe does not unlock them. See the
+[Pi operator guide](PI_APPLIANCE_OPERATOR.md) for the later target-host boundary.
 
 ---
 
@@ -630,6 +700,8 @@ That capture authority can list and open the input selected in **Capture
 Current Kit**, but the capture flow has no output surface and cannot transmit a
 request or a kit. Cockpit's separate outbound surface remains unavailable until
 the operator completes the explicit arm flow described below.
+The selected exact raw input name must have one match in the available list;
+zero or multiple matches refuse before input open rather than choosing the first.
 Rytm and A4 frames must pass the family codec, checksum/length validation,
 and an exact decode/re-encode check before becoming in-memory captures.
 `session_status.capture_enabled` is the authoritative capability flag. The
@@ -702,8 +774,12 @@ do not infer an observation from a successful command or file transfer.
    such as Pad 1. Set depth to **10%**.
 4. Choose a profile, preview, and PREPARE. Record the exact output port, plan
    id, affected pad list, and message count. The affected set must contain
-   Pad 2 only and must exclude every locked/untargeted pad.
-5. Confirm SEND once. Audition while OXI continues to own notes/triggers. Save
+   Pad 2 only and must exclude every locked/untargeted pad. Inspect every
+   field/value and require `ready=true` with only supported, small changes
+   approved for this trial. Forge has no per-control lock; changed paired
+   controls block the whole plan. If no candidate meets this criterion,
+   leave the generated audition pending rather than alter a prepared plan.
+5. Only for that accepted ready plan, confirm SEND once. Audition while OXI continues to own notes/triggers. Save
    a screenshot and the Cockpit log line carrying the plan id and packet
    count. Verify the selected pad changed as intended and compare every
    locked/untargeted pad against the before capture.

@@ -17,10 +17,12 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Callable, Iterable
+from threading import Event
 from time import monotonic, sleep
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, Final, Protocol, cast
 
 from .observability.logging import get_logger
+from .observability.metrics import get_metrics
 from .observability.tracing import operation
 from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError, RealMidiSendError
 
@@ -35,6 +37,7 @@ __all__ = [
 ]
 
 _logger = get_logger(__name__)
+_AMBIGUOUS_INPUT_ERROR: Final[str] = "ambiguous_midi_input_port"
 
 
 class RealMidiInputPort(Protocol):
@@ -191,6 +194,34 @@ def _require_mido_port_name(value: object, *, direction: str) -> str:
     if not isinstance(value, str) or not value:
         raise RealMidiPortError(f"midi_{direction}_port_required")
     return value
+
+
+def _require_unambiguous_input_port(port_name: str, available: tuple[str, ...]) -> None:
+    """Refuse duplicate exact matches before either input backend opens."""
+
+    matches = available.count(port_name)
+    if matches > 1:
+        get_metrics().record_error(_AMBIGUOUS_INPUT_ERROR)
+        _logger.warning(
+            _AMBIGUOUS_INPUT_ERROR,
+            extra={
+                "match_count": matches,
+                "outcome": "refused",
+                "fingerprint": "midi.input.port_ambiguous",
+            },
+        )
+        raise RealMidiPortError(_AMBIGUOUS_INPUT_ERROR)
+
+
+def _close_raw_input(port: _RtMidiInput) -> None:
+    """Release a raw input after capture or a duplicate-name refusal."""
+
+    close_port = getattr(port, "close_port", None)
+    if callable(close_port):
+        try:
+            close_port()
+        except (OSError, RuntimeError, AttributeError):
+            _logger.debug("rtmidi_sysex_capture_close_failed_best_effort")
 
 
 def _require_7bit(value: object, *, field: str) -> int:
@@ -407,6 +438,7 @@ class MidoMidiPortProvider:
             available = self.list_input_names()
             if checked_port_name not in available:
                 raise RealMidiPortError(f"unknown_midi_input_port: {checked_port_name}")
+            _require_unambiguous_input_port(checked_port_name, available)
             try:
                 port = mido.open_input(checked_port_name)
             except (
@@ -431,6 +463,7 @@ class MidoMidiPortProvider:
         port_name: str,
         *,
         timeout_seconds: float,
+        cancel_event: Event | None = None,
     ) -> tuple[bytes, ...]:
         """Capture the first complete SysEx frame from a hardware input.
 
@@ -441,6 +474,8 @@ class MidoMidiPortProvider:
         checked_port_name = _require_mido_port_name(port_name, direction="input")
         if timeout_seconds <= 0:
             raise RealMidiPortError("midi_sysex_capture_timeout_seconds_required")
+        if cancel_event is not None and cancel_event.is_set():
+            raise RealMidiPortError("midi_sysex_capture_cancelled")
 
         with operation("capture_sysex_messages"):
             rtmidi = _import_rtmidi()
@@ -465,11 +500,19 @@ class MidoMidiPortProvider:
                 raise RealMidiPortError(f"unknown_midi_input_port: {checked_port_name}")
 
             try:
+                _require_unambiguous_input_port(checked_port_name, available)
+            except RealMidiPortError:
+                _close_raw_input(midi_in)
+                raise
+
+            try:
                 midi_in.ignore_types(sysex=False, timing=True, active_sense=True)
                 midi_in.open_port(available.index(checked_port_name))
                 deadline = monotonic() + timeout_seconds
                 sysex_buffer = bytearray()
                 while monotonic() < deadline:
+                    if cancel_event is not None and cancel_event.is_set():
+                        raise RealMidiPortError("midi_sysex_capture_cancelled")
                     message = midi_in.get_message()
                     frame = _coerce_sysex_frame(message)
                     if frame is None:
@@ -477,8 +520,13 @@ class MidoMidiPortProvider:
                         if data is not None:
                             frame = _append_sysex_chunk(sysex_buffer, data)
                     if frame is not None:
+                        if cancel_event is not None and cancel_event.is_set():
+                            raise RealMidiPortError("midi_sysex_capture_cancelled")
                         return (frame,)
-                    sleep(0.01)
+                    if cancel_event is None:
+                        sleep(0.01)
+                    else:
+                        cancel_event.wait(0.01)
             except (
                 OSError,
                 RuntimeError,
@@ -490,14 +538,17 @@ class MidoMidiPortProvider:
                     context={"underlying": repr(exc)},
                 ) from exc
             finally:
-                close_port = getattr(midi_in, "close_port", None)
-                if callable(close_port):
-                    try:
-                        close_port()
-                    except (OSError, RuntimeError, AttributeError):  # pragma: no cover
-                        _logger.debug("rtmidi_sysex_capture_close_failed_best_effort")
+                _close_raw_input(midi_in)
 
         raise RealMidiPortError("midi_sysex_capture_timeout")
+
+    def capture_sysex_messages_cancellable(
+        self, port_name: str, *, timeout_seconds: float, cancel_event: Event
+    ) -> tuple[bytes, ...]:
+        """Reuse the guarded input loop with an interruptible polling wait."""
+        return self.capture_sysex_messages(
+            port_name, timeout_seconds=timeout_seconds, cancel_event=cancel_event
+        )
 
 
 def build_mido_midi_port_provider() -> MidoMidiPortProvider:

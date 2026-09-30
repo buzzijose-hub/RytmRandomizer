@@ -42,11 +42,105 @@
  * host. See the PR body for the current CI status of the armed lane.
  */
 
-import { test, expect } from './fixtures/wizard_fixture';
-import type { Page } from '@playwright/test';
+import { test, expect, type SidecarHandle } from './fixtures/wizard_fixture';
+import type { Page, WebSocket } from '@playwright/test';
+import {
+  isEvent,
+  type CockpitSendPlan,
+  type Event as CockpitEvent,
+  type MutationCandidate,
+} from '../src/ws/protocol';
 
 /** How long to let the sidecar's connection poll publish its first enumeration. */
 const ENUMERATION_TIMEOUT_MS = 8_000;
+/** Bounded operator candidate search, never a retry of a failed SEND. */
+const MAX_CANDIDATES = 8;
+const PAIRED_CONTROL_MESSAGE =
+  'Paired-control precision is unverified. No part of this plan will be sent.';
+
+async function openCockpit(page: Page, sidecar: SidecarHandle): Promise<WebSocket> {
+  const connected = page.waitForEvent('websocket', {
+    predicate: async (socket) => {
+      const url = new URL(socket.url());
+      if (url.hostname !== sidecar.host || url.port !== String(sidecar.port)) return false;
+      // Development StrictMode creates and closes a throwaway connection.
+      // Own the authenticated socket that actually hydrates this UI, rather
+      // than the first matching URL. Unexpected loss after bootstrap fails.
+      try {
+        await socket.waitForEvent('framereceived', {
+          predicate: ({ payload }) => readEvent(payload)?.type === 'session_status',
+          timeout: ENUMERATION_TIMEOUT_MS,
+        });
+        return !socket.isClosed();
+      } catch (error: unknown) {
+        if (socket.isClosed()) return false;
+        throw error;
+      }
+    },
+  });
+  await page.goto('/');
+  await expect(page.getByTestId('cockpit-root')).toBeVisible({ timeout: 10_000 });
+  return connected;
+}
+
+function readEvent(payload: string | Buffer): CockpitEvent | null {
+  const message: unknown = JSON.parse(
+    typeof payload === 'string' ? payload : payload.toString('utf8'),
+  );
+  return isEvent(message) ? message : null;
+}
+
+/** Observe real sidecar events; every command still comes from a UI click. */
+async function eventAfterUI(
+  socket: WebSocket,
+  type: CockpitEvent['type'],
+  action: () => Promise<void>,
+): Promise<CockpitEvent> {
+  const received = socket.waitForEvent('framereceived', {
+    predicate: ({ payload }) => readEvent(payload)?.type === type,
+    timeout: ENUMERATION_TIMEOUT_MS,
+  });
+  await action();
+  const event = readEvent((await received).payload);
+  if (event === null || event.type !== type) {
+    throw new Error(`Expected sidecar ${type} event after UI action`);
+  }
+  return event;
+}
+
+async function previewAfterUI(
+  socket: WebSocket,
+  action: () => Promise<void>,
+): Promise<MutationCandidate> {
+  const event = await eventAfterUI(socket, 'mutation_previewed', action);
+  if (event.type !== 'mutation_previewed' || event.candidate === null) {
+    throw new Error('Expected a genuine generated preview after UI action');
+  }
+  return event.candidate;
+}
+
+async function prepareCurrentCandidate(
+  page: Page,
+  socket: WebSocket,
+  candidate: MutationCandidate,
+): Promise<CockpitSendPlan> {
+  const prepare = page.getByTestId('action-prepare-send-plan');
+  await expect(prepare).toBeEnabled({ timeout: ENUMERATION_TIMEOUT_MS });
+  const event = await eventAfterUI(socket, 'send_plan_changed', () => prepare.click());
+  if (event.type !== 'send_plan_changed' || event.send_plan === null) {
+    throw new Error('Expected a genuine prepared plan after PREPARE');
+  }
+  expect(event.send_plan.candidate_id).toBe(candidate.candidate_id);
+  return event.send_plan;
+}
+
+async function expectPairedControlRefusal(page: Page, plan: CockpitSendPlan): Promise<void> {
+  expect(plan.ready).toBe(false);
+  expect(plan.blocked_reasons).toContain('paired_control_precision_unverified');
+  await expect(page.getByTestId('action-send')).toBeDisabled();
+  await expect(page.getByTestId('safety-rail')).toContainText(PAIRED_CONTROL_MESSAGE);
+  await expect(page.getByTestId('send-confirm-dialog')).toHaveCount(0);
+}
 
 /**
  * Read the outputs the sidecar has actually enumerated, straight from the
@@ -75,6 +169,7 @@ async function selectFirstProfile(page: Page): Promise<void> {
   const chips = page.getByTestId('profile-chips').getByRole('button');
   await expect(chips.first()).toBeVisible({ timeout: ENUMERATION_TIMEOUT_MS });
   await chips.first().click();
+  await expect(chips.first()).toHaveAttribute('aria-pressed', 'true');
 }
 
 /**
@@ -84,36 +179,110 @@ async function selectFirstProfile(page: Page): Promise<void> {
  * on, and the UI gates PREPARE on having seen a candidate — so the operator
  * journey genuinely starts here, not at REGEN.
  */
-async function enablePreview(page: Page): Promise<void> {
+async function enablePreview(page: Page, socket: WebSocket): Promise<void> {
   const toggle = page.getByTestId('action-preview');
   if ((await toggle.getAttribute('aria-pressed')) !== 'true') {
-    await toggle.click();
+    await previewAfterUI(socket, () => toggle.click());
     await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   }
 }
 
-/** Drive the cockpit to a PREPARE-d, ready send plan. */
-async function prepareSendPlan(page: Page): Promise<void> {
-  await enablePreview(page);
-  // REGEN guarantees a fresh candidate regardless of the boot-time depth.
-  await page.getByTestId('action-regen').click();
-  const prepare = page.getByTestId('action-prepare-send-plan');
-  await expect(prepare).toBeEnabled({ timeout: ENUMERATION_TIMEOUT_MS });
-  await prepare.click();
-  await expect(page.getByTestId('action-send')).toBeEnabled();
+/** Select an actual supported preview scope, retaining its seed through PREPARE. */
+async function prepareSendPlan(page: Page, socket: WebSocket): Promise<void> {
+  await enablePreview(page, socket);
+  const clearTargets = page.getByTestId('rytm-target-summary').getByRole('button');
+  if (await clearTargets.isEnabled()) {
+    await previewAfterUI(socket, () => clearTargets.click());
+  }
+
+  // The default snapshot includes paired LFO Depth. A broad generated
+  // candidate may correctly refuse; inspect that refusal before narrowing
+  // scope, rather than assuming REGEN always produces a sendable plan.
+  for (let attempt = 0; attempt < MAX_CANDIDATES; attempt += 1) {
+    const candidate = await previewAfterUI(socket, () => page.getByTestId('action-regen').click());
+    const broadPlan = await prepareCurrentCandidate(page, socket, candidate);
+    if (candidate.pad_deltas.some((delta) => delta.changed_keys.includes('lfo_depth'))) {
+      await expectPairedControlRefusal(page, broadPlan);
+    } else if (broadPlan.packets.length > 0) {
+      expect(broadPlan.ready).toBe(true);
+      await expect(page.getByTestId('action-send')).toBeEnabled();
+    } else {
+      expect(broadPlan.ready).toBe(false);
+      expect(broadPlan.blocked_reasons).toContain('no_sendable_changes');
+      await expect(page.getByTestId('action-send')).toBeDisabled();
+    }
+
+    const supported = candidate.pad_deltas.find(
+      (delta) => !delta.changed_keys.includes('lfo_depth') &&
+        broadPlan.packets.some((packet) => packet.pad_id === delta.pad_id),
+    );
+    if (supported === undefined) continue;
+
+    const card = page.getByTestId(`pad-card-${supported.pad_id}`);
+    const target = card.getByRole('button', { name: `Target pad ${supported.pad_id}`, exact: true });
+    const scoped = await previewAfterUI(socket, () => target.click());
+    expect(scoped.seed).toBe(candidate.seed);
+    expect(scoped.source_snapshot_id).toBe(candidate.source_snapshot_id);
+    expect(scoped.pad_deltas).toEqual([supported]);
+    await expect(
+      card.getByRole('button', { name: `Remove pad ${supported.pad_id}`, exact: true }),
+    ).toHaveAttribute('aria-pressed', 'true');
+    await expect(card.getByTestId('knob-ghost-LDP')).toHaveCount(0);
+
+    const plan = await prepareCurrentCandidate(page, socket, scoped);
+    expect(plan.ready).toBe(true);
+    expect(plan.blocked_reasons).toEqual([]);
+    expect(plan.target_pad_ids).toEqual([supported.pad_id]);
+    expect(plan.packets).toEqual(
+      broadPlan.packets.filter((packet) => packet.pad_id === supported.pad_id),
+    );
+    expect(plan.packets.length).toBeGreaterThan(0);
+    await expect(page.getByTestId('action-send')).toBeEnabled();
+    return;
+  }
+  throw new Error(
+    `No pad with unchanged paired LFO Depth and supported changes in ${MAX_CANDIDATES} genuine UI candidates`,
+  );
 }
 
 test.describe('armed SEND journey (I2)', () => {
+  test('changed paired LFO Depth blocks the whole plan and explains the refusal', async ({
+    page,
+    sidecar,
+  }) => {
+    const socket = await openCockpit(page, sidecar);
+    await selectFirstProfile(page);
+    await enablePreview(page, socket);
+
+    for (let attempt = 0; attempt < MAX_CANDIDATES; attempt += 1) {
+      const candidate = await previewAfterUI(socket, () => page.getByTestId('action-regen').click());
+      const plan = await prepareCurrentCandidate(page, socket, candidate);
+      const paired = candidate.pad_deltas.find((delta) => delta.changed_keys.includes('lfo_depth'));
+      if (paired === undefined) {
+        expect(plan.ready).toBe(plan.packets.length > 0);
+        if (plan.ready) await expect(page.getByTestId('action-send')).toBeEnabled();
+        else await expect(page.getByTestId('action-send')).toBeDisabled();
+        continue;
+      }
+      await expect(
+        page.getByTestId(`pad-card-${paired.pad_id}`).getByTestId('knob-ghost-LDP'),
+      ).toHaveCount(1);
+      expect(plan.packets.length).toBeGreaterThan(0);
+      await expectPairedControlRefusal(page, plan);
+      return;
+    }
+    throw new Error(`No changed paired LFO Depth in ${MAX_CANDIDATES} genuine UI candidates`);
+  });
+
   test('unarmed SEND is a single click and needs no confirmation dialog', async ({
     page,
     sidecar,
   }) => {
     expect(sidecar.token.length).toBeGreaterThan(20);
-    await page.goto('/');
-    await expect(page.getByTestId('cockpit-root')).toBeVisible({ timeout: 10_000 });
+    const socket = await openCockpit(page, sidecar);
 
     await selectFirstProfile(page);
-    await prepareSendPlan(page);
+    await prepareSendPlan(page, socket);
 
     const send = page.getByTestId('action-send');
     // Mock session ⇒ dry-run label, and the sidecar does not demand confirm.
@@ -131,7 +300,7 @@ test.describe('armed SEND journey (I2)', () => {
     page,
     sidecar,
   }) => {
-    await page.goto('/');
+    const socket = await openCockpit(page, sidecar);
     const outputs = await enumeratedOutputs(page);
 
     test.skip(
@@ -158,7 +327,7 @@ test.describe('armed SEND journey (I2)', () => {
 
     // --- PREPARE ------------------------------------------------------------
     await selectFirstProfile(page);
-    await prepareSendPlan(page);
+    await prepareSendPlan(page, socket);
 
     // Armed ⇒ live label, not the dry-run one.
     const send = page.getByTestId('action-send');
@@ -183,7 +352,7 @@ test.describe('armed SEND journey (I2)', () => {
     await page.getByTestId('disarm-button').click();
     await expect(page.getByTestId('arm-open-button')).toBeVisible();
     // Back to passive: the label reverts to the dry-run wording.
-    await prepareSendPlan(page);
+    await prepareSendPlan(page, socket);
     await expect(page.getByTestId('action-send')).toContainText('DRY-RUN SEND');
   });
 });

@@ -272,7 +272,9 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "snapshot",
         }
     ),
-    "dual_machine": frozenset({"devices"}),
+    # Target aliases are canonical immutable data shared with the appliance.
+    # The resolver still obtains every concrete device through the registry.
+    "dual_machine": frozenset({"data", "devices"}),
     "engines": frozenset(
         {
             "data",

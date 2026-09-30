@@ -8,6 +8,13 @@ import Snapshot`` without reaching into each submodule. See
 
 from __future__ import annotations
 
+from ...data.device_targets import DUAL_MACHINE_TARGET_IDS
+from ...data.persisted_state import (
+    PERSISTED_STATE_REFUSAL_METRIC_CODES,
+    classify_payload,
+    require_schema_version,
+)
+from ...guardrails.input_validation import require_int, require_object
 from .history import History, HistoryEntry
 from .mutation_candidate import MutationCandidate, PadDelta
 from .profile_model import ProfileModel, StyleTrait, TraitPadWeight
@@ -89,4 +96,10 @@ __all__ = [
     "narrow_transition_curve",
     "narrow_via",
     "new_ulid",
+    "classify_payload",
+    "PERSISTED_STATE_REFUSAL_METRIC_CODES",
+    "DUAL_MACHINE_TARGET_IDS",
+    "require_int",
+    "require_object",
+    "require_schema_version",
 ]

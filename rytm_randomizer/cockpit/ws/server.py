@@ -129,6 +129,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from ...observability.logging import get_logger
 from .handlers import (
     EventEmitter,
+    cancel_pending_capture,
     disarm_session_on_teardown,
     drain_pending_events,
     emit_initial_events,
@@ -139,6 +140,7 @@ from .handlers import (
 from .protocol import (
     CLOSE_CODE_MESSAGE_TOO_BIG,
     CLOSE_CODE_POLICY_VIOLATION,
+    COMMAND_CAPTURE_CURRENT_KIT,
     HANDSHAKE_AUTH_FAILED,
     HANDSHAKE_AUTH_REQUIRED,
     HELLO_FRAME_TYPE,
@@ -622,30 +624,49 @@ async def _reader_loop(
     sibling connection's reader.
     """
 
-    while True:
-        try:
-            raw = await websocket.receive_text()
-        except WebSocketDisconnect:
-            # Client closed the connection — normal teardown path; no log
-            # noise needed (Uvicorn's access log records the disconnect).
-            return False
-        if len(raw.encode("utf-8")) > max_bytes:
-            # Ack + close on a size-cap violation (SX1). Routed through
-            # the queue so the writer stays the only sender; the tagged
-            # close_code makes the writer tear the socket down with
-            # 1009 (message too big) right after the ack flushes.
-            queue.put_frame(
-                {"ok": False, "code": MESSAGE_TOO_LARGE_CODE},
-                close_code=CLOSE_CODE_MESSAGE_TOO_BIG,
-            )
-            return True
-        envelope = _parse_envelope(raw)
+    async def dispatch(envelope: dict[str, object]) -> None:
         ack = await handle_command(envelope, session)
         # ack-first, events-second per spec § "The Three Protocols" —
         # both enter the FIFO queue back-to-back, so the client sees the
         # ack it can correlate to its request before any state update.
         queue.put_frame(ack)
         await drain_pending_events(session, emitter)
+
+    capture_task: asyncio.Task[None] | None = None
+    try:
+        while True:
+            try:
+                raw = await websocket.receive_text()
+            except WebSocketDisconnect:
+                return False
+            if len(raw.encode("utf-8")) > max_bytes:
+                queue.put_frame(
+                    {"ok": False, "code": MESSAGE_TOO_LARGE_CODE},
+                    close_code=CLOSE_CODE_MESSAGE_TOO_BIG,
+                )
+                return True
+            envelope = _parse_envelope(raw)
+            command = envelope.get("command")
+            if (
+                isinstance(command, dict)
+                and cast("dict[str, object]", command).get("type") == COMMAND_CAPTURE_CURRENT_KIT
+                and (capture_task is None or capture_task.done())
+            ):
+                # Input capture is the one long operation allowed off this reader.
+                # Its handler reserves session.capture_cancel before awaiting the
+                # input thread. All other mutations refuse while it is active;
+                # DISARM remains available on this same authenticated connection.
+                capture_task = asyncio.create_task(dispatch(envelope))
+                await asyncio.sleep(0)
+            else:
+                await dispatch(envelope)
+    finally:
+        if capture_task is not None:
+            if not capture_task.done():
+                cancel_pending_capture(session)
+                capture_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await capture_task
 
 
 def create_app(
@@ -678,6 +699,12 @@ def create_app(
         ``uvicorn.run(app, host=..., port=...)`` to serve.
     """
 
+    # A simulated launch never receives the transmit capability. The ordinary
+    # arm handler already refuses sessions with no server-minted secret before
+    # resolving a port or importing/constructing a MIDI provider. Seal it at
+    # composition so the preserved studio view has the same restriction.
+    if os.environ.get("RYTM_RAND_APPLIANCE_SIMULATION") == "1":
+        session.arm_secret = None
     if not isinstance(token, str) or not token:
         # An empty token would make the HMAC comparison pass against the
         # empty string a client could trivially send. Refuse to start
@@ -786,6 +813,11 @@ def create_app(
         disarm_session_on_teardown(session)
 
     app.router.add_event_handler("shutdown", _disarm_on_shutdown)
+
+    if os.environ.get("RYTM_RAND_APPLIANCE_WEB_ROOT"):
+        from ..appliance_runtime import install_appliance_routes
+
+        install_appliance_routes(app, token=expected_token, arm_secret=session.arm_secret)
 
     return app
 

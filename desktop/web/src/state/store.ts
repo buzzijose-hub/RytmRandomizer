@@ -380,6 +380,25 @@ export function createCockpitStore() {
           !sameNumberSet(state.a4TrackLocks, dualMachineStage.analog_four.locked_ids);
         const rytmCandidateReady = dualMachineStage.rytm.candidate_state === 'ready';
         const rytmPlanReady = dualMachineStage.rytm.plan_state === 'ready';
+        // PREPARE publishes the plan before its stage. A blocked plan is still
+        // current inspection evidence; preserving it does not grant SEND.
+        const plan = state.sendPlan;
+        const candidate = state.previewCandidate;
+        const rytmBlockedPlanCurrent =
+          dualMachineStage.rytm.plan_state === 'blocked' &&
+          rytmCandidateReady &&
+          dualMachineStage.rytm.connection_state !== 'disconnected' &&
+          state.connectionStatus === 'connected' &&
+          plan !== null &&
+          !plan.ready &&
+          candidate !== null &&
+          plan.candidate_id === candidate.candidate_id &&
+          plan.source_snapshot_id === candidate.source_snapshot_id &&
+          plan.profile_id === candidate.profile_id &&
+          plan.source_snapshot_id === state.snapshot?.snapshot_id &&
+          plan.profile_id === state.profile?.profile_id &&
+          sameNumberSet(plan.target_pad_ids, dualMachineStage.rytm.target_ids) &&
+          sameNumberSet(plan.locked_pad_ids, dualMachineStage.rytm.locked_ids);
         const a4CandidateReady = dualMachineStage.analog_four.candidate_state === 'ready';
         return {
           dualMachineStage,
@@ -389,7 +408,10 @@ export function createCockpitStore() {
           a4TrackLocks: dualMachineStage.analog_four.locked_ids,
           previewCandidate:
             rytmScopeChanged || !rytmCandidateReady ? null : state.previewCandidate,
-          sendPlan: rytmScopeChanged || !rytmPlanReady ? null : state.sendPlan,
+          sendPlan:
+            rytmScopeChanged || (!rytmPlanReady && !rytmBlockedPlanCurrent)
+              ? null
+              : state.sendPlan,
           patchGenomeStale:
             state.patchGenome === null
               ? false

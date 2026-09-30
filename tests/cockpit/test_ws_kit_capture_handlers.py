@@ -18,7 +18,7 @@ from conftest import (
 from rytm_randomizer.cockpit.capture import KitCaptureService
 from rytm_randomizer.cockpit.capture import bridge as capture_bridge
 from rytm_randomizer.cockpit.capture import cockpit_snapshot_from_rytm_capture
-from rytm_randomizer.cockpit.data import PadState, Snapshot
+from rytm_randomizer.cockpit.data import MutationCandidate, PadDelta, PadState, Snapshot
 from rytm_randomizer.cockpit.data.rytm_parameter_map import (
     cockpit_parameter_control,
     cockpit_parameter_key,
@@ -228,6 +228,24 @@ def test_a4_capture_retains_exact_evidence_without_touching_rytm_state(
     assert session.history_store.current == rytm_history
 
 
+def _single_parameter_candidate(session: CockpitSession, parameter: str) -> MutationCandidate:
+    candidate = session.current_candidate
+    assert candidate is not None
+    pad = session.device.capture_snapshot().pads[0]
+    before = pad.params[parameter]
+    return replace(
+        candidate,
+        pad_deltas=(
+            PadDelta(
+                pad_id=pad.pad_id,
+                proposed_params={**pad.params, parameter: before - 1 if before > 0 else 1},
+                changed_keys=frozenset({parameter}),
+            ),
+        ),
+        estimated_midi_msgs=1,
+    )
+
+
 def test_captured_rytm_anchor_mutates_and_prepares_only_selected_pad(
     tmp_path: Path,
 ) -> None:
@@ -255,6 +273,7 @@ def test_captured_rytm_anchor_mutates_and_prepares_only_selected_pad(
     assert target_ack["ok"] is True
     assert session.current_candidate is not None
     assert {delta.pad_id for delta in session.current_candidate.pad_deltas} == {1}
+    session.current_candidate = _single_parameter_candidate(session, "flt")
 
     prepare_ack = _dispatch(session, {"type": "prepare_send_plan"})
     assert prepare_ack["ok"] is True
@@ -269,6 +288,45 @@ def test_captured_rytm_anchor_mutates_and_prepares_only_selected_pad(
     after_send = session.device.capture_snapshot()
     after_untargeted = {pad.pad_id: pad for pad in after_send.pads if pad.pad_id != 1}
     assert after_untargeted == before_untargeted
+
+
+def test_captured_rytm_paired_field_is_retained_but_refuses_a_send(tmp_path: Path) -> None:
+    frame = elektron_syx_message(rytm_real_layout_kit_payload(b"PAIRED BASELINE"))
+    session = _session(tmp_path, KitCaptureService(_Provider(frame)))
+    assert (
+        _dispatch(
+            session,
+            {
+                "type": COMMAND_CAPTURE_CURRENT_KIT,
+                "device_id": "analog_rytm_mk2",
+                "input_port": "Rytm Input",
+            },
+        )["ok"]
+        is True
+    )
+    capture = session.kit_captures["analog_rytm_mk2"]
+    before_snapshot = session.device.capture_snapshot()
+    before_history = session.history_store.current
+    assert "lfo_depth" in before_snapshot.pads[0].params
+    session.active_profile = session.profile_registry.list_profiles()[0]
+    assert (
+        _dispatch(
+            session,
+            {"type": "set_mutation_targets", "device_id": "analog_rytm_mk2", "target_ids": [1]},
+        )["ok"]
+        is True
+    )
+    session.current_candidate = _single_parameter_candidate(session, "lfo_depth")
+
+    prepared = _dispatch(session, {"type": "prepare_send_plan"})
+    assert prepared["ok"] is True
+    assert prepared["send_plan"]["ready"] is False
+    assert prepared["send_plan"]["readiness_reason"] == "paired_control_precision_unverified"
+    assert prepared["send_plan"]["packets"] == []
+    assert _dispatch(session, {"type": "send"})["ok"] is False
+    assert session.device.capture_snapshot() == before_snapshot
+    assert session.history_store.current == before_history
+    assert session.kit_captures["analog_rytm_mk2"] is capture
 
 
 def test_rytm_capture_promotion_fails_closed_on_untrusted_result_shapes() -> None:

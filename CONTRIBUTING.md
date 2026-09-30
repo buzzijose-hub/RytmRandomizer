@@ -610,6 +610,27 @@ output still requires the separate ArmedApply lifecycle. Keep the default,
 override, installer, and passive-CLI behavior synchronized with
 `docs/LOCAL_DEV_TOOLING_NOTES.md` and `docs/COCKPIT_QUICKSTART.md`.
 
+The Pi launcher sets `RYTM_RAND_APPLIANCE_WEB_ROOT` to the production frontend
+and requires `RYTM_RAND_APPLIANCE_RUNTIME_DIR` for its private browser bootstrap.
+Both are unset by default. `RYTM_RAND_APPLIANCE_SIMULATION=1` explicitly selects
+disconnected simulation and permanently removes output authority from that server
+composition; it is unset by default. `RYTM_RAND_APPLIANCE_PROFILE_FILE` optionally
+overrides the server-owned rule-profile file, which otherwise lives at the
+platform Cockpit config root as `appliance-scopes.json`. Profiles never persist
+arming, candidates, or pending commands. See the environment index in
+[`LOCAL_DEV_TOOLING_NOTES.md`](docs/LOCAL_DEV_TOOLING_NOTES.md) and the build,
+install, and rollback procedures in
+[`PI_APPLIANCE_DEPLOYMENT.md`](docs/PI_APPLIANCE_DEPLOYMENT.md).
+
+The Pi kiosk also reads inherited platform settings: `WAYLAND_DISPLAY` must
+come from an existing graphical Wayland session; when it is unset, `kiosk`
+refuses to launch. `XDG_RUNTIME_DIR` supplies the default parent for private
+runtime files; when unset, the launcher uses Python's platform temporary
+directory. `--runtime-dir` overrides that choice. `session-start` imports the
+existing `WAYLAND_DISPLAY`, `DISPLAY` and `XDG_CURRENT_DESKTOP` into the user's
+service manager; it does not create a compositor or invent display values.
+These settings do not enable MIDI and are not needed for the default CLI.
+
 The installer workflow also defines build-only `TAURI_CLI_VERSION` (pinned
 to `2.11.4`) and `STUDIO_WINDOWS` (the `studio_windows` dispatch input, false
 by default). These select the packaging tool and optional Windows studio copy;
@@ -817,6 +838,7 @@ Skills under `.claude/skills/` package repeatable knowledge so an agent (or a hu
 | [`codex-hook-additionalcontext-reprompt`](.claude/skills/learned/codex-hook-additionalcontext-reprompt/SKILL.md) | Codex hooks run only `type:command` handlers — re-prompt the model via `additionalContext`. |
 | [`playwright-strict-mode-selectors`](.claude/skills/learned/playwright-strict-mode-selectors/SKILL.md) | Keep browser locators unique and stable under Playwright strict mode. |
 | [`targeted-live-kit-mutation`](.claude/skills/learned/targeted-live-kit-mutation/SKILL.md) | Carry target-minus-lock scope, fresh capture authority, package-import isolation, exact-plan SEND, narrow A4 evidence, and atomic paired retention through live-kit work. |
+| [`pi-appliance-source-evidence`](.claude/skills/learned/pi-appliance-source-evidence/SKILL.md) | Bind the kiosk to its packaged source, seal simulation authority, preserve native parameter precision, and validate the production touch layout. |
 
 **Codex discovers these too.** Codex scans `$REPO_ROOT/.agents/skills/`, not `.claude/skills/`. The repo ships a committed symlink **`.agents/skills` → `.claude/skills/learned`** so codex auto-discovers every learned skill (identical `SKILL.md` format). Edit a skill once in `.claude/skills/learned/` and both agents see it. On a Windows clone where the symlink checked out as a plain file, run `git config core.symlinks true && git checkout -- .agents/skills` to re-materialize it. See [`AGENTS.md` § Skills](AGENTS.md#skills--codex-auto-discovers-them-from-agentsskills).
 

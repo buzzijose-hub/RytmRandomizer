@@ -5,9 +5,9 @@ first-class, mechanically-enforced invariant of this repo — not a
 post-hoc audit. This document is the conformance statement, the enforcement
 map, and the per-release manual screen-reader smoke protocol.
 
-The cockpit is a Tauri desktop app whose UI is a Vite + React + TypeScript
-web surface (`desktop/web/`) rendered in the platform WebView. All guidance
-below targets that surface.
+The cockpit's shared Vite + React + TypeScript web surface (`desktop/web/`)
+runs in the Tauri platform WebView or the Pi appliance's local Chromium kiosk.
+Both presentations need their own manual assistive-technology acceptance.
 
 ---
 
@@ -16,7 +16,8 @@ below targets that surface.
 - **Standard:** Web Content Accessibility Guidelines (WCAG) 2.2.
 - **Conformance level:** AA.
 - **Scope:** the cockpit (`desktop/web/src/cockpit/**`), the profile wizard
-  (`desktop/web/src/wizard/**`), and the shared a11y infrastructure
+  (`desktop/web/src/wizard/**`), the touch appliance
+  (`desktop/web/src/appliance/**`), and the shared a11y infrastructure
   (`desktop/web/src/a11y/**`).
 - **Evaluation methods:** automated axe-core scans (jsdom component/panel
   audit + real-Chromium route scan), CSS-token contrast analysis, and a
@@ -106,9 +107,17 @@ lanes plus a set of static architecture tests:
 | Gate | Runner | Where | What it catches |
 |---|---|---|---|
 | **Component/panel audit** | axe-core in jsdom | `desktop/web/tests/a11y/cockpit_axe_audit.test.tsx` (run by `npm run test:a11y`, a named step in the `desktop-web` CI job) | Structural WCAG 2.0/2.1/2.2 A+AA violations on every cockpit component + panel, in isolation. Floor 0 for every surface. |
+| **Appliance controls/dialogs** | axe-core in jsdom | `desktop/web/tests/a11y/appliance_axe_audit.test.tsx` (also run by `npm run test:a11y`) | Home/pad targets, track and parameter protection, numeric keypad, exact local-apply confirmation and passive output-arm dialog. Each case requires zero violations. |
 | **Per-control assertions** | axe-core in jsdom | `tests/cockpit/DepthSlider.test.tsx` (+ per-panel cases) | Control-level name/role/value + slider-pattern regressions. |
 | **Route scan** | @axe-core/playwright in real Chromium | `desktop/web/e2e/a11y_axe_scan.spec.ts` (`desktop-web-e2e` CI job) | Full-route violations **including colour-contrast** (which jsdom cannot compute — see §6). |
 | **Keyboard / SR journeys** | Playwright | `e2e/a11y_keyboard_journey.spec.ts`, `e2e/a11y_screen_reader_journey.spec.ts` | Tab order, focus movement, accessible-name snapshots. |
+
+The route scan explicitly covers `/`, `/#/wizard` and `/#/appliance`. The
+appliance case waits for authenticated appliance state, its passive status and
+all twelve pad controls before scanning; the disconnected shell is not a
+substitute. These are required checks, not evidence that a particular source
+revision has passed: consult that revision's CI or closeout receipts. A browser
+scan does not establish Raspberry Pi touchscreen or screen-reader acceptance.
 
 > **jsdom caveat:** jsdom has no canvas, so axe-core's colour-contrast rule
 > cannot run there and is silently skipped in the component audit. Contrast is
@@ -244,6 +253,10 @@ tracked follow-up.
 - **Tauri WebView parity.** Behaviour verified in Chrome/Firefox may differ
   in the OS WebView; the manual pass is done in the real build for that
   reason.
+- **Pi appliance acceptance.** The shared Chromium route and component gates
+  cover software accessibility. Physical touch, kiosk startup and the manual
+  screen-reader pass on Raspberry Pi OS remain separate acceptance work;
+  desktop scans do not establish those results.
 
 ---
 

@@ -66,6 +66,7 @@ import json
 import time
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable, Mapping
+from threading import Event
 from typing import Final, Protocol, SupportsFloat, SupportsInt, cast, runtime_checkable
 
 from ...devices import get_device
@@ -88,6 +89,7 @@ from ..data import (
     Snapshot,
     StageDeviceId,
 )
+from ..data.appliance import ApplianceProvenanceRecord
 from ..device.connection import ConnectionState, active_connection_manager
 from ..diagnostics import build_diagnostics_payload
 from ..engine import mutate, prepare_send_plan
@@ -136,6 +138,7 @@ from .protocol import (
     ERR_MISSING_ENVELOPE_KEY,
     ERR_UNKNOWN_COMMAND,
     ERR_VALIDATION,
+    EVENT_APPLIANCE_CHANGED,
     EVENT_CONNECTION_CHANGED,
     EVENT_DUAL_MACHINE_STAGE_CHANGED,
     EVENT_HISTORY_UPDATED,
@@ -840,13 +843,26 @@ async def _handle_capture_current_kit(
     input_port = cmd["input_port"]
     if not isinstance(input_port, str) or not input_port.strip():
         raise ValueError("capture input_port must be a non-empty string")
+    if session.capture_cancel is not None:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "another current-kit capture is active")
+        )
+    cancel_event = Event()
+    generation = session.capture_generation
+    session.capture_cancel = cancel_event
     try:
         result = await asyncio.to_thread(
             session.kit_capture_service.capture,
             device_id,
             input_port.strip(),
+            cancel_event=cancel_event,
         )
+    except asyncio.CancelledError:
+        cancel_event.set()
+        raise
     except (OSError, RuntimeError, TypeError, ValueError, RytmRandomizerError) as exc:
+        if cancel_event.is_set() or generation != session.capture_generation:
+            return HandlerResult(ack=_error_ack(ERR_VALIDATION, "current-kit capture cancelled"))
         _logger.warning(
             "cockpit_kit_capture_failed",
             extra={
@@ -885,6 +901,11 @@ async def _handle_capture_current_kit(
             ack=_error_ack(ERR_VALIDATION, "current-kit capture failed"),
             events=failure_events,
         )
+    finally:
+        if session.capture_cancel is cancel_event:
+            session.capture_cancel = None
+    if cancel_event.is_set() or generation != session.capture_generation:
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "current-kit capture cancelled"))
     events: list[dict[str, object]] = []
     session.stage_coordinator.record_capture(
         device_id,
@@ -1191,6 +1212,22 @@ async def _handle_prepare_send_plan(
 
 
 async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    if session.hardware_intent and session.armed_apply is None:
+        # The operator armed and never explicitly disarmed, but the seam is
+        # gone — an INVOLUNTARY auto-disarm (device unplugged, provider
+        # error, transport teardown) cleared it. Falling through here would
+        # skip the per-action confirmation, write to the mock adapter, and
+        # ack ok:True with a new snapshot id while putting ZERO bytes on the
+        # wire: the operator keeps performing, believing the device is
+        # following. Refuse instead, and say why.
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "hardware was disarmed automatically (device lost or send "
+                "failed); re-arm to send to hardware, or disarm explicitly "
+                "to continue in mock mode",
+            )
+        )
     if session.current_candidate is None:
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "no current candidate; set a profile and depth first")
@@ -1247,22 +1284,6 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
         if refusal is not None:
             refusal.events.extend(hardware_evidence_events)
             return refusal
-    elif session.hardware_intent:
-        # The operator armed and never explicitly disarmed, but the seam is
-        # gone — an INVOLUNTARY auto-disarm (device unplugged, provider
-        # error, transport teardown) cleared it. Falling through here would
-        # skip the per-action confirmation, write to the mock adapter, and
-        # ack ok:True with a new snapshot id while putting ZERO bytes on the
-        # wire: the operator keeps performing, believing the device is
-        # following. Refuse instead, and say why.
-        return HandlerResult(
-            ack=_error_ack(
-                ERR_VALIDATION,
-                "hardware was disarmed automatically (device lost or send "
-                "failed); re-arm to send to hardware, or disarm explicitly "
-                "to continue in mock mode",
-            )
-        )
     elif session.device.is_armed:
         _logger.info(
             "cockpit_live_send_authorized",
@@ -2263,6 +2284,35 @@ def _show_bank_state_events(session: CockpitSession) -> list[dict[str, object]]:
     return [{"type": EVENT_SHOW_BANK_CHANGED, "show_bank": workspace.state_dict()}]
 
 
+def _revoked_appliance_events(session: CockpitSession) -> list[dict[str, object]]:
+    workspace = session.appliance
+    if workspace is None:
+        return []
+    provenance: dict[StageDeviceId, ApplianceProvenanceRecord] = {
+        device_id: {
+            "source_type": "simulation" if workspace.simulation else "disconnected",
+            "fingerprint": None,
+            "captured_at": None,
+            "kit_name": None,
+            "working_state_verified": False,
+        }
+        for device_id in CAPTURE_DEVICE_IDS
+    }
+    return [
+        {
+            "type": EVENT_APPLIANCE_CHANGED,
+            "state": workspace.state(provenance=provenance, armed=session_is_armed(session)),
+        }
+    ]
+
+
+def cancel_pending_capture(session: CockpitSession) -> None:
+    """Signal owned input cancellation and reject every result from the old context."""
+    session.capture_generation += 1
+    if session.capture_cancel is not None:
+        session.capture_cancel.set()
+
+
 def _teardown_armed_state(session: CockpitSession) -> None:
     """Return the session to the passive baseline (idempotent).
 
@@ -2278,6 +2328,11 @@ def _teardown_armed_state(session: CockpitSession) -> None:
     teardowns close the port exactly once.
     """
 
+    cancel_pending_capture(session)
+    session.current_candidate = None
+    session.current_send_plan = None
+    if session.appliance is not None:
+        session.appliance.revoke_context()
     armed = session.armed_apply
     session.armed_apply = None
     if armed is not None:
@@ -2331,6 +2386,22 @@ def build_armed_watchdog(
 
     def _on_connection_change(state: ConnectionState) -> None:
         phase_lost = state.phase not in ("listening", "armed")
+        if phase_lost:
+            cancel_pending_capture(session)
+            # Passive Studio previews survive disconnects. Appliance context
+            # and armed plans (through teardown below) must be revoked.
+            if session.appliance is not None:
+                session.current_candidate = None
+                session.current_send_plan = None
+                if session.appliance.context is not None:
+                    session.appliance.revoke_context()
+                    if (
+                        session.armed_apply is None
+                        and not session.device.is_armed
+                        and broadcaster is not None
+                    ):
+                        for event in _revoked_appliance_events(session):
+                            broadcaster(event)
         if phase_lost and session.show_kit_forge is not None:
             changed = session.show_kit_forge.revoke_hardware_evidence()
             if changed and broadcaster is not None:
@@ -2367,6 +2438,8 @@ def build_armed_watchdog(
         if broadcaster is not None:
             broadcaster(_build_session_status(session))
             broadcaster(_build_dual_machine_stage_changed(session))
+            for event in _revoked_appliance_events(session):
+                broadcaster(event)
             if not phase_lost:
                 for event in _show_bank_state_events(session):
                     broadcaster(event)
@@ -2586,7 +2659,9 @@ async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> Handle
 async def _handle_disarm(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     """Explicit disarm: tear the armed seam down, restore the passive device."""
 
-    if session.armed_apply is None and not session.device.is_armed:
+    was_armed = session.armed_apply is not None or session.device.is_armed
+    had_capture = session.capture_cancel is not None
+    if not was_armed and not had_capture and session.appliance is None:
         return HandlerResult(ack=_error_ack(ERR_VALIDATION, "session is not armed"))
     _teardown_armed_state(session)
     # EXPLICIT disarm is the only thing that clears hardware intent: the
@@ -2600,6 +2675,7 @@ async def _handle_disarm(_cmd: dict[str, object], session: CockpitSession) -> Ha
             _build_session_status(session),
             _build_dual_machine_stage_changed(session),
             *_show_bank_state_events(session),
+            *_revoked_appliance_events(session),
         ],
     )
 
@@ -2782,6 +2858,10 @@ def _resolve_handler(cmd_type: str) -> HandlerFn | None:
 
     if cmd_type in _CORE_HANDLERS:
         return _CORE_HANDLERS[cmd_type]
+    if cmd_type == "appliance":
+        from .appliance_handlers import handle_appliance  # noqa: PLC0415
+
+        return handle_appliance
     if cmd_type.startswith("show_bank_"):
         # Show Kit Forge is loaded only when its panel requests state, keeping
         # the fixed eleven-event bootstrap and ordinary passive edit path
@@ -2897,6 +2977,28 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
     # boot paths that never touch a ``wizard_*`` command do not pay the
     # wizard's import cost.
     handler = _resolve_handler(cmd_type) if isinstance(cmd_type, str) else None
+    if session.capture_cancel is not None and cmd_type not in (
+        COMMAND_CAPTURE_CURRENT_KIT,
+        COMMAND_DISARM,
+        COMMAND_DIAGNOSTICS,
+    ):
+        label = cmd_type if handler is not None and isinstance(cmd_type, str) else "<unknown>"
+        _metrics.record_ws_command(
+            label, (time.perf_counter() - _t0) * 1000.0, error_code=ERR_VALIDATION
+        )
+        _logger.info(
+            "ws_command_refused",
+            extra={
+                "reason": "capture_active",
+                "cmd_type": label,
+                "request_id": request_id,
+                "outcome": "refused",
+            },
+        )
+        return {
+            "request_id": request_id,
+            **_error_ack(ERR_VALIDATION, "current-kit capture is active; disarm to cancel it"),
+        }
     # OBS O2 — bucket label for the RED counters. Use the actual cmd_type
     # if it's a string; non-string types collapse to the same "<unknown>"
     # label the operation span uses, so the operator sees one consistent
@@ -3026,6 +3128,7 @@ __all__ = [
     "WS_ERROR_CODES",
     "build_armed_watchdog",
     "build_connection_changed",
+    "cancel_pending_capture",
     "drain_pending_events",
     "emit_initial_events",
     "handle_command",

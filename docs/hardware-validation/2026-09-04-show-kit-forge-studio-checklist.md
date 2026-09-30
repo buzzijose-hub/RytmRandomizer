@@ -186,6 +186,11 @@ inferred by this checklist.
       then **Preview Rytm** and **Prepare exact plan**. Record the exact output
       port, current send-plan id, affected pad ids, packet count, and message count.
 - [ ] Verify the plan names Pad 2 only and excludes every locked/untargeted pad.
+- [ ] Inspect every changed field/value and require `ready=true`, with only
+      supported, small changes approved for this trial. Show Kit Forge locks
+      pads, not individual controls. A changed paired control blocks the whole
+      plan; if no suitable candidate exists, keep this audition unperformed.
+      Do not remove captured fields, truncate a paired value or hand-edit a plan.
 - [ ] Arm the exact Rytm output with the launch token. Do not arm A4.
 - [ ] Acknowledge the manual source reload in the SEND form and confirm this
       exact current plan once. Record the outcome and log evidence. Repeat the
