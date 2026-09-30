@@ -580,7 +580,12 @@ class ApplianceWorkspace:
             selected = self.scopes[device_id].target_ids
             reference_track = min(selected) if selected else None
 
-            def parameter_view(row: ApplianceParameterCapability) -> dict[str, object]:
+            def parameter_view(
+                row: ApplianceParameterCapability,
+                source: Snapshot | None = source,
+                device_id: StageDeviceId = device_id,
+                reference_track: int | None = reference_track,
+            ) -> dict[str, object]:
                 values: dict[str, int] = {}
                 if source is not None:
                     for pad in source.pads:
