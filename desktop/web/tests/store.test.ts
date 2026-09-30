@@ -4,7 +4,9 @@
  * Goal: 100% branch coverage on `src/state/**`.
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+import { _registerWriter, _reset } from '../src/a11y/announcer';
 
 import {
   bindClientToStore,
@@ -162,6 +164,23 @@ const readyStage: DualMachineStageState = {
   },
   oxi_owns_sequencing: true,
   direct_oxi_control: false,
+};
+
+const blockedPlan: CockpitSendPlan = {
+  ...sendPlan,
+  ready: false,
+  readiness_reason: 'paired_control_precision_unverified',
+  blocked_reasons: ['paired_control_precision_unverified'],
+};
+
+const blockedStage: DualMachineStageState = {
+  ...readyStage,
+  rytm: {
+    ...readyStage.rytm,
+    plan_state: 'blocked',
+    authority_state: 'blocked',
+    blocked_reasons: ['paired_control_precision_unverified'],
+  },
 };
 
 const showBankState: ShowBankState = {
@@ -761,6 +780,115 @@ class FakeClient {
 }
 
 describe('bindClientToStore', () => {
+  it.each([
+    { scope: 'default', targetIds: [], lockedIds: [], packets: sendPlan.packets },
+    { scope: 'targeted and locked', targetIds: [1, 2], lockedIds: [2], packets: sendPlan.packets.slice(0, 1) },
+  ])('preserves a current blocked $scope plan through consecutive prepare events without enabling Send', ({ targetIds, lockedIds, packets }) => {
+    const store = createCockpitStore();
+    const client = new FakeClient();
+    const unbind = bindClientToStore(client as unknown as CockpitClient, store);
+    const plan = { ...blockedPlan, target_pad_ids: targetIds, locked_pad_ids: lockedIds, packets };
+    const stage = { ...blockedStage, rytm: { ...blockedStage.rytm, target_ids: targetIds, locked_ids: lockedIds } };
+    const fire = (event: Event): void => {
+      for (const handler of client.handlers.get(event.type) ?? []) handler(event);
+    };
+    client.fireStatus('connected');
+    fire({ type: 'snapshot_changed', snapshot });
+    fire({ type: 'profile_changed', profile });
+    fire({ type: 'mutation_targets_changed', rytm_pad_targets: targetIds, a4_track_targets: [] });
+    fire({ type: 'mutation_locks_changed', rytm_pad_locks: lockedIds, a4_track_locks: [] });
+    fire({ type: 'mutation_previewed', candidate });
+    fire({ type: 'send_plan_changed', send_plan: plan });
+    expect(store.getState().sendPlan).toBe(plan);
+
+    fire({ type: 'dual_machine_stage_changed', stage });
+
+    expect(store.getState().previewCandidate).toBe(candidate);
+    expect(store.getState().sendPlan).toBe(plan);
+    expect(store.getState().sendPlan?.packets).toBe(packets);
+    expect(store.getState().dualMachineStage).toBe(stage);
+    expect(selectCanSend(store.getState())).toBe(false);
+    expect(selectSendPlanReady(store.getState())).toBe(false);
+
+    // Explicit invalidation remains authoritative; a later stage cannot
+    // resurrect an artifact already cleared by its own whole-state event.
+    fire({ type: 'send_plan_changed', send_plan: null });
+    fire({ type: 'dual_machine_stage_changed', stage });
+    expect(store.getState().sendPlan).toBeNull();
+    unbind();
+  });
+
+  it.each<[
+    string,
+    (store: ReturnType<typeof createCockpitStore>) => void,
+    DualMachineStageState,
+  ]>([
+    ['missing candidate', (store) => store.getState().setPreviewCandidate(null), blockedStage],
+    ['other candidate', (store) => store.getState().setPreviewCandidate({ ...candidate, candidate_id: 'other' }), blockedStage],
+    ['other candidate source', (store) => store.getState().setPreviewCandidate({ ...candidate, source_snapshot_id: 'other' }), blockedStage],
+    ['other candidate profile', (store) => store.getState().setPreviewCandidate({ ...candidate, profile_id: 'other' }), blockedStage],
+    ['missing snapshot', (store) => store.setState({ snapshot: null }), blockedStage],
+    ['changed snapshot', (store) => store.getState().setSnapshot(snapshot2), blockedStage],
+    ['missing profile', (store) => store.getState().setProfile(null), blockedStage],
+    ['changed profile', (store) => store.getState().setProfile({ ...profile, profile_id: 'other' }), blockedStage],
+    ['mismatched plan targets', (store) => store.getState().setSendPlan({ ...blockedPlan, target_pad_ids: [1] }), blockedStage],
+    ['mismatched plan locks', (store) => store.getState().setSendPlan({ ...blockedPlan, locked_pad_ids: [2] }), blockedStage],
+    ['ready plan under blocked stage', (store) => store.getState().setSendPlan(sendPlan), blockedStage],
+    ['missing plan', (store) => store.getState().setSendPlan(null), blockedStage],
+    ['changed targets', () => {}, { ...blockedStage, rytm: { ...blockedStage.rytm, target_ids: [1] } }],
+    ['changed locks', () => {}, { ...blockedStage, rytm: { ...blockedStage.rytm, locked_ids: [2] } }],
+    ['no plan', () => {}, { ...blockedStage, rytm: { ...blockedStage.rytm, plan_state: 'none' } }],
+    ['stale plan', () => {}, { ...blockedStage, rytm: { ...blockedStage.rytm, plan_state: 'stale' } }],
+    ['no candidate', () => {}, { ...blockedStage, rytm: { ...blockedStage.rytm, candidate_state: 'none' } }],
+    ['stale candidate', () => {}, { ...blockedStage, rytm: { ...blockedStage.rytm, candidate_state: 'stale' } }],
+    ['blocked candidate', () => {}, { ...blockedStage, rytm: { ...blockedStage.rytm, candidate_state: 'blocked' } }],
+    ['disconnected lane', () => {}, { ...blockedStage, rytm: { ...blockedStage.rytm, connection_state: 'disconnected' } }],
+    ['transport loss', (store) => store.getState().setConnectionStatus('closed'), blockedStage],
+  ])('clears a blocked inspection plan after %s', (_name, invalidate, stage) => {
+    const store = createCockpitStore();
+    store.getState().setConnectionStatus('connected');
+    store.getState().setSnapshot(snapshot);
+    store.getState().setProfile(profile);
+    store.getState().setPreviewCandidate(candidate);
+    store.getState().setSendPlan(blockedPlan);
+    invalidate(store);
+
+    store.getState().setDualMachineStage(stage);
+
+    expect(store.getState().sendPlan).toBeNull();
+    expect(selectCanSend(store.getState())).toBe(false);
+  });
+
+  it('announces ready, blocked and cleared plans accurately', () => {
+    vi.useFakeTimers();
+    _reset();
+    const writer = vi.fn();
+    _registerWriter(writer);
+    const store = createCockpitStore();
+    const client = new FakeClient();
+    const unbind = bindClientToStore(client as unknown as CockpitClient, store);
+    const announcePlan = (plan: CockpitSendPlan | null): void => {
+      for (const handler of client.handlers.get('send_plan_changed') ?? []) {
+        handler({ type: 'send_plan_changed', send_plan: plan });
+      }
+      vi.runAllTimers();
+    };
+    try {
+      announcePlan(sendPlan);
+      expect(writer).toHaveBeenLastCalledWith('Send plan ready, 2 pads, 2 parameters');
+      announcePlan(blockedPlan);
+      expect(writer).toHaveBeenLastCalledWith(
+        'Send plan blocked. No part of this plan will be sent. Review readiness before preparing again.',
+      );
+      announcePlan(null);
+      expect(writer).toHaveBeenLastCalledWith('Send plan cleared');
+    } finally {
+      unbind();
+      _reset();
+      vi.useRealTimers();
+    }
+  });
+
   it('routes all nine engine events into the corresponding store slices', () => {
     const store = createCockpitStore();
     const client = new FakeClient();

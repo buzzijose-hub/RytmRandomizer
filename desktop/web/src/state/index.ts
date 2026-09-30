@@ -67,9 +67,11 @@ export function bindClientToStore(
     client.on('send_plan_changed', (ev) => {
       store.getState().setSendPlan(ev.send_plan);
       announce(
-        ev.send_plan !== null
-          ? `Send plan ready, ${ev.send_plan.pad_count} pads, ${ev.send_plan.estimated_midi_msgs} parameters`
-          : 'Send plan cleared',
+        ev.send_plan === null
+          ? 'Send plan cleared'
+          : ev.send_plan.ready
+            ? `Send plan ready, ${ev.send_plan.pad_count} pads, ${ev.send_plan.estimated_midi_msgs} parameters`
+            : 'Send plan blocked. No part of this plan will be sent. Review readiness before preparing again.',
       );
     }),
     client.on('history_updated', (ev) => store.getState().setHistory(ev.history)),
