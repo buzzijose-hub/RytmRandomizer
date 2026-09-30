@@ -12,6 +12,10 @@ flowchart LR
   Scope --> Catalog[Canonical parameter evidence]
   WS --> Capture[Existing input-only KIT capture]
   Capture --> Saved[Saved-state evidence]
+  Saved --> Native[Existing typed A4 fields and Rytm promotion]
+  Native --> Scope
+  Pins[Explicit optional input adapter] --> Queue[One kiosk bounded event queue]
+  Queue --> Touch
   WS --> Armed[Existing ArmedApply boundary]
   Scope --> Block[Scoped live APPLY awaits working-state and restore evidence]
 ```

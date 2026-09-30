@@ -1,8 +1,21 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-09-21. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-09-30. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
+
+The Pi touch appliance is being integrated on `codex/pi-performance-appliance`
+from `892aaffc`. It reuses the shared Cockpit frontend, authenticated sidecar,
+deterministic mutation engine, capture codecs and persistence writer. Its
+complete sound-page catalog separates saved-state native A4 previews from live
+authority. The local simulated production preview is running without output
+authority; final combined verification and physical Pi acceptance are distinct.
+Scoped hardware APPLY, precise device restoration, general A4 live SEND and
+unsaved working-state readback remain blocked. See the
+[operator guide](PI_APPLIANCE_OPERATOR.md), [deployment guide](PI_APPLIANCE_DEPLOYMENT.md)
+and [current execution ledger](superpowers/plans/2026-09-30-pi-performance-appliance_STATE.json)
+for current source-bound receipts; the historical results below do not validate
+this new branch.
 
 Show Kit Forge merged through PR #238 on September 8 as one
 versioned, paired Analog Rytm/Analog Four preparation workflow. It keeps

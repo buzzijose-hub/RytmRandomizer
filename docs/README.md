@@ -30,6 +30,9 @@ lives under `docs/archive/` and is historical — safe to skip on first pass.
 - **[OBSERVABILITY.md](OBSERVABILITY.md)** — logging, error taxonomy, tracing guide.
 
 ### Ops references (exempt from the 12-cap)
+- **[PI_APPLIANCE_OPERATOR.md](PI_APPLIANCE_OPERATOR.md)** — touch workflows, scope and saved-state evidence limits.
+- **[PI_APPLIANCE_DEPLOYMENT.md](PI_APPLIANCE_DEPLOYMENT.md)** — authenticated shared kiosk, versioned packaging, target dependencies and rollback.
+- **[PI_APPLIANCE_CAPABILITIES.md](PI_APPLIANCE_CAPABILITIES.md)** — machine-readable catalog provenance, native domains and optional input mapping.
 - **[BRANCH_PROTECTION.md](BRANCH_PROTECTION.md)** — branch-protection ruleset; referenced by `Scripts/apply-branch-protection.sh` and `.github/workflows/test.yml`.
 - **[BUILDING_INSTALLERS.md](BUILDING_INSTALLERS.md)** — release-engineer workflow for native installers.
 - **[MANUAL_HARDWARE_VALIDATION.md](MANUAL_HARDWARE_VALIDATION.md)** — pre-release human checklist against real Rytm MK2; referenced from `.github/workflows/release.yml`.

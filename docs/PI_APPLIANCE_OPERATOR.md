@@ -4,8 +4,9 @@
 to the full desktop workflow. Choose RYTM, A4 or BOTH, then use SCOPE to select
 pads/tracks, pages, track/page depth and parameter protection. Empty targets select
 **nothing** here; legacy scope behavior stays unchanged. Locks win. Master, track
-and page depth multiply before the shared engine rounds to integer transport
-precision. Zero depth does not stage a mutation. Changing a slider affects the
+and page depth multiply before the shared engine rounds once to the source's
+native integer precision. Captured A4 fixed-point fields retain their fractional
+bits and show exact display values. Zero depth does not stage a mutation. Changing a slider affects the
 next roll and never applies or undoes a previous roll.
 
 MUTATE stages a diff; APPLY requires the exact current candidate confirmation.
@@ -45,7 +46,7 @@ through visible touch keypads.
 | Variable | Default and purpose |
 |---|---|
 | `RYTM_RAND_APPLIANCE_SIMULATION` | unset/production; exact `1` enables no-output simulation |
-| `RYTM_RAND_APPLIANCE_PROFILE_FILE` | `~/.rytm-randomizer/appliance-scopes.json`; server-owned path, never supplied over the wire |
+| `RYTM_RAND_APPLIANCE_PROFILE_FILE` | `default_profiles_dir().parent / "appliance-scopes.json"` (Linux: `$XDG_CONFIG_HOME/rytm-randomizer/`, default `~/.config/rytm-randomizer/`); server-owned path, never supplied over the wire |
 
 See [deployment](PI_APPLIANCE_DEPLOYMENT.md), [capability matrix](PI_APPLIANCE_CAPABILITIES.md)
 and the [execution ledger](superpowers/plans/2026-09-30-pi-performance-appliance_STATE.json).

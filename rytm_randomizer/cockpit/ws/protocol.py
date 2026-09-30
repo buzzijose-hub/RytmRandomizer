@@ -36,12 +36,12 @@ from __future__ import annotations
 
 from typing import Final, Literal, NotRequired, TypedDict
 
+from ..appliance_controls import APPLIANCE_CONTROL_EVENT
 from ..capture import KitCaptureDeviceId, KitCaptureResultDict
 from ..data.a4_preparation import A4PreparationReportDict
 from ..data.show_bank import ShowBankWorkspaceStateDict
 from ..data.stage import DualMachineStageStateDict
 from ..mutation_targets import MutationTargetsDict
-from ..appliance_controls import APPLIANCE_CONTROL_EVENT
 from .wizard_protocol import WIZARD_COMMAND_TYPES, WIZARD_EVENT_TYPES
 
 # ---------------------------------------------------------------------------

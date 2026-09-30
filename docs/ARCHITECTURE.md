@@ -683,6 +683,13 @@ under existing `scripts/` and `installer-assets/`. No sender is introduced; scop
 live APPLY awaits working-state/readback/restore evidence and Studio ArmedApply
 policy stays unchanged. See `PI_APPLIANCE_OPERATOR.md` and `PI_APPLIANCE_DEPLOYMENT.md`.
 
+The A4 projection in `cockpit/capture/appliance_a4.py` re-decodes the retained
+canonical frame, then uses typed native field accessors for all four tracks.
+Integer bounds travel alongside per-cell depth into the shared engine; Q8.8 and
+Q8.7 display strings are exact. Shared pitch fine components remain protected.
+The optional `appliance_control_intent` event goes to one authenticated kiosk's
+bounded queue and invokes the same touch handlers. It cannot confirm ARM/APPLY.
+
 The `rytm_randomizer.cockpit` subpackage is the live-performance GUI surface
 and the home of the portable mutation engine. It hosts the actual
 WebSocket Protocol the desktop shell drives. (The live `live_gui_*_model`
