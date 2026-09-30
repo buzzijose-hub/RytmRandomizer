@@ -17,7 +17,8 @@ async function mount(state = applianceState()): Promise<ApplianceFakeClient> {
 async function settled(fake: ApplianceFakeClient): Promise<void> { await waitFor(() => expect(screen.getByRole('status')).not.toHaveTextContent('BUSY')); expect(fake.sent.length).toBeGreaterThan(0); }
 function click(name: string): void {
   const matches = screen.getAllByRole('button', { name });
-  const button = matches.length > 1 ? within(screen.getByRole('navigation', { name: 'Appliance pages' })).getByRole('button', { name }) : matches[0]!;
+  const modal = screen.queryByRole('dialog');
+  const button = modal !== null ? within(modal).getByRole('button', { name }) : matches.length > 1 ? within(screen.getByRole('navigation', { name: 'Appliance pages' })).getByRole('button', { name }) : matches[0]!;
   button.focus(); fireEvent.click(button);
 }
 function emit(fake: ApplianceFakeClient, state: ApplianceState): void { act(() => fake.emit({ type: 'appliance_changed', state })); }
@@ -159,7 +160,7 @@ describe('touch performance appliance', () => {
     fireEvent.change(input, { target: { files: [valid] } }); await waitFor(() => expect(fake.sent.at(-1)).toMatchObject({ operation: 'profile_import', payload: { document: { schema_version: 1 } } }));
     const corrupt = new File(['x'], 'corrupt.json'); Object.defineProperty(corrupt, 'text', { value: () => Promise.resolve('x') });
     fireEvent.change(input, { target: { files: [corrupt] } }); await screen.findByText(/Profile JSON is corrupt/);
-    fireEvent.change(input, { target: { files: [new File(['x'.repeat(262145)], 'too-large.json')] } }); expect(screen.getByText(/exceeds 256 KiB/)).toBeInTheDocument();
+    fireEvent.change(input, { target: { files: [new File(['x'.repeat(65537)], 'too-large.json')] } }); expect(screen.getByText(/exceeds 64 KiB/)).toBeInTheDocument();
   });
 
   it('exports server-validated profile without persisting transient authority', async () => {
@@ -204,14 +205,14 @@ describe('touch performance appliance', () => {
     expect(fake.sent.at(-1)).toMatchObject({ operation: 'mutate', expected_revision: 3 });
     fireEvent.click(within(screen.getByLabelText('Mutation device selection')).getByRole('button', { name: 'A4' })); await settled(fake);
     emit(fake, applianceState({ target: 'a4', revision: 4, last_receipt: { status: 'simulated', expected_count: 2, sent_count: 0, hardware_verified: false } }));
-    expect(screen.getByText(/SIMULATED \/ 0 OF 2/)).toBeInTheDocument(); click('SCOPE'); expect(screen.getByRole('heading', { name: 'A4 SCOPE' })).toBeInTheDocument();
+    expect(screen.getByText(/SIMULATED \/ 0 OF 2/)).toBeInTheDocument(); click('A4 TARGETS'); expect(screen.getByRole('dialog')).toHaveTextContent('A4 TARGETS'); click('Close dialog');
     click('HOME'); fireEvent.click(within(screen.getByLabelText('Mutation device selection')).getByRole('button', { name: 'BOTH' })); await settled(fake);
     emit(fake, applianceState({ target: 'both', revision: 5 })); expect(screen.getAllByRole('button', { name: /^Pad \d+,/ })).toHaveLength(12);
     click('Pad 9, not targeted'); await settled(fake);
     fireEvent.click(screen.getByRole('link', { name: 'RytmRandomizer appliance home' }));
     click('BOTH'); click('MASTER 25 percent. Adjust'); click('100%'); click('SET 100%'); await settled(fake);
     click('Track 4, not targeted'); await settled(fake); expect(fake.sent.at(-1)).toMatchObject({ payload: { lanes: { analog_four_mk2: { target_ids: [1, 2, 4] } } } });
-    click('HOME'); emit(fake, applianceState()); click('SCOPE'); expect(screen.getByRole('heading', { name: 'RYTM SCOPE' })).toBeInTheDocument();
+    click('HOME'); emit(fake, applianceState()); click('RYTM TARGETS'); expect(screen.getByRole('dialog')).toHaveTextContent('RYTM TARGETS'); click('Close dialog');
   });
 
   it('provides visible cancel and close for every exact action without side effects', async () => {
@@ -316,6 +317,14 @@ describe('touch performance appliance', () => {
     fake.hang = true;
     act(() => { fireEvent.click(screen.getByRole('button', { name: 'MUTATE' })); fireEvent.click(screen.getByRole('button', { name: 'NEW ANCHOR…' })); fake.emit({ type: 'appliance_control_intent', action: 'capture_anchor', delta: 0, source: 'physical_input' }); });
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument(); act(() => fake.setStatus('closed'));
+  });
+
+  it('keeps the complete pad/track touch matrix available in compact target dialogs', async () => {
+    const fake = await mount(); click('RYTM TARGETS'); expect(within(screen.getByRole('dialog')).getAllByRole('button', { name: /^Pad \d+,/ })).toHaveLength(12);
+    click('Pad 9, not targeted'); await settled(fake); click('ALL'); await settled(fake); expect(fake.sent.at(-1)).toMatchObject({ payload: { lanes: { analog_rytm_mk2: { target_ids: Array.from({ length: 12 }, (_, i) => i + 1) } } } });
+    click('NONE'); await settled(fake); expect(fake.sent.at(-1)).toMatchObject({ payload: { lanes: { analog_rytm_mk2: { target_ids: [] } } } }); click('Close dialog');
+    emit(fake, applianceState({ target: 'a4' })); click('A4 TARGETS'); click('ALL'); await settled(fake); expect(fake.sent.at(-1)).toMatchObject({ payload: { lanes: { analog_four_mk2: { target_ids: [1, 2, 3, 4] } } } }); click('Close dialog');
+    emit(fake, applianceState({ mode: 'production' })); click('CAPTURE / RESYNC'); expect(screen.getByText(/Capture input is unavailable/)).toBeInTheDocument();
   });
 });
 
