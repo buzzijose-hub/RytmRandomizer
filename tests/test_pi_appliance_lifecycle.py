@@ -94,11 +94,17 @@ def target(
 
 
 def release_archive(
-    tmp_path: Path, sha: str, *, wheels: bool = True, receipt_patch: dict[str, object] | None = None
+    tmp_path: Path,
+    sha: str,
+    *,
+    wheels: bool = True,
+    receipt_patch: dict[str, object] | None = None,
+    template_patch: dict[str, bytes] | None = None,
 ) -> Path:
     files = {
         "src/pyproject.toml": b"verified source fixture",
         "src/rytm_randomizer/cockpit/appliance_runtime.py": b"verified runtime fixture",
+        "src/rytm_randomizer/cockpit/ws/handlers.py": b"verified handler fixture",
         "web/index.html": f"<html><head></head><body>{sha}</body></html>".encode(),
         "pi_appliance.py": script.read_bytes(),
     }
@@ -109,6 +115,7 @@ def release_archive(
             if path.is_file()
         }
     )
+    files.update(template_patch or {})
     if wheels:
         files["wheels/fixture.whl"] = b"native wheel fixture; never executed"
         receipt = {
@@ -157,6 +164,9 @@ def test_verified_install_update_idempotency_and_rollback_preserve_user_data(
     )
     assert (home / ".config/autostart/rytm-appliance.desktop").is_file()
     assert "mido==1.3.3" in (release_a / "installed-requirements.txt").read_text()
+    cache = release_a / "src/rytm_randomizer/cockpit/__pycache__/runtime.cpython-311.pyc"
+    cache.parent.mkdir(parents=True)
+    cache.write_bytes(b"generated interpreter cache")
     install_command = next(call for call in commands.calls if "install" in call)
     assert "--no-index" in install_command and "--find-links" in install_command
     before = len([call for call in commands.calls if "venv" in call])
@@ -175,9 +185,68 @@ def test_verified_install_update_idempotency_and_rollback_preserve_user_data(
     assert commands.calls[0][1:4] == ["-m", "pip", "check"]
     assert commands.calls[1:] == [
         ["systemctl", "--user", "stop", "rytm-appliance.target"],
+        ["systemctl", "--user", "daemon-reload"],
         ["systemctl", "--user", "start", "rytm-appliance.target"],
     ]
     assert data.read_text() == "operator profile and captures remain intact"
+
+
+@pytest.mark.parametrize("autostart_choice", ["enabled", "never_enabled", "disabled"])
+def test_rollback_restores_previous_service_settings_and_keeps_autostart_choice(
+    target: tuple[TargetPath, TargetPath, NativeCommands],
+    tmp_path: Path,
+    autostart_choice: str,
+) -> None:
+    home, prefix, commands = target
+
+    def templates(restart: int) -> dict[str, bytes]:
+        return {
+            "assets/rytm-appliance-backend.service": (
+                f"[Service]\nRestartSec={restart}\nReadWritePaths=@PREFIX@/runtime-{restart}\n"
+            ).encode(),
+            "assets/rytm-appliance-kiosk.service": f"[Service]\nRestartSec={restart}\n".encode(),
+            "assets/rytm-appliance.target": f"[Unit]\nDescription=Release {restart}\n".encode(),
+            "assets/rytm-appliance.desktop": (
+                f"[Desktop Entry]\nName=Release {restart}\nExec=@LAUNCHER@ session-start\n"
+            ).encode(),
+        }
+
+    cli.install(
+        release_archive(tmp_path, "a" * 40, template_patch=templates(11)),
+        prefix=prefix,
+        online=False,
+        autostart=autostart_choice != "never_enabled",
+    )
+    cli.install(
+        release_archive(tmp_path, "b" * 40, template_patch=templates(12)),
+        prefix=prefix,
+        online=False,
+    )
+    units = home / ".config/systemd/user"
+    assert "RestartSec=12" in (units / "rytm-appliance-backend.service").read_text()
+    desktop = home / ".config/autostart/rytm-appliance.desktop"
+    if autostart_choice == "disabled":
+        desktop.unlink()
+    elif autostart_choice == "enabled":
+        assert "Name=Release 12" in desktop.read_text()
+    unrelated = units / "unrelated.service"
+    unrelated.write_text("operator-owned unit")
+    commands.calls.clear()
+    cli.rollback(prefix)
+    assert "RestartSec=11" in (units / "rytm-appliance-backend.service").read_text()
+    assert str(prefix / "runtime-11") in (units / "rytm-appliance-backend.service").read_text()
+    assert "RestartSec=11" in (units / "rytm-appliance-kiosk.service").read_text()
+    assert "Description=Release 11" in (units / "rytm-appliance.target").read_text()
+    if autostart_choice == "enabled":
+        assert "Name=Release 11" in desktop.read_text()
+        assert "@LAUNCHER@" not in desktop.read_text()
+    else:
+        assert not desktop.exists()
+    assert unrelated.read_text() == "operator-owned unit"
+    assert commands.calls[-2:] == [
+        ["systemctl", "--user", "daemon-reload"],
+        ["systemctl", "--user", "start", "rytm-appliance.target"],
+    ]
 
 
 def test_failed_dependency_update_keeps_current_units_and_previous_release(
@@ -212,6 +281,11 @@ def test_failed_dependency_update_keeps_current_units_and_previous_release(
         "path_escape",
         "file_missing",
         "size_limit",
+        "invalid_template",
+        "omitted_source",
+        "added_source",
+        "metadata_sha",
+        "metadata_version",
     ],
 )
 def test_rollback_refuses_unusable_previous_before_stopping_current(
@@ -240,6 +314,24 @@ def test_rollback_refuses_unusable_previous_before_stopping_current(
         (previous / "web/index.html").unlink()
     elif damage == "size_limit":
         monkeypatch.setattr(cli, "MAX_MANIFEST_BYTES", 1)
+    elif damage == "invalid_template":
+        template = previous / "assets/rytm-appliance-backend.service"
+        template.write_bytes(b"\xff")
+        manifest = json.loads((previous / "manifest.json").read_text())
+        manifest["files"]["assets/rytm-appliance-backend.service"] = cli.digest(b"\xff")
+        (previous / "manifest.json").write_text(json.dumps(manifest))
+    elif damage == "added_source":
+        (previous / "src/rytm_randomizer/cockpit/untracked.py").write_text("changed module")
+    elif damage in {"omitted_source", "metadata_sha", "metadata_version"}:
+        manifest = json.loads((previous / "manifest.json").read_text())
+        if damage == "omitted_source":
+            manifest["files"].pop("src/rytm_randomizer/cockpit/ws/handlers.py")
+            (previous / "src/rytm_randomizer/cockpit/ws/handlers.py").write_text("changed handler")
+        elif damage == "metadata_sha":
+            manifest["source_sha"] = "f" * 40
+        else:
+            manifest["version"] = "2.0.0"
+        (previous / "manifest.json").write_text(json.dumps(manifest))
     else:
         manifest = json.loads((previous / "manifest.json").read_text())
         if damage == "incomplete":
@@ -438,8 +530,9 @@ def test_wheelhouse_receipt_publishes_only_a_stable_clean_commit(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, source_state: str
 ) -> None:
     directory = tmp_path / "wheels"
-    directory.mkdir()
-    (directory / "receipt.json").write_text("old receipt")
+    if source_state == "dirty":
+        directory.mkdir()
+        (directory / "receipt.json").write_text("old receipt")
     calls: list[list[str]] = []
     identities = iter(
         [
@@ -477,6 +570,22 @@ def test_wheelhouse_receipt_publishes_only_a_stable_clean_commit(
             assert calls == [] and (directory / "receipt.json").read_text() == "old receipt"
         else:
             assert len(calls) == 1 and not (directory / "receipt.json").exists()
+
+
+def test_wheelhouse_refuses_to_certify_preexisting_wheels(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    directory = tmp_path / "reused-wheels"
+    directory.mkdir()
+    stale = directory / "rytm_randomizer-1.34.0-99-py3-none-any.whl"
+    stale.write_bytes(b"stale project wheel from another source")
+    calls: list[list[str]] = []
+    monkeypatch.setattr(cli, "committed_source", lambda: ("/full/git", "a" * 40))
+    monkeypatch.setattr(cli, "checked", lambda command, **_kwargs: calls.append(command) or "")
+    with pytest.raises(ValueError, match="fresh directory"):
+        cli.build_wheelhouse(directory)
+    assert calls == [] and not (directory / "receipt.json").exists()
+    assert stale.read_bytes() == b"stale project wheel from another source"
 
 
 @pytest.mark.parametrize(
@@ -633,3 +742,17 @@ def test_real_stdio_helper_and_script_help_have_no_external_side_effects(
     with pytest.raises(SystemExit) as error:
         runpy.run_path(str(script), run_name="__main__")
     assert error.value.code == 0
+
+
+def test_stdio_capture_uses_utf8_independently_of_windows_locale(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen: dict[str, object] = {}
+
+    def command(_command: list[str], **kwargs: object) -> SimpleNamespace:
+        seen.update(kwargs)
+        return SimpleNamespace(stdout="Unicode dependency tree: \u2514\u2500\u2500\n")
+
+    monkeypatch.setattr(cli.subprocess, "run", command)
+    assert cli.checked(["/full/npm", "run", "build"]).endswith("\u2514\u2500\u2500")
+    assert seen["encoding"] == "utf-8" and seen["errors"] == "replace"

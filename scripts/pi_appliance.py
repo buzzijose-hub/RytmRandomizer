@@ -37,6 +37,11 @@ MAX_PACKAGE_FILES: Final[int] = 12000
 WEB_BUILD_RECEIPT: Final[str] = "web-build-receipt.json"
 MAX_RECEIPT_BYTES: Final[int] = 256 * 1024
 MAX_MANIFEST_BYTES: Final[int] = 4 * 1024 * 1024
+SERVICE_UNIT_NAMES: Final[tuple[str, ...]] = (
+    "rytm-appliance-backend.service",
+    "rytm-appliance-kiosk.service",
+    "rytm-appliance.target",
+)
 REQUIRED_RUNTIME_FILES: Final[frozenset[str]] = frozenset(
     {
         "src/pyproject.toml",
@@ -79,7 +84,14 @@ class RotatingOutput(io.TextIOBase):
 
 def checked(command: list[str], *, cwd: Path | None = None, timeout: int = 300) -> str:
     return subprocess.run(
-        command, cwd=cwd, check=True, capture_output=True, text=True, timeout=timeout
+        command,
+        cwd=cwd,
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=timeout,
     ).stdout.strip()
 
 
@@ -380,9 +392,69 @@ def _service_paths(prefix: Path) -> dict[str, str]:
     }
 
 
+def render_service_assets(release: Path, prefix: Path, *, autostart: bool) -> dict[Path, str]:
+    """Read and render all release-owned settings before changing an active service."""
+    units = Path.home() / ".config/systemd/user"
+    templates = {units / name: name for name in SERVICE_UNIT_NAMES}
+    if autostart:
+        templates[Path.home() / ".config/autostart/rytm-appliance.desktop"] = (
+            "rytm-appliance.desktop"
+        )
+    rendered: dict[Path, str] = {}
+    for destination, name in templates.items():
+        content = (release / "assets" / name).read_text(encoding="utf-8")
+        for before, after in _service_paths(prefix).items():
+            content = content.replace(before, after)
+        rendered[destination] = content
+    return rendered
+
+
+def install_service_assets(rendered: dict[Path, str]) -> None:
+    """Install only the appliance's known rendered unit and optional autostart files."""
+    for path, content in rendered.items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+
+
+def release_inventory(release: Path) -> set[str]:
+    """Inventory immutable bytes without traversing generated environments or caches."""
+    names: set[str] = set()
+    for directory, children, files in os.walk(release, followlinks=False):
+        root = Path(directory)
+        children[:] = [
+            child
+            for child in children
+            if child != "__pycache__" and not (root == release and child == ".venv")
+        ]
+        if any((root / child).is_symlink() for child in children):
+            raise ValueError("Retained release inventory contains an unsafe directory")
+        for name in files:
+            path = root / name
+            if path.suffix == ".pyc" or (
+                root == release and name in {"manifest.json", "installed-requirements.txt"}
+            ):
+                continue
+            relative = path.relative_to(release).as_posix()
+            if path.is_symlink() or not path.is_file():
+                raise ValueError("Retained release inventory contains an unsafe file")
+            names.add(relative)
+            if len(names) > MAX_PACKAGE_FILES:
+                raise ValueError("Retained release inventory exceeds the size limit")
+    return names
+
+
 def verify_release_files(release: Path, manifest: dict[str, object]) -> None:
     """Check retained release bytes before reactivation; generated venv files stay separate."""
     files = manifest.get("files")
+    source_sha, version = manifest.get("source_sha"), manifest.get("version")
+    if (
+        not isinstance(source_sha, str)
+        or not re.fullmatch(r"[a-f0-9]{40}", source_sha)
+        or not isinstance(version, str)
+        or not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version)
+        or release.name != f"{version}-{source_sha[:12]}"
+    ):
+        raise ValueError("Retained release metadata does not match its release identity")
     if (
         manifest.get("format_version") != 1
         or manifest.get("target") != "linux-arm64"
@@ -413,6 +485,8 @@ def verify_release_files(release: Path, manifest: dict[str, object]) -> None:
         total += path.stat().st_size
         if total > MAX_PACKAGE_BYTES or digest(path.read_bytes()) != expected:
             raise ValueError("Retained release runtime files differ from their verified manifest")
+    if release_inventory(release) != set(files):
+        raise ValueError("Retained release immutable inventory differs from its verified manifest")
 
 
 def install(archive: Path, *, prefix: Path, online: bool, autostart: bool = False) -> None:
@@ -485,23 +559,14 @@ def install(archive: Path, *, prefix: Path, online: bool, autostart: bool = Fals
                 if release.resolve().is_relative_to((prefix / "releases").resolve()):
                     shutil.rmtree(release)
                 raise
-        units = Path.home() / ".config/systemd/user"
-        units.mkdir(parents=True, exist_ok=True)
-        for template in (release / "assets").glob("*.service"):
-            content = template.read_text()
-            for before, after in _service_paths(prefix).items():
-                content = content.replace(before, after)
-            (units / template.name).write_text(content)
-        (units / "rytm-appliance.target").write_bytes(
-            (release / "assets/rytm-appliance.target").read_bytes()
+        install_service_assets(
+            render_service_assets(
+                release,
+                prefix,
+                autostart=autostart
+                or (Path.home() / ".config/autostart/rytm-appliance.desktop").is_file(),
+            )
         )
-        if autostart:
-            desktop = Path.home() / ".config/autostart/rytm-appliance.desktop"
-            desktop.parent.mkdir(parents=True, exist_ok=True)
-            content = (release / "assets/rytm-appliance.desktop").read_text()
-            for before, after in _service_paths(prefix).items():
-                content = content.replace(before, after)
-            desktop.write_text(content)
         previous = prefix / "previous"
         if current.is_symlink() and current.resolve() != release:
             replacement = prefix / ".previous-next"
@@ -664,7 +729,14 @@ def rollback(prefix: Path) -> None:
         raise ValueError("Previous release has an invalid manifest; user data has not been changed")
     verify_release_files(release, manifest)
     checked([str(release / ".venv/bin/python"), "-m", "pip", "check"])
+    rendered = render_service_assets(
+        release,
+        prefix,
+        autostart=(Path.home() / ".config/autostart/rytm-appliance.desktop").is_file(),
+    )
     checked(["systemctl", "--user", "stop", "rytm-appliance.target"])
+    install_service_assets(rendered)
+    checked(["systemctl", "--user", "daemon-reload"])
     replacement = prefix / ".rollback-next"
     replacement.unlink(missing_ok=True)
     replacement.symlink_to(previous.resolve(), target_is_directory=True)
@@ -675,11 +747,7 @@ def rollback(prefix: Path) -> None:
 def uninstall() -> None:
     checked(["systemctl", "--user", "stop", "rytm-appliance.target"])
     units = Path.home() / ".config/systemd/user"
-    for name in (
-        "rytm-appliance-backend.service",
-        "rytm-appliance-kiosk.service",
-        "rytm-appliance.target",
-    ):
+    for name in SERVICE_UNIT_NAMES:
         (units / name).unlink(missing_ok=True)
     (Path.home() / ".config/autostart/rytm-appliance.desktop").unlink(missing_ok=True)
     checked(["systemctl", "--user", "daemon-reload"])
@@ -689,9 +757,12 @@ def uninstall() -> None:
 def build_wheelhouse(directory: Path) -> None:
     """Build offline wheels only from a stable committed source and publish its receipt last."""
     _, source_sha = committed_source()
+    if directory.exists() and any(directory.iterdir()):
+        raise ValueError(
+            "Wheelhouse output must be empty; choose a fresh directory for this source"
+        )
     directory.mkdir(parents=True, exist_ok=True)
     receipt_path = directory / "receipt.json"
-    receipt_path.unlink(missing_ok=True)
     checked(
         [
             sys.executable,
