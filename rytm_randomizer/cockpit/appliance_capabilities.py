@@ -426,7 +426,7 @@ def _a4_domains(field: str | None) -> tuple[CapabilityDomain, CapabilityDomain, 
             ),
             False,
         )
-    if field.endswith("tune") or field.endswith("fine"):
+    if field in {"osc1_tune", "osc2_tune", "osc1_fine", "osc2_fine"}:
         return (
             CapabilityDomain(
                 "centered-pitch-word",
