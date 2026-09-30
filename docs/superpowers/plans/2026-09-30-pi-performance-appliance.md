@@ -1,6 +1,6 @@
 # Pi performance appliance implementation
 
-> **Status:** implementation in progress; hardware acceptance unverified.
+> Status: in-flight; implementation and integrated verification, hardware acceptance unverified.
 
 Per docs/PLAN_REQUIREMENTS.md. Starting integration SHA:
 `892aaffc` (`origin/modularize-v1.34`, fetched 2026-09-30).

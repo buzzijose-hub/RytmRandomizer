@@ -8,6 +8,8 @@ import Snapshot`` without reaching into each submodule. See
 
 from __future__ import annotations
 
+from ...data.persisted_state import classify_payload, require_schema_version
+from ...guardrails.input_validation import require_int
 from .history import History, HistoryEntry
 from .mutation_candidate import MutationCandidate, PadDelta
 from .profile_model import ProfileModel, StyleTrait, TraitPadWeight
@@ -89,4 +91,7 @@ __all__ = [
     "narrow_transition_curve",
     "narrow_via",
     "new_ulid",
+    "classify_payload",
+    "require_int",
+    "require_schema_version",
 ]
