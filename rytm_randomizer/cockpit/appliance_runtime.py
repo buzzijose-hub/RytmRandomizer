@@ -15,13 +15,15 @@ import os
 import secrets
 from http.cookies import SimpleCookie
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal
 from urllib.parse import parse_qs
 
 from fastapi import FastAPI, Request
 from starlette.responses import HTMLResponse, Response
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from ..observability.logging import get_logger
+from ..observability.metrics import get_metrics
 from .export.writer import atomic_write
 
 WEB_ROOT_ENV: Final[str] = "RYTM_RAND_APPLIANCE_WEB_ROOT"
@@ -29,6 +31,22 @@ RUNTIME_DIR_ENV: Final[str] = "RYTM_RAND_APPLIANCE_RUNTIME_DIR"
 COOKIE_NAME: Final[str] = "rytm-appliance-session"
 MAX_ASSET_BYTES: Final[int] = 20 * 1024 * 1024
 MAX_BOOTSTRAP_BYTES: Final[int] = 2048
+_logger = get_logger(__name__)
+
+
+def _record_auth_refusal(
+    code: Literal[
+        "appliance_auth.host",
+        "appliance_auth.origin",
+        "appliance_auth.session",
+        "appliance_auth.bootstrap",
+    ],
+    *,
+    transport: Literal["http", "websocket"],
+) -> None:
+    """Record a fixed refusal category without any untrusted request material."""
+    _logger.warning("appliance_auth_refused", extra={"fingerprint": code, "transport": transport})
+    get_metrics().record_error(code)
 
 
 class ApplianceGuard:
@@ -57,7 +75,19 @@ class ApplianceGuard:
         value = jar[COOKIE_NAME].value if COOKIE_NAME in jar else ""
         public = bootstrap or path == "/health"
         authorised = public or hmac.compare_digest(value.encode("utf-8"), self.cookie.encode())
-        if host != self.host or not origin_ok or not authorised:
+        refusal: (
+            Literal["appliance_auth.host", "appliance_auth.origin", "appliance_auth.session"] | None
+        ) = None
+        if host != self.host:
+            refusal = "appliance_auth.host"
+        elif not origin_ok:
+            refusal = "appliance_auth.origin"
+        elif not authorised:
+            refusal = "appliance_auth.session"
+        if refusal is not None:
+            _record_auth_refusal(
+                refusal, transport="websocket" if scope["type"] == "websocket" else "http"
+            )
             if scope["type"] == "websocket":
                 await send({"type": "websocket.close", "code": 1008})
             else:
@@ -136,13 +166,16 @@ def install_appliance_routes(app: FastAPI, *, token: str, arm_secret: str | None
         async for chunk in request.stream():
             body.extend(chunk)
             if len(body) > MAX_BOOTSTRAP_BYTES:
+                _record_auth_refusal("appliance_auth.bootstrap", transport="http")
                 return Response("Bootstrap body too large", status_code=413)
         try:
             parsed = parse_qs(bytes(body).decode("utf-8", errors="replace"), max_num_fields=4)
         except ValueError:
+            _record_auth_refusal("appliance_auth.bootstrap", transport="http")
             return Response("Malformed bootstrap body", status_code=400)
         credential = parsed.get("credential", [""])[0]
         if not hmac.compare_digest(credential.encode("utf-8"), bootstrap_secret.encode()):
+            _record_auth_refusal("appliance_auth.bootstrap", transport="http")
             return Response("Bootstrap refused", status_code=403)
         response = _document(index, token=token, arm_secret=arm_secret, port=port)
         response.set_cookie(COOKIE_NAME, cookie, httponly=True, samesite="strict", path="/")

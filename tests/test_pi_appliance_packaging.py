@@ -153,12 +153,65 @@ def test_serve_refuses_mixed_hardware_simulation(
         cli.serve(args)
 
 
+def test_passive_serve_activates_backend_decision_logging_into_private_rotating_sink(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import logging
+
+    from fastapi.testclient import TestClient
+
+    from rytm_randomizer.cockpit import __main__ as sidecar
+    from rytm_randomizer.cockpit.ws.server import create_app
+
+    web, runtime = tmp_path / "web", tmp_path / "runtime"
+    web.mkdir()
+    (web / "index.html").write_text("<html><head></head><body>production</body></html>")
+    secrets = ["private-ws-token", "private-arm-token"]
+    original_handlers = list(logging.getLogger("rytm_randomizer").handlers)
+
+    def passive() -> None:
+        session = sidecar.build_session()
+        session.arm_secret = secrets[1]
+        app = create_app(session, token=secrets[0])
+        text = (runtime / "launch.html").read_text()
+        secrets.append(text.split('name="credential" value="')[1].split('"')[0])
+        with TestClient(app, base_url="http://127.0.0.1:4317") as client:
+            assert client.get("/appliance").status_code == 403
+
+    monkeypatch.setattr(sidecar, "run", passive)
+    monkeypatch.setattr(cli.os, "environ", dict(cli.os.environ))
+    log = tmp_path / "logs/backend.log"
+    cli.serve(
+        argparse.Namespace(
+            runtime_dir=runtime,
+            web_root=web,
+            port=4317,
+            hardware_input=False,
+            simulation=False,
+            log_file=log,
+        )
+    )
+    text = log.read_text()
+    records = [json.loads(line) for line in text.splitlines()]
+    refusals = [record for record in records if record.get("message") == "appliance_auth_refused"]
+    assert len(refusals) == 1
+    assert refusals[0]["fingerprint"] == "appliance_auth.session"
+    assert refusals[0]["transport"] == "http"
+    assert all(secret not in text for secret in secrets)
+    assert logging.getLogger("rytm_randomizer").handlers == original_handlers
+
+
 def test_packaged_launcher_binds_its_source_before_foreign_editable_install(tmp_path: Path) -> None:
     release = tmp_path / "release"
     package = release / "src/rytm_randomizer"
     (package / "cockpit").mkdir(parents=True)
     (package / "__init__.py").write_text("")
     (package / "cockpit/__init__.py").write_text("")
+    (package / "observability").mkdir()
+    (package / "observability/__init__.py").write_text("")
+    (package / "observability/logging.py").write_text(
+        "def configure_logging(**kwargs):\n    pass\n"
+    )
     marker = tmp_path / "source.txt"
     (package / "cockpit/__main__.py").write_text(
         "from pathlib import Path\n"
