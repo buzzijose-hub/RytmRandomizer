@@ -186,6 +186,10 @@ journal, subject to its existing rotation and service rate limits.
 
 Default deployed startup is a **production disconnected/passive session**.
 The optional `--simulation` flag is reserved for an explicitly labeled preview.
+Simulation removes the server-minted ARM capability at backend composition;
+neither the touch surface nor the preserved studio surface can grant it. The
+launcher imports only its own checkout or verified release `src` tree, even if
+the interpreter has an editable install pointing to another checkout.
 To enable input-only KIT capture, invoke the same launcher with
 `serve --hardware-input`; it delegates exactly to the established
 `python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar` composition.
@@ -199,6 +203,16 @@ output action still needs explicit UI arming and confirmation through
 `ArmedApply`. A4 blocked rows remain blocked. Saved-KIT capture does not prove
 the current unsaved working state, and a local send receipt does not prove that
 hardware accepted or retained a value.
+
+An input capture runs as one owned asynchronous action so the authenticated
+WebSocket reader can still receive DISARM. Other mutations refuse during that
+wait. DISARM, owner disconnect, last-connection teardown and connection loss
+invalidate the capture generation; a late frame cannot adopt a snapshot or
+restore a revoked candidate. The app-owned provider checks a cancellation event
+between input polls and closes its input in `finally`. An injected provider that
+lacks cooperative cancellation may finish its input-only wait at the existing
+120-second timeout; its result is still discarded immediately after cancellation.
+These are software checks with fake inputs, not physical timing evidence.
 
 ## Desktop-host production preview
 

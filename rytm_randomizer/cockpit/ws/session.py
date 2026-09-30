@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import secrets
 from dataclasses import dataclass, field
+from threading import Event
 from typing import TYPE_CHECKING, Final
 
 from ...observability.logging import get_logger
@@ -108,6 +109,10 @@ class CockpitSession:
     kit_captures: dict[KitCaptureDeviceId, KitCaptureResult] = field(
         default_factory=dict[KitCaptureDeviceId, KitCaptureResult]
     )
+    capture_cancel: Event | None = None
+    """Cancellation signal for the one owned input capture, never output authority."""
+    capture_generation: int = 0
+    """Incremented on context loss so a late input result cannot restore revoked state."""
     active_profile: ProfileModel | None = None
     depth: float = DEFAULT_DEPTH
     seed: int = field(default_factory=fresh_seed)
