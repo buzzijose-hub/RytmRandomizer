@@ -40,6 +40,15 @@ Use this when changing the appliance runtime or its captured-value presentation.
   the healthy service, preserve the user's autostart choice, and test releases
   whose launch settings differ. A wheelhouse receipt may certify only a fresh
   build's wheels, never leftover wheels from another source revision.
+- Exercise both sides of platform-specific permission decisions on every host.
+  Inject the runtime module's OS view without changing global `os.name`, which
+  also controls `pathlib`. Assert directory and credential-file permissions;
+  a Windows-only 100% coverage receipt does not establish POSIX branch coverage.
+- Isolate log-capture handlers and restore their propagation and levels. A pytest
+  capture handler attached to both a child logger and its ancestor counts one
+  event twice. Privacy checks must distinguish verified source `pathname`
+  metadata from request data: `/appliance_runtime.py` is a source file, while a
+  unique path from an actual refused request must be absent from the whole record.
 
 See `docs/PI_APPLIANCE_OPERATOR.md`, `docs/PI_APPLIANCE_CAPABILITIES.md` and
 `docs/PI_APPLIANCE_DEPLOYMENT.md` for the current product contract.

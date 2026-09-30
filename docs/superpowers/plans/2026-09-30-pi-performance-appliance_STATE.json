@@ -268,6 +268,24 @@
       "passed": 19,
       "ordered_neighbor_passed": 48,
       "note": "Reproduced both failures with POSIX-normalized source metadata on Windows. Verifies source pathname resolves to runtime module and exempts only that field from broad route exclusion. Original-record credential scan includes a unique actually requested path sentinel; seven-event/category/metric/zero-MIDI assertions remain. Lint and independent review clean; production unchanged."
+    },
+    {
+      "scope": "hosted Ubuntu explicit platform branch coverage",
+      "tree": "1837f15eca12516332386327be81d045de07d24a",
+      "result": "all tests passed; touched coverage gate failed",
+      "passed": 10624,
+      "skipped": 2,
+      "note": "Job 110005425665 coverage XML reports appliance_runtime.py:151->153 uncovered on POSIX. Windows local coverage had both platform outcomes, but the Linux suite lacked an explicit non-POSIX permission setup case. Add both platform behavior cases without changing global os.name, production code, exclusions or threshold; replacement acceptance pending."
+    },
+    {
+      "scope": "runtime agent explicit platform permissions",
+      "tree": "7b3009bf3bb3305b374bfa23cc1f5a348e88d9d5",
+      "result": "focused checks passed; integrated and hosted checks pending",
+      "passed": 21,
+      "statements": 131,
+      "branches": 36,
+      "coverage_percent": 100,
+      "note": "Fresh runtimes under module-local posix/nt OS views assert real delegated chmod0700 only for POSIX directory and chmod0600 for launch on both, bootstrap/auth refusal and authenticated document. Global os.name/pathlib untouched. Original containment/log/privacy tests retained; lint and independent review clean. No production/exclusion/threshold changes."
     }
   ],
   "integration_shas": [

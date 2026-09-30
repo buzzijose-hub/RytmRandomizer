@@ -102,3 +102,23 @@ credentials and a unique path used in an actual refused request. Both inherited
 propagation variants and all seven refusal assertions remain. Local runtime
 19-case and ordered 48-case checks passed, with lint and independent review
 clean. Production behavior is unchanged; hosted replacement CI is still pending.
+
+## 2026-09-30 — explicit cross-platform permission coverage
+
+At `1837f15e`, Ubuntu push job `110005425665` passed all 10,624 tests with two
+skips. Its touched-file coverage gate then found one uncovered branch:
+`appliance_runtime.py:151` had not taken the non-POSIX directory-permission path.
+The local Windows run covered both outcomes, so its 100% receipt alone did not
+establish the corresponding Linux coverage. No coverage threshold or exclusion
+was changed. Both platform decisions need explicit permission-behavior tests
+on every host; the learned appliance workflow now records this and the log
+capture/metadata lessons. Replacement acceptance remains pending.
+
+Test-only commit `7b3009bf3bb3305b374bfa23cc1f5a348e88d9d5` explicitly composes
+fresh private runtimes under both module-local OS views. It delegates real
+permission calls while asserting directory mode 0700 only for the POSIX branch,
+launch-file mode 0600 for both, and authenticated private-bootstrap behavior.
+The real host's `os.name` and `pathlib` semantics are untouched. All 21 focused
+runtime cases passed; the module's 131 statements and 36 branches reached 100%
+coverage with no exclusions. Lint and independent review passed. The integrated
+full suite and hosted gates must still validate the replacement source.
