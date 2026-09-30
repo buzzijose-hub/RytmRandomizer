@@ -37,7 +37,8 @@ from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws import appliance_handlers
 from rytm_randomizer.cockpit.ws.handlers import handle_command
 from rytm_randomizer.cockpit.ws.session import CockpitSession
-from rytm_randomizer.devices import A4Kit, AnalogFourKitSnapshot
+from rytm_randomizer.devices import AnalogFourKitSnapshot
+from rytm_randomizer.devices.analog_four_fields import A4Kit
 from rytm_randomizer.devices.strategies.analog_four_saved_kit_codec import (
     decode_analog_four_saved_kit_payload,
     encode_analog_four_saved_kit_payload,

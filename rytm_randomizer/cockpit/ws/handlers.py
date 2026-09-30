@@ -1211,6 +1211,22 @@ async def _handle_prepare_send_plan(
 
 
 async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    if session.hardware_intent and session.armed_apply is None:
+        # The operator armed and never explicitly disarmed, but the seam is
+        # gone — an INVOLUNTARY auto-disarm (device unplugged, provider
+        # error, transport teardown) cleared it. Falling through here would
+        # skip the per-action confirmation, write to the mock adapter, and
+        # ack ok:True with a new snapshot id while putting ZERO bytes on the
+        # wire: the operator keeps performing, believing the device is
+        # following. Refuse instead, and say why.
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "hardware was disarmed automatically (device lost or send "
+                "failed); re-arm to send to hardware, or disarm explicitly "
+                "to continue in mock mode",
+            )
+        )
     if session.current_candidate is None:
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "no current candidate; set a profile and depth first")
@@ -1267,22 +1283,6 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
         if refusal is not None:
             refusal.events.extend(hardware_evidence_events)
             return refusal
-    elif session.hardware_intent:
-        # The operator armed and never explicitly disarmed, but the seam is
-        # gone — an INVOLUNTARY auto-disarm (device unplugged, provider
-        # error, transport teardown) cleared it. Falling through here would
-        # skip the per-action confirmation, write to the mock adapter, and
-        # ack ok:True with a new snapshot id while putting ZERO bytes on the
-        # wire: the operator keeps performing, believing the device is
-        # following. Refuse instead, and say why.
-        return HandlerResult(
-            ack=_error_ack(
-                ERR_VALIDATION,
-                "hardware was disarmed automatically (device lost or send "
-                "failed); re-arm to send to hardware, or disarm explicitly "
-                "to continue in mock mode",
-            )
-        )
     elif session.device.is_armed:
         _logger.info(
             "cockpit_live_send_authorized",

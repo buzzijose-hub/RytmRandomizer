@@ -36,7 +36,7 @@ from ...data.appliance_parameter_bindings import (
     A4_APPLIANCE_PARAMETER_FIELDS,
     RYTM_APPLIANCE_FX_FIELDS,
 )
-from ...devices import (
+from ...devices.analog_four_fields import (
     A4Destination,
     A4EnvelopeShape,
     A4Filter2Type,

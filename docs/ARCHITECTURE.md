@@ -685,6 +685,8 @@ policy stays unchanged. See `PI_APPLIANCE_OPERATOR.md` and `PI_APPLIANCE_DEPLOYM
 
 The A4 projection in `cockpit/capture/appliance_a4.py` re-decodes the retained
 canonical frame, then uses typed native field accessors for all four tracks.
+The public `devices/analog_four_fields.py` facade exposes those existing codec
+types; capture code does not import the private strategy implementation.
 Integer bounds travel alongside per-cell depth into the shared engine; Q8.8 and
 Q8.7 display strings are exact. Shared pitch fine components remain protected.
 The optional `appliance_control_intent` event goes to one authenticated kiosk's
@@ -700,6 +702,10 @@ Per-lane `HistoryStore` pointers own local current snapshots; the bounded joint
 timeline contains snapshot IDs only and coordinates both lanes without claiming
 hardware restoration. Target aliases come from `data/device_targets.py`, shared
 with the existing dual-machine target resolver.
+That resolver retains its public home in `dual_machine/targets.py` and adds one
+reviewed downward dependency on the stdlib-only `data` leaf. It still obtains
+device instances only through the registry. The import-direction matrix declares
+this shared-fact dependency explicitly; no concrete family dependency is added.
 
 The `rytm_randomizer.cockpit` subpackage is the live-performance GUI surface
 and the home of the portable mutation engine. It hosts the actual

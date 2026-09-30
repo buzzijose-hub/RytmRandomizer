@@ -610,6 +610,18 @@ output still requires the separate ArmedApply lifecycle. Keep the default,
 override, installer, and passive-CLI behavior synchronized with
 `docs/LOCAL_DEV_TOOLING_NOTES.md` and `docs/COCKPIT_QUICKSTART.md`.
 
+The Pi launcher sets `RYTM_RAND_APPLIANCE_WEB_ROOT` to the production frontend
+and requires `RYTM_RAND_APPLIANCE_RUNTIME_DIR` for its private browser bootstrap.
+Both are unset by default. `RYTM_RAND_APPLIANCE_SIMULATION=1` explicitly selects
+disconnected simulation and permanently removes output authority from that server
+composition; it is unset by default. `RYTM_RAND_APPLIANCE_PROFILE_FILE` optionally
+overrides the server-owned rule-profile file, which otherwise lives at the
+platform Cockpit config root as `appliance-scopes.json`. Profiles never persist
+arming, candidates, or pending commands. See the environment index in
+[`LOCAL_DEV_TOOLING_NOTES.md`](docs/LOCAL_DEV_TOOLING_NOTES.md) and the build,
+install, and rollback procedures in
+[`PI_APPLIANCE_DEPLOYMENT.md`](docs/PI_APPLIANCE_DEPLOYMENT.md).
+
 The installer workflow also defines build-only `TAURI_CLI_VERSION` (pinned
 to `2.11.4`) and `STUDIO_WINDOWS` (the `studio_windows` dispatch input, false
 by default). These select the packaging tool and optional Windows studio copy;

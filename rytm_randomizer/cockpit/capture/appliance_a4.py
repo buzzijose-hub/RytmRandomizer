@@ -16,7 +16,8 @@ from ...data.analog_four_kit_fields import (
     format_a4_native_number,
 )
 from ...data.analog_four_saved_kit_layout import A4_SNAPSHOT_LAYOUT_SAVED_KIT
-from ...devices import A4Kit, A4Sound, AnalogFourKitSnapshot
+from ...devices import AnalogFourKitSnapshot
+from ...devices.analog_four_fields import A4Kit, A4Sound
 from ..data import PadState, Snapshot, new_ulid, require_int
 from ..data.stage import ANALOG_FOUR_DEVICE_ID
 from .appliance_capabilities import ApplianceParameterCapability, parameter_capabilities

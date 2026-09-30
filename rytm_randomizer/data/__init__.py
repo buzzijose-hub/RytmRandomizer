@@ -190,7 +190,7 @@ from .controller_rehearsal_scenarios import (
     CONTROLLER_REHEARSAL_SCENARIOS,
     DEFAULT_CONTROLLER_REHEARSAL_SCENARIO,
 )
-from .device_targets import DUAL_MACHINE_TARGET_IDS, DualMachineDeviceId
+from .device_targets import DUAL_MACHINE_TARGET_IDS
 from .live_gui_contracts import LIVE_GUI_SCREEN_COMPONENT_SPECS
 from .manual_feedback_packet import (
     DEFAULT_MANUAL_FEEDBACK_SCENARIO,
@@ -328,7 +328,6 @@ from .style_targets import STYLE_TARGET_VECTOR_AXES, STYLE_TARGET_VECTORS
 
 __all__ = [
     "DUAL_MACHINE_TARGET_IDS",
-    "DualMachineDeviceId",
     "A4_APPLIANCE_NATIVE_ONLY_PARAMETERS",
     "A4_APPLIANCE_PARAMETER_FIELDS",
     "RYTM_APPLIANCE_FX_FIELDS",

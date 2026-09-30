@@ -115,13 +115,13 @@ def _depth(value: object) -> float:
     return result
 
 
-def _target(value: object) -> ApplianceTarget:
+def _appliance_target(value: object) -> ApplianceTarget:
     if not isinstance(value, str) or value not in TARGETS:
         raise ValueError("unknown target")
     return cast(ApplianceTarget, value)
 
 
-def _fingerprints(value: object) -> dict[StageDeviceId, str | None]:
+def _profile_fingerprints(value: object) -> dict[StageDeviceId, str | None]:
     fingerprints = validated_object(value)
     if set(fingerprints) != set(DEVICE_IDS) or any(
         item is not None and (not isinstance(item, str) or len(item) > FINGERPRINT_LIMIT)
@@ -324,7 +324,7 @@ class ApplianceWorkspace:
         for name, item in profiles.items():
             self._name(name)
             profile = validated_object(item)
-            target = _target(profile.get("target"))
+            target = _appliance_target(profile.get("target"))
             lanes = validated_object(profile.get("lanes"))
             if set(lanes) != set(DEVICE_IDS):
                 raise ValueError("profile requires both explicit lanes")
@@ -333,7 +333,7 @@ class ApplianceWorkspace:
                 for device in DEVICE_IDS
             }
             association = validated_object(profile.get("association"))
-            fingerprints = _fingerprints(association.get("fingerprints"))
+            fingerprints = _profile_fingerprints(association.get("fingerprints"))
             result[name] = {
                 "target": target,
                 "master_depth": _depth(profile.get("master_depth")),
@@ -426,7 +426,7 @@ class ApplianceWorkspace:
         self.anchor = None
 
     def change_scope(self, payload: Mapping[str, object]) -> None:
-        target = _target(payload.get("target", self.target))
+        target = _appliance_target(payload.get("target", self.target))
         depth = _depth(payload.get("master_depth", self.master_depth))
         lanes = validated_object(payload.get("lanes", {}))
         if not set(lanes) <= set(DEVICE_IDS):
@@ -670,7 +670,7 @@ class ApplianceWorkspace:
                 "lanes": {device: scope.to_dict() for device, scope in self.scopes.items()},
                 "association": {
                     "device_ids": list(DEVICE_IDS),
-                    "fingerprints": _fingerprints(fingerprints),
+                    "fingerprints": _profile_fingerprints(fingerprints),
                 },
             }
             if len(profiles) > PROFILE_LIMIT:

@@ -24,7 +24,8 @@ from rytm_randomizer.data.analog_four_kit_fields import (
     format_a4_native_number,
     parse_a4_fixed_8_8,
 )
-from rytm_randomizer.devices import A4Kit, AnalogFourKitSnapshot
+from rytm_randomizer.devices import AnalogFourKitSnapshot
+from rytm_randomizer.devices.analog_four_fields import A4Kit
 from rytm_randomizer.devices.strategies import analog_four_kit_fields as codec
 from rytm_randomizer.devices.strategies.analog_four_saved_kit_codec import (
     decode_analog_four_saved_kit_payload,
