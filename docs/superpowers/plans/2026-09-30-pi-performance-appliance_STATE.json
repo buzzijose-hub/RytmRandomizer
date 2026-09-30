@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "software implemented; source-bound final acceptance and PR publication recorded separately",
+  "status": "PR #252 open; auth-refusal CI test repaired locally; hosted rerun and separate desktop-shell failure investigation pending",
   "starting_sha": "892aaffca2484d1939ba3e133263aaadde2f22de",
   "original_checkout_sha": "a73aded67211b1e4a4cf294eb13ecfd3887de7e8",
   "integration_branch": "codex/pi-performance-appliance",
@@ -211,6 +211,28 @@
       "passed": 33,
       "skipped": 2,
       "duration_seconds": 56.5
+    },
+    {
+      "scope": "hosted Python CI on Linux, macOS and Windows",
+      "tree": "13b0000311620677b7a4d1ab22a1796d9de8581b",
+      "result": "failed; retained for audit",
+      "note": "Same auth-refusal log capture assertion: 14 records instead of exactly 7. Windows reported 10619 passed and 5 skipped alongside the failure. Runtime agent reproduced inherited propagation and stale closed ancestor-handler state before the test-only repair."
+    },
+    {
+      "scope": "runtime agent local CI-isolation repair",
+      "tree": "e36979a93a925c1886138593b3d7ef364137a330",
+      "result": "focused checks passed; hosted CI rerun pending",
+      "passed": 19,
+      "ordered_neighbor_passed": 48,
+      "note": "Both ambient propagation variants covered. Monkeypatch restores handler/propagation state; exact 7 records, privacy, metrics and zero-MIDI assertions preserved, category/stderr assertions strengthened. Lint clean; production source unchanged."
+    },
+    {
+      "scope": "hosted desktop-shell job",
+      "tree": "13b0000311620677b7a4d1ab22a1796d9de8581b",
+      "result": "failed; separate investigation pending",
+      "passed": 31,
+      "failed": 1,
+      "note": "backend_restart failure is being investigated separately; the auth-log test repair does not establish complete CI success."
     }
   ],
   "integration_shas": [
