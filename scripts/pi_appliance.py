@@ -73,14 +73,17 @@ def digest(data: bytes) -> str:
 
 def package(output: Path, *, web_root: Path, wheelhouse: Path | None) -> None:
     """Deterministic archive of exact committed source + built web + optional wheels."""
-    checked(["git", "diff", "--exit-code", "HEAD"], cwd=ROOT)
-    source_sha = checked(["git", "rev-parse", "HEAD"], cwd=ROOT)
+    git = shutil.which("git")
+    if git is None:
+        raise ValueError("Git is required to package exact committed source; install Git first")
+    checked([git, "diff", "--exit-code", "HEAD"], cwd=ROOT)
+    source_sha = checked([git, "rev-parse", "HEAD"], cwd=ROOT)
     if not (web_root / "index.html").is_file():
         raise ValueError("Production assets missing: run npm ci && npm run build in desktop/web")
     files: dict[str, bytes] = {}
     source_tar = subprocess.run(
         [
-            "git",
+            git,
             "archive",
             "--format=tar",
             "HEAD",
@@ -354,7 +357,26 @@ def install(archive: Path, *, prefix: Path, online: bool, autostart: bool = Fals
     )
 
 
+def bind_runtime_source() -> Path:
+    """Use this checkout/release's verified source, even with another editable install."""
+    launcher = Path(__file__).resolve().parent
+    source = launcher / "src" if (launcher / "src/rytm_randomizer").is_dir() else ROOT
+    package_root = source / "rytm_randomizer"
+    if not (package_root / "__init__.py").is_file():
+        raise ValueError("This launcher has no colocated appliance source")
+    loaded = sys.modules.get("rytm_randomizer")
+    if loaded is not None:
+        origin = getattr(loaded, "__file__", None)
+        if not isinstance(origin, str) or Path(origin).resolve().parent != package_root.resolve():
+            raise ValueError(
+                "Another RytmRandomizer source is already loaded; start a fresh process"
+            )
+    sys.path.insert(0, str(source))
+    return source
+
+
 def serve(args: argparse.Namespace) -> None:
+    bind_runtime_source()
     runtime = args.runtime_dir.resolve()
     runtime.mkdir(parents=True, exist_ok=True, mode=0o700)
     if os.name == "posix":
