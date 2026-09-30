@@ -17,6 +17,7 @@ from starlette.websockets import WebSocketDisconnect
 from rytm_randomizer.cockpit import appliance_runtime as runtime
 from rytm_randomizer.cockpit.__main__ import build_session
 from rytm_randomizer.cockpit.ws.server import create_app
+from rytm_randomizer.observability.metrics import MidiMetrics
 
 pytestmark = pytest.mark.fast
 AUTH = "test-ws-token"
@@ -156,6 +157,53 @@ def test_ws_requires_same_origin_cookie_and_existing_hello_token(
         socket.send_text(json.dumps({"type": "hello", "token": "test-ws-token"}))
         assert socket.receive_json() == {"ok": True}
         assert socket.receive_json()["type"] == "session_status"
+
+
+def test_auth_refusal_categories_log_transport_and_increment_metrics_without_request_data(
+    prepared: tuple[TestClient, Path, Path],
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    client, _, private = prepared
+    metrics = MidiMetrics()
+    monkeypatch.setattr(runtime, "get_metrics", lambda: metrics)
+    runtime._logger.addHandler(caplog.handler)
+    secrets = [
+        "private-header-host.invalid",
+        "https://private-header-origin.invalid",
+        "private-body-credential",
+        credential(private),
+        AUTH,
+        ARM_AUTH,
+    ]
+    try:
+        assert client.get("/appliance", headers={"Host": secrets[0]}).status_code == 403
+        assert client.get("/appliance", headers={"Origin": secrets[1]}).status_code == 403
+        assert client.get("/appliance").status_code == 403
+        assert client.post("/bootstrap", data={"credential": secrets[2]}).status_code == 403
+        assert client.post("/bootstrap", content=b"x" * 2049).status_code == 413
+        assert client.post("/bootstrap", content="a=1&b=2&c=3&d=4&e=5").status_code == 400
+        with pytest.raises(WebSocketDisconnect):
+            with client.websocket_connect(
+                "ws://127.0.0.1:4317/ws", headers={"Origin": "http://127.0.0.1:4317"}
+            ):
+                pass
+    finally:
+        runtime._logger.removeHandler(caplog.handler)
+    records = [record for record in caplog.records if record.name == runtime.__name__]
+    assert len(records) == 7
+    assert all(record.getMessage() == "appliance_auth_refused" for record in records)
+    assert [record.transport for record in records] == ["http"] * 6 + ["websocket"]
+    assert dict(metrics.errors_by_kind) == {
+        "appliance_auth.host": 1,
+        "appliance_auth.origin": 1,
+        "appliance_auth.session": 2,
+        "appliance_auth.bootstrap": 3,
+    }
+    logged = json.dumps([record.__dict__ for record in records], default=str)
+    assert all(secret not in logged for secret in secrets)
+    assert all("/appliance" not in str(record.__dict__) for record in records)
+    assert not metrics.cc_sent_by_channel
 
 
 def test_assets_are_bounded_and_do_not_escape_web_root(

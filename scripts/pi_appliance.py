@@ -505,7 +505,16 @@ def serve(args: argparse.Namespace) -> None:
     output = RotatingOutput(args.log_file) if args.log_file else None
     if output is not None:
         sys.stdout = sys.stderr = output
+    package_logger: logging.Logger | None = None
+    prior_handlers: list[logging.Handler] = []
+    prior_level, prior_propagate = logging.NOTSET, False
     try:
+        from rytm_randomizer.observability.logging import configure_logging
+
+        package_logger = logging.getLogger("rytm_randomizer")
+        prior_handlers = list(package_logger.handlers)
+        prior_level, prior_propagate = package_logger.level, package_logger.propagate
+        configure_logging(json=True, stream=sys.stderr)
         if args.hardware_input:
             from rytm_randomizer.app import main as app_main
 
@@ -518,6 +527,14 @@ def serve(args: argparse.Namespace) -> None:
         for name in ("ws-token", "arm-secret", "launch.html"):
             (runtime / name).unlink(missing_ok=True)
         sys.stdout, sys.stderr = original_stdout, original_stderr
+        if package_logger is not None:
+            for handler in list(package_logger.handlers):
+                package_logger.removeHandler(handler)
+                handler.close()
+            for handler in prior_handlers:
+                package_logger.addHandler(handler)
+            package_logger.setLevel(prior_level)
+            package_logger.propagate = prior_propagate
         if output is not None:
             output.close()
 
