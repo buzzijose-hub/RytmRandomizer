@@ -11,6 +11,11 @@ flowchart LR
   Scope --> Engine[Existing deterministic engine]
   Scope --> Catalog[Canonical parameter evidence]
   WS --> Capture[Existing input-only KIT capture]
+  WS --> Cancel[DISARM or owner disconnect]
+  Cancel --> Generation[Revoke capture generation]
+  Cancel --> Provider[Optional CancellableSysexCaptureProvider]
+  Capture --> Provider
+  Generation --> Late[Discard late capture results]
   Capture --> Saved[Saved-state evidence]
   Saved --> Native[Existing typed A4 fields and Rytm promotion]
   Native --> Scope
@@ -18,6 +23,7 @@ flowchart LR
   Queue --> Touch
   WS --> Armed[Existing ArmedApply boundary]
   Scope --> Block[Scoped live APPLY awaits working-state and restore evidence]
+  Scope --> History[Existing per-lane HistoryStore pointers]
 ```
 
 ## Purpose

@@ -3,20 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from types import MappingProxyType
-from typing import Final
 
+from ..data.device_targets import DUAL_MACHINE_TARGET_IDS
 from ..devices import Device, all_devices
-
-_ALIASES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
-    {
-        "rytm": ("analog_rytm_mk2",),
-        "rytm-only": ("analog_rytm_mk2",),
-        "a4": ("analog_four_mk2",),
-        "a4-only": ("analog_four_mk2",),
-        "both": ("analog_rytm_mk2", "analog_four_mk2"),
-    }
-)
 
 
 def resolve_target_devices(
@@ -27,9 +16,10 @@ def resolve_target_devices(
     """Resolve a live-friendly target alias to registered devices."""
 
     normalized = target.strip().lower()
-    if normalized not in _ALIASES:
+    if normalized not in DUAL_MACHINE_TARGET_IDS:
         raise ValueError(
-            "unknown target " f"{target!r}; expected one of {', '.join(sorted(_ALIASES))}"
+            "unknown target "
+            f"{target!r}; expected one of {', '.join(sorted(DUAL_MACHINE_TARGET_IDS))}"
         )
     source = all_devices() if registry is None else registry
-    return {device_id: source[device_id] for device_id in _ALIASES[normalized]}
+    return {device_id: source[device_id] for device_id in DUAL_MACHINE_TARGET_IDS[normalized]}

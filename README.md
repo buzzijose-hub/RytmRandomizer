@@ -35,7 +35,7 @@ What the app actually does today:
 - **Touch appliance.** The `#/appliance` route adapts the shared Cockpit to 800×480, 480×320 and 1024×600 screens, with Rytm/A4/BOTH scope, depth, protection, captured-value previews, local history and rule profiles. A production kiosk package targets 64-bit Raspberry Pi OS. Scoped live APPLY and hardware restore remain blocked by explicit evidence gaps; the simulated preview has no MIDI output authority. See the [operator guide](docs/PI_APPLIANCE_OPERATOR.md) and [deployment commands](docs/PI_APPLIANCE_DEPLOYMENT.md).
 - **Kit morphing + scoped randomization.** Morph between your current kit and a target per track/page with a depth macro, and scope randomization with masks + intensity anchored on the kit you are actually playing. Both are pure, deterministic, and pinned byte-identical across languages.
 - **Profile authoring + signed export.** Learn a style profile from your music (the [wizard](#profile-wizard)), mutate live against it, and ship it as a tiny signed `.rymp` file (the [export pipeline](#export-pipeline)).
-- **Accessible by gate, not by afterthought.** Every cockpit route passes a WCAG 2.2 AA axe audit in CI with zero violations. See the [accessibility statement](docs/ACCESSIBILITY.md).
+- **Accessibility checks in CI.** Cockpit, Wizard and Appliance routes have a zero-violation WCAG 2.2 AA axe gate. See the [accessibility statement](docs/ACCESSIBILITY.md) for tested scope and manual checks.
 
 ## Safety model — Live-but-Passive
 
@@ -167,7 +167,7 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the long form and [`docs/
 
 ## Accessibility
 
-The cockpit targets **WCAG 2.2 AA** and enforces it in CI: an axe audit runs against every route on every PR and currently reports **zero violations**, backed by 44 dedicated a11y component tests (keyboard-operable sliders with APG semantics, colorblind-safe status — icon + shape + text, never hue alone — centralized aria-live announcements, focus restoration across live re-renders, reduced-motion support, and 200% zoom/reflow checks). The full statement, known Tauri-webview caveats, and the per-release screen-reader smoke protocol live in [`docs/ACCESSIBILITY.md`](docs/ACCESSIBILITY.md).
+The cockpit targets **WCAG 2.2 AA**. CI enforces a zero-violation axe threshold for the Cockpit, Wizard and Appliance routes, alongside component checks for keyboard operation, dialog focus, status text, announcements, reduced motion and reflow. Automated checks do not establish complete accessibility. The tested scope, known Tauri-webview caveats and manual screen-reader smoke protocol live in [`docs/ACCESSIBILITY.md`](docs/ACCESSIBILITY.md).
 
 ---
 

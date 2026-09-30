@@ -225,6 +225,8 @@ def test_restart_rotates_every_authentication_capability(
     first, _, private = prepared
     old = credential(private)
     enter(first, private)
+    old_cookie = first.cookies.get(runtime.COOKIE_NAME)
+    assert old_cookie
     monkeypatch.delenv(runtime.WEB_ROOT_ENV)
     app = create_app(build_session(), token=NEXT_AUTH)
     monkeypatch.setenv(runtime.WEB_ROOT_ENV, str(prepared[1]))
@@ -232,10 +234,14 @@ def test_restart_rotates_every_authentication_capability(
     second = TestClient(app, base_url="http://127.0.0.1:4317")
     assert second.post("/bootstrap", data={"credential": old}).status_code == 403
     assert (
-        second.get("/appliance", headers={"Cookie": first.headers.get("cookie", "")}).status_code
+        second.get(
+            "/appliance", headers={"Cookie": f"{runtime.COOKIE_NAME}={old_cookie}"}
+        ).status_code
         == 403
     )
     response = second.post("/bootstrap", data={"credential": credential(private)})
+    assert second.cookies.get(runtime.COOKIE_NAME) != old_cookie
+    assert second.get("/appliance").status_code == 200
     assert "new-arm-secret" in response.text
     assert "new-ws-token" in response.text
 

@@ -22,6 +22,7 @@ from ..snapshot.mutation_scope import MutationScope, registered_mutation_ids
 from .capture.appliance_a4 import appliance_a4_parameter_encodings
 from .capture.appliance_capabilities import ApplianceParameterCapability, parameter_capabilities
 from .data import (
+    DUAL_MACHINE_TARGET_IDS,
     PERSISTED_STATE_REFUSAL_METRIC_CODES,
     MutationCandidate,
     PadState,
@@ -48,11 +49,7 @@ from .history import HistoryStore
 
 DEVICE_IDS: Final[tuple[StageDeviceId, ...]] = STAGE_DEVICE_IDS
 TARGETS: Final[Mapping[str, tuple[StageDeviceId, ...]]] = MappingProxyType(
-    {
-        "rytm": (DEVICE_IDS[0],),
-        "a4": (DEVICE_IDS[1],),
-        "both": DEVICE_IDS,
-    }
+    {target: DUAL_MACHINE_TARGET_IDS[target] for target in ("rytm", "a4", "both")}
 )
 OPERATIONS: Final[frozenset[str]] = frozenset(
     (
@@ -240,9 +237,8 @@ class ApplianceWorkspace:
                 tuple(dict.fromkeys(row.page for row in rows)),
                 parameter_locks=tuple(row.parameter_id for row in rows if row.default_protected),
             )
-        self.sources: dict[StageDeviceId, Snapshot] = {}
         self.histories: dict[StageDeviceId, HistoryStore] = {}
-        self.timeline: list[dict[StageDeviceId, Snapshot]] = []
+        self.timeline: list[dict[StageDeviceId, str]] = []
         self.cursor = 0
         self.anchor: dict[StageDeviceId, Snapshot] | None = None
         self.candidates: dict[StageDeviceId, MutationCandidate] = {}
@@ -252,6 +248,47 @@ class ApplianceWorkspace:
         self.profiles: dict[str, ApplianceProfileRecord] = {}
         self.storage_error: str | None = None
         self._load_profiles()
+
+    @property
+    def sources(self) -> dict[StageDeviceId, Snapshot]:
+        """Current baselines come exclusively from the shared history stores."""
+        return {
+            device: next(
+                entry.snapshot
+                for entry in history.current.entries
+                if entry.snapshot.snapshot_id == history.current.current_id
+            )
+            for device, history in self.histories.items()
+        }
+
+    def _reset_history(self, sources: Mapping[StageDeviceId, Snapshot]) -> None:
+        self.histories = {}
+        for device, snapshot in sources.items():
+            history = HistoryStore()
+            history.initial(snapshot)
+            self.histories[device] = history
+        self.timeline = [{device: snapshot.snapshot_id for device, snapshot in sources.items()}]
+        self.cursor = 0
+
+    def _retain_history(self) -> None:
+        """Keep only reachable joint checkpoints, with truthful per-lane parents."""
+        for device, history in self.histories.items():
+            snapshots = {
+                entry.snapshot.snapshot_id: entry.snapshot for entry in history.current.entries
+            }
+            retained = HistoryStore()
+            seen: set[str] = set()
+            for checkpoint in self.timeline:
+                snapshot_id = checkpoint[device]
+                if snapshot_id in seen:
+                    continue
+                if retained.has_entries:
+                    retained.append_post_send(snapshots[snapshot_id], via="send")
+                else:
+                    retained.initial(snapshots[snapshot_id])
+                seen.add(snapshot_id)
+            retained.load(self.timeline[self.cursor][device])
+            self.histories[device] = retained
 
     def _load_profiles(self) -> None:
         if self.profile_file is None or not self.profile_file.exists():
@@ -349,7 +386,6 @@ class ApplianceWorkspace:
         """Drop transient source assumptions on disconnect, leaving saved rules."""
         self.context = None
         self.invalidate()
-        self.sources.clear()
         self.histories.clear()
         self.timeline.clear()
         self.anchor = None
@@ -370,13 +406,13 @@ class ApplianceWorkspace:
             "appliance_context_invalidated",
             extra={"revision": self.revision, "simulation": self.simulation},
         )
-        self.sources = {} if source is None else {DEVICE_IDS[0]: source}
+        sources: dict[StageDeviceId, Snapshot] = {} if source is None else {DEVICE_IDS[0]: source}
         if a4_source is not None and not self.simulation:
-            self.sources[DEVICE_IDS[1]] = a4_source
+            sources[DEVICE_IDS[1]] = a4_source
         if self.simulation:
             rows = parameter_capabilities(DEVICE_IDS[1])
             params = {row.parameter_id: 64 for row in rows}
-            self.sources[DEVICE_IDS[1]] = Snapshot(
+            sources[DEVICE_IDS[1]] = Snapshot(
                 new_ulid(),
                 DEVICE_IDS[1],
                 datetime.now(timezone.utc),
@@ -386,13 +422,7 @@ class ApplianceWorkspace:
                 None,
                 None,
             )
-        self.histories = {}
-        for device_id, snapshot in self.sources.items():
-            history = HistoryStore()
-            history.initial(snapshot)
-            self.histories[device_id] = history
-        self.timeline = [dict(self.sources)]
-        self.cursor = 0
+        self._reset_history(sources)
         self.anchor = None
 
     def change_scope(self, payload: Mapping[str, object]) -> None:
@@ -577,21 +607,20 @@ class ApplianceWorkspace:
             or payload.get("confirmed") is not True
         ):
             raise ValueError("exact current candidate and confirmation are required")
-        snapshots = dict(self.sources)
+        snapshots: dict[StageDeviceId, Snapshot] = {}
         for device_id, candidate in self.candidates.items():
             adapter = MockDeviceAdapter(self.sources[device_id])
-            snapshot = adapter.apply(candidate, frozenset(self.scopes[device_id].locked_ids))
+            snapshots[device_id] = adapter.apply(
+                candidate, frozenset(self.scopes[device_id].locked_ids)
+            )
+        for device_id, snapshot in snapshots.items():
             self.histories[device_id].append_post_send(snapshot, via="send")
-            snapshots[device_id] = snapshot
-        self.sources = snapshots
-        self.timeline = self.timeline[: self.cursor + 1] + [dict(snapshots)]
-        self.timeline = self.timeline[-HISTORY_LIMIT:]
+        checkpoint: dict[StageDeviceId, str] = {
+            device: snapshot.snapshot_id for device, snapshot in self.sources.items()
+        }
+        self.timeline = (self.timeline[: self.cursor + 1] + [checkpoint])[-HISTORY_LIMIT:]
         self.cursor = len(self.timeline) - 1
-        if any(len(history.current.entries) > HISTORY_LIMIT for history in self.histories.values()):
-            for device, snapshot in snapshots.items():
-                store = HistoryStore()
-                store.initial(snapshot)
-                self.histories[device] = store
+        self._retain_history()
         self.last_receipt = {
             "status": "simulated_local_apply",
             "sent_count": 0,
@@ -606,15 +635,14 @@ class ApplianceWorkspace:
         elif operation == "return_anchor":
             if self.anchor is None:
                 raise ValueError("no local anchor captured")
-            self.sources = dict(self.anchor)
-            self.timeline = [dict(self.sources)]
-            self.cursor = 0
+            self._reset_history(self.anchor)
         else:
             cursor = self.cursor + (-1 if operation == "undo" else 1)
             if not 0 <= cursor < len(self.timeline):
                 raise ValueError("no local history entry in that direction")
             self.cursor = cursor
-            self.sources = dict(self.timeline[cursor])
+            for device, snapshot_id in self.timeline[cursor].items():
+                self.histories[device].load(snapshot_id)
         self.last_receipt = {
             "status": "local_history_only",
             "sent_count": 0,

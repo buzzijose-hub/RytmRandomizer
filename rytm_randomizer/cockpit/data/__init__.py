@@ -8,6 +8,7 @@ import Snapshot`` without reaching into each submodule. See
 
 from __future__ import annotations
 
+from ...data.device_targets import DUAL_MACHINE_TARGET_IDS
 from ...data.persisted_state import (
     PERSISTED_STATE_REFUSAL_METRIC_CODES,
     classify_payload,
@@ -97,6 +98,7 @@ __all__ = [
     "new_ulid",
     "classify_payload",
     "PERSISTED_STATE_REFUSAL_METRIC_CODES",
+    "DUAL_MACHINE_TARGET_IDS",
     "require_int",
     "require_schema_version",
 ]

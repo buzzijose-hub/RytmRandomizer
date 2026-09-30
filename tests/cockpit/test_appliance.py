@@ -189,12 +189,47 @@ def test_production_both_refuses_before_creating_any_lane_candidate(
     workspace: ApplianceWorkspace, tmp_path: Path
 ) -> None:
     profile = ProfileRegistry(tmp_path / "registry").list_profiles()[0]
-    workspace.simulation = False
-    del workspace.sources[DEVICE_IDS[1]]
+    source = workspace.sources[DEVICE_IDS[0]]
+    workspace = ApplianceWorkspace(simulation=False)
+    workspace.sync(source, context="only-rytm-saved-capture")
     workspace.change_scope({"target": "both"})
     with pytest.raises(ValueError, match="all selected lanes"):
         workspace.roll(profile, 1234)
     assert not workspace.candidates and workspace.candidate is None
+
+
+def test_master_track_and_page_depth_compose_before_rounding_and_zero_page_is_exact(
+    workspace: ApplianceWorkspace, tmp_path: Path
+) -> None:
+    source = workspace.sources[DEVICE_IDS[0]]
+    profile = ProfileRegistry(tmp_path / "registry").list_profiles()[0]
+    workspace.change_scope(
+        {
+            "master_depth": 0.83,
+            "lanes": {
+                DEVICE_IDS[0]: {
+                    "target_ids": [1],
+                    "track_depths": {"1": 0.71},
+                    "page_depths": {"SRC": 0.61, "AMP": 0, "FILTER": 0},
+                }
+            },
+        }
+    )
+    workspace.roll(profile, 1234)
+    actual = workspace.candidates[DEVICE_IDS[0]].pad_deltas[0]
+    equivalent = ApplianceWorkspace(simulation=True)
+    equivalent.sync(source, context="equivalent-product")
+    equivalent.change_scope(
+        {
+            "master_depth": 0.83 * 0.71 * 0.61,
+            "lanes": {DEVICE_IDS[0]: {"target_ids": [1], "page_ids": ["SRC"]}},
+        }
+    )
+    equivalent.roll(profile, 1234)
+    assert actual == equivalent.candidates[DEVICE_IDS[0]].pad_deltas[0]
+    assert actual.changed_keys == frozenset({"dec"})
+    assert actual.proposed_params["amp_decay"] == source.pads[0].params["amp_decay"]
+    assert actual.proposed_params["flt"] == source.pads[0].params["flt"]
 
 
 def test_context_digest_changes_and_sync_revokes_transient_authority(
@@ -219,6 +254,51 @@ def test_local_history_is_bounded(workspace: ApplianceWorkspace, tmp_path: Path)
                 hardware_intent=False,
             )
     assert len(workspace.timeline) == HISTORY_LIMIT
+    for _ in range(HISTORY_LIMIT - 1):
+        workspace.navigate("undo")
+    for device, snapshot in workspace.sources.items():
+        assert snapshot.snapshot_id == workspace.timeline[0][device]
+        assert workspace.histories[device].current.current_id == snapshot.snapshot_id
+        assert len(workspace.histories[device].current.entries) <= HISTORY_LIMIT
+    with pytest.raises(ValueError, match="no local history"):
+        workspace.navigate("undo")
+    workspace.navigate("redo")
+    assert workspace.cursor == 1
+
+
+@pytest.mark.parametrize("navigation", ["undo", "return_anchor"])
+def test_roll_after_history_navigation_uses_selected_parent_and_discards_redo(
+    workspace: ApplianceWorkspace, tmp_path: Path, navigation: str
+) -> None:
+    profile = ProfileRegistry(tmp_path / "registry").list_profiles()[0]
+    workspace.change_scope({"target": "both"})
+    workspace.navigate("anchor")
+    baseline = dict(workspace.sources)
+    workspace.roll(profile, 1234)
+    workspace.apply_local(
+        {"candidate_id": workspace.candidate["candidate_id"], "confirmed": True},
+        hardware_intent=False,
+    )
+    discarded = dict(workspace.sources)
+    workspace.navigate(navigation)
+    assert workspace.sources == baseline
+    workspace.roll(profile, 5678)
+    workspace.apply_local(
+        {"candidate_id": workspace.candidate["candidate_id"], "confirmed": True},
+        hardware_intent=False,
+    )
+    for device, history in workspace.histories.items():
+        entries = history.current.entries
+        assert len(entries) == 2
+        assert entries[-1].parent_id == baseline[device].snapshot_id
+        assert entries[-1].snapshot == workspace.sources[device]
+        assert discarded[device].snapshot_id not in {
+            entry.snapshot.snapshot_id for entry in entries
+        }
+    with pytest.raises(ValueError, match="no local history"):
+        workspace.navigate("redo")
+    workspace.navigate("undo")
+    assert workspace.sources == baseline
 
 
 def test_native_bounds_preserve_fixed_point_precision_and_zero_depth(tmp_path: Path) -> None:

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "integrated implementation and verification",
+  "status": "integrated independent-review repairs; full verification pending",
   "starting_sha": "892aaffca2484d1939ba3e133263aaadde2f22de",
   "original_checkout_sha": "a73aded67211b1e4a4cf294eb13ecfd3887de7e8",
   "integration_branch": "codex/pi-performance-appliance",
@@ -57,18 +57,68 @@
       "scope": "capability isolated branch",
       "command": "capability and optional-controls tests",
       "result": "passed"
+    },
+    {
+      "scope": "root focused",
+      "tree": "0a0b1281",
+      "command": "pytest tests/cockpit/test_appliance.py tests/cockpit/test_appliance_safety.py tests/cockpit/test_capture_cancellation.py -n0 -q",
+      "result": "passed",
+      "count": 88,
+      "duration_seconds": 2.12
+    },
+    {
+      "scope": "root focused lane extraction",
+      "tree": "d68dc3a9 plus lane extraction",
+      "command": "pytest appliance+appliance_safety --cov appliance/handlers/DTO --cov-branch --cov-fail-under=100 -n0",
+      "result": "passed",
+      "count": 79,
+      "coverage": "498 statements178branches100%"
+    },
+    {
+      "scope": "agent frontend",
+      "tree": "746eea41",
+      "result": "passed",
+      "count": 49,
+      "coverage": "100% of416 statements452branches169functions241lines"
     }
   ],
   "integration_shas": [
     "913ad1ba",
     "7135e002",
     "a08521a8",
-    "59a4bb7b"
+    "59a4bb7b",
+    "c029600a",
+    "9051e849",
+    "d68dc3a9",
+    "c32f6207",
+    "0a0b1281",
+    "09b1fe6e"
   ],
   "blockers": [
     "physical Raspberry Pi unavailable",
     "A4 live authority unvalidated",
-    "unsaved working-state readback not established"
+    "unsaved working-state readback not established",
+    "ARM64 native dependency build unavailable (no Docker/Rust, no configured WSL distribution)",
+    "automatic approval review blocked obsolete credential directory deletion and original node_modules junction unlink; both preserved; clean isolated dependency installation used"
   ],
-  "resume": "Continue three agents in isolated worktrees. Root owns native A4 service integration, engine, profiles default, integrated verification. Runtime owns simulation authority sealing and teardown review; UI owns native display and 100% tests plus screenshots; capability agent owns A4 exact projection then service safety coverage. Never touch original dirty checkout. No push or PR yet. Full integrated backend, frontend coverage, browser, parity, packaging and independent review remain."
+  "resume": "Root integration is pi-performance-appliance; preserve original dirty checkout. Own preview sessions70839 simulation4317 and74497 passive4318 serve c029600a source and oldassets, require restart/rebuild. Capabilities worktree has clean locked npm dependencies; agent controls commit pending, then fast-forward clean checkout to root for exactSHA build. Runtime agent authoring deployment lifecycle tests; review_docs authoring final maintainability report (UIaxe895fd0b2 ready). Root owns authoritative history+target facts+docs uncommitted. Need merge all, full bounded backendcoverage/architecture/parity, pinnedlint/type/deadcode, locked frontendcoverage/build/E2E, actual 3size visualQA, deterministicpackage+matrix+receipts, consolidatedpostpushreview, onePR. No push yet.",
+  "resources": {
+    "logical_cpus": 24,
+    "ram_total_gib": 31.75,
+    "ram_available_gib_latest": 16.26,
+    "disk_free_gib_initial": 432,
+    "python": "3.12.14 Windows x64",
+    "lint_tools": "ruff0.15.13 black26.3.1 isort8.0.1 pyright1.1.411 isolated under ignored output/local/pi-appliance/venv/python-tools",
+    "frontend_dependencies": "npm ci,396 locked packages in pi-appliance-capabilities worktree; original node_modules preserved"
+  },
+  "review": {
+    "architecture": "duplicate native facts repaired870d3227",
+    "types": "validated DTOs repaired9051e849; constants runtime repair",
+    "safety": "passive capture touch cancel repaired746eea41",
+    "observability": "runtime d3e934ce, root0a0b1281; controls pending",
+    "abstraction": "authoritative shared HistoryStore and shared target facts being validated",
+    "tests": "old-cookie assertion corrected; fractional page depths added; install/rollback/kiosk lifecycle authoring",
+    "docs": "cancellation Protocol prose/diagram added; route axe895fd0b2 pending merge",
+    "maintainability": "independent reviewer active"
+  }
 }

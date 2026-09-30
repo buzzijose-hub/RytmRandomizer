@@ -690,6 +690,17 @@ Q8.7 display strings are exact. Shared pitch fine components remain protected.
 The optional `appliance_control_intent` event goes to one authenticated kiosk's
 bounded queue and invokes the same touch handlers. It cannot confirm ARM/APPLY.
 
+`CancellableSysexCaptureProvider` is an optional input-only Protocol in
+`cockpit/capture/service.py`. The WebSocket reader owns one capture task while
+continuing to accept DISARM; cancellation signals the cooperative provider and
+revokes the capture generation. Owner disconnect and connection loss use the
+same revocation. A late result from a non-cooperative provider is discarded;
+it cannot adopt a snapshot or revive device authority. No output method is added.
+Per-lane `HistoryStore` pointers own local current snapshots; the bounded joint
+timeline contains snapshot IDs only and coordinates both lanes without claiming
+hardware restoration. Target aliases come from `data/device_targets.py`, shared
+with the existing dual-machine target resolver.
+
 The `rytm_randomizer.cockpit` subpackage is the live-performance GUI surface
 and the home of the portable mutation engine. It hosts the actual
 WebSocket Protocol the desktop shell drives. (The live `live_gui_*_model`
