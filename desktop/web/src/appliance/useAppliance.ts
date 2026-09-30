@@ -9,6 +9,7 @@ export interface ApplianceController {
   busy: boolean;
   notice: string;
   getState: () => ApplianceState | null;
+  isBusy: () => boolean;
   execute: (operation: ApplianceOperation, payload?: Record<string, unknown>) => Promise<CommandAck | null>;
   command: (command: Command, timeoutMs?: number) => Promise<CommandAck | null>;
 }
@@ -80,5 +81,5 @@ export function useAppliance(client: CockpitClient): ApplianceController {
     if (operation !== 'state' && current === null) return null;
     return command({ type: 'appliance', operation, payload, ...(operation === 'state' ? {} : { expected_revision: current?.revision }) });
   }, [command]);
-  return { state, busy, notice, execute, command, getState: () => stateRef.current };
+  return { state, busy, notice, execute, command, getState: () => stateRef.current, isBusy: () => busyRef.current };
 }

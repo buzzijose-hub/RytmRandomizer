@@ -1068,6 +1068,12 @@ export interface ApplianceChangedEvent {
   type: 'appliance_changed';
   state: ApplianceState;
 }
+export interface ApplianceControlIntentEvent {
+  type: 'appliance_control_intent';
+  action: 'focus_step' | 'activate_focus' | 'mutate' | 'undo' | 'capture_anchor';
+  delta: number;
+  source: 'physical_input';
+}
 
 export type Event =
   | SnapshotChangedEvent
@@ -1088,6 +1094,7 @@ export type Event =
   | MidiActivityEvent
   | LibraryChangedEvent
   | ApplianceChangedEvent
+  | ApplianceControlIntentEvent
   | WizardEvent;
 
 export type EventType = Event['type'];
@@ -1615,6 +1622,7 @@ export function isEvent(msg: unknown): msg is Event {
     'midi_activity',
     'library_changed',
     'appliance_changed',
+    'appliance_control_intent',
     'wizard_state_changed',
     'analysis_progress',
     'profile_created',
