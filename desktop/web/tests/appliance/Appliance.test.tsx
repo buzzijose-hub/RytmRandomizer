@@ -298,6 +298,25 @@ describe('touch performance appliance', () => {
     click('RYTM'); fireEvent.change(screen.getByLabelText('Track to edit'), { target: { value: '2' } }); click('PROTECT'); expect(screen.getByText(/TRACK 2: 72.750/)).toBeInTheDocument();
     expect(screen.queryByText(/SIMULATED 7-BIT/)).not.toBeInTheDocument();
   });
+
+  it('uses the same mutation/undo/explicit anchor flow for optional configured controls', async () => {
+    const fake = await mount();
+    act(() => fake.emit({ type: 'appliance_control_intent', action: 'mutate', delta: 0, source: 'physical_input' })); await settled(fake); expect(fake.sent.at(-1)).toMatchObject({ operation: 'mutate' });
+    act(() => fake.emit({ type: 'appliance_control_intent', action: 'undo', delta: 0, source: 'physical_input' })); await settled(fake); expect(fake.sent.at(-1)).toMatchObject({ operation: 'undo' });
+    act(() => fake.emit({ type: 'appliance_control_intent', action: 'capture_anchor', delta: 0, source: 'physical_input' })); expect(screen.getByRole('dialog')).toHaveTextContent('ADOPT NEW LOCAL ANCHOR'); click('CANCEL');
+    emit(fake, applianceState({ master_depth: 0, history: { count: 1, can_undo: false, can_redo: false, anchor_captured: false, hardware_restore_supported: false } })); const before = fake.sent.length;
+    act(() => { fake.emit({ type: 'appliance_control_intent', action: 'mutate', delta: 0, source: 'physical_input' }); fake.emit({ type: 'appliance_control_intent', action: 'undo', delta: 0, source: 'physical_input' }); }); expect(fake.sent.length).toBe(before);
+    act(() => fake.setStatus('closed')); act(() => fake.emit({ type: 'appliance_control_intent', action: 'capture_anchor', delta: 0, source: 'physical_input' })); expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('rejects same-frame stale touch mutation/undo/anchor and busy physical input', async () => {
+    const fake = await mount(); const mutate = screen.getByRole('button', { name: 'MUTATE' }); const undo = screen.getByRole('button', { name: 'UNDO / LOCAL' }); click('HISTORY'); const anchor = screen.getByRole('button', { name: 'NEW ANCHOR…' });
+    act(() => { fake.setStatus('closed'); fireEvent.click(mutate); fireEvent.click(undo); fireEvent.click(anchor); }); expect(fake.sent).toHaveLength(1);
+    fake.ackQueue.push({ request_id: 'state', ok: true, appliance: applianceState() }); act(() => fake.setStatus('connected')); await screen.findByRole('button', { name: 'NEW ANCHOR…' });
+    fake.hang = true;
+    act(() => { fireEvent.click(screen.getByRole('button', { name: 'MUTATE' })); fireEvent.click(screen.getByRole('button', { name: 'NEW ANCHOR…' })); fake.emit({ type: 'appliance_control_intent', action: 'capture_anchor', delta: 0, source: 'physical_input' }); });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument(); act(() => fake.setStatus('closed'));
+  });
 });
 
 function candidateStateWithRevision(revision: number): ApplianceState { const state = candidateState(); state.revision = revision; state.candidate!.revision = revision; return state; }
