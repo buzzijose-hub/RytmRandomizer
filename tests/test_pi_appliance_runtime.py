@@ -182,6 +182,7 @@ def test_auth_refusal_categories_log_transport_and_increment_metrics_without_req
     caplog.set_level(logging.WARNING, logger=runtime.__name__)
     monkeypatch.setattr(runtime._logger, "handlers", [caplog.handler])
     monkeypatch.setattr(runtime._logger, "propagate", False)
+    request_path = "/private-request-path-sentinel"
     secrets = [
         "private-header-host.invalid",
         "https://private-header-origin.invalid",
@@ -189,8 +190,9 @@ def test_auth_refusal_categories_log_transport_and_increment_metrics_without_req
         credential(private),
         AUTH,
         ARM_AUTH,
+        request_path,
     ]
-    assert client.get("/appliance", headers={"Host": secrets[0]}).status_code == 403
+    assert client.get(request_path, headers={"Host": secrets[0]}).status_code == 403
     assert client.get("/appliance", headers={"Origin": secrets[1]}).status_code == 403
     assert client.get("/appliance").status_code == 403
     assert client.post("/bootstrap", data={"credential": secrets[2]}).status_code == 403
@@ -220,9 +222,21 @@ def test_auth_refusal_categories_log_transport_and_increment_metrics_without_req
         "appliance_auth.session": 2,
         "appliance_auth.bootstrap": 3,
     }
+    assert all(
+        Path(record.pathname).resolve() == Path(runtime.__file__).resolve() for record in records
+    )
+    # Exercise POSIX source metadata on every host, including Windows.
+    record_data = [
+        {**record.__dict__, "pathname": Path(record.pathname).as_posix()} for record in records
+    ]
     logged = json.dumps([record.__dict__ for record in records], default=str)
     assert all(secret not in logged for secret in secrets)
-    assert all("/appliance" not in str(record.__dict__) for record in records)
+    # Only trusted standard source metadata is exempt from the broad route rule.
+    # The unique actual request path above must be absent from the whole record.
+    assert all(
+        "/appliance" not in str({key: value for key, value in record.items() if key != "pathname"})
+        for record in record_data
+    )
     assert not metrics.cc_sent_by_channel
     assert "--- Logging error ---" not in capsys.readouterr().err
 
