@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import io
 import json
+import logging
 import os
 import re
 from pathlib import Path
@@ -159,15 +161,27 @@ def test_ws_requires_same_origin_cookie_and_existing_hello_token(
         assert socket.receive_json()["type"] == "session_status"
 
 
+@pytest.mark.parametrize("package_propagates", [False, True])
 def test_auth_refusal_categories_log_transport_and_increment_metrics_without_request_data(
     prepared: tuple[TestClient, Path, Path],
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
+    capsys: pytest.CaptureFixture[str],
+    package_propagates: bool,
 ) -> None:
     client, _, private = prepared
     metrics = MidiMetrics()
     monkeypatch.setattr(runtime, "get_metrics", lambda: metrics)
-    runtime._logger.addHandler(caplog.handler)
+    # Reproduce inherited suite state: a stale capture stream and either
+    # package-level propagation policy must not affect this semantic test.
+    package_logger = logging.getLogger("rytm_randomizer")
+    closed_stream = io.StringIO()
+    closed_stream.close()
+    monkeypatch.setattr(package_logger, "handlers", [logging.StreamHandler(closed_stream)])
+    monkeypatch.setattr(package_logger, "propagate", package_propagates)
+    caplog.set_level(logging.WARNING, logger=runtime.__name__)
+    monkeypatch.setattr(runtime._logger, "handlers", [caplog.handler])
+    monkeypatch.setattr(runtime._logger, "propagate", False)
     secrets = [
         "private-header-host.invalid",
         "https://private-header-origin.invalid",
@@ -176,23 +190,29 @@ def test_auth_refusal_categories_log_transport_and_increment_metrics_without_req
         AUTH,
         ARM_AUTH,
     ]
-    try:
-        assert client.get("/appliance", headers={"Host": secrets[0]}).status_code == 403
-        assert client.get("/appliance", headers={"Origin": secrets[1]}).status_code == 403
-        assert client.get("/appliance").status_code == 403
-        assert client.post("/bootstrap", data={"credential": secrets[2]}).status_code == 403
-        assert client.post("/bootstrap", content=b"x" * 2049).status_code == 413
-        assert client.post("/bootstrap", content="a=1&b=2&c=3&d=4&e=5").status_code == 400
-        with pytest.raises(WebSocketDisconnect):
-            with client.websocket_connect(
-                "ws://127.0.0.1:4317/ws", headers={"Origin": "http://127.0.0.1:4317"}
-            ):
-                pass
-    finally:
-        runtime._logger.removeHandler(caplog.handler)
+    assert client.get("/appliance", headers={"Host": secrets[0]}).status_code == 403
+    assert client.get("/appliance", headers={"Origin": secrets[1]}).status_code == 403
+    assert client.get("/appliance").status_code == 403
+    assert client.post("/bootstrap", data={"credential": secrets[2]}).status_code == 403
+    assert client.post("/bootstrap", content=b"x" * 2049).status_code == 413
+    assert client.post("/bootstrap", content="a=1&b=2&c=3&d=4&e=5").status_code == 400
+    with pytest.raises(WebSocketDisconnect):
+        with client.websocket_connect(
+            "ws://127.0.0.1:4317/ws", headers={"Origin": "http://127.0.0.1:4317"}
+        ):
+            pass
     records = [record for record in caplog.records if record.name == runtime.__name__]
     assert len(records) == 7
     assert all(record.getMessage() == "appliance_auth_refused" for record in records)
+    assert [record.fingerprint for record in records] == [
+        "appliance_auth.host",
+        "appliance_auth.origin",
+        "appliance_auth.session",
+        "appliance_auth.bootstrap",
+        "appliance_auth.bootstrap",
+        "appliance_auth.bootstrap",
+        "appliance_auth.session",
+    ]
     assert [record.transport for record in records] == ["http"] * 6 + ["websocket"]
     assert dict(metrics.errors_by_kind) == {
         "appliance_auth.host": 1,
@@ -204,6 +224,7 @@ def test_auth_refusal_categories_log_transport_and_increment_metrics_without_req
     assert all(secret not in logged for secret in secrets)
     assert all("/appliance" not in str(record.__dict__) for record in records)
     assert not metrics.cc_sent_by_channel
+    assert "--- Logging error ---" not in capsys.readouterr().err
 
 
 def test_assets_are_bounded_and_do_not_escape_web_root(
