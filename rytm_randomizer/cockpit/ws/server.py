@@ -678,6 +678,12 @@ def create_app(
         ``uvicorn.run(app, host=..., port=...)`` to serve.
     """
 
+    # A simulated launch never receives the transmit capability. The ordinary
+    # arm handler already refuses sessions with no server-minted secret before
+    # resolving a port or importing/constructing a MIDI provider. Seal it at
+    # composition so the preserved studio view has the same restriction.
+    if os.environ.get("RYTM_RAND_APPLIANCE_SIMULATION") == "1":
+        session.arm_secret = None
     if not isinstance(token, str) or not token:
         # An empty token would make the HMAC comparison pass against the
         # empty string a client could trivially send. Refuse to start

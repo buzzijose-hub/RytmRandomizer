@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import re
@@ -239,3 +240,60 @@ def test_posix_permission_path_and_index_containment(
     monkeypatch.setattr(Path, "is_relative_to", lambda *_: False)
     with pytest.raises(ValueError, match="inside web root"):
         runtime.install_appliance_routes(client.app, token=AUTH, arm_secret=None)
+
+
+def test_simulation_composition_withholds_output_capability_before_any_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.cockpit.ws import handlers
+
+    class RefusingProvider:
+        def list_output_names(self) -> tuple[str, ...]:
+            pytest.fail("simulation must never enumerate an output provider")
+
+        def open_output(self, _port_name: str) -> object:
+            pytest.fail("simulation must never open an output provider")
+
+    monkeypatch.delenv(runtime.WEB_ROOT_ENV, raising=False)
+    session = build_session()
+    session.arm_secret = ARM_AUTH
+    session.arm_port_provider = RefusingProvider()
+    monkeypatch.setenv("RYTM_RAND_APPLIANCE_SIMULATION", "1")
+    create_app(session, token=AUTH)
+    assert session.arm_secret is None
+
+    def refuse_spec(_name: str) -> None:
+        pytest.fail("simulation must refuse before searching/importing the MIDI backend")
+
+    monkeypatch.setattr(handlers.importlib.util, "find_spec", refuse_spec)
+    # Removing the environment flag after composition cannot restore authority.
+    monkeypatch.delenv("RYTM_RAND_APPLIANCE_SIMULATION")
+    ack = asyncio.run(
+        handlers.handle_command(
+            {
+                "request_id": "simulation-arm-refusal",
+                "command": {
+                    "type": "arm",
+                    "arm_token": ARM_AUTH,
+                    "confirm": True,
+                    "port_name": "exact output",
+                },
+            },
+            session,
+        )
+    )
+    assert ack["ok"] is False
+    assert "no ARM secret" in str(ack["message"])
+    assert session.armed_apply is None
+    assert session.hardware_intent is False
+
+
+def test_ordinary_production_composition_retains_explicit_arm_capability(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(runtime.WEB_ROOT_ENV, raising=False)
+    monkeypatch.setenv("RYTM_RAND_APPLIANCE_SIMULATION", "0")
+    session = build_session()
+    session.arm_secret = ARM_AUTH
+    create_app(session, token=AUTH)
+    assert session.arm_secret == ARM_AUTH
