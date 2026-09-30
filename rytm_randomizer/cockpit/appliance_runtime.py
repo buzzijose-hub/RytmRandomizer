@@ -29,6 +29,8 @@ RUNTIME_DIR_ENV: Final[str] = "RYTM_RAND_APPLIANCE_RUNTIME_DIR"
 COOKIE_NAME: Final[str] = "rytm-appliance-session"
 MAX_ASSET_BYTES: Final[int] = 20 * 1024 * 1024
 MAX_BOOTSTRAP_BYTES: Final[int] = 2048
+UNPRIVILEGED_PORT_MINIMUM: Final[int] = 1024
+TCP_PORT_MAXIMUM: Final[int] = 65535
 
 
 class ApplianceGuard:
@@ -111,7 +113,7 @@ def install_appliance_routes(app: FastAPI, *, token: str, arm_secret: str | None
     if "<head>" not in index:
         raise ValueError("Appliance requires a bounded production index.html with a head")
     port = int(os.environ.get("RYTM_RAND_WS_PORT", "4317"))
-    if not 1024 <= port <= 65535:
+    if not UNPRIVILEGED_PORT_MINIMUM <= port <= TCP_PORT_MAXIMUM:
         raise ValueError("Appliance port must be an unprivileged TCP port")
     origin = f"http://127.0.0.1:{port}"
     runtime = Path(os.environ[RUNTIME_DIR_ENV]).resolve()

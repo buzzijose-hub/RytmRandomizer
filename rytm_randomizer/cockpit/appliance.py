@@ -17,10 +17,12 @@ from types import MappingProxyType
 from typing import Final, cast
 
 from ..observability.logging import get_logger
+from ..observability.metrics import PersistedStateRefusalCode, get_metrics
 from ..snapshot.mutation_scope import MutationScope, registered_mutation_ids
 from .capture.appliance_a4 import appliance_a4_parameter_encodings
 from .capture.appliance_capabilities import ApplianceParameterCapability, parameter_capabilities
 from .data import (
+    PERSISTED_STATE_REFUSAL_METRIC_CODES,
     MutationCandidate,
     PadState,
     ProfileModel,
@@ -72,8 +74,30 @@ OPERATIONS: Final[frozenset[str]] = frozenset(
 PROFILE_LIMIT: Final[int] = 32
 HISTORY_LIMIT: Final[int] = 32
 STORAGE_LIMIT: Final[int] = 65536
+FINGERPRINT_LIMIT: Final[int] = 128
+PROFILE_NAME_LIMIT: Final[int] = 64
+PRINTABLE_CHARACTER_MINIMUM: Final[int] = 32
 SCHEMA_VERSION: Final[int] = require_schema_version("appliance_scopes")
 _logger = get_logger(__name__)
+
+
+def _record_profile_refusal(
+    code: PersistedStateRefusalCode,
+    *,
+    from_version: int | None = None,
+    to_version: int | None = None,
+) -> None:
+    get_metrics().record_persisted_state_refusal("appliance_scopes", code)
+    _logger.warning(
+        "appliance_profile_load_refused",
+        extra={
+            "store_id": "appliance_scopes",
+            "reason": code,
+            "from_version": from_version,
+            "to_version": to_version,
+            "outcome": "preserved_refused",
+        },
+    )
 
 
 def validated_object(value: object) -> Mapping[str, object]:
@@ -103,7 +127,7 @@ def _target(value: object) -> ApplianceTarget:
 def _fingerprints(value: object) -> dict[StageDeviceId, str | None]:
     fingerprints = validated_object(value)
     if set(fingerprints) != set(DEVICE_IDS) or any(
-        item is not None and (not isinstance(item, str) or len(item) > 128)
+        item is not None and (not isinstance(item, str) or len(item) > FINGERPRINT_LIMIT)
         for item in fingerprints.values()
     ):
         raise ValueError("invalid profile identity")
@@ -189,6 +213,15 @@ class ApplianceScope:
         )
 
 
+@dataclass(frozen=True)
+class _LaneMutationRequest:
+    snapshot: Snapshot
+    scope: ApplianceScope
+    depths: dict[tuple[int, str], float]
+    cells: dict[tuple[int, str], ApplianceParameterCapability]
+    bounds: dict[tuple[int, str], tuple[int, int]]
+
+
 class ApplianceWorkspace:
     """Single-session scope presets and bounded local history, no output seam."""
 
@@ -230,10 +263,16 @@ class ApplianceWorkspace:
             decision = classify_payload("appliance_scopes", document)
             if decision.refused:
                 self.storage_error = decision.code
+                _record_profile_refusal(
+                    PERSISTED_STATE_REFUSAL_METRIC_CODES[decision.code],
+                    from_version=decision.from_version,
+                    to_version=decision.to_version,
+                )
                 return
             self.profiles = self._validated_profiles(decision.payload)
         except (OSError, ValueError, TypeError):
             self.storage_error = "profile_storage_corrupt_or_unreadable"
+            _record_profile_refusal("unreadable")
 
     def _validated_profiles(self, document: object) -> dict[str, ApplianceProfileRecord]:
         raw = validated_object(document)
@@ -295,8 +334,8 @@ class ApplianceWorkspace:
         if (
             not isinstance(name, str)
             or not name.strip()
-            or len(name) > 64
-            or any(ord(c) < 32 for c in name)
+            or len(name) > PROFILE_NAME_LIMIT
+            or any(ord(c) < PRINTABLE_CHARACTER_MINIMUM for c in name)
         ):
             raise ValueError("profile name must contain 1..64 printable characters")
         return name.strip()
@@ -315,6 +354,10 @@ class ApplianceWorkspace:
         self.timeline.clear()
         self.anchor = None
         self.cursor = 0
+        _logger.info(
+            "appliance_context_revoked",
+            extra={"reason": "session_authority_revoked", "revision": self.revision},
+        )
 
     def sync(
         self, source: Snapshot | None, *, context: str, a4_source: Snapshot | None = None
@@ -366,6 +409,65 @@ class ApplianceWorkspace:
         self.target, self.master_depth, self.scopes = target, depth, scopes
         self.invalidate()
 
+    def _lane_request(self, device_id: StageDeviceId) -> _LaneMutationRequest | None:
+        """Resolve one lane's eligible native cells before any mutation is staged."""
+        native_encodings = {
+            encoding.parameter_id: encoding for encoding in appliance_a4_parameter_encodings()
+        }
+        snapshot = self.sources[device_id]
+        scope = self.scopes[device_id]
+        track_depths, page_depths = dict(scope.track_depths), dict(scope.page_depths)
+        rows = parameter_capabilities(device_id)
+        by_cell: dict[tuple[int, str], ApplianceParameterCapability] = {}
+        depths: dict[tuple[int, str], float] = {}
+        bounds: dict[tuple[int, str], tuple[int, int]] = {}
+        for pad in snapshot.pads:
+            for key in pad.params:
+                mapping = (
+                    cockpit_parameter_mapping(pad.machine, key)
+                    if device_id == DEVICE_IDS[0]
+                    else None
+                )
+                row = next(
+                    (
+                        item
+                        for item in rows
+                        if (
+                            item.parameter_id == key
+                            if device_id != DEVICE_IDS[0]
+                            else mapping is not None
+                            and item.parameter == mapping.parameter
+                            and item.page == ("SRC" if mapping.machine_key else mapping.section)
+                            and item.machine_key == mapping.machine_key
+                        )
+                    ),
+                    None,
+                )
+                if (
+                    row is None
+                    or row.page not in scope.page_ids
+                    or row.parameter_id in scope.parameter_locks
+                ):
+                    continue
+                # Selector/routing policies never receive interpolation, even if unlocked.
+                if row.categorical or row.legal_domain.authority == "unknown":
+                    continue
+                if device_id == DEVICE_IDS[1] and not self.simulation:
+                    encoding = native_encodings.get(key)
+                    if encoding is None or not encoding.offline_mutable:
+                        continue
+                    bounds[(pad.pad_id, key)] = (encoding.raw_minimum, encoding.raw_maximum)
+                by_cell[(pad.pad_id, key)] = row
+                depths[(pad.pad_id, key)] = (
+                    self.master_depth
+                    * track_depths.get(str(pad.pad_id), 1)
+                    * page_depths.get(row.page, 1)
+                )
+        effective_ids = scope.effective_ids(device_id)
+        if not any(value > 0 and cell[0] in effective_ids for cell, value in depths.items()):
+            return None
+        return _LaneMutationRequest(snapshot, scope, depths, by_cell, bounds)
+
     def roll(self, profile: ProfileModel, seed: int) -> None:
         devices = TARGETS[self.target]
         if self.master_depth == 0 or all(
@@ -382,77 +484,16 @@ class ApplianceWorkspace:
             not self.scopes[device].effective_ids(device) for device in devices
         ):
             raise ValueError("linked BOTH requires eligible targets in both lanes")
-        requests: dict[
-            StageDeviceId,
-            tuple[
-                Snapshot,
-                ApplianceScope,
-                dict[tuple[int, str], float],
-                dict[tuple[int, str], ApplianceParameterCapability],
-            ],
-        ] = {}
+        requests: dict[StageDeviceId, _LaneMutationRequest] = {}
         candidates: dict[StageDeviceId, MutationCandidate] = {}
         changes: list[ApplianceChangeRecord] = []
         native_encodings = {
             encoding.parameter_id: encoding for encoding in appliance_a4_parameter_encodings()
         }
-        native_bounds: dict[StageDeviceId, dict[tuple[int, str], tuple[int, int]]] = {}
         for device_id in devices:
-            snapshot = self.sources[device_id]
-            scope = self.scopes[device_id]
-            track_depths, page_depths = dict(scope.track_depths), dict(scope.page_depths)
-            rows = parameter_capabilities(device_id)
-            by_cell: dict[tuple[int, str], ApplianceParameterCapability] = {}
-            depths: dict[tuple[int, str], float] = {}
-            bounds: dict[tuple[int, str], tuple[int, int]] = {}
-            for pad in snapshot.pads:
-                for key in pad.params:
-                    mapping = (
-                        cockpit_parameter_mapping(pad.machine, key)
-                        if device_id == DEVICE_IDS[0]
-                        else None
-                    )
-                    row = next(
-                        (
-                            item
-                            for item in rows
-                            if (
-                                item.parameter_id == key
-                                if device_id != DEVICE_IDS[0]
-                                else mapping is not None
-                                and item.parameter == mapping.parameter
-                                and item.page == ("SRC" if mapping.machine_key else mapping.section)
-                                and item.machine_key == mapping.machine_key
-                            )
-                        ),
-                        None,
-                    )
-                    if (
-                        row is None
-                        or row.page not in scope.page_ids
-                        or row.parameter_id in scope.parameter_locks
-                    ):
-                        continue
-                    # Selector/routing policies never receive interpolation, even if unlocked.
-                    if row.categorical or row.legal_domain.authority == "unknown":
-                        continue
-                    if device_id == DEVICE_IDS[1] and not self.simulation:
-                        encoding = native_encodings.get(key)
-                        if encoding is None or not encoding.offline_mutable:
-                            continue
-                        bounds[(pad.pad_id, key)] = (encoding.raw_minimum, encoding.raw_maximum)
-                    by_cell[(pad.pad_id, key)] = row
-                    depths[(pad.pad_id, key)] = (
-                        self.master_depth
-                        * track_depths.get(str(pad.pad_id), 1)
-                        * page_depths.get(row.page, 1)
-                    )
-            if scope.effective_ids(device_id) and any(
-                value > 0 and cell[0] in scope.effective_ids(device_id)
-                for cell, value in depths.items()
-            ):
-                requests[device_id] = (snapshot, scope, depths, by_cell)
-                native_bounds[device_id] = bounds
+            request = self._lane_request(device_id)
+            if request is not None:
+                requests[device_id] = request
         if self.target == "both" and len(requests) != len(devices):
             raise ValueError(
                 "linked BOTH requires mutable unlocked parameters and nonzero depth in each lane"
@@ -461,7 +502,13 @@ class ApplianceWorkspace:
             self.candidate = None
             self.candidates.clear()
             return
-        for device_id, (snapshot, scope, depths, by_cell) in requests.items():
+        for device_id, request in requests.items():
+            snapshot, scope, depths, by_cell = (
+                request.snapshot,
+                request.scope,
+                request.depths,
+                request.cells,
+            )
             candidate = mutate(
                 snapshot,
                 profile,
@@ -469,7 +516,7 @@ class ApplianceWorkspace:
                 seed,
                 target_pad_ids=scope.effective_ids(device_id),
                 parameter_depths=depths,
-                parameter_bounds=native_bounds[device_id] or None,
+                parameter_bounds=request.bounds or None,
             )
             candidates[device_id] = candidate
             pads = {pad.pad_id: pad for pad in snapshot.pads}

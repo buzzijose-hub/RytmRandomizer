@@ -2978,6 +2978,19 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
         COMMAND_DISARM,
         COMMAND_DIAGNOSTICS,
     ):
+        label = cmd_type if handler is not None and isinstance(cmd_type, str) else "<unknown>"
+        _metrics.record_ws_command(
+            label, (time.perf_counter() - _t0) * 1000.0, error_code=ERR_VALIDATION
+        )
+        _logger.info(
+            "ws_command_refused",
+            extra={
+                "reason": "capture_active",
+                "cmd_type": label,
+                "request_id": request_id,
+                "outcome": "refused",
+            },
+        )
         return {
             "request_id": request_id,
             **_error_ack(ERR_VALIDATION, "current-kit capture is active; disarm to cancel it"),

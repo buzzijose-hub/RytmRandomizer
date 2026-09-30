@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
@@ -18,6 +19,34 @@ from .session import CockpitSession, fresh_seed
 SIMULATION_ENV: Final[str] = "RYTM_RAND_APPLIANCE_SIMULATION"
 PROFILE_FILE_ENV: Final[str] = "RYTM_RAND_APPLIANCE_PROFILE_FILE"
 _logger = get_logger(__name__)
+
+
+def _execute_operation(
+    workspace: ApplianceWorkspace,
+    operation: str,
+    payload: Mapping[str, object],
+    session: CockpitSession,
+    fingerprints: Mapping[str, object],
+) -> dict[str, object] | None:
+    """Execute only after synchronization and revision validation."""
+    exported: dict[str, object] | None = None
+    if operation == "scope":
+        workspace.change_scope(payload)
+    elif operation == "mutate":
+        profiles = session.profile_registry.list_profiles()
+        profile = session.active_profile or (profiles[0] if profiles else None)
+        if profile is None:
+            raise ValueError("no profile is available")
+        workspace.roll(profile, fresh_seed())
+    elif operation == "apply":
+        workspace.apply_local(
+            payload, hardware_intent=session.hardware_intent or session_is_armed(session)
+        )
+    elif operation in ("anchor", "undo", "redo", "return_anchor"):
+        workspace.navigate(operation)
+    elif operation.startswith("profile_"):
+        exported = workspace.profile_action(operation, payload, fingerprints)
+    return exported
 
 
 async def handle_appliance(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
@@ -72,23 +101,7 @@ async def handle_appliance(cmd: dict[str, object], session: CockpitSession) -> H
         ):
             raise ValueError("appliance revision changed; refresh and review the current action")
     payload = validated_object(cmd.get("payload", {}))
-    exported: dict[str, object] | None = None
-    if operation == "scope":
-        workspace.change_scope(payload)
-    elif operation == "mutate":
-        profiles = session.profile_registry.list_profiles()
-        profile = session.active_profile or (profiles[0] if profiles else None)
-        if profile is None:
-            raise ValueError("no profile is available")
-        workspace.roll(profile, fresh_seed())
-    elif operation == "apply":
-        workspace.apply_local(
-            payload, hardware_intent=session.hardware_intent or session_is_armed(session)
-        )
-    elif operation in ("anchor", "undo", "redo", "return_anchor"):
-        workspace.navigate(operation)
-    elif operation.startswith("profile_"):
-        exported = workspace.profile_action(operation, payload, fingerprints)
+    exported = _execute_operation(workspace, operation, payload, session, fingerprints)
     provenance: dict[str, dict[str, object]] = {}
     for device, capture in captures.items():
         provenance[device] = {

@@ -8,7 +8,11 @@ import Snapshot`` without reaching into each submodule. See
 
 from __future__ import annotations
 
-from ...data.persisted_state import classify_payload, require_schema_version
+from ...data.persisted_state import (
+    PERSISTED_STATE_REFUSAL_METRIC_CODES,
+    classify_payload,
+    require_schema_version,
+)
 from ...guardrails.input_validation import require_int
 from .history import History, HistoryEntry
 from .mutation_candidate import MutationCandidate, PadDelta
@@ -92,6 +96,7 @@ __all__ = [
     "narrow_via",
     "new_ulid",
     "classify_payload",
+    "PERSISTED_STATE_REFUSAL_METRIC_CODES",
     "require_int",
     "require_schema_version",
 ]

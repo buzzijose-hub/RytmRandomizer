@@ -672,7 +672,7 @@ as a snapshot mutation, move it through the `Device` strategies instead.
 the same Cockpit. `cockpit/appliance.py` adds revision-bound explicit scope, bounded
 local history and registered versioned preset associations. It consumes Snapshot,
 HistoryStore, MockDeviceAdapter, the deterministic engine and registered mutation
-domains. `cockpit/appliance_capabilities.py` projects canonical catalogs and codec
+domains. `cockpit/capture/appliance_capabilities.py` projects canonical catalogs and codec
 facts into parameter evidence without granting output authority. The `appliance`
 WS command and `appliance_changed` whole-state event are requested on demand,
 retaining Studio's fixed bootstrap. Context changes revoke candidates. Touch empty

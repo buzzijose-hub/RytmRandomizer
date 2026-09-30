@@ -24,8 +24,27 @@ from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws import handlers, server
 from rytm_randomizer.cockpit.ws.session import CockpitSession
 from rytm_randomizer.observability.errors import StateError
+from rytm_randomizer.observability.metrics import MidiMetrics
 
 pytestmark = pytest.mark.fast
+
+
+@pytest.mark.parametrize("command", [{"type": "set_depth", "depth": 0.7}, {"type": ["private"]}])
+def test_capture_busy_refusals_record_bounded_command_metrics(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, command: dict[str, object]
+) -> None:
+    session = session_with_input(tmp_path, DelayedInput(cooperative=True))
+    session.capture_cancel = Event()
+    metrics = MidiMetrics()
+    monkeypatch.setattr(handlers, "get_metrics", lambda: metrics)
+    result = asyncio.run(
+        handlers.handle_command({"request_id": "busy-request", "command": command}, session)
+    )
+    assert result["ok"] is False and result["code"] == handlers.ERR_VALIDATION
+    label = "set_depth" if command["type"] == "set_depth" else "<unknown>"
+    assert metrics.ws_command_count == {label: 1}
+    assert metrics.ws_command_errors_by_code == {handlers.ERR_VALIDATION: 1}
+    assert set(metrics.ws_command_duration_ms_total) == {label}
 
 
 class DelayedInput:

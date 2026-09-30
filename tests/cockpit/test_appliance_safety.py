@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import copy
 import json
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -41,8 +42,38 @@ from rytm_randomizer.devices.strategies.analog_four_saved_kit_codec import (
     decode_analog_four_saved_kit_payload,
     encode_analog_four_saved_kit_payload,
 )
+from rytm_randomizer.observability.metrics import MidiMetrics
 
 pytestmark = pytest.mark.fast
+
+
+@pytest.mark.parametrize(
+    ("contents", "reason"),
+    [
+        (b"private corrupt content", "unreadable"),
+        (b'{"schema_version":999}', "schema_newer_than_app"),
+    ],
+)
+def test_profile_refusal_is_observable_without_disclosing_saved_content(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    contents: bytes,
+    reason: str,
+) -> None:
+    profile_file = tmp_path / "private-profile.json"
+    profile_file.write_bytes(contents)
+    metrics = MidiMetrics()
+    monkeypatch.setattr(appliance_module, "get_metrics", lambda: metrics)
+    monkeypatch.setattr(appliance_module._logger, "handlers", [caplog.handler])
+    with caplog.at_level(logging.WARNING, logger=appliance_module._logger.name):
+        workspace = ApplianceWorkspace(simulation=False, profile_file=profile_file)
+    assert workspace.storage_error is not None and not workspace.profiles
+    assert profile_file.read_bytes() == contents
+    assert metrics.persisted_state_refusals_by_code == {f"appliance_scopes:{reason}": 1}
+    record = next(item for item in caplog.records if item.msg == "appliance_profile_load_refused")
+    assert record.reason == reason and record.outcome == "preserved_refused"
+    assert "private" not in repr(record.__dict__)
 
 
 def _source() -> Snapshot:
