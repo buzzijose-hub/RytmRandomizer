@@ -57,3 +57,26 @@ failure remains under investigation. The logging repair is not a claim that all
 CI failures are resolved. Earlier `13b00003` software receipts remain historical
 checkpoints; the test tree changed in `e36979a9` and must be identified separately
 in subsequent verification.
+
+## 2026-09-30 — native readiness diagnosis and integrated backend checkpoint
+
+The capability agent traced the separate `backend_restart` failure to an
+existing harness readiness race. `native_update_driver.ts` is unchanged from
+baseline `892aaffc`: it waits for rotated credential files, then immediately
+probes with the stale token. Python writes those files before uvicorn starts
+listening, so the probe can race socket readiness and fail for startup timing.
+This evidence does not establish a production regression.
+
+The baseline CI job `109149261285` passed 32 native cases and two installer
+cases. At the same appliance source `13b00003`, PR job `109992075623` also
+passed 32 plus two, while push job `109991619778` reported 31 native cases
+passed and one failed. The differing outcomes and unchanged harness support
+the pre-existing race diagnosis. No retry, assertion relaxation or harness
+change is claimed as a repair; replacement CI remains pending.
+
+The new integrated backend checkpoint
+`5f911385f58fb0453813484df9678ef3797c14a2` passed 10,621 tests with five existing
+skips and eight warnings, using four workers: 192.92 seconds pytest and 195.094
+seconds wall. This result includes the auth-log isolation regression cases.
+These software and desktop CI observations grant no physical Pi, native ARM64
+or live-hardware acceptance.

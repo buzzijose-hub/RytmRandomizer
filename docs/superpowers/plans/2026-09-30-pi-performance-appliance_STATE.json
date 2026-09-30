@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "PR #252 open; auth-refusal CI test repaired locally; hosted rerun and separate desktop-shell failure investigation pending",
+  "status": "PR #252 open; auth-log repair passed integrated backend; pre-existing native harness readiness race evidenced; replacement hosted CI pending",
   "starting_sha": "892aaffca2484d1939ba3e133263aaadde2f22de",
   "original_checkout_sha": "a73aded67211b1e4a4cf294eb13ecfd3887de7e8",
   "integration_branch": "codex/pi-performance-appliance",
@@ -233,6 +233,24 @@
       "passed": 31,
       "failed": 1,
       "note": "backend_restart failure is being investigated separately; the auth-log test repair does not establish complete CI success."
+    },
+    {
+      "scope": "capability agent native CI readiness investigation",
+      "tree": "13b0000311620677b7a4d1ab22a1796d9de8581b",
+      "result": "pre-existing harness race evidenced; production regression not proven; replacement CI pending",
+      "note": "native_update_driver.ts is unchanged from baseline 892aaffc and waits for rotated credentials, which Python writes before uvicorn listens; the immediate stale-token probe can race socket readiness. Baseline job 109149261285 passed 32 native + 2 installer cases; exact 13b PR job 109992075623 passed 32 + 2 while push job 109991619778 passed 31 native cases with 1 failure. No retry, relaxed assertion or harness change claimed."
+    },
+    {
+      "scope": "integrated backend after auth-log isolation repair",
+      "tree": "5f911385f58fb0453813484df9678ef3797c14a2",
+      "result": "passed",
+      "passed": 10621,
+      "skipped": 5,
+      "warnings": 8,
+      "duration_seconds": 192.92,
+      "wall_seconds": 195.094,
+      "workers": 4,
+      "note": "Includes the auth-log isolation regression cases. Hosted replacement CI remains pending; no physical Pi, native ARM64 or live-hardware acceptance claim."
     }
   ],
   "integration_shas": [
@@ -256,7 +274,8 @@
     "abf0ea61",
     "a685df2d",
     "8067387e",
-    "226aa0f0"
+    "226aa0f0",
+    "5f911385f58fb0453813484df9678ef3797c14a2"
   ],
   "blockers": [
     "physical Raspberry Pi unavailable",
