@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pi performance appliance execution ledger",
+  "description": "Schema for the compact committed checkpoint ledger. Exact final-source receipts remain outside versioned source; checkpoint records must retain their own tree identity.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "status", "starting_sha", "original_checkout_sha",
+    "integration_branch", "base", "agents", "heavy_job_budget", "receipts",
+    "integration_shas", "blockers", "resume", "resources", "review",
+    "source_bound_acceptance_directory"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "status": { "$ref": "#/definitions/nonemptyText" },
+    "starting_sha": { "$ref": "#/definitions/fullSha" },
+    "original_checkout_sha": { "$ref": "#/definitions/fullSha" },
+    "integration_branch": { "type": "string", "pattern": "^codex/.+" },
+    "base": { "$ref": "#/definitions/nonemptyText" },
+    "codex_version": { "$ref": "#/definitions/nonemptyText" },
+    "agents": {
+      "type": "array", "minItems": 1, "uniqueItems": true,
+      "items": { "$ref": "#/definitions/nonemptyText" }
+    },
+    "heavy_job_budget": {
+      "type": "object", "additionalProperties": false,
+      "required": ["concurrent", "pytest_workers", "browser_workers"],
+      "properties": {
+        "concurrent": { "type": "integer", "minimum": 1 },
+        "pytest_workers": { "type": "integer", "minimum": 1 },
+        "browser_workers": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "receipts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "description": "Historical receipts have runner-specific fields. Preserve them while requiring scope, outcome and source/checkpoint identity; a dirty-tree description is not a full-SHA final receipt.",
+        "required": ["scope", "tree", "result"],
+        "properties": {
+          "scope": { "$ref": "#/definitions/nonemptyText" },
+          "tree": { "$ref": "#/definitions/nonemptyText" },
+          "result": { "$ref": "#/definitions/nonemptyText" },
+          "command": { "$ref": "#/definitions/nonemptyText" },
+          "count": { "type": ["integer", "string"] },
+          "passed": { "type": "integer", "minimum": 0 },
+          "failed": { "type": "integer", "minimum": 0 },
+          "skipped": { "type": "integer", "minimum": 0 },
+          "files": { "type": "integer", "minimum": 0 },
+          "checks": { "type": "integer", "minimum": 0 },
+          "duration_seconds": { "type": "number", "minimum": 0 },
+          "exit_codes": { "type": "array", "items": { "type": "integer" } },
+          "viewports": {
+            "type": "array",
+            "items": {
+              "type": "array", "minItems": 2, "maxItems": 2,
+              "items": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "integration_shas": {
+      "type": "array", "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[0-9a-f]{7,40}$" }
+    },
+    "blockers": { "type": "array", "items": { "$ref": "#/definitions/nonemptyText" } },
+    "resume": { "$ref": "#/definitions/nonemptyText" },
+    "resources": {
+      "type": "object", "minProperties": 1,
+      "additionalProperties": { "type": ["string", "number"] }
+    },
+    "review": {
+      "type": "object", "minProperties": 1,
+      "additionalProperties": { "$ref": "#/definitions/nonemptyText" }
+    },
+    "source_bound_acceptance_directory": { "$ref": "#/definitions/nonemptyText" }
+  },
+  "definitions": {
+    "fullSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "nonemptyText": { "type": "string", "minLength": 1 }
+  }
+}

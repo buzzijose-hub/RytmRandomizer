@@ -6,6 +6,18 @@ Software is implemented; final source-bound acceptance and publication are
 recorded by the execution ledger and `output/local/pi-appliance/RUN_REPORT.md`.
 Protected human review and hardware acceptance remain separate external steps.
 
+Durable Gate 14/15 records:
+[retrospective baseline](../../PI_APPLIANCE_MAINTAINABILITY_AUDIT.md),
+[post-implementation comparison](../../PI_APPLIANCE_MAINTAINABILITY_REPORT.md),
+[run/learning report](../../PI_APPLIANCE_RUN_REPORT.md),
+[append-only log](../../PI_APPLIANCE_RUN_LOG.md),
+[architecture before/after](../../PI_APPLIANCE_ARCHITECTURE_BEFORE_AFTER.md),
+[replay playbook](../../PI_APPLIANCE_REPLAY_PLAYBOOK.md) and
+[ledger schema](2026-09-30-pi-performance-appliance_STATE.schema.json).
+The formal baseline was reconstructed during final review, not written before
+implementation; its chronology is explicit. These committed records remain
+usable without the generated final artifact directory.
+
 Per docs/PLAN_REQUIREMENTS.md. Starting integration SHA:
 `892aaffc` (`origin/modularize-v1.34`, fetched 2026-09-30).
 Original checkout `a73aded6` and all dirty research/calibration/docs are preserved.
@@ -68,8 +80,10 @@ remains visible with its reason. BOTH preflights both lanes before any action.
 Verify focused refusal/normal tests, touched coverage, full bounded pytest, frozen
 parity, architecture, lint/types, Vitest/build, browser sizes and runtime packaging.
 Independent reviews cover architecture, safety, security/persistence, tests and
-visuals. Failures are repaired without gate exclusions. Rollback removes versioned
-runtime links/services while retaining user profiles; code reverts as one bundle.
+visuals. Failures are repaired without gate exclusions. Rollback restores the
+previous verified release's service configuration and current pointer while
+retaining releases and user profiles. Uninstall removes service/autostart entries;
+code reverts as one bundle.
 
 ## Publication, interruption and termination
 
