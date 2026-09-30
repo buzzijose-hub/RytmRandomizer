@@ -1,5 +1,23 @@
 # Pi appliance maintainability comparison
 
+## Computer-first continuation comparison
+
+The two continuation repairs retain the ten dimensions and scores below.
+Input identity and paired precision now refuse at their owning boundaries,
+with categorical diagnostics and an operator explanation. Shared provider
+cleanup and canonical mapping reuse add no registry, framework, output adapter
+or environment setting. Existing fake-backed tests cover both refusal and
+supported scope behavior; a fail-closed Python/TypeScript readiness equality
+guard closes the composition gap identified by independent architecture review.
+No negative structural delta was identified in the architecture, side-effects
+or observability reviews at integrated code checkpoint `6f00f8d2`.
+
+Full replacement-source validation and the remaining dimension verdicts are
+recorded in `output/local/touring-readiness-2026-09-30/`, preserving earlier
+receipts as historical. Physical mutation/restoration, ARM64 installation,
+touchscreen, startup and full-set rehearsals are still unperformed; this
+maintainability comparison cannot establish those outcomes.
+
 Date: 2026-09-30. Reviewed code checkpoint: `97fd6216`.
 See the [retrospective baseline](PI_APPLIANCE_MAINTAINABILITY_AUDIT.md) for the
 scoring method and the explicit chronology limitation.

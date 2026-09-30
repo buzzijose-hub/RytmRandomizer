@@ -122,3 +122,22 @@ The real host's `os.name` and `pathlib` semantics are untouched. All 21 focused
 runtime cases passed; the module's 131 statements and 36 branches reached 100%
 coverage with no exclusions. Lint and independent review passed. The integrated
 full suite and hosted gates must still validate the replacement source.
+
+## 2026-09-30 — computer-first continuation kickoff
+
+At delivered source `b613fb3b`, the operator reported both instruments connected
+by USB and Windows identified the Rytm MKII and A4 MKII. The supported
+`app --arm --cockpit-kit-capture-sidecar` composition enumerated input names
+through authenticated `list_capture_inputs` commands. Actual names were
+`Elektron Analog Rytm MKII 3` and `Elektron Analog Four MKII 4`, with no duplicate
+exact names. The session reported `armed=false`, no selected output, and zero
+unsaved sends. The one-shot sidecar was stopped. No capture, output opening,
+instrument mutation or wire-monitoring observation occurred.
+
+Local receipt: `output/local/touring-readiness-2026-09-30/usb-input-discovery.json`.
+Independent Rytm, A4 and Pi/rehearsal audits are retained in that directory.
+Firmware, channel/current-value confirmation and backed-up scratch kits remain
+unanswered; all physical mutation/recovery and Pi acceptance fields remain open.
+The existing plan records two parallel isolated refusal repairs: exact input
+uniqueness and canonical paired-control whole-plan refusal. They extend PR #252,
+with no new output authority, dependency pin change or V1.34 fixture capture.

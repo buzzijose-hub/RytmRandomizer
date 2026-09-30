@@ -1,5 +1,27 @@
 # Pi appliance implementation and learning report
 
+## Computer-first continuation (2026-09-30)
+
+The operator's connected Rytm and A4 were identified as MKII by Windows; the
+supported application enumerated both real input names while unarmed with no
+output selected. Its one-shot discovery process stopped without capturing or
+changing an instrument. Firmware, channel/current-value and backed-up scratch
+kit evidence remains pending. See [first computer gate](COCKPIT_QUICKSTART.md#first-computer-hardware-gate).
+
+Independent Rytm/A4 audits traced the existing limited audition/manual-reload
+paths and two small safety defects. Isolated commits `788958f6` and `a545d33f`
+now refuse duplicate input names before opening and block a complete Studio
+plan containing an eligible changed paired control. Supported packets remain
+inspectable while blocked SEND transmits none. The existing wire vocabulary,
+rail, operator docs and learned skill carry the same contract. Parent added a
+Python/TypeScript readiness equality test; its seven-case file passed locally.
+
+Replacement-source acceptance lives in
+`output/local/touring-readiness-2026-09-30/`; this section does not reuse prior
+counts as a later source-SHA result. Existing learning/state/run artifacts are
+extended in the same PR #252 bundle. No broad A4, scoped appliance or BOTH live
+authority is granted, and no physical touring gate is marked passed.
+
 Checkpoint: 2026-09-30, source `97fd6216`. Status: software implemented;
 final aggregate acceptance and publication in progress.
 

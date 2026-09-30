@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import re
 from pathlib import Path
 from typing import Final
 
@@ -99,3 +100,21 @@ def test_rehearsal_surface_imports_no_active_runtime_boundaries() -> None:
         or module.endswith(".cockpit.ws.server")
     )
     assert not violations
+
+
+def test_live_send_plan_readiness_vocabulary_matches_frontend() -> None:
+    """A Python refusal reason must be representable by the real WS client."""
+
+    from rytm_randomizer.cockpit.data.send_plan import READINESS_REASON_VALUES
+
+    protocol_path = PROJECT_ROOT / "desktop/web/src/ws/protocol.ts"
+    assert protocol_path.is_file()
+    declaration = re.search(
+        r"export type SendPlanReadinessReason\s*=([^;]+);",
+        protocol_path.read_text(encoding="utf-8"),
+    )
+    assert declaration is not None, "The WS readiness union must exist"
+    frontend_values = re.findall(r"'([^']+)'", declaration.group(1))
+    assert frontend_values, "The readiness mirror must not be empty"
+    assert len(frontend_values) == len(set(frontend_values))
+    assert set(frontend_values) == set(READINESS_REASON_VALUES)

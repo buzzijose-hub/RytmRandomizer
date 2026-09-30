@@ -115,3 +115,49 @@ listed truthfully; publication failures retain complete local branch + PR body.
 - [x] Gate 18 — architecture prose and diagrams updated together.
 
 These are commitments, not claims that unrun checks or physical tests passed.
+
+## 2026-09-30 — computer-first instrument acceptance preparation
+
+The user has both instruments connected by USB. Windows identifies both as
+MKII; application-owned input enumeration at delivered source `b613fb3b`
+identifies `Elektron Analog Rytm MKII 3` and `Elektron Analog Four MKII 4`.
+The enumerating session was unarmed, held no output port, and was stopped.
+Firmware, disposable saved kits, channel configuration and physical recovery
+remain unconfirmed. These observations establish discovery only.
+
+Two small refusal repairs precede broader captured Rytm auditions. They extend
+the existing PR #252 bundle and its gates; no sibling or stacked PR is opened.
+
+| Workstream | Dependency | Isolated worktree / branch | Owned files / crew |
+|---|---|---|---|
+| Rytm precision guard | This written checkpoint | `.codex/worktrees/road-ready-rytm-guard/RytmRandomizer`, `codex/road-ready-rytm-guard` | `cockpit/engine/send_plan.py`, `cockpit/data/send_plan.py`, matching TS vocabulary and existing plan tests; capabilities agent designs, implements and audits |
+| Capture input identity | This written checkpoint | `.codex/worktrees/road-ready-capture-guard/RytmRandomizer`, `codex/road-ready-capture-guard` | `mido_provider.py` and existing provider tests; runtime agent designs, implements and audits |
+| Documentation / integration | Design; then both implementation commits | Existing Pi integration worktree and branch | Root owns this plan, evidence/state/log and integration; documentation agent owns operator, status, architecture and diagram updates; independent dimension agents review the integrated result |
+
+Rytm preparation reads the canonical mapping. A changed, unlocked, in-scope
+paired control blocks the whole live plan with a typed readiness reason rather
+than emitting its MSB alone or silently sending a supported subset. Unchanged,
+locked and untargeted paired fields must not block a supported audition. No
+paired conversion, restore promotion or V1.34 engine change is introduced.
+
+Both provider input-opening paths require exactly one match for the selected
+name. Unknown and duplicate names refuse before opening. The raw backend's
+temporary input object closes on rejection; ambiguity must keep its categorical
+failure instead of being translated into an unrelated backend error. Existing
+lazy-import, app-owned composition and pinned dependencies remain intact.
+
+The agents reuse existing fake backends and test files. Parent integrates the
+commits, runs one bounded full suite with coverage, checks touched production
+coverage, parity, architecture, lint/types, frontend tests/build, and performs
+targeted independent review. A failed check triggers repair and rerun; no gate,
+fixture, dependency pin or hardware-authority exclusion changes. The existing
+learning skill receives the two observed safety lessons and the existing run
+log/state retain source-bound results. The previous package remains historical;
+new packaging and receipt hashes describe the replacement source.
+
+This software checkpoint terminates after validated publication to existing
+PR #252 and a concrete first-test handoff. Physical acceptance continues only
+with the operator's actual firmware/channel/backup information and observed
+actions; no simulated or saved-file result counts as hardware restoration.
+The existing STOP, recovery, permission, 72-hour cap and no-self-merge rules
+apply. No monitor, new automation or instrument send is part of this repair.

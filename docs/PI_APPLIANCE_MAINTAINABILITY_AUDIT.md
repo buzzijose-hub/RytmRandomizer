@@ -1,5 +1,24 @@
 # Pi appliance maintainability baseline
 
+## Computer-first continuation baseline (2026-09-30)
+
+Continuation preflight used delivered source `b613fb3b`; the written plan and
+device audits preceded the two implementation assignments. This paragraph
+formalizes that preflight while their isolated work is in progress. Existing
+ownership, naming, release, environment and test conventions remain the
+baseline below. Two traced defects affect identity and exact transport: input
+capture picks the first duplicate endpoint name, and Studio plan preparation
+can use only the MSB of a canonical paired Rytm control.
+
+Repair in the owning provider and existing send-plan builder; do not introduce
+another adapter, renderer, registry or capture service. Preserve the unknown
+input refusal and passive/lazy defaults. Reuse provider/capture/armed-send fakes
+and mirror the typed readiness vocabulary in TypeScript. Explain refusals in
+the existing rail and operator docs. These repairs improve the baseline's
+error-message and future-extension dimensions without changing configuration,
+versioning, frozen output or physical authority. Independent post-integration
+review and actual integrated tests remain required.
+
 Date of formalization: 2026-09-30. Baseline source: `892aaffca2484d1939ba3e133263aaadde2f22de`.
 
 This is a **retrospective** Gate 14 baseline, reconstructed during final review

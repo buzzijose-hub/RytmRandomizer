@@ -111,6 +111,23 @@ support in this updater checkpoint.
 
 ## Recent Cleanup
 
+- 2026-09-30: Prepared the first computer hardware gate before Pi and full-set
+  rehearsal. The Rytm plan guard marks the complete plan unready when a changed,
+  in-scope, unlocked control needs unverified paired precision; it never sends
+  just that control's MSB or silently applies the remaining subset. Supported
+  packets may remain for inspection, with zero transmission. The capture
+  provider requires one exact raw input-name match before open.
+  App-owned input-name discovery at `b613fb3b` reported Rytm MKII and A4 MKII
+  endpoints with no duplicate exact names, output unarmed, no selected output,
+  and `unsaved_sends=0`; no capture or mutation was performed. These endpoint
+  names do not establish firmware, track channels, current values or backups.
+  The [first computer gate](COCKPIT_QUICKSTART.md#first-computer-hardware-gate)
+  retains guarded Show Kit Rytm audition/manual recovery and a separately
+  supervised, single-CC A4 app probe as distinct paths. Physical mutation,
+  recovery, Pi and full-set acceptance remain unperformed; scoped appliance,
+  general A4 and BOTH live APPLY remain blocked. New repair verification is
+  recorded separately from the earlier source-bound software receipts.
+
 - 2026-09-21: Resumed the six-PR closeout and verified #248's hosted checks at
   `e2e46d6e`, including both required aggregates and actual Windows acceptance.
   Updated native architecture maps and the current state/report to distinguish

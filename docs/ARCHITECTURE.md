@@ -704,6 +704,13 @@ continuing to accept DISARM; cancellation signals the cooperative provider and
 revokes the capture generation. Owner disconnect and connection loss use the
 same revocation. A late result from a non-cooperative provider is discarded;
 it cannot adopt a snapshot or revive device authority. No output method is added.
+The real capture provider requires exactly one occurrence of the selected raw
+input name in the freshly enumerated backend list before opening it. Missing
+and ambiguous names refuse; selecting the first duplicate cannot establish
+source identity. The capture service validates the request, owns cancellation
+and frame validation, and delegates port opening to that provider; it does not
+independently enforce name uniqueness. This input-only check grants no output
+or unsaved-state authority.
 Per-lane `HistoryStore` pointers own local current snapshots; the bounded joint
 timeline contains snapshot IDs only and coordinates both lanes without claiming
 hardware restoration. Target aliases come from `data/device_targets.py`, shared
@@ -1480,6 +1487,13 @@ then select the candidate again, preview it, and prepare its exact plan before
 arming and confirming SEND. The server requires a matching source capture
 newer than the preceding hardware attempt or disconnect, plus explicit manual
 reload acknowledgment; a saved-KIT dump alone cannot prove restored RAM state.
+The existing `cockpit/engine/send_plan.py` boundary also inspects canonical
+transport metadata for each changed, in-scope, unlocked Rytm field. An
+unverified paired control makes the complete plan `ready=false` with
+`paired_control_precision_unverified`. Supported packets remain available for
+inspection, but zero packets are transmitted and no subset is applied. The
+paired field is not reduced to its MSB. Locked, untargeted or unchanged
+controls do not create that blocker. No new renderer or output seam is added.
 The path is implemented, but automated tests do not establish that a physical
 one-pad audition and restoration occurred. Persistent SAVE is never issued by
 Cockpit. The operator saves the favorite on the instrument, then requests a

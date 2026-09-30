@@ -32,6 +32,17 @@ confirmation procedure. General A4 and linked BOTH live apply remain blocked;
 neither lane sends when linked preflight fails. Local-send acceptance never means
 physical hardware verification.
 
+Before Pi or full-set acceptance, complete the
+[first computer hardware gate](COCKPIT_QUICKSTART.md#first-computer-hardware-gate)
+using the existing studio checklist. Rytm uses guarded Show Kit audition,
+manual source reload and fresh whole-payload verification; a changed,
+in-scope, unlocked paired control makes the whole plan unready. Supported
+packets can remain for inspection, but none is transmitted and no MSB-only or
+partial subset is applied. The KIT capture provider requires one exact
+input-name match before opening. The separate, supervised A4 single-CC app probe
+does not enable A4 or BOTH in this surface. USB discovery alone proves neither
+backup/configuration nor physical mutation or recovery.
+
 Scope presets include device/fingerprint associations. Production recall refuses
 unknown or different kit identity. Presets never persist arming, candidates,
 pending commands, capture authority or history. Versioned storage holds at most

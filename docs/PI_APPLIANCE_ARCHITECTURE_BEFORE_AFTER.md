@@ -1,5 +1,20 @@
 # Pi appliance architecture before and after
 
+## Computer-first safety continuation
+
+The delivered `b613fb3b` foundation exposed two refusal gaps during instrument
+preflight. The continuation keeps the same module graph:
+
+| Responsibility | Before | After |
+| --- | --- | --- |
+| Exact input identity | Membership and first-index selection allowed duplicate names. | The existing provider shares a duplicate-match refusal across ordinary and raw capture opening; raw cleanup retains the primary refusal. |
+| Studio paired transport | The canonical paired field could be projected to its MSB. | The existing plan builder reads canonical mapping metadata and blocks the whole plan for an eligible changed paired field; supported packets remain inspection data. |
+| Operator explanation / wire vocabulary | No paired-precision refusal reason. | Existing Python/TS readiness enums and SafetyRail carry the reason; an existing architecture test pins their equality. |
+
+No Protocol, registered device, output seam, root module, dependency pin or
+hardware-readiness promotion is added. Actual working-state restoration remains
+outside the local history contract.
+
 Baseline `892aaffc`; implemented checkpoint `97fd6216`. The authoritative
 current graph remains [ARCHITECTURE.md](ARCHITECTURE.md) and
 [ARCHITECTURE_DIAGRAMS.md](ARCHITECTURE_DIAGRAMS.md).

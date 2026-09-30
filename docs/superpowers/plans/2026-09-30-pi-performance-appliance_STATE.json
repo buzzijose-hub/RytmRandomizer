@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "PR #252 open; auth-log repair passed integrated backend; pre-existing native harness readiness race evidenced; replacement hosted CI pending",
+  "status": "PR #252 computer-first safety guards integrated; exact source acceptance in continuation receipts; physical mutation/recovery and Pi touring gates not run",
   "starting_sha": "892aaffca2484d1939ba3e133263aaadde2f22de",
   "original_checkout_sha": "a73aded67211b1e4a4cf294eb13ecfd3887de7e8",
   "integration_branch": "codex/pi-performance-appliance",
@@ -286,6 +286,14 @@
       "branches": 36,
       "coverage_percent": 100,
       "note": "Fresh runtimes under module-local posix/nt OS views assert real delegated chmod0700 only for POSIX directory and chmod0600 for launch on both, bootstrap/auth refusal and authenticated document. Global os.name/pathlib untouched. Original containment/log/privacy tests retained; lint and independent review clean. No production/exclusion/threshold changes."
+    },
+    {
+      "scope": "computer-first input discovery",
+      "tree": "b613fb3bf997a72e9d60deb68c80b89a32d73060",
+      "command": "app --arm --cockpit-kit-capture-sidecar; authenticated list_capture_inputs only",
+      "result": "passed; unarmed, no output selected, unsaved_sends=0; process stopped; no capture or hardware mutation",
+      "count": 2,
+      "receipt": "output/local/touring-readiness-2026-09-30/usb-input-discovery.json"
     }
   ],
   "integration_shas": [
@@ -310,7 +318,10 @@
     "a685df2d",
     "8067387e",
     "226aa0f0",
-    "5f911385f58fb0453813484df9678ef3797c14a2"
+    "5f911385f58fb0453813484df9678ef3797c14a2",
+    "788958f6",
+    "a545d33f",
+    "6f00f8d2"
   ],
   "blockers": [
     "physical Raspberry Pi unavailable",
@@ -319,7 +330,7 @@
     "ARM64 native dependency build unavailable (no Docker/Rust, no configured WSL distribution)",
     "automatic approval review blocked obsolete credential directory deletion and original node_modules junction unlink; both preserved; clean isolated dependency installation used"
   ],
-  "resume": "Preserve original dirty checkout. Read final verification.json and RUN_REPORT.md under source_bound_acceptance_directory before treating checkpoint receipts as final. Final clean-commit acceptance covers backend/coverage, frontend/axe/browser, lint/type/deadcode, deterministic archive and extracted source wheel, exactSHA preview screenshots, and consolidated PR review. Hardware/Pi/ARM64 live validation remains external and unperformed. Publication is one PR against modularize-v1.34, never a merge or self-approval. Existing obsolete credential directory and original node_modules junction were preserved after automatic approval rejection; do not retry deletion.",
+  "resume": "Read this ledger and continuation receipts; reconcile PR #252 exact head and tests; obtain instrument OS/channel/current-value/backup evidence; execute existing first-computer and studio forms without output before reviewed ready plan confirmation. Pi native/offline/touch/startup and full-set recovery remain physical acceptance, never simulated passes.",
   "resources": {
     "logical_cpus": 24,
     "ram_total_gib": 31.75,
@@ -339,7 +350,8 @@
     "docs": "Operator/deployment/CONTRIBUTING and architecture/diagram updated; lessons capture source binding, native precision, modal visibility and release recovery.",
     "maintainability": "Independent review complete: wheelhouse source identity, retained immutable inventory, prior-release service activation, UTF8 metadata and compact modal action visibility repaired and regression-tested through a685df2d and99a0e419.",
     "visual": "Independent pixel review found compact modal actions clipped;99a0e419 repaired fixed header/footer with scrollingbody. Actual80productionbundlechecks and independent8shot originalresolutionrecheck pass.",
-    "security": "Exact retained file inventory and identity; previous release service templates; fresh wheelhouse receipt; standalonebytecode refusal; explicitUTF8 metadata reads/writes repaired througha685df2d with regressiontests. No unresolved material finding in implemented scope."
+    "security": "Exact retained file inventory and identity; previous release service templates; fresh wheelhouse receipt; standalonebytecode refusal; explicitUTF8 metadata reads/writes repaired througha685df2d with regressiontests. No unresolved material finding in implemented scope.",
+    "computer_continuation": "Eight independent dimensions inspect continuation; architecture enum drift guard and failure-safe shared metrics fixture added after review. See continuation reviews and consolidated verdict; exact replacement-source tests/package remain externally source-bound."
   },
-  "source_bound_acceptance_directory": "output/local/pi-appliance/"
+  "source_bound_acceptance_directory": "output/local/touring-readiness-2026-09-30/"
 }

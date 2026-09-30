@@ -147,10 +147,10 @@ def _stage_send(session: CockpitSession, *, ready: bool = True) -> CockpitSendPl
     return plan
 
 
+@pytest.mark.usefixtures("isolated_observability")
 def test_armed_send_refuses_whole_plan_when_paired_control_is_changed(tmp_path: Path) -> None:
-    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+    from rytm_randomizer.observability.metrics import get_metrics
 
-    reset_metrics()
     session = _make_session(tmp_path)
     provider = _FakeProvider()
     session.arm_port_provider = provider
@@ -189,7 +189,6 @@ def test_armed_send_refuses_whole_plan_when_paired_control_is_changed(tmp_path: 
     assert session.device.capture_snapshot() == before_snapshot
     assert session.history_store.current == before_history
     assert _dispatch(session, {"type": "disarm"})["ok"] is True
-    reset_metrics()
 
 
 # ---------------------------------------------------------------------------

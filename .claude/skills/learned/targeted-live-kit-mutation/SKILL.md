@@ -19,6 +19,8 @@ kit adoption, or a send plan that could reach an Elektron device.
 2. Treat an empty target list as the backward-compatible all-scope default.
    Validate identifiers as actual non-boolean integers inside the registered
    device domain before changing session state.
+   The appliance intentionally defines empty targets as none and must resolve
+   that presentation rule before invoking the legacy scope default.
 3. Carry scope through the public `MutationPlanner` and `Device` seams. Repeat
    the invariant at the inert send-plan boundary so a stale or externally
    constructed candidate cannot address a locked or untargeted item.
@@ -69,12 +71,38 @@ kit adoption, or a send plan that could reach an Elektron device.
     both displayed and pending results when any context changes. Saved-KIT
     Q8.8 evidence cannot establish live paired-CC or NRPN conversion, output
     destination semantics, or a physical restore contract.
+15. Inspect canonical transport metadata before forming a Rytm send plan. If
+    any changed, in-scope, unlocked control needs unverified paired precision,
+    mark the entire plan unready with `paired_control_precision_unverified`.
+    Retain supported packets for inspection, but transmit zero packets: never
+    send only the paired field's MSB or quietly apply a supported subset. An
+    unchanged, locked or untargeted paired field is not a blocker.
+16. Enforce exactly one selected raw input-name match at the real provider's
+    freshly enumerated backend list before open. Missing or duplicate names
+    refuse; opening the first duplicate can bind evidence to another same-family
+    instrument. The capture service delegates this identity check; its request,
+    cancellation and frame validation do not independently prove uniqueness.
+    Keep cancellation and input-only ownership intact.
+17. Discovery is an endpoint receipt, not physical acceptance. PnP/model names
+    do not prove firmware, track-channel configuration, current control values
+    or a recoverable source. First supervised Rytm trials use the guarded Show
+    Kit source-reload/fresh-capture flow; a standalone Studio candidate does not
+    inherit that source attestation. A separately supervised legacy app A4
+    single-CC probe cannot authorize Cockpit A4/BOTH or scoped appliance APPLY.
+    Separate host-send completion from observed mutation and manual recovery;
+    after a partial or uncertain send, recover before preparing a new attempt.
 
 ## Verification
 
 - Test empty/default scope, explicit targets, targets plus locks, invalid
   identifiers, stale-plan rejection, and contradictory packet rejection.
 - Exercise captured-anchor SEND and prove every untargeted item stays unchanged.
+- Cover mixed supported/paired changes, paired-only changes, and unchanged,
+  locked and untargeted paired controls. A paired refusal keeps the whole plan
+  unready and actual sends at zero even when supported inspection packets remain;
+  verify it at the actual prepare/send boundary, not only a metadata helper.
+- Inject zero, one and duplicate exact raw input-name matches; prove refusal
+  happens before any input open, including a list change at the provider seam.
 - Exercise stale source/recapture/preflight reuse, restart/import authority
   revocation, paired-retention failure rollback, and family-codec import
   rejection.
