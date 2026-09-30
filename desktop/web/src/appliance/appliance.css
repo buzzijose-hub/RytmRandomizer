@@ -76,7 +76,9 @@
 .appliance-performance-targets { display: flex; gap: 8px; }
 .appliance-performance-targets > section { flex: 1; min-width: 0; }
 .appliance button.appliance-compact-target-button { display: none; }
-.appliance-perform .appliance-target-grid > button { min-height: 44px; }
+.appliance-perform .appliance-target-grid > button { min-height: 44px; padding: 4px 3px; }
+.appliance-perform .appliance-section-heading { margin-bottom: 4px; }
+.appliance-perform .appliance-device-choice { margin: 4px 0; }
 .appliance-target-grid { display: grid; grid-template-columns: repeat(4, minmax(44px, 1fr)); gap: 6px; }
 .appliance-target-grid > button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 52px; padding: 5px 3px; }
 .appliance-target-grid > button strong { font-size: 20px; font-weight: 400; }
@@ -94,6 +96,9 @@
 .appliance-perform-right .appliance-depth { min-height: 76px; }
 .appliance-empty { margin-top: 12px; border: 1px dashed var(--line); padding: 12px; }
 .appliance-empty > span { display: block; font-size: 11px; margin-bottom: 9px; }
+.appliance-illustration { display: flex; align-items: center; gap: 8px; }
+.appliance-illustration svg { width: 48px; height: 20px; fill: none; stroke: var(--muted); stroke-width: 2; shape-rendering: crispEdges; flex-shrink: 0; }
+.appliance-illustration small { font-size: 9px; }
 .appliance-diff { margin-top: 10px; }
 .appliance-diff table { width: 100%; border-collapse: collapse; font: 12px/1.4 ui-monospace, monospace; }
 .appliance-diff th { text-align: left; font-weight: normal; }

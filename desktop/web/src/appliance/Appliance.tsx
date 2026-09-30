@@ -94,7 +94,7 @@ function Provenance({ lane }: { lane: ApplianceLane }): JSX.Element {
 }
 
 function CandidateDiff({ candidate }: { candidate: ApplianceCandidate | null }): JSX.Element {
-  if (candidate === null) return <div className="appliance-empty"><span>01 / CHOOSE TARGETS</span><span>02 / SET DEPTH + PROTECTION</span><span>03 / MUTATE TO PREVIEW</span><p>One roll. No background mutation.</p></div>;
+  if (candidate === null) return <div className="appliance-empty"><span>01 / CHOOSE TARGETS</span><span>02 / SET DEPTH + PROTECTION</span><span>03 / MUTATE TO PREVIEW</span><div className="appliance-illustration"><svg viewBox="0 0 48 20" role="img" aria-label="Illustrative stepped envelope"><path d="M1 18H5V2H13V6H21V10H29V10H33V14H39V18H47" /></svg><small>ILLUSTRATIVE ENVELOPE</small></div><p>One roll. No background mutation.</p></div>;
   return <div className="appliance-diff"><div className="appliance-section-heading"><h3>EXACT NEXT APPLY</h3><span>{candidate.changes.length} CHANGES</span></div>{candidate.changes.length === 0 ? <p>No eligible changes. Zero depth and locks produce no writes.</p> : <table><thead><tr><th>TRACK / PARAMETER</th><th>BEFORE</th><th>AFTER</th></tr></thead><tbody>{candidate.changes.map((change) => <tr key={`${change.device_id}:${change.track_id}:${change.parameter_id}`}><th>{DEVICE_LABELS[change.device_id]} {change.track_id} / {change.parameter}</th><td>{change.before_display ?? change.before}</td><td>{change.after_display ?? change.after}</td></tr>)}</tbody></table>}<p>{candidate.blocked_reasons.map(readable).join(' · ')}</p></div>;
 }
 
