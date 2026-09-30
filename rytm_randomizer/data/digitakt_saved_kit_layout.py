@@ -2,9 +2,11 @@
 
 **Promotion status: CANDIDATE.** Unlike
 :mod:`rytm_randomizer.data.analog_four_saved_kit_layout`, nothing in this
-module has been validated against a physical Digitakt. The family/name
-positions describe the repository's synthetic candidate format only; they
-are not manual-backed proof of an actual saved-project dump layout.
+module is promoted. The one hardware-verified fact is the MK1 family byte
+(``0x0A``), read from real PATTERN dumps pinned by
+``tests/test_digitakt_real_captures.py``. The name position is still the
+repository's synthetic candidate format: on a real dump it reads header
+bytes, not a name. ``DIGITAKT_II_FAMILY_BYTE`` is an unverified guess.
 
 Deliberately **absent** here, and required before any Digitakt mutation can
 become sendable (``.claude/rules/targeted-mutation-safety.md`` #6):
@@ -26,7 +28,7 @@ from typing import Final
 
 #: Candidate family selectors, used only by synthetic-layout intake.
 #: Real captures must validate these values and positions before promotion.
-DIGITAKT_MK1_FAMILY_BYTE: Final[int] = 0x0A  # verified: real MK1 kit dump, OS 1.52A
+DIGITAKT_MK1_FAMILY_BYTE: Final[int] = 0x0A  # verified: real MK1 PATTERN dump, OS 1.52A
 DIGITAKT_II_FAMILY_BYTE: Final[int] = 0x10
 
 #: Candidate payload type byte, mirroring the A4 candidate-kit convention.

@@ -310,14 +310,14 @@ settings. Until someone sends us a real file, that work cannot start — this is
 the missing piece, and you are the person who can supply it.
 
 **You are not installing anything or changing your Digitakt.** You are asking
-it to send a copy of one kit, the same way you would make a backup, and saving
+it to send a copy of one pattern, the same way you would make a backup, and saving
 that copy as a file.
 
 ---
 
 ## What Part B is, in one sentence
 
-Your Digitakt can send a copy of a kit over USB. You catch that copy with a
+Your Digitakt can send a copy of a pattern over USB. You catch that copy with a
 free program and save it as a file ending in `.syx`. You do that twice — once
 with a knob low, once with it high — then one command files them for us.
 
@@ -363,7 +363,7 @@ The program now sits waiting. Nothing happens until you do Step 9.
 
 ---
 
-## Step 8 — Set up a throwaway kit and turn the knob LOW
+## Step 8 — Set up a throwaway pattern and turn the knob LOW
 
 **First, protect your own work.** Save your current project on the Digitakt
 (`SETTINGS` → `PROJECT` → `SAVE`). Then start a fresh, empty one
@@ -392,28 +392,28 @@ tell us it later.
 
 ---
 
-## Step 9 — Send the kit from the Digitakt
+## Step 9 — Send the pattern from the Digitakt
 
 On the Digitakt itself:
 
 1. Press **`SETTINGS`**.
 2. Go to **`SYSEX DUMP`**.
 3. Choose **`SYSEX SEND`**.
-4. Choose **`KIT`** — the currently loaded kit, **not** the whole project.
+4. Choose **`PATTERN`** — the current pattern, **not** the whole project.
+   (The Digitakt has no separate `KIT` item: a pattern carries each track's
+   sound settings, including the filter.)
 5. Press **`YES`** to send.
 
-> **Why a kit and not the whole project:** a kit is a few kilobytes; a whole
-> project can be hundreds of times larger. These files get committed into the
-> project's history permanently, so smaller is genuinely better. A kit is also
-> exactly what the software models.
+> **Why a pattern and not the whole project:** a pattern is about 30
+> kilobytes; a whole project is far larger. These files get committed into the
+> project's history permanently, so smaller is genuinely better.
 
 The Digitakt shows a progress bar. The program on your computer should show
 data arriving — a size in bytes, or a new row in a list.
 
-> **Honest note:** these menu names are from the Rytm and Analog Four, which
-> use the same scheme. **We have not confirmed them on a Digitakt.** If your
-> menus differ, that is useful information — tell us what you actually see and
-> we will correct the instructions. You are the first person doing this.
+> **Confirmed on real hardware:** Steve ran this on a Digitakt MK1 (OS 1.52A)
+> and found the menu item is `PATTERN`, not `KIT` as an earlier version of
+> this guide said. If your menus differ again, tell us what you actually see.
 
 > **If nothing arrives:** check the program is still in "waiting/record" mode
 > — some tools time out after 30 seconds and need restarting before you press
@@ -425,9 +425,9 @@ data arriving — a size in bytes, or a new row in a list.
 
 1. In the program, **save** what it caught.
 2. Save it **on your Desktop**, named exactly **`low.syx`**.
-3. Check the file size. **A kit should be a few kilobytes.** If it is hundreds
-   of kilobytes you probably sent the whole project — redo Step 9 and choose
-   `KIT`.
+3. Check the file size. **A pattern is about 30 kilobytes** (31,613 bytes on
+   a Digitakt MK1). If it is hundreds of kilobytes you probably sent the whole
+   project — redo Step 9 and choose `PATTERN`.
 
 ---
 
@@ -442,10 +442,10 @@ them. With only one file we would be guessing.
    press `1`, then press `FLTR`). **Turn knob `E` all the way to the right** —
    `FREQ` goes up to **`127`**. Write down the number the screen shows.
 2. In the capture program, start listening again (Step 7).
-3. Send the kit again (Step 9).
+3. Send the pattern again (Step 9).
 4. Save it **on your Desktop**, named exactly **`high.syx`**.
 
-You now have `low.syx` and `high.syx` — the same kit, differing only in one
+You now have `low.syx` and `high.syx` — the same pattern, differing only in one
 knob. Don't worry if you got this wrong: the command in the next step checks
 the two files really are different and tells you if they aren't.
 
@@ -465,7 +465,7 @@ Once you have **both** `low.syx` and `high.syx` on your Desktop, run:
   --high ~/Desktop/high.syx \
   --captured-by "Steve" \
   --os-version "1.52A" \
-  --menu-path "SETTINGS > SYSEX DUMP > SYSEX SEND > KIT"
+  --menu-path "SETTINGS > SYSEX DUMP > SYSEX SEND > PATTERN"
 ```
 
 Change these to match you:
@@ -514,8 +514,8 @@ on-screen number tells us far more than "turned it most of the way up".
 
 ### One thing that really matters
 
-**Use a disposable kit, not your real work.** Make a new kit, leave it
-initialized, change only what Steps 8 and 11 ask. This keeps your own material out of
+**Use a disposable pattern, not your real work.** Start a new project, leave
+the pattern initialized, change only what Steps 8 and 11 ask. This keeps your own material out of
 a public repository and makes the file far easier for us to read.
 
 ---
@@ -608,8 +608,9 @@ PART B - I capture two SysEx dumps from the Digitakt:
     E all the way LEFT (FREQ 0)
   - a free catcher program (SysEx Librarian on Mac, MIDI-OX on Windows) with
     its MIDI input set to the Digitakt, in record/receive mode
-  - on the Digitakt: SETTINGS > SYSEX DUMP > SYSEX SEND > KIT > YES
-    (a KIT, not the whole PROJECT - a kit is a few kilobytes)
+  - on the Digitakt: SETTINGS > SYSEX DUMP > SYSEX SEND > PATTERN > YES
+    (a PATTERN, not the whole PROJECT - a pattern is about 30 kilobytes;
+    there is no KIT item on a Digitakt)
   - save it on my Desktop as low.syx
   - then turn ONLY knob E all the way RIGHT (FREQ 127), capture again, and save
     it on my Desktop as high.syx

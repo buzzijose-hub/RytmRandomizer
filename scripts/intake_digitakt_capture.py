@@ -21,7 +21,7 @@ Usage::
         --high ~/Desktop/high.syx \\
         --captured-by "Steve" \\
         --os-version "1.52A" \\
-        --menu-path "SETTINGS > SYSEX DUMP > SYSEX SEND > KIT"
+        --menu-path "SETTINGS > SYSEX DUMP > SYSEX SEND > PATTERN"
 
 ``--high`` is optional but strongly encouraged: a matched pair differing in one
 known parameter is what makes offset discovery possible by comparison rather
@@ -45,7 +45,8 @@ from typing import Final
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
 FIXTURE_DIR: Final[Path] = PROJECT_ROOT / "tests" / "fixtures" / "digitakt_saved_kit"
 
-#: Bigger than any plausible single kit. A whole-project dump is the common
+#: Bigger than any plausible single pattern (a real Digitakt MK1 PATTERN dump
+#: is 31,613 bytes). A whole-project dump is the common
 #: mistake, and these files are committed permanently, so refuse loudly rather
 #: than quietly adding megabytes to the repository's history.
 MAX_REASONABLE_KIT_BYTES: Final[int] = 64 * 1024
@@ -69,7 +70,7 @@ def sha256_of(path: Path) -> str:
 
 
 def validate_capture(path: Path, device_id: str) -> bytes:
-    """Read ``path`` and check it looks like a Digitakt kit dump.
+    """Read ``path`` and check it looks like a Digitakt PATTERN dump.
 
     Validation routes through the registered device's own decoder rather than
     re-typing byte rules here: the decoder is the single place that knows what
@@ -83,9 +84,9 @@ def validate_capture(path: Path, device_id: str) -> bytes:
         _fail(f"{path.name} is empty -- the capture tool caught nothing. Redo the dump.")
     if len(raw) > MAX_REASONABLE_KIT_BYTES:
         _fail(
-            f"{path.name} is {len(raw):,} bytes, which is far too large for a single kit. "
-            "You probably sent the whole PROJECT instead of the KIT. Redo the dump and "
-            "choose KIT."
+            f"{path.name} is {len(raw):,} bytes, which is far too large for a single "
+            "pattern. You probably sent the whole PROJECT instead of the PATTERN. Redo the "
+            "dump and choose PATTERN."
         )
 
     from rytm_randomizer.devices import registry
