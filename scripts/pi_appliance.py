@@ -36,6 +36,19 @@ MAX_PACKAGE_BYTES: Final[int] = 512 * 1024 * 1024
 MAX_PACKAGE_FILES: Final[int] = 12000
 WEB_BUILD_RECEIPT: Final[str] = "web-build-receipt.json"
 MAX_RECEIPT_BYTES: Final[int] = 256 * 1024
+MAX_MANIFEST_BYTES: Final[int] = 4 * 1024 * 1024
+REQUIRED_RUNTIME_FILES: Final[frozenset[str]] = frozenset(
+    {
+        "src/pyproject.toml",
+        "src/rytm_randomizer/cockpit/appliance_runtime.py",
+        "web/index.html",
+        "pi_appliance.py",
+        "assets/rytm-appliance-backend.service",
+        "assets/rytm-appliance-kiosk.service",
+        "assets/rytm-appliance.target",
+        "assets/rytm-appliance.desktop",
+    }
+)
 
 
 class RotatingOutput(io.TextIOBase):
@@ -81,10 +94,21 @@ def committed_source() -> tuple[str, str]:
         raise ValueError("Git is required to package exact committed source; install Git first")
     checked([git, "diff", "--exit-code", "HEAD"], cwd=ROOT)
     if checked(
-        [git, "status", "--porcelain", "--untracked-files=all", "--", "desktop/web"], cwd=ROOT
+        [
+            git,
+            "status",
+            "--porcelain",
+            "--untracked-files=all",
+            "--",
+            "desktop/web",
+            "rytm_randomizer",
+            "pyproject.toml",
+            "VERSION",
+        ],
+        cwd=ROOT,
     ):
         raise ValueError(
-            "Frontend source has uncommitted or untracked files; commit it before building"
+            "Appliance source has uncommitted or untracked files; commit it before building"
         )
     source_sha = checked([git, "rev-parse", "HEAD"], cwd=ROOT)
     return git, source_sha
@@ -193,11 +217,12 @@ def package(output: Path, *, web_root: Path, wheelhouse: Path | None) -> None:
             git,
             "archive",
             "--format=tar",
-            "HEAD",
+            source_sha,
             "rytm_randomizer",
             "pyproject.toml",
             "VERSION",
             "README.md",
+            "LICENSE",
         ],
         cwd=ROOT,
         check=True,
@@ -240,6 +265,8 @@ def package(output: Path, *, web_root: Path, wheelhouse: Path | None) -> None:
         "files": {name: digest(data) for name, data in sorted(files.items())},
     }
     files["manifest.json"] = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()
+    if committed_source()[1] != source_sha:
+        raise ValueError("Committed source changed during packaging; package the final commit")
     output.parent.mkdir(parents=True, exist_ok=True)
     with tarfile.open(output, mode="w") as archive:
         for name, data in sorted(files.items()):
@@ -353,6 +380,41 @@ def _service_paths(prefix: Path) -> dict[str, str]:
     }
 
 
+def verify_release_files(release: Path, manifest: dict[str, object]) -> None:
+    """Check retained release bytes before reactivation; generated venv files stay separate."""
+    files = manifest.get("files")
+    if (
+        manifest.get("format_version") != 1
+        or manifest.get("target") != "linux-arm64"
+        or not isinstance(files, dict)
+        or len(files) > MAX_PACKAGE_FILES
+        or not REQUIRED_RUNTIME_FILES.issubset(files)
+    ):
+        raise ValueError("Retained release has an unsupported or incomplete manifest")
+    total = 0
+    for name, expected in files.items():
+        if (
+            not isinstance(name, str)
+            or PurePosixPath(name).is_absolute()
+            or ".." in PurePosixPath(name).parts
+            or "\\" in name
+            or ":" in name
+            or not isinstance(expected, str)
+            or not re.fullmatch(r"[a-f0-9]{64}", expected)
+        ):
+            raise ValueError("Retained release manifest has unsafe file entries")
+        path = release / name
+        if (
+            not path.is_file()
+            or path.is_symlink()
+            or not path.resolve().is_relative_to(release.resolve())
+        ):
+            raise ValueError("Retained release has missing or unsafe runtime files")
+        total += path.stat().st_size
+        if total > MAX_PACKAGE_BYTES or digest(path.read_bytes()) != expected:
+            raise ValueError("Retained release runtime files differ from their verified manifest")
+
+
 def install(archive: Path, *, prefix: Path, online: bool, autostart: bool = False) -> None:
     if not supported_target() or os.getuid() == 0:
         raise ValueError("Install as the graphical-session user on ARM64 Bookworm/Trixie")
@@ -361,12 +423,15 @@ def install(archive: Path, *, prefix: Path, online: bool, autostart: bool = Fals
         raise ValueError("labwc is missing; use a supported Raspberry Pi OS desktop image")
     if shutil.disk_usage(Path.home()).free < 2 * 1024**3:
         raise ValueError("At least 2 GiB free disk space is required for staged installation")
-    prefix.mkdir(parents=True, exist_ok=True, mode=0o700)
     if (
         any(char in str(prefix) for char in ('"', "%", "\n", "\r", "\\"))
         or not prefix.is_absolute()
     ):
         raise ValueError("Install prefix must be an absolute Linux path suitable for systemd")
+    prefix.mkdir(parents=True, exist_ok=True, mode=0o700)
+    current = prefix / "current"
+    if current.exists() and not current.is_symlink():
+        raise ValueError("Active release pointer is not a symlink; refusing to overwrite it")
     for path in (
         Path.home() / ".config/rytm-randomizer",
         Path.home() / ".local/state/rytm-appliance",
@@ -375,17 +440,7 @@ def install(archive: Path, *, prefix: Path, online: bool, autostart: bool = Fals
     with tempfile.TemporaryDirectory(prefix=".install-", dir=prefix) as staging:
         stage = Path(staging)
         manifest = unpack_verified(archive, stage)
-        required = {
-            "src/pyproject.toml",
-            "src/rytm_randomizer/cockpit/appliance_runtime.py",
-            "web/index.html",
-            "pi_appliance.py",
-            "assets/rytm-appliance-backend.service",
-            "assets/rytm-appliance-kiosk.service",
-            "assets/rytm-appliance.target",
-            "assets/rytm-appliance.desktop",
-        }
-        if not required.issubset(manifest["files"]):
+        if not REQUIRED_RUNTIME_FILES.issubset(manifest["files"]):
             raise ValueError("Appliance package is missing required runtime files")
         release_name = f"{manifest['version']}-{str(manifest['source_sha'])[:12]}"
         if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+-[a-f0-9]{12}", release_name):
@@ -394,6 +449,7 @@ def install(archive: Path, *, prefix: Path, online: bool, autostart: bool = Fals
         if release.exists():
             if json.loads((release / "manifest.json").read_text()) != manifest:
                 raise ValueError("Existing release identity has different contents")
+            verify_release_files(release, manifest)
             checked([str(release / ".venv/bin/python"), "-m", "pip", "check"])
         else:
             if not online and not list((stage / "wheels").glob("*.whl")):
@@ -404,6 +460,7 @@ def install(archive: Path, *, prefix: Path, online: bool, autostart: bool = Fals
                 receipt = json.loads((stage / "wheels/receipt.json").read_text())
                 if (
                     receipt.get("source_sha") != manifest["source_sha"]
+                    or receipt.get("machine") not in {"aarch64", "arm64"}
                     or str(receipt.get("python", "")).split(".")[:2]
                     != platform.python_version().split(".")[:2]
                 ):
@@ -446,9 +503,6 @@ def install(archive: Path, *, prefix: Path, online: bool, autostart: bool = Fals
                 content = content.replace(before, after)
             desktop.write_text(content)
         previous = prefix / "previous"
-        current = prefix / "current"
-        if current.exists() and not current.is_symlink():
-            raise ValueError("Active release pointer is not a symlink; refusing to overwrite it")
         if current.is_symlink() and current.resolve() != release:
             replacement = prefix / ".previous-next"
             replacement.unlink(missing_ok=True)
@@ -597,6 +651,19 @@ def rollback(prefix: Path) -> None:
         (prefix / "releases").resolve()
     ):
         raise ValueError("No valid previous release; user data has not been changed")
+    release = previous.resolve()
+    manifest_path = release / "manifest.json"
+    if (
+        not release.is_dir()
+        or not manifest_path.is_file()
+        or manifest_path.stat().st_size > MAX_MANIFEST_BYTES
+    ):
+        raise ValueError("Previous release is incomplete; user data has not been changed")
+    manifest = json.loads(manifest_path.read_text())
+    if not isinstance(manifest, dict):
+        raise ValueError("Previous release has an invalid manifest; user data has not been changed")
+    verify_release_files(release, manifest)
+    checked([str(release / ".venv/bin/python"), "-m", "pip", "check"])
     checked(["systemctl", "--user", "stop", "rytm-appliance.target"])
     replacement = prefix / ".rollback-next"
     replacement.unlink(missing_ok=True)
@@ -617,6 +684,35 @@ def uninstall() -> None:
     (Path.home() / ".config/autostart/rytm-appliance.desktop").unlink(missing_ok=True)
     checked(["systemctl", "--user", "daemon-reload"])
     print("Services removed. Releases, profiles, captures and configuration are retained.")
+
+
+def build_wheelhouse(directory: Path) -> None:
+    """Build offline wheels only from a stable committed source and publish its receipt last."""
+    _, source_sha = committed_source()
+    directory.mkdir(parents=True, exist_ok=True)
+    receipt_path = directory / "receipt.json"
+    receipt_path.unlink(missing_ok=True)
+    checked(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "wheel",
+            "--wheel-dir",
+            str(directory),
+            str(ROOT) + "[cockpit]",
+        ],
+        timeout=1200,
+    )
+    if committed_source()[1] != source_sha:
+        raise ValueError("Committed source changed during wheel build; rebuild the final commit")
+    receipt = {
+        "source_sha": source_sha,
+        "machine": platform.machine(),
+        "python": platform.python_version(),
+        "files": {path.name: digest(path.read_bytes()) for path in directory.glob("*.whl")},
+    }
+    receipt_path.write_text(json.dumps(receipt, indent=2) + "\n")
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -706,28 +802,7 @@ def main(argv: list[str] | None = None) -> None:
         elif args.command == "wheelhouse":
             if not supported_target() or args.wheelhouse is None:
                 parser.error("wheelhouse requires target ARM64 OS and --wheelhouse")
-            args.wheelhouse.mkdir(parents=True, exist_ok=True)
-            checked(
-                [
-                    sys.executable,
-                    "-m",
-                    "pip",
-                    "wheel",
-                    "--wheel-dir",
-                    str(args.wheelhouse),
-                    str(ROOT) + "[cockpit]",
-                ],
-                timeout=1200,
-            )
-            receipt = {
-                "source_sha": checked(["git", "rev-parse", "HEAD"], cwd=ROOT),
-                "machine": platform.machine(),
-                "python": platform.python_version(),
-                "files": {
-                    path.name: digest(path.read_bytes()) for path in args.wheelhouse.glob("*.whl")
-                },
-            }
-            (args.wheelhouse / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
+            build_wheelhouse(args.wheelhouse)
     except (ValueError, OSError, subprocess.SubprocessError) as exc:
         parser.exit(1, f"Appliance command failed: {exc}\n")
 
