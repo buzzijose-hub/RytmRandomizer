@@ -63,6 +63,7 @@ try {
   await page.evaluate(() => document.fonts.ready);
   for (const [width, height] of [[800, 480], [480, 320], [1024, 600]]) {
     await page.setViewportSize({ width, height });
+    await clickNav('RYTM');
     await clickNav('HOME');
     await check('home', width, height);
     if (width >= 650) await checkTargetMatrix(12);
