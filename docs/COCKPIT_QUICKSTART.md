@@ -34,6 +34,12 @@ indices and names from an earlier session are not routing authority.
   A selected raw input name must occur exactly once in the available inputs;
   missing or duplicate matches refuse before opening a port. A successful
   enumeration is neither a captured baseline nor a mutation/recovery receipt.
+  For the first dedicated input-only receiver, set the documented
+  `RYTM_RAND_MIDI_BACKEND=off` in that child process before this app command.
+  This disables automatic background monitoring while the explicitly injected
+  capture service still lists and opens the selected real input. The resulting
+  connection-status indicator is not hot-plug proof. The Pi launcher's
+  `serve --hardware-input` selects `auto` and is not this isolated configuration.
 - **Rytm:** use the guarded **Show Kit Forge** audition described in
   [§6a](#6a-remaining-operator-present-studio-rehearsal) and the existing
   [studio checklist](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md).

@@ -141,3 +141,27 @@ unanswered; all physical mutation/recovery and Pi acceptance fields remain open.
 The existing plan records two parallel isolated refusal repairs: exact input
 uniqueness and canonical paired-control whole-plan refusal. They extend PR #252,
 with no new output authority, dependency pin change or V1.34 fixture capture.
+
+## 2026-09-30 — replacement-source integration correction
+
+At clean source `7ed2506c`, the full four-worker coverage suite reported one
+failure, 10,646 passed, five skips and eight warnings in 294.12 seconds. The
+remaining old mock Show Forge journey expected a broad captured candidate to
+SEND despite its changed paired control. Production correctly refused it.
+The test now asserts the whole-plan block, unchanged mock snapshot/history and
+no hardware-save claim while retaining the original captured candidate. The
+separate supported and armed-refusal cases remain. The repaired Forge plus
+armed-send files passed all 42 cases, with one inherited Starlette warning;
+touched lint/format checks passed. Full replacement acceptance must rerun.
+
+Read-only runtime tracing also established that automatic monitoring can retain
+the input separately selected for raw capture; no actual WinMM failure was
+observed. First-computer receiver instructions now use the existing app-owned
+capture composition with process-local MIDI_BACKEND=off, as discovery already
+did. Explicit capture remains enabled; this configuration does not demonstrate
+connection/hot-plug monitoring. The Pi hardware launcher chooses auto, so its
+native coexistence/reconnect checks remain physical gates. No new capture
+service, transport, output authority or hardware observation is introduced.
+
+Failed receipt files are preserved under
+`output/local/touring-readiness-2026-09-30/checkpoint-7ed2506c/`.

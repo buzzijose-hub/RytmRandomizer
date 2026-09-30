@@ -523,7 +523,7 @@ def test_workspace_complete_local_favorite_and_show_preflight_journey(
     assert ShowKitForgeWorkspace(store).bank(bank.bank_id) == workspace.bank(bank.bank_id)
 
 
-def test_mock_ws_forge_journey_reuses_exact_rytm_plan_and_never_claims_save(
+def test_mock_ws_forge_journey_refuses_paired_plan_and_never_claims_save(
     tmp_path: Path,
 ) -> None:
     rytm, analog_four, snapshot, _entry = _sources()
@@ -621,11 +621,17 @@ def test_mock_ws_forge_journey_reuses_exact_rytm_plan_and_never_claims_save(
     assert session.current_send_plan.target_pad_ids == frozenset({1, 2})
     assert session.current_send_plan.locked_pad_ids == frozenset({2})
     assert {packet.pad_id for packet in session.current_send_plan.packets} == {1}
+    assert session.current_send_plan.ready is False
+    assert "paired_control_precision_unverified" in session.current_send_plan.blocked_reasons
     plan_id = session.current_send_plan.plan_id
     selected_id = session.current_send_plan.candidate_id
+    before_snapshot = session.device.capture_snapshot()
+    before_history = session.history_store.current
     ack, _events = command("send", send_plan_id=plan_id)
-    assert ack["ok"] is True
-    # Mock SEND is an in-memory projection, not a live unsaved hardware state.
+    assert ack["ok"] is False
+    assert session.device.capture_snapshot() == before_snapshot
+    assert session.history_store.current == before_history
+    # A blocked generated plan cannot change even the local mock audition.
     assert workspace.bank(bank.bank_id).entry(entry.entry_id).rytm_live_auditioned_at is None
 
     ack, _events = command(
