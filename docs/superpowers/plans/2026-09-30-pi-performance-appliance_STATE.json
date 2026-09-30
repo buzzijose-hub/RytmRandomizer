@@ -1,15 +1,74 @@
 {
   "schema_version": 1,
-  "status": "implementation",
-  "starting_sha": "892aaffc",
+  "status": "integrated implementation and verification",
+  "starting_sha": "892aaffca2484d1939ba3e133263aaadde2f22de",
   "original_checkout_sha": "a73aded67211b1e4a4cf294eb13ecfd3887de7e8",
   "integration_branch": "codex/pi-performance-appliance",
   "base": "modularize-v1.34",
   "codex_version": "0.159.2",
-  "agents": ["touch_ui", "runtime", "capabilities"],
-  "heavy_job_budget": {"concurrent": 1, "pytest_workers": 4, "browser_workers": 1},
-  "receipts": [],
-  "integration_shas": [],
-  "blockers": ["physical Raspberry Pi unavailable", "A4 live authority unvalidated", "unsaved working-state readback not established"],
-  "resume": "Inspect current branch diff and agent branches; finish shared backend contract, integrate each committed agent branch with --no-ff, run coordinated checks and independent reviews. Preserve original dirty checkout."
+  "agents": [
+    "touch_ui",
+    "runtime",
+    "capabilities"
+  ],
+  "heavy_job_budget": {
+    "concurrent": 1,
+    "pytest_workers": 4,
+    "browser_workers": 1
+  },
+  "receipts": [
+    {
+      "count": "110 modules",
+      "note": "Windows x64 production frontend, existing dependency Vite8.0.14; bundle-size and mixed-import warnings",
+      "scope": "integration",
+      "command": "npm run build",
+      "result": "passed",
+      "tree": "59a4bb7b plus root source fixes"
+    },
+    {
+      "count": 30,
+      "duration_seconds": 0.63,
+      "scope": "integration",
+      "command": "python -m pytest tests/cockpit/test_appliance.py -n 0 -q",
+      "result": "passed",
+      "tree": "59a4bb7b plus native-domain and profile-path fixes"
+    },
+    {
+      "count": 28,
+      "note": "Agent reported runtime 100% statement/branch coverage; not full integrated verification",
+      "tree": "a4e0114a",
+      "scope": "runtime isolated branch",
+      "command": "targeted runtime and packaging tests",
+      "result": "passed"
+    },
+    {
+      "count": 572,
+      "note": "Agent reviewed import side effects, house style, perimeter, armed entrypoints",
+      "duration_seconds": 81.45,
+      "scope": "runtime integrated review",
+      "command": "targeted architecture -n 0",
+      "result": "passed",
+      "tree": "59a4bb7b"
+    },
+    {
+      "count": 505,
+      "note": "Agent reported three modules 100% statement/branch coverage",
+      "tree": "48e5f46a",
+      "scope": "capability isolated branch",
+      "command": "capability and optional-controls tests",
+      "result": "passed"
+    }
+  ],
+  "integration_shas": [
+    "913ad1ba",
+    "7135e002",
+    "a08521a8",
+    "59a4bb7b"
+  ],
+  "blockers": [
+    "physical Raspberry Pi unavailable",
+    "A4 live authority unvalidated",
+    "unsaved working-state readback not established"
+  ],
+  "resume": "Continue three agents in isolated worktrees. Root owns native A4 service integration, engine, profiles default, integrated verification. Runtime owns simulation authority sealing and teardown review; UI owns native display and 100% tests plus screenshots; capability agent owns A4 exact projection then service safety coverage. Never touch original dirty checkout. No push or PR yet. Full integrated backend, frontend coverage, browser, parity, packaging and independent review remain."
 }

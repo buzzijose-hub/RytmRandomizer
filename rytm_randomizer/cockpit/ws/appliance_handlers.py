@@ -7,8 +7,9 @@ from pathlib import Path
 from typing import Final
 
 from ...observability.logging import get_logger
-from ..appliance import DEVICE_IDS, OPERATIONS, ApplianceWorkspace, _mapping, context_digest
+from ..appliance import DEVICE_IDS, OPERATIONS, ApplianceWorkspace, context_digest, validated_object
 from ..capture.bridge import cockpit_snapshot_from_rytm_capture
+from ..profiles import default_profiles_dir
 from .handlers import HandlerResult, session_is_armed
 from .protocol import EVENT_APPLIANCE_CHANGED
 from .session import CockpitSession, fresh_seed
@@ -26,7 +27,7 @@ async def handle_appliance(cmd: dict[str, object], session: CockpitSession) -> H
     if session.appliance is None:
         profile_file = Path(
             os.environ.get(
-                PROFILE_FILE_ENV, str(Path.home() / ".rytm-randomizer" / "appliance-scopes.json")
+                PROFILE_FILE_ENV, str(default_profiles_dir().parent / "appliance-scopes.json")
             )
         )
         session.appliance = ApplianceWorkspace(
@@ -62,7 +63,7 @@ async def handle_appliance(cmd: dict[str, object], session: CockpitSession) -> H
             or expected != workspace.revision
         ):
             raise ValueError("appliance revision changed; refresh and review the current action")
-    payload = _mapping(cmd.get("payload", {}))
+    payload = validated_object(cmd.get("payload", {}))
     exported: dict[str, object] | None = None
     if operation == "scope":
         workspace.change_scope(payload)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -218,3 +219,56 @@ def test_local_history_is_bounded(workspace: ApplianceWorkspace, tmp_path: Path)
                 hardware_intent=False,
             )
     assert len(workspace.timeline) == HISTORY_LIMIT
+
+
+def test_native_bounds_preserve_fixed_point_precision_and_zero_depth(tmp_path: Path) -> None:
+    profile = ProfileRegistry(tmp_path / "registry").list_profiles()[0]
+    snapshot = Snapshot(
+        "native",
+        DEVICE_IDS[1],
+        datetime.now(timezone.utc),
+        (PadState(1, "A4 native", {"fixed": 16391, "protected": 30000}),),
+        None,
+        None,
+    )
+    bounds = {(1, "fixed"): (0, 32767), (1, "protected"): (0, 32767)}
+    candidate = mutate(
+        snapshot,
+        profile,
+        0.45,
+        456,
+        parameter_bounds=bounds,
+        parameter_depths={(1, "fixed"): 0.01},
+    )
+    values = candidate.pad_deltas[0].proposed_params
+    assert 16000 < values["fixed"] < 16800
+    assert values["fixed"] != snapshot.pads[0].params["fixed"]
+    assert values["fixed"] % 256 != 0  # Native Q8.8 precision is not truncated to CC7.
+    assert values["protected"] == 30000
+    unchanged = mutate(snapshot, profile, 0.45, 456, parameter_bounds=bounds, parameter_depths={})
+    assert unchanged.pad_deltas[0].changed_keys == frozenset()
+    full = mutate(snapshot, profile, 0.45, 456, parameter_bounds=bounds)
+    assert full.pad_deltas[0].proposed_params["fixed"] > 127
+
+
+@pytest.mark.parametrize("limits", [(True, 127), (0, False), (0.5, 127), (0, 127.5), (100, 1)])
+def test_native_bounds_reject_invalid_domains(
+    workspace: ApplianceWorkspace, tmp_path: Path, limits: tuple[object, object]
+) -> None:
+    profile = ProfileRegistry(tmp_path / "registry").list_profiles()[0]
+    with pytest.raises(ValueError, match="ordered integer limits"):
+        mutate(
+            workspace.sources[DEVICE_IDS[0]],
+            profile,
+            0.45,
+            1,
+            parameter_bounds={(1, "dec"): cast(tuple[int, int], limits)},
+        )
+    with pytest.raises(ValueError, match="known cell"):
+        mutate(
+            workspace.sources[DEVICE_IDS[0]],
+            profile,
+            0.45,
+            1,
+            parameter_bounds={(1, "unknown"): (0, 127)},
+        )

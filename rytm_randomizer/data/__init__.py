@@ -148,6 +148,11 @@ from .analog_rytm_midi import (
     ANALOG_RYTM_VALIDATED_RUNTIME_CC,
 )
 from .analog_rytm_style_recipes import ANALOG_RYTM_STYLE_RECIPES
+from .appliance_parameter_bindings import (
+    A4_APPLIANCE_NATIVE_ONLY_PARAMETERS,
+    A4_APPLIANCE_PARAMETER_FIELDS,
+    RYTM_APPLIANCE_FX_FIELDS,
+)
 from .audio_patch_dna import (
     AUDIO_PATCH_DNA_CANDIDATE_COUNT,
     AUDIO_PATCH_DNA_DIRECTION_SPECS,
@@ -297,6 +302,9 @@ from .style_profiles import STYLE_PROFILES
 from .style_targets import STYLE_TARGET_VECTOR_AXES, STYLE_TARGET_VECTORS
 
 __all__ = [
+    "A4_APPLIANCE_NATIVE_ONLY_PARAMETERS",
+    "A4_APPLIANCE_PARAMETER_FIELDS",
+    "RYTM_APPLIANCE_FX_FIELDS",
     "PERSISTED_STATE_CODES",
     "PERSISTED_STATE_REFUSAL_METRIC_CODES",
     "PERSISTED_STATE_STORES",

@@ -22,13 +22,14 @@ from ..snapshot.mutation_scope import MutationScope, registered_mutation_ids
 from .appliance_capabilities import ApplianceParameterCapability, parameter_capabilities
 from .data import MutationCandidate, PadState, ProfileModel, Snapshot, new_ulid
 from .data.rytm_parameter_map import cockpit_parameter_mapping
+from .data.stage import STAGE_DEVICE_IDS, StageDeviceId
 from .device import MockDeviceAdapter
 from .engine import mutate
 from .export.writer import atomic_write
 from .history import HistoryStore
 
-DEVICE_IDS: Final[tuple[str, ...]] = ("analog_rytm_mk2", "analog_four")
-TARGETS: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType(
+DEVICE_IDS: Final[tuple[StageDeviceId, ...]] = STAGE_DEVICE_IDS
+TARGETS: Final[Mapping[str, tuple[StageDeviceId, ...]]] = MappingProxyType(
     {
         "rytm": (DEVICE_IDS[0],),
         "a4": (DEVICE_IDS[1],),
@@ -59,8 +60,11 @@ SCHEMA_VERSION: Final[int] = require_schema_version("appliance_scopes")
 _logger = get_logger(__name__)
 
 
-def _mapping(value: object) -> Mapping[str, object]:
-    if not isinstance(value, Mapping) or not all(isinstance(key, str) for key in value):
+def validated_object(value: object) -> Mapping[str, object]:
+    if not isinstance(value, Mapping):
+        raise ValueError("expected an object with string keys")
+    checked = cast(Mapping[object, object], value)
+    if not all(isinstance(key, str) for key in checked):
         raise ValueError("expected an object with string keys")
     return cast(Mapping[str, object], value)
 
@@ -75,7 +79,9 @@ def _depth(value: object) -> float:
 
 
 def _strings(value: object, available: set[str]) -> tuple[str, ...]:
-    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+    if not isinstance(value, list):
+        raise ValueError("expected a string list")
+    if not all(isinstance(item, str) for item in cast(list[object], value)):
         raise ValueError("expected a string list")
     items = cast(list[str], value)
     if len(items) != len(set(items)) or not set(items) <= available:
@@ -104,7 +110,7 @@ class ApplianceScope:
             "parameter_locks": list(self.parameter_locks),
         }
 
-    def effective_ids(self, device_id: str) -> frozenset[int]:
+    def effective_ids(self, device_id: StageDeviceId) -> frozenset[int]:
         if not self.target_ids:
             return frozenset()
         return MutationScope(
@@ -115,8 +121,8 @@ class ApplianceScope:
         )
 
     @classmethod
-    def parse(cls, value: object, device_id: str) -> ApplianceScope:
-        raw = _mapping(value)
+    def parse(cls, value: object, device_id: StageDeviceId) -> ApplianceScope:
+        raw = validated_object(value)
         rows = parameter_capabilities(device_id)
         pages = {row.page for row in rows}
         parameters = {row.parameter_id for row in rows}
@@ -127,7 +133,7 @@ class ApplianceScope:
             if not isinstance(values, list):
                 raise ValueError("targets and locks must be lists")
             checked: list[int] = []
-            for item in values:
+            for item in cast(list[object], values):
                 if isinstance(item, bool) or not isinstance(item, int) or item not in available:
                     raise ValueError("track identifier is outside device domain")
                 checked.append(item)
@@ -136,7 +142,7 @@ class ApplianceScope:
             return tuple(checked)
 
         def depths(field: str, domain: set[str]) -> tuple[tuple[str, float], ...]:
-            values = _mapping(raw.get(field, {}))
+            values = validated_object(raw.get(field, {}))
             if not set(values) <= domain:
                 raise ValueError("unknown depth scope")
             return tuple((key, _depth(item)) for key, item in sorted(values.items()))
@@ -160,7 +166,7 @@ class ApplianceWorkspace:
         self.revision = 0
         self.target = "rytm"
         self.master_depth = 0.45
-        self.scopes: dict[str, ApplianceScope] = {}
+        self.scopes: dict[StageDeviceId, ApplianceScope] = {}
         for device_id in DEVICE_IDS:
             rows = parameter_capabilities(device_id)
             self.scopes[device_id] = ApplianceScope(
@@ -169,12 +175,12 @@ class ApplianceWorkspace:
                 tuple(dict.fromkeys(row.page for row in rows)),
                 parameter_locks=tuple(row.parameter_id for row in rows if row.default_protected),
             )
-        self.sources: dict[str, Snapshot] = {}
-        self.histories: dict[str, HistoryStore] = {}
-        self.timeline: list[dict[str, Snapshot]] = []
+        self.sources: dict[StageDeviceId, Snapshot] = {}
+        self.histories: dict[StageDeviceId, HistoryStore] = {}
+        self.timeline: list[dict[StageDeviceId, Snapshot]] = []
         self.cursor = 0
-        self.anchor: dict[str, Snapshot] | None = None
-        self.candidates: dict[str, MutationCandidate] = {}
+        self.anchor: dict[StageDeviceId, Snapshot] | None = None
+        self.candidates: dict[StageDeviceId, MutationCandidate] = {}
         self.candidate: dict[str, object] | None = None
         self.context: str | None = None
         self.last_receipt: dict[str, object] | None = None
@@ -198,29 +204,29 @@ class ApplianceWorkspace:
             self.storage_error = "profile_storage_corrupt_or_unreadable"
 
     def _validated_profiles(self, document: object) -> dict[str, dict[str, object]]:
-        raw = _mapping(document)
+        raw = validated_object(document)
         if raw.get("schema_version") != SCHEMA_VERSION or isinstance(
             raw.get("schema_version"), bool
         ):
             raise ValueError("unsupported profile schema")
-        profiles = _mapping(raw.get("profiles"))
+        profiles = validated_object(raw.get("profiles"))
         if len(profiles) > PROFILE_LIMIT:
             raise ValueError("too many profiles")
         result: dict[str, dict[str, object]] = {}
         for name, item in profiles.items():
             self._name(name)
-            profile = _mapping(item)
+            profile = validated_object(item)
             if profile.get("target") not in TARGETS:
                 raise ValueError("unknown target")
-            lanes = _mapping(profile.get("lanes"))
+            lanes = validated_object(profile.get("lanes"))
             if set(lanes) != set(DEVICE_IDS):
                 raise ValueError("profile requires both explicit lanes")
             checked = {
                 device: ApplianceScope.parse(lanes[device], device).to_dict()
                 for device in DEVICE_IDS
             }
-            association = _mapping(profile.get("association"))
-            fingerprints = _mapping(association.get("fingerprints"))
+            association = validated_object(profile.get("association"))
+            fingerprints = validated_object(association.get("fingerprints"))
             if set(fingerprints) != set(DEVICE_IDS) or any(
                 value is not None and (not isinstance(value, str) or len(value) > 128)
                 for value in fingerprints.values()
@@ -309,13 +315,14 @@ class ApplianceWorkspace:
         if not isinstance(target, str) or target not in TARGETS:
             raise ValueError("unknown target")
         depth = _depth(payload.get("master_depth", self.master_depth))
-        lanes = _mapping(payload.get("lanes", {}))
+        lanes = validated_object(payload.get("lanes", {}))
         if not set(lanes) <= set(DEVICE_IDS):
             raise ValueError("unknown lane")
         scopes = dict(self.scopes)
         for device_id, patch in lanes.items():
-            merged = {**scopes[device_id].to_dict(), **_mapping(patch)}
-            scopes[device_id] = ApplianceScope.parse(merged, device_id)
+            device = cast(StageDeviceId, device_id)
+            merged = {**scopes[device].to_dict(), **validated_object(patch)}
+            scopes[device] = ApplianceScope.parse(merged, device)
         self.target, self.master_depth, self.scopes = target, depth, scopes
         self.invalidate()
 
@@ -331,7 +338,20 @@ class ApplianceWorkspace:
             raise ValueError(
                 "all selected lanes require a trustworthy source; A4 live baseline is unavailable"
             )
-        candidates: dict[str, MutationCandidate] = {}
+        if self.target == "both" and any(
+            not self.scopes[device].effective_ids(device) for device in devices
+        ):
+            raise ValueError("linked BOTH requires eligible targets in both lanes")
+        requests: dict[
+            StageDeviceId,
+            tuple[
+                Snapshot,
+                ApplianceScope,
+                dict[tuple[int, str], float],
+                dict[tuple[int, str], ApplianceParameterCapability],
+            ],
+        ] = {}
+        candidates: dict[StageDeviceId, MutationCandidate] = {}
         changes: list[dict[str, object]] = []
         for device_id in devices:
             snapshot = self.sources[device_id]
@@ -356,7 +376,7 @@ class ApplianceWorkspace:
                                 if device_id != DEVICE_IDS[0]
                                 else mapping is not None
                                 and item.parameter == mapping.parameter
-                                and item.page == mapping.section
+                                and item.page == ("SRC" if mapping.machine_key else mapping.section)
                                 and item.machine_key == mapping.machine_key
                             )
                         ),
@@ -377,8 +397,20 @@ class ApplianceWorkspace:
                         * track_depths.get(str(pad.pad_id), 1)
                         * page_depths.get(row.page, 1)
                     )
-            if not depths or not scope.effective_ids(device_id):
-                continue
+            if scope.effective_ids(device_id) and any(
+                value > 0 and cell[0] in scope.effective_ids(device_id)
+                for cell, value in depths.items()
+            ):
+                requests[device_id] = (snapshot, scope, depths, by_cell)
+        if self.target == "both" and len(requests) != len(devices):
+            raise ValueError(
+                "linked BOTH requires mutable unlocked parameters and nonzero depth in each lane"
+            )
+        if not requests:
+            self.candidate = None
+            self.candidates.clear()
+            return
+        for device_id, (snapshot, scope, depths, by_cell) in requests.items():
             candidate = mutate(
                 snapshot,
                 profile,
@@ -513,8 +545,8 @@ class ApplianceWorkspace:
             self._publish(profiles)
         else:
             profile = profiles[name]
-            association = _mapping(profile["association"])
-            saved = _mapping(association["fingerprints"])
+            association = validated_object(profile["association"])
+            saved = validated_object(association["fingerprints"])
             if not self.simulation and (
                 any(saved.get(device) is None for device in TARGETS[str(profile["target"])])
                 or any(
@@ -535,27 +567,45 @@ class ApplianceWorkspace:
         lanes: dict[str, object] = {}
         for device_id in DEVICE_IDS:
             source = self.sources.get(device_id)
-            params = source.pads[0].params if source and source.pads else {}
+            selected = self.scopes[device_id].target_ids
+            reference_track = min(selected) if selected else None
+
+            def parameter_view(row: ApplianceParameterCapability) -> dict[str, object]:
+                values: dict[str, int] = {}
+                if source is not None:
+                    for pad in source.pads:
+                        key = row.cockpit_key if device_id == DEVICE_IDS[0] else row.parameter_id
+                        if key is None or key not in pad.params:
+                            continue
+                        if device_id == DEVICE_IDS[0]:
+                            mapping = cockpit_parameter_mapping(pad.machine, key)
+                            if (
+                                mapping is None
+                                or mapping.machine_key != row.machine_key
+                                or mapping.parameter != row.parameter
+                            ):
+                                continue
+                        values[str(pad.pad_id)] = pad.params[key]
+                return {
+                    "parameter_id": row.parameter_id,
+                    "page": row.page,
+                    "parameter": row.parameter,
+                    "cockpit_key": row.cockpit_key,
+                    "machine_key": row.machine_key,
+                    "value": values.get(str(reference_track)),
+                    "values_by_track": values,
+                    "default_protected": row.default_protected,
+                    "categorical": row.categorical,
+                    "protection_reasons": list(row.protection_reasons),
+                    "blockers": list(row.blockers),
+                }
+
             lanes[device_id] = {
                 "device_id": device_id,
+                "reference_track_id": reference_track,
                 "scope": self.scopes[device_id].to_dict(),
                 "provenance": provenance[device_id],
-                "parameters": [
-                    {
-                        "parameter_id": row.parameter_id,
-                        "page": row.page,
-                        "parameter": row.parameter,
-                        "cockpit_key": row.cockpit_key,
-                        "value": params.get(
-                            row.cockpit_key if device_id == DEVICE_IDS[0] else row.parameter_id
-                        ),
-                        "default_protected": row.default_protected,
-                        "categorical": row.categorical,
-                        "protection_reasons": list(row.protection_reasons),
-                        "blockers": list(row.blockers),
-                    }
-                    for row in parameter_capabilities(device_id)
-                ],
+                "parameters": [parameter_view(row) for row in parameter_capabilities(device_id)],
                 "blocked_reasons": (
                     []
                     if self.simulation
