@@ -174,6 +174,10 @@ def test_fixed_point_and_hidden_pitch_precision_are_exact_and_not_midi_conversio
     assert modulation.native_domain.maximum == "32767"
     assert "hidden half-step" in _a4("OSC1 Pitch").native_domain.note
     assert "Two native residual codes" in _a4("OSC1 Fine").display_domain.note
+    for parameter in ("OSC1 Detune", "OSC2 Detune"):
+        assert _a4(parameter).native_domain.encoding == "u7"
+        assert _a4(parameter).display_domain.minimum == "-64"
+        assert _a4(parameter).display_domain.maximum == "63"
 
 
 def test_saved_file_hardware_evidence_does_not_promote_a4_live_send() -> None:

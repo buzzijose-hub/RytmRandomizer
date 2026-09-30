@@ -62,6 +62,32 @@ policy. The matrix-wide automatic-request, complete-unsaved-synchronization
 and whole-KIT-restore capabilities are false. Simulation must be labeled and
 cannot grant any of these capabilities.
 
+## Captured A4 offline projection
+
+`cockpit.capture.appliance_a4.appliance_snapshot_from_a4_capture()` re-decodes
+the retained saved-KIT frame and verifies its exact native payload and
+fingerprint before projecting 98 mapped controls on each of the four tracks.
+It uses the existing `A4Kit`/`A4Sound` accessors and keeps the retained frame,
+unknown bytes and original capture untouched. Documented-only rows have no
+projected value. Invalid mapped native values refuse projection without
+clipping or substituting simulation values.
+
+`appliance_a4_parameter_encoding(parameter_id)` exposes the per-cell integer
+domain and exact display conversion used by preview mutation. Q8.8 words keep
+their low byte; Q8.7 depths retain every 1/128 step; pitch words retain hidden
+half steps. Detune is a separate bipolar byte in -64..63, rather than an
+oscillator pitch word. FIN is displayed but cannot be independently mutated
+because it shares the pitch word. Unknown selector domains also remain
+immutable. Display strings use integer arithmetic, independent of the active
+Decimal precision. The calibrated Filter 1 domain remains 0..127.00; broader
+codec ranges are labeled as software evidence, not hardware validation.
+
+This metadata grants offline preview eligibility only. The row's default
+protections, categorical choice restrictions, OXI AMP locks and explicit
+per-track/page/parameter scope still apply. Live send and hardware restoration
+remain false, and captured saved values do not claim the instrument's current
+unsaved state.
+
 ## Optional physical input layer
 
 `rytm_randomizer.cockpit.appliance_controls` maps one push encoder plus MUTATE,
