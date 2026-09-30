@@ -52,3 +52,13 @@ Use this when changing the appliance runtime or its captured-value presentation.
 
 See `docs/PI_APPLIANCE_OPERATOR.md`, `docs/PI_APPLIANCE_CAPABILITIES.md` and
 `docs/PI_APPLIANCE_DEPLOYMENT.md` for the current product contract.
+
+Shared lifecycle changes need a passive Studio regression as well as an armed
+or appliance case. Refused commands must not mutate before returning an error;
+state revocation must match its published events. Pin the public session seed
+in software integration journeys whose ready plan depends on generated values,
+and assert that paired fields remain unchanged in positive-send cases. Keep a
+separate generated paired-refusal case. Source/package checksum equality proves
+integrity, not publisher authentication, trusted dependencies or physical Pi
+service validation. Exclude standard log pathname metadata when checking private
+saved content, while asserting the complete application-owned field set.

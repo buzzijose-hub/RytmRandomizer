@@ -49,10 +49,10 @@ pytestmark = pytest.mark.fast
 
 
 @pytest.mark.parametrize(
-    ("contents", "reason"),
+    ("contents", "reason", "from_version", "to_version"),
     [
-        (b"private corrupt content", "unreadable"),
-        (b'{"schema_version":999}', "schema_newer_than_app"),
+        (b"private corrupt content", "unreadable", None, None),
+        (b'{"schema_version":999}', "schema_newer_than_app", 999, 1),
     ],
 )
 def test_profile_refusal_is_observable_without_disclosing_saved_content(
@@ -61,6 +61,8 @@ def test_profile_refusal_is_observable_without_disclosing_saved_content(
     caplog: pytest.LogCaptureFixture,
     contents: bytes,
     reason: str,
+    from_version: int | None,
+    to_version: int | None,
 ) -> None:
     profile_file = tmp_path / "private-profile.json"
     profile_file.write_bytes(contents)
@@ -74,7 +76,21 @@ def test_profile_refusal_is_observable_without_disclosing_saved_content(
     assert metrics.persisted_state_refusals_by_code == {f"appliance_scopes:{reason}": 1}
     record = next(item for item in caplog.records if item.msg == "appliance_profile_load_refused")
     assert record.reason == reason and record.outcome == "preserved_refused"
-    assert "private" not in repr(record.__dict__)
+    assert record.getMessage() == "appliance_profile_load_refused"
+    assert record.args == () and record.exc_info is None and record.stack_info is None
+    standard_fields = logging.makeLogRecord({}).__dict__.keys()
+    application_fields = {
+        key: value
+        for key, value in record.__dict__.items()
+        if key not in standard_fields and key not in {"message", "asctime", "op_id"}
+    }
+    assert application_fields == {
+        "store_id": "appliance_scopes",
+        "reason": reason,
+        "from_version": from_version,
+        "to_version": to_version,
+        "outcome": "preserved_refused",
+    }
 
 
 def _source() -> Snapshot:

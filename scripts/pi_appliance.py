@@ -836,7 +836,10 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--hardware-input",
         action="store_true",
-        help="Use existing app --arm capture composition; UI arming still required",
+        help=(
+            "Enable real MIDI discovery/capture and the existing ArmedApply output capability; "
+            "every output still requires explicit UI arming and confirmation"
+        ),
     )
     parser.add_argument(
         "--simulation",

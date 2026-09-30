@@ -165,3 +165,23 @@ service, transport, output authority or hardware observation is introduced.
 
 Failed receipt files are preserved under
 `output/local/touring-readiness-2026-09-30/checkpoint-7ed2506c/`.
+
+## 2026-09-30 — maintainer lifecycle review and seed-dependent refusal
+
+The clean `569a3214` four-worker suite reported one failure, 10,646 passed,
+five skips and nine warnings in 298.46 seconds. The existing capture-to-send
+software rehearsal drew an unpinned seed and correctly generated a changed
+paired control; its old ready expectation failed. The previous run happened
+to draw a supported candidate. The capabilities agent repairs the existing
+test through the public seed constructor and explicit supported/blocked
+assertions, without altering captured fields or plans. Failed exact-source
+receipts are preserved under `checkpoint-569a3214/` in the continuation bundle.
+
+Eddie's actual PR review at `b613fb3b` separately identified silent passive
+Studio candidate loss on disconnect and state mutation before unarmed DISARM
+refusal. The isolated runtime workstream repairs both while retaining capture,
+Forge and armed safety. Packaging prose now explicitly states unsigned integrity
+checking, unhashed dependency resolution and pending Pi/systemd validation;
+`--hardware-input` names its existing output capability. The saved-content
+privacy assertion inspects application fields rather than source pathnames.
+Replacement integrated acceptance and publication must still run.

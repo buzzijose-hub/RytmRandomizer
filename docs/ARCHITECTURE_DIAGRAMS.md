@@ -27,6 +27,11 @@ flowchart LR
   Pins[Explicit optional input adapter] --> Queue[One kiosk bounded event queue]
   Queue --> Touch
   WS --> Armed[Existing ArmedApply boundary]
+  WS --> DisarmCheck[Check DISARM authority before mutation]
+  DisarmCheck -->|plain unarmed Studio| UnarmedRefusal[Refuse without state changes]
+  DisarmCheck -->|armed or capture or appliance| Cancel
+  Drop[Passive Studio connection loss] --> KeepOffline[Preserve offline candidate and plan]
+  Drop --> Generation
   Scope --> Block[Scoped live APPLY awaits working-state and restore evidence]
   Scope --> History[Existing per-lane HistoryStore pointers]
 ```

@@ -55,6 +55,14 @@ python scripts/pi_appliance.py package --output output/rytm-appliance.tar
 
 This creates a deterministic uncompressed tar, adjacent `.sha256`, and a
 manifest covering source, production web assets, launcher and service templates.
+These are integrity checks against accidental corruption or mismatched files,
+not signature verification or protection against an attacker replacing both
+the archive and its checksum. No authenticated release provenance is supplied
+by this source-package path. The online installer and target wheelhouse build
+resolve dependencies without hash-pinned requirements; recorded wheel hashes
+check the transferred build, not a trusted dependency resolution. The package
+and user-service templates have software tests, but have not been validated on
+physical Pi hardware or through `systemd-analyze verify` on the target.
 `build` checks installed package versions against the existing npm lock, runs the
 shared production build, and writes a bounded `web-build-receipt.json` containing
 clean source SHA, lockfile hash and every asset hash. `package` requires that exact
@@ -198,10 +206,13 @@ Simulation removes the server-minted ARM capability at backend composition;
 neither the touch surface nor the preserved studio surface can grant it. The
 launcher imports only its own checkout or verified release `src` tree, even if
 the interpreter has an editable install pointing to another checkout.
-To enable input-only KIT capture, invoke the same launcher with
+To enable real MIDI discovery and the capture-capable application, invoke the same launcher with
 `serve --hardware-input`; it delegates exactly to the established
 `python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar` composition.
-This is an explicit launch choice. It does not auto-arm an output.
+This explicit launch also makes the existing ArmedApply output capability
+available through Studio. It does not auto-arm an output; every output still
+requires explicit UI arming and exact confirmation. The flag enables this
+complete hardware composition, not an exclusively input-only process.
 
 For supervised hardware-input startup, the operator can create a user-systemd
 override for the backend service that replaces `ExecStart` with the existing

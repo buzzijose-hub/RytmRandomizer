@@ -918,6 +918,12 @@ report. It sits **alongside** them:
   Persistent kit/sound writes are refused outright
   (`KitMutationUnsupportedError`); only RAM-only live-dial CC sends
   transmit.
+- **Shared Studio lifecycle remains coherent.** A passive connection drop
+  cancels input capture and revokes Forge hardware evidence, but preserves its
+  offline candidate and prepared plan. Appliance context or armed authority
+  uses the existing revocation events and teardown. A plain unarmed DISARM
+  refusal occurs before changing intent, candidate, plan or stage state;
+  accepted capture/appliance cancellation and armed DISARM broadcast the result.
 - **Architecture invariants apply unchanged.** `data/` stays a leaf
   (cockpit code may read `data/profiles.py` for CC-number lookups but
   never re-defines a fact table). The `cockpit/` subpackage satisfies

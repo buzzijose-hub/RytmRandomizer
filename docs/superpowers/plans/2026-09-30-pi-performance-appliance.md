@@ -161,3 +161,18 @@ with the operator's actual firmware/channel/backup information and observed
 actions; no simulated or saved-file result counts as hardware restoration.
 The existing STOP, recovery, permission, 72-hour cap and no-self-merge rules
 apply. No monitor, new automation or instrument send is part of this repair.
+
+### Maintainer review continuation
+
+Eddie's review at `b613fb3b` requests two shared Studio lifecycle repairs:
+passive disconnect must not silently discard its offline candidate/plan, and
+a refused plain unarmed DISARM must leave session state unchanged. The runtime
+agent owns `cockpit/ws/handlers.py` and existing lifecycle tests in isolated
+`studio-session-review-fixes`; root owns packaging/flag wording and the existing
+privacy assertion. Capture cancellation, Forge evidence revocation and armed
+output teardown remain mandatory. The capabilities agent separately pins the
+existing software-only capture/send lifecycle's public seed seam, since the
+random industrial preview can correctly refuse a changed paired control.
+Every implementation is merged into this same PR; final clean-source acceptance
+replaces, rather than relabels, failed receipts. Packaging remains unsigned
+integrity checking with unhashed dependency resolution and unvalidated Pi units.
