@@ -48,13 +48,19 @@ existing lockfile; do not generate a second frontend dependency graph.
 ```sh
 cd desktop/web
 npm ci
-npm run build
 cd ../..
+python scripts/pi_appliance.py build
 python scripts/pi_appliance.py package --output output/rytm-appliance.tar
 ```
 
 This creates a deterministic uncompressed tar, adjacent `.sha256`, and a
 manifest covering source, production web assets, launcher and service templates.
+`build` checks installed package versions against the existing npm lock, runs the
+shared production build, and writes a bounded `web-build-receipt.json` containing
+clean source SHA, lockfile hash and every asset hash. `package` requires that exact
+receipt; missing, stale, extra or altered web assets refuse before publication.
+The ordinary `npm run build` command remains useful during development; packaged
+deliverables use the launcher `build` command from the final committed checkout.
 Archive members have stable ordering, timestamps and modes. An archive without
 wheels needs explicitly opted-in online installation. A source package is **not
 an ARM64 native build**. The frontend is architecture independent; Python native

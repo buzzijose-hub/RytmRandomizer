@@ -11,7 +11,7 @@ import subprocess
 import sys
 import tarfile
 from pathlib import Path
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 
 import pytest
 
@@ -209,6 +209,132 @@ def test_packaging_missing_git_is_actionable_before_output(
     with pytest.raises(ValueError, match="Git is required"):
         cli.package(tmp_path / "artifact.tar", web_root=tmp_path, wheelhouse=None)
     assert not (tmp_path / "artifact.tar").exists()
+
+
+def web_project(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    web = tmp_path / "desktop/web"
+    web.mkdir(parents=True)
+    (web / "package-lock.json").write_text('{"lockfileVersion":3,"packages":{}}')
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    monkeypatch.setattr(cli, "committed_source", lambda: ("/full/git", "a" * 40))
+    monkeypatch.setattr(cli.shutil, "which", lambda _name: "/full/npm")
+    return web
+
+
+def fake_web_build(command: list[str], *, cwd: Path, **_kwargs: object) -> str:
+    assert command == ["/full/npm", "run", "build"]
+    (cwd / "dist/assets").mkdir(parents=True, exist_ok=True)
+    (cwd / "dist/index.html").write_text('<script src="/assets/app.js"></script>')
+    (cwd / "dist/assets/app.js").write_text("console.log('shared fixture')")
+    return ""
+
+
+def test_build_writes_exact_receipt_only_after_success(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    web = web_project(tmp_path, monkeypatch)
+    monkeypatch.setattr(cli, "checked", fake_web_build)
+    cli.build()
+    receipt = json.loads((web / "dist" / cli.WEB_BUILD_RECEIPT).read_text())
+    assert receipt["source_sha"] == "a" * 40
+    assert receipt["package_lock_sha256"] == cli.digest((web / "package-lock.json").read_bytes())
+    assert set(receipt["files"]) == {"index.html", "assets/app.js"}
+    cli.verify_web_receipt(web / "dist", "a" * 40)
+
+
+@pytest.mark.parametrize("mismatch", ["source", "lock", "asset", "extra", "missing", "schema"])
+def test_package_refuses_stale_or_tampered_web_receipt_before_output(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mismatch: str
+) -> None:
+    web = web_project(tmp_path, monkeypatch)
+    monkeypatch.setattr(cli, "checked", fake_web_build)
+    cli.build()
+    receipt_path = web / "dist" / cli.WEB_BUILD_RECEIPT
+    if mismatch == "source":
+        monkeypatch.setattr(cli, "committed_source", lambda: ("/full/git", "b" * 40))
+    elif mismatch == "lock":
+        (web / "package-lock.json").write_text('{"packages":{},"changed":true}')
+    elif mismatch == "asset":
+        (web / "dist/assets/app.js").write_text("tampered")
+    elif mismatch == "extra":
+        (web / "dist/extra.js").write_text("not in receipt")
+    elif mismatch == "missing":
+        receipt_path.unlink()
+    else:
+        receipt = json.loads(receipt_path.read_text())
+        receipt["format_version"] = 2
+        receipt_path.write_text(json.dumps(receipt))
+    output = tmp_path / "artifact.tar"
+    with pytest.raises(ValueError, match="receipt"):
+        cli.package(output, web_root=web / "dist", wheelhouse=None)
+    assert not output.exists() and not output.with_suffix(".tar.sha256").exists()
+
+
+def test_build_dependency_mismatch_and_source_change_leave_no_receipt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    web = web_project(tmp_path, monkeypatch)
+    (web / "package-lock.json").write_text(
+        '{"packages":{"node_modules/example":{"version":"1.2.3"}}}'
+    )
+    with pytest.raises(ValueError, match="npm ci"):
+        cli.build()
+    installed = web / "node_modules/example/package.json"
+    installed.parent.mkdir(parents=True)
+    installed.write_text('{"version":"1.2.4"}')
+    with pytest.raises(ValueError, match="npm ci"):
+        cli.build()
+    installed.write_text('{"version":"1.2.3"}')
+    monkeypatch.setattr(cli, "checked", fake_web_build)
+    identities = iter([("/full/git", "a" * 40), ("/full/git", "b" * 40)])
+    monkeypatch.setattr(cli, "committed_source", lambda: next(identities))
+    with pytest.raises(ValueError, match="changed during build"):
+        cli.build()
+    assert not (web / "dist" / cli.WEB_BUILD_RECEIPT).exists()
+
+
+def test_receipt_size_bound_and_nested_receipt_asset_are_verified(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    web = web_project(tmp_path, monkeypatch)
+    monkeypatch.setattr(cli, "checked", fake_web_build)
+    cli.build()
+    nested = web / "dist/assets" / cli.WEB_BUILD_RECEIPT
+    nested.write_text("unrecorded asset with a reserved basename")
+    with pytest.raises(ValueError, match="receipt"):
+        cli.verify_web_receipt(web / "dist", "a" * 40)
+    monkeypatch.setattr(cli, "MAX_RECEIPT_BYTES", 1)
+    with pytest.raises(ValueError, match="oversized"):
+        cli.verify_web_receipt(web / "dist", "a" * 40)
+
+
+def test_valid_build_receipt_is_included_in_verified_package(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    web = web_project(tmp_path, monkeypatch)
+    monkeypatch.setattr(cli, "checked", fake_web_build)
+    cli.build()
+    (tmp_path / "VERSION").write_text("1.34.0")
+    assets = tmp_path / "service-assets"
+    assets.mkdir()
+    (assets / "fixture.service").write_text("fixture")
+    monkeypatch.setattr(cli, "ASSETS", assets)
+    buffer = io.BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w") as source:
+        member = tarfile.TarInfo("pyproject.toml")
+        member.size = 7
+        source.addfile(member, io.BytesIO(b"fixture"))
+    monkeypatch.setattr(
+        cli.subprocess, "run", lambda *_args, **_kwargs: SimpleNamespace(stdout=buffer.getvalue())
+    )
+    output = tmp_path / "artifact.tar"
+    cli.package(output, web_root=web / "dist", wheelhouse=None)
+    metadata = cli.unpack_verified(output, tmp_path / "verified")
+    assert metadata["source_sha"] == "a" * 40
+    assert "web/" + cli.WEB_BUILD_RECEIPT in metadata["files"]
+    assert (tmp_path / "verified/web/assets/app.js").read_bytes() == (
+        web / "dist/assets/app.js"
+    ).read_bytes()
 
 
 def test_kiosk_missing_graphical_session_is_actionable(

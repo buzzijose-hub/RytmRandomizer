@@ -27,12 +27,15 @@ import urllib.error
 import urllib.request
 from logging.handlers import RotatingFileHandler
 from pathlib import Path, PurePosixPath
+from typing import Final
 
-ROOT = Path(__file__).resolve().parents[1]
-ASSETS = ROOT / "installer-assets" / "pi-appliance"
-DEFAULT_PORT = 4317
-MAX_PACKAGE_BYTES = 512 * 1024 * 1024
-MAX_PACKAGE_FILES = 12000
+ROOT: Final[Path] = Path(__file__).resolve().parents[1]
+ASSETS: Final[Path] = ROOT / "installer-assets" / "pi-appliance"
+DEFAULT_PORT: Final[int] = 4317
+MAX_PACKAGE_BYTES: Final[int] = 512 * 1024 * 1024
+MAX_PACKAGE_FILES: Final[int] = 12000
+WEB_BUILD_RECEIPT: Final[str] = "web-build-receipt.json"
+MAX_RECEIPT_BYTES: Final[int] = 256 * 1024
 
 
 class RotatingOutput(io.TextIOBase):
@@ -71,15 +74,113 @@ def digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def package(output: Path, *, web_root: Path, wheelhouse: Path | None) -> None:
-    """Deterministic archive of exact committed source + built web + optional wheels."""
+def committed_source() -> tuple[str, str]:
+    """Resolve exact clean HEAD before assigning any artifact source identity."""
     git = shutil.which("git")
     if git is None:
         raise ValueError("Git is required to package exact committed source; install Git first")
     checked([git, "diff", "--exit-code", "HEAD"], cwd=ROOT)
     source_sha = checked([git, "rev-parse", "HEAD"], cwd=ROOT)
+    return git, source_sha
+
+
+def web_inventory(web_root: Path) -> dict[str, str]:
+    """Hash every bounded regular web asset except the build receipt itself."""
     if not (web_root / "index.html").is_file():
-        raise ValueError("Production assets missing: run npm ci && npm run build in desktop/web")
+        raise ValueError("Production assets missing: run the appliance build command")
+    files: dict[str, str] = {}
+    total = 0
+    for path in sorted(web_root.rglob("*")):
+        if not path.is_file() or path == web_root / WEB_BUILD_RECEIPT:
+            continue
+        if path.is_symlink() or not path.resolve().is_relative_to(web_root.resolve()):
+            raise ValueError("Production assets must be contained regular files")
+        total += path.stat().st_size
+        if total > MAX_PACKAGE_BYTES or len(files) >= MAX_PACKAGE_FILES:
+            raise ValueError("Production assets exceed appliance size limits")
+        files[path.relative_to(web_root).as_posix()] = digest(path.read_bytes())
+    return files
+
+
+def verify_locked_dependencies(web: Path) -> None:
+    """Refuse installed dependency versions that differ from the existing npm lock."""
+    lock = json.loads((web / "package-lock.json").read_text())
+    packages = lock.get("packages") if isinstance(lock, dict) else None
+    if not isinstance(packages, dict):
+        raise ValueError("A packages-based npm lockfile is required; run npm ci in desktop/web")
+    for name, package in packages.items():
+        if not name:
+            continue
+        if (
+            not isinstance(name, str)
+            or not name.startswith("node_modules/")
+            or ".." in PurePosixPath(name).parts
+            or not isinstance(package, dict)
+            or not isinstance(package.get("version"), str)
+        ):
+            raise ValueError("Unsupported npm lockfile entry; run npm ci in desktop/web")
+        installed = web / name / "package.json"
+        if not installed.is_file() and package.get("optional") is True:
+            continue
+        if (
+            not installed.is_file()
+            or json.loads(installed.read_text()).get("version") != package["version"]
+        ):
+            raise ValueError(
+                "Installed frontend dependencies differ from lockfile; run npm ci in desktop/web"
+            )
+
+
+def build() -> None:
+    """Build the shared production frontend and bind its exact output to clean HEAD."""
+    _, source_sha = committed_source()
+    web = ROOT / "desktop/web"
+    receipt_path = web / "dist" / WEB_BUILD_RECEIPT
+    receipt_path.unlink(missing_ok=True)
+    verify_locked_dependencies(web)
+    npm = shutil.which("npm")
+    if npm is None:
+        raise ValueError("npm is required to build the shared production frontend")
+    lock_sha = digest((web / "package-lock.json").read_bytes())
+    checked([npm, "run", "build"], cwd=web, timeout=300)
+    if committed_source()[1] != source_sha:
+        raise ValueError("Committed source changed during build; rebuild the final commit")
+    if digest((web / "package-lock.json").read_bytes()) != lock_sha:
+        raise ValueError("Frontend lockfile changed during build; rebuild the final lockfile")
+    receipt = {
+        "format_version": 1,
+        "source_sha": source_sha,
+        "package_lock_sha256": lock_sha,
+        "files": web_inventory(web / "dist"),
+    }
+    data = (json.dumps(receipt, indent=2, sort_keys=True) + "\n").encode()
+    if len(data) > MAX_RECEIPT_BYTES:
+        raise ValueError("Web build receipt exceeds the size limit")
+    receipt_path.write_bytes(data)
+    print(json.dumps({"source_sha": source_sha, "web_build_receipt": str(receipt_path)}))
+
+
+def verify_web_receipt(web_root: Path, source_sha: str) -> None:
+    """Refuse stale or altered production output before packaging publishes bytes."""
+    path = web_root / WEB_BUILD_RECEIPT
+    if not path.is_file() or path.is_symlink() or path.stat().st_size > MAX_RECEIPT_BYTES:
+        raise ValueError("Missing or oversized web build receipt; run the appliance build command")
+    receipt = json.loads(path.read_bytes())
+    if (
+        not isinstance(receipt, dict)
+        or receipt.get("format_version") != 1
+        or receipt.get("source_sha") != source_sha
+        or receipt.get("package_lock_sha256")
+        != digest((ROOT / "desktop/web/package-lock.json").read_bytes())
+        or receipt.get("files") != web_inventory(web_root)
+    ):
+        raise ValueError("Production web build receipt does not match this source/assets; rebuild")
+
+
+def package(output: Path, *, web_root: Path, wheelhouse: Path | None) -> None:
+    """Deterministic archive of exact committed source + verified web + optional wheels."""
+    git, source_sha = committed_source()
+    verify_web_receipt(web_root, source_sha)
     files: dict[str, bytes] = {}
     source_tar = subprocess.run(
         [
@@ -500,6 +601,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "command",
         choices=(
+            "build",
             "package",
             "install",
             "serve",
@@ -548,7 +650,9 @@ def main(argv: list[str] | None = None) -> None:
     if not 1024 <= args.port <= 65535:
         parser.error("port must be between 1024 and 65535")
     try:
-        if args.command == "package":
+        if args.command == "build":
+            build()
+        elif args.command == "package":
             package(args.output, web_root=args.web_root, wheelhouse=args.wheelhouse)
         elif args.command == "install":
             if args.archive is None:
