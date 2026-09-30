@@ -41,6 +41,7 @@ from ..data.a4_preparation import A4PreparationReportDict
 from ..data.show_bank import ShowBankWorkspaceStateDict
 from ..data.stage import DualMachineStageStateDict
 from ..mutation_targets import MutationTargetsDict
+from ..appliance_controls import APPLIANCE_CONTROL_EVENT
 from .wizard_protocol import WIZARD_COMMAND_TYPES, WIZARD_EVENT_TYPES
 
 # ---------------------------------------------------------------------------
@@ -259,6 +260,7 @@ EVENT_TYPES: Final[frozenset[str]] = (
             EVENT_LIBRARY_CHANGED,
             EVENT_SHOW_BANK_CHANGED,
             EVENT_APPLIANCE_CHANGED,
+            APPLIANCE_CONTROL_EVENT,
         }
     )
     | WIZARD_EVENT_TYPES

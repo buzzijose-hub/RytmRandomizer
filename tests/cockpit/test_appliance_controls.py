@@ -16,9 +16,31 @@ from rytm_randomizer.cockpit.appliance_controls import (
     BoardPinAssignment,
     ConfiguredApplianceControls,
     ControlButtonBinding,
+    make_appliance_control_sink,
 )
 
 pytestmark = pytest.mark.fast
+
+
+def test_configured_input_sink_uses_existing_kiosk_event_contract() -> None:
+    events: list[dict[str, object]] = []
+    adapter = _Input((ApplianceInputEvent("press", "mutate", 1, 1000),))
+    controls = ConfiguredApplianceControls(
+        adapter, make_appliance_control_sink(events.append), _board()
+    )
+    assert controls.poll() == 0 and events == []
+    controls.start()
+    assert controls.poll() == 1
+    assert events == [
+        {
+            "type": "appliance_control_intent",
+            "action": "mutate",
+            "delta": 0,
+            "source": "physical_input",
+        }
+    ]
+    assert controls.poll() == 0  # a physical edge is never replayed
+    controls.stop()
 
 
 class _Input:

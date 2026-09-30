@@ -18,6 +18,7 @@ from ..guardrails.input_validation import require_int, require_text
 ControlSource = Literal["encoder", "encoder_push", "mutate", "undo", "anchor"]
 ControlAction = Literal["focus_step", "activate_focus", "mutate", "undo", "capture_anchor"]
 ControlPinRole = Literal["encoder_a", "encoder_b", "encoder_push", "mutate", "undo", "anchor"]
+APPLIANCE_CONTROL_EVENT: Final[str] = "appliance_control_intent"
 
 _BUTTON_SOURCES: Final[frozenset[ControlSource]] = frozenset(
     {"encoder_push", "mutate", "undo", "anchor"}
@@ -59,6 +60,23 @@ class ApplianceControlIntent:
 
     def to_dict(self) -> dict[str, object]:
         return {"action": self.action, "delta": self.delta, "source": "physical_input"}
+
+
+def make_appliance_control_sink(
+    emit_event: Callable[[dict[str, object]], object],
+) -> Callable[[ApplianceControlIntent], None]:
+    """Wire configured inputs to one kiosk's existing bounded event queue.
+
+    The frontend consumes these intents through its ordinary touch handlers.
+    Select one authenticated kiosk queue rather than broadcasting physical
+    presses to multiple clients. This bridge does not queue or replay commands
+    across a disconnected browser and never opens a GPIO or MIDI device.
+    """
+
+    def emit(intent: ApplianceControlIntent) -> None:
+        emit_event({"type": APPLIANCE_CONTROL_EVENT, **intent.to_dict()})
+
+    return emit
 
 
 @dataclass(frozen=True)
@@ -280,6 +298,7 @@ class ConfiguredApplianceControls:
 
 
 __all__ = [
+    "APPLIANCE_CONTROL_EVENT",
     "ApplianceBoardConfiguration",
     "ApplianceControlIntent",
     "ApplianceControlMapper",
@@ -289,4 +308,5 @@ __all__ = [
     "BoardPinAssignment",
     "ConfiguredApplianceControls",
     "ControlButtonBinding",
+    "make_appliance_control_sink",
 ]
