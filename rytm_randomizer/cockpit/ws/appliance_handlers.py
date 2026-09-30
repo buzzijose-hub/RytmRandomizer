@@ -8,6 +8,7 @@ from typing import Final
 
 from ...observability.logging import get_logger
 from ..appliance import DEVICE_IDS, OPERATIONS, ApplianceWorkspace, context_digest, validated_object
+from ..capture.appliance_a4 import appliance_snapshot_from_a4_capture
 from ..capture.bridge import cockpit_snapshot_from_rytm_capture
 from ..profiles import default_profiles_dir
 from .handlers import HandlerResult, session_is_armed
@@ -48,13 +49,20 @@ async def handle_appliance(cmd: dict[str, object], session: CockpitSession) -> H
             "profile": session.active_profile.profile_id if session.active_profile else None,
         }
     )
-    captured_rytm = session.kit_captures.get("analog_rytm_mk2")
-    source = (
-        session.device.capture_snapshot()
-        if workspace.simulation
-        else (cockpit_snapshot_from_rytm_capture(captured_rytm) if captured_rytm else None)
-    )
-    workspace.sync(source, context=context)
+    if workspace.context != context:
+        captured_rytm = session.kit_captures.get("analog_rytm_mk2")
+        captured_a4 = session.kit_captures.get("analog_four_mk2")
+        source = (
+            session.device.capture_snapshot()
+            if workspace.simulation
+            else (cockpit_snapshot_from_rytm_capture(captured_rytm) if captured_rytm else None)
+        )
+        a4_source = (
+            appliance_snapshot_from_a4_capture(captured_a4)
+            if captured_a4 is not None and not workspace.simulation
+            else None
+        )
+        workspace.sync(source, context=context, a4_source=a4_source)
     if operation != "state":
         expected = cmd.get("expected_revision")
         if (

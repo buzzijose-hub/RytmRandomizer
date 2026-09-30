@@ -20,6 +20,7 @@ from ..data.persisted_state import classify_payload, require_schema_version
 from ..observability.logging import get_logger
 from ..snapshot.mutation_scope import MutationScope, registered_mutation_ids
 from .appliance_capabilities import ApplianceParameterCapability, parameter_capabilities
+from .capture.appliance_a4 import appliance_a4_parameter_encodings
 from .data import MutationCandidate, PadState, ProfileModel, Snapshot, new_ulid
 from .data.rytm_parameter_map import cockpit_parameter_mapping
 from .data.stage import STAGE_DEVICE_IDS, StageDeviceId
@@ -288,7 +289,9 @@ class ApplianceWorkspace:
         self.anchor = None
         self.cursor = 0
 
-    def sync(self, source: Snapshot | None, *, context: str) -> None:
+    def sync(
+        self, source: Snapshot | None, *, context: str, a4_source: Snapshot | None = None
+    ) -> None:
         if context == self.context:
             return
         self.context = context
@@ -298,6 +301,8 @@ class ApplianceWorkspace:
             extra={"revision": self.revision, "simulation": self.simulation},
         )
         self.sources = {} if source is None else {DEVICE_IDS[0]: source}
+        if a4_source is not None and not self.simulation:
+            self.sources[DEVICE_IDS[1]] = a4_source
         if self.simulation:
             rows = parameter_capabilities(DEVICE_IDS[1])
             params = {row.parameter_id: 64 for row in rows}
@@ -363,6 +368,10 @@ class ApplianceWorkspace:
         ] = {}
         candidates: dict[StageDeviceId, MutationCandidate] = {}
         changes: list[dict[str, object]] = []
+        native_encodings = {
+            encoding.parameter_id: encoding for encoding in appliance_a4_parameter_encodings()
+        }
+        native_bounds: dict[StageDeviceId, dict[tuple[int, str], tuple[int, int]]] = {}
         for device_id in devices:
             snapshot = self.sources[device_id]
             scope = self.scopes[device_id]
@@ -370,6 +379,7 @@ class ApplianceWorkspace:
             rows = parameter_capabilities(device_id)
             by_cell: dict[tuple[int, str], ApplianceParameterCapability] = {}
             depths: dict[tuple[int, str], float] = {}
+            bounds: dict[tuple[int, str], tuple[int, int]] = {}
             for pad in snapshot.pads:
                 for key in pad.params:
                     mapping = (
@@ -401,6 +411,11 @@ class ApplianceWorkspace:
                     # Selector/routing policies never receive interpolation, even if unlocked.
                     if row.categorical or row.legal_domain.authority == "unknown":
                         continue
+                    if device_id == DEVICE_IDS[1] and not self.simulation:
+                        encoding = native_encodings.get(key)
+                        if encoding is None or not encoding.offline_mutable:
+                            continue
+                        bounds[(pad.pad_id, key)] = (encoding.raw_minimum, encoding.raw_maximum)
                     by_cell[(pad.pad_id, key)] = row
                     depths[(pad.pad_id, key)] = (
                         self.master_depth
@@ -412,6 +427,7 @@ class ApplianceWorkspace:
                 for cell, value in depths.items()
             ):
                 requests[device_id] = (snapshot, scope, depths, by_cell)
+                native_bounds[device_id] = bounds
         if self.target == "both" and len(requests) != len(devices):
             raise ValueError(
                 "linked BOTH requires mutable unlocked parameters and nonzero depth in each lane"
@@ -428,6 +444,7 @@ class ApplianceWorkspace:
                 seed,
                 target_pad_ids=scope.effective_ids(device_id),
                 parameter_depths=depths,
+                parameter_bounds=native_bounds[device_id] or None,
             )
             candidates[device_id] = candidate
             pads = {pad.pad_id: pad for pad in snapshot.pads}
@@ -443,6 +460,16 @@ class ApplianceWorkspace:
                             "page": row.page,
                             "before": pads[delta.pad_id].params[key],
                             "after": delta.proposed_params[key],
+                            "before_display": (
+                                native_encodings[key].format_display(pads[delta.pad_id].params[key])
+                                if device_id == DEVICE_IDS[1] and not self.simulation
+                                else str(pads[delta.pad_id].params[key])
+                            ),
+                            "after_display": (
+                                native_encodings[key].format_display(delta.proposed_params[key])
+                                if device_id == DEVICE_IDS[1] and not self.simulation
+                                else str(delta.proposed_params[key])
+                            ),
                         }
                     )
         self.candidates = candidates
@@ -575,6 +602,9 @@ class ApplianceWorkspace:
         self, *, provenance: Mapping[str, dict[str, object]], armed: bool
     ) -> dict[str, object]:
         lanes: dict[str, object] = {}
+        native_encodings = {
+            encoding.parameter_id: encoding for encoding in appliance_a4_parameter_encodings()
+        }
         for device_id in DEVICE_IDS:
             source = self.sources.get(device_id)
             selected = self.scopes[device_id].target_ids
@@ -601,6 +631,15 @@ class ApplianceWorkspace:
                             ):
                                 continue
                         values[str(pad.pad_id)] = pad.params[key]
+                encoding = native_encodings.get(row.parameter_id)
+                displayed = {
+                    track: (
+                        encoding.format_display(value)
+                        if encoding is not None and not self.simulation
+                        else str(value)
+                    )
+                    for track, value in values.items()
+                }
                 return {
                     "parameter_id": row.parameter_id,
                     "page": row.page,
@@ -609,6 +648,8 @@ class ApplianceWorkspace:
                     "machine_key": row.machine_key,
                     "value": values.get(str(reference_track)),
                     "values_by_track": values,
+                    "display_value": displayed.get(str(reference_track)),
+                    "display_values_by_track": displayed,
                     "default_protected": row.default_protected,
                     "categorical": row.categorical,
                     "protection_reasons": list(row.protection_reasons),
