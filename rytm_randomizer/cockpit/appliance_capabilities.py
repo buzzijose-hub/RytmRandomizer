@@ -119,6 +119,7 @@ class ApplianceParameterCapability:
     parameter_id: str
     device_id: StageDeviceId
     page: str
+    catalog_section: str
     parameter: str
     machine_key: str | None
     cockpit_key: str | None
@@ -159,6 +160,7 @@ class ApplianceParameterCapability:
             "parameter_id": self.parameter_id,
             "device_id": self.device_id,
             "page": self.page,
+            "catalog_section": self.catalog_section,
             "parameter": self.parameter,
             "machine_key": self.machine_key,
             "cockpit_key": self.cockpit_key,
@@ -220,6 +222,7 @@ def _protection_reasons(
 
 
 def _rytm_capability(mapping: AnalogRytmCcMapping) -> ApplianceParameterCapability:
+    page = "SRC" if mapping.machine_key is not None else mapping.section
     field = (
         RYTM_SOUND_FIELD_BY_NRPN_LSB.get(mapping.nrpn_lsb)
         if mapping.nrpn_msb == 1 and mapping.nrpn_lsb is not None
@@ -231,9 +234,7 @@ def _rytm_capability(mapping: AnalogRytmCcMapping) -> ApplianceParameterCapabili
         if field is not None
         else ((RYTM_FX_OFFSETS[fx_field],) if fx_field else ())
     )
-    key = cockpit_parameter_key(
-        mapping.machine_key or "unknown", mapping.section, mapping.parameter
-    )
+    key = cockpit_parameter_key(mapping.machine_key or "unknown", page, mapping.parameter)
     categorical = mapping.value_kind == "selector" or any(
         word in mapping.parameter.casefold() for word in _SELECTOR_WORDS
     )
@@ -264,7 +265,7 @@ def _rytm_capability(mapping: AnalogRytmCcMapping) -> ApplianceParameterCapabili
     )
     reasons = _protection_reasons(
         ANALOG_RYTM_DEVICE_ID,
-        mapping.section,
+        page,
         mapping.parameter,
         high_risk=mapping.risk == "high" or mapping.mutation_status == "locked_default",
     )
@@ -285,10 +286,11 @@ def _rytm_capability(mapping: AnalogRytmCcMapping) -> ApplianceParameterCapabili
         blockers.append("not_in_appliance_live_scope")
     return ApplianceParameterCapability(
         parameter_id=_parameter_id(
-            ANALOG_RYTM_DEVICE_ID, mapping.section, mapping.parameter, mapping.machine_key
+            ANALOG_RYTM_DEVICE_ID, page, mapping.parameter, mapping.machine_key
         ),
         device_id=ANALOG_RYTM_DEVICE_ID,
-        page=mapping.section,
+        page=page,
+        catalog_section=mapping.section,
         parameter=mapping.parameter,
         machine_key=mapping.machine_key,
         cockpit_key=key,
@@ -553,6 +555,7 @@ def _a4_capability(
         parameter_id=_parameter_id(ANALOG_FOUR_DEVICE_ID, mapping.section, mapping.parameter, None),
         device_id=ANALOG_FOUR_DEVICE_ID,
         page=mapping.section,
+        catalog_section=mapping.section,
         parameter=mapping.parameter,
         machine_key=None,
         cockpit_key=field,

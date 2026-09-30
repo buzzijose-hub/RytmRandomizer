@@ -52,7 +52,7 @@ def test_complete_catalogs_include_nrpn_only_and_native_only_controls() -> None:
     assert len({row.parameter_id for row in rows}) == len(rows)
     rytm = [row for row in rows if row.device_id == ANALOG_RYTM_DEVICE_ID]
     a4 = [row for row in rows if row.device_id == ANALOG_FOUR_DEVICE_ID]
-    assert {(row.machine_key, row.page, row.parameter) for row in rytm} == {
+    assert {(row.machine_key, row.catalog_section, row.parameter) for row in rytm} == {
         (row.machine_key, row.section, row.parameter) for row in ANALOG_RYTM_MANUAL_CC.values()
     }
     assert {row.parameter for row in a4} == set(ANALOG_FOUR_MANUAL_CC) | set(
@@ -63,6 +63,7 @@ def test_complete_catalogs_include_nrpn_only_and_native_only_controls() -> None:
     assert _a4("LFO2 Destination B").nrpn_lsb is not None
     assert _a4("Noise Color").cc_msb is None
     assert _a4("Noise Color").nrpn_lsb is None
+    assert all(row.page == "SRC" for row in rytm if row.machine_key is not None)
 
 
 def test_binding_facts_reference_only_existing_catalog_and_codec_names() -> None:
@@ -205,6 +206,12 @@ def test_tuning_samples_routing_modulation_sequencing_and_oxi_amp_default_locks(
 
 
 def test_rytm_aliases_cc7_and_paired_precision_refusal() -> None:
+    src = _rytm("Tune", "bd_hard")
+    assert src.page == "SRC"
+    assert src.catalog_section == "bd_hard"
+    assert src.cockpit_key == "tun"
+    assert src.send_support == "conditional_cc7"
+    assert _rytm("Decay", "sy_raw").cockpit_key == "dec"
     row = _rytm("Filter Frequency")
     assert row.cockpit_key == "flt"
     assert row.send_support == "conditional_cc7"

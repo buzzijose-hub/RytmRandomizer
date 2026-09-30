@@ -19,6 +19,7 @@ validation references, explicit blockers, and protection defaults.
 |---|---|
 | `parameter_id` | Stable device/engine/page/parameter identity; labels are not unique across Rytm engines. |
 | `cockpit_key` | Existing Rytm compact key or A4 native field name; an alias confers no output authority. |
+| `page`, `catalog_section` | UI sound page and original source section. Rytm engine-named catalog sections are normalized to the SRC page. |
 | `native_fields`, `native_offsets` | Existing decoded saved-KIT fields and track-relative offsets (Rytm FX offsets are kit-relative). No guessed MIDI-to-offset conversion. |
 | `native_domain` | Stored representation, including pitch, Q8.8 and Q8.7 precision. |
 | `display_domain`, `legal_domain` | Exact textual bounds/steps or listed enum values, with `catalog`, `codec_range`, `calibration`, or `unknown` authority. A codec range describes supported software values, not physical validation of every possible value. |
@@ -30,7 +31,7 @@ validation references, explicit blockers, and protection defaults.
 | `default_protected`, `protection_reasons` | Application-write locks. They do not disable the instruments' own LFOs, scenes, parameter locks or performance control. |
 
 For Rytm, resolve `cockpit_parameter_mapping(pad.machine, key)` and then the row
-whose `(machine_key, page, parameter)` matches the canonical mapping. A global
+whose `(machine_key, catalog_section, parameter)` matches the canonical mapping. A global
 dictionary keyed only by `tun` or `dec` loses engine-specific domains. Actual
 capture promotion is still decided by the canonical capture bridge, and
 ArmedApply remains the Cockpit's output boundary. A matrix row cannot arm,
