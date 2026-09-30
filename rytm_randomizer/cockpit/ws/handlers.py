@@ -2388,17 +2388,20 @@ def build_armed_watchdog(
         phase_lost = state.phase not in ("listening", "armed")
         if phase_lost:
             cancel_pending_capture(session)
-            session.current_candidate = None
-            session.current_send_plan = None
-            if session.appliance is not None and session.appliance.context is not None:
-                session.appliance.revoke_context()
-                if (
-                    session.armed_apply is None
-                    and not session.device.is_armed
-                    and broadcaster is not None
-                ):
-                    for event in _revoked_appliance_events(session):
-                        broadcaster(event)
+            # Passive Studio previews survive disconnects. Appliance context
+            # and armed plans (through teardown below) must be revoked.
+            if session.appliance is not None:
+                session.current_candidate = None
+                session.current_send_plan = None
+                if session.appliance.context is not None:
+                    session.appliance.revoke_context()
+                    if (
+                        session.armed_apply is None
+                        and not session.device.is_armed
+                        and broadcaster is not None
+                    ):
+                        for event in _revoked_appliance_events(session):
+                            broadcaster(event)
         if phase_lost and session.show_kit_forge is not None:
             changed = session.show_kit_forge.revoke_hardware_evidence()
             if changed and broadcaster is not None:
@@ -2658,14 +2661,14 @@ async def _handle_disarm(_cmd: dict[str, object], session: CockpitSession) -> Ha
 
     was_armed = session.armed_apply is not None or session.device.is_armed
     had_capture = session.capture_cancel is not None
+    if not was_armed and not had_capture and session.appliance is None:
+        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "session is not armed"))
     _teardown_armed_state(session)
     # EXPLICIT disarm is the only thing that clears hardware intent: the
     # operator has chosen to go passive, so a subsequent mock SEND is what
     # they asked for. Involuntary auto-disarms deliberately leave the flag
     # set so SEND refuses instead of silently writing to the mock.
     session.hardware_intent = False
-    if not was_armed and not had_capture and session.appliance is None:
-        return HandlerResult(ack=_error_ack(ERR_VALIDATION, "session is not armed"))
     return HandlerResult(
         ack={"ok": True, "armed": False},
         events=[
