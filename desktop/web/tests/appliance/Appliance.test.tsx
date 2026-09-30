@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testi
 import { App } from '../../src/App';
 import { Appliance } from '../../src/appliance/Appliance';
 import { useCockpitStore } from '../../src/state';
-import { isEvent, type ApplianceState } from '../../src/ws/protocol';
+import { isEvent, type ApplianceState, type CommandAck } from '../../src/ws/protocol';
 import { connectionListening, diagnosticsHealthy, diagnosticsFaulty } from '../cockpit/_fixtures';
 
 import { ApplianceFakeClient, applianceState, candidateState } from './fixtures';
@@ -184,6 +184,23 @@ describe('touch performance appliance', () => {
     fireEvent.click(within(screen.getByRole('heading', { name: 'CONNECTION / CAPTURE' }).parentElement!).getByRole('button', { name: 'A4' })); fake.ackQueue.push({ request_id: 'scan', ok: true, capture_enabled: true, capture_inputs: ['A4 IN'] }); click('SCAN INPUTS'); await settled(fake);
     expect(fake.sent.at(-1)).toEqual({ type: 'list_capture_inputs', device_id: 'analog_four_mk2' });
     expect(screen.getByText(/No automatic request/)).toBeInTheDocument();
+  });
+
+  it('keeps passive capture cancellable from the fixed header after leaving the capture page', async () => {
+    const fake = await mount(applianceState({ mode: 'production' })); click('CAPTURE / RESYNC');
+    fake.ackQueue.push({ request_id: 'scan', ok: true, capture_enabled: true, capture_inputs: ['EXACT INPUT'] }); click('SCAN INPUTS'); await settled(fake);
+    fireEvent.change(screen.getByLabelText('Exact capture input'), { target: { value: 'EXACT INPUT' } });
+    let resolve!: (ack: CommandAck) => void; fake.responseQueue.push(new Promise((done) => { resolve = done; }));
+    click('LISTEN FOR KIT CAPTURE');
+    expect(screen.getByRole('button', { name: 'CANCEL CAPTURE' })).toBeEnabled(); expect(screen.queryByRole('button', { name: 'ARM…' })).not.toBeInTheDocument();
+    click('HOME'); expect(screen.getByRole('button', { name: 'CANCEL CAPTURE' })).toBeEnabled();
+    click('CANCEL CAPTURE'); await settled(fake);
+    expect(fake.sent).toContainEqual({ type: 'disarm' }); expect(fake.sent.at(-1)).toMatchObject({ type: 'appliance', operation: 'state' });
+    const count = fake.sent.length;
+    await act(async () => resolve({ request_id: 'old-capture', ok: true, appliance: applianceState({ mode: 'production', armed: true, revision: 99 }) }));
+    expect(fake.sent).toHaveLength(count); expect(screen.getByText('PASSIVE / DISARMED')).toBeInTheDocument();
+    click('ARM…'); expect(screen.getByRole('dialog')).toHaveTextContent('ARM EXACT OUTPUT'); expect(screen.getByRole('button', { name: 'CONFIRM ARM' })).toBeDisabled();
+    expect(fake.sent.some((request) => request.type === 'arm')).toBe(false);
   });
 
   it('reads existing diagnostics and offers reduced motion and the full studio', async () => {

@@ -154,6 +154,7 @@ export function Appliance({ client }: { client: CockpitClient }): JSX.Element {
   const controller = useAppliance(client);
   const rootRef = useRef<HTMLElement>(null);
   const { state, busy } = controller;
+  const capturePending = controller.pendingCommand === 'capture_current_kit';
   const connection = useCockpitStore((store) => store.connection);
   const [page, setPage] = useState<Page>('perform');
   const [tool, setTool] = useState<Tool>('profiles');
@@ -194,7 +195,7 @@ export function Appliance({ client }: { client: CockpitClient }): JSX.Element {
   };
   const disarm = async (): Promise<void> => { setConfirmation(null); const ack = await controller.command({ type: 'disarm' }); if (ack?.ok) await controller.execute('state'); };
   return <main ref={rootRef} className="appliance" data-testid="appliance" aria-label="RytmRandomizer performance appliance">
-    <header className="appliance-top"><a href="#/appliance" aria-label="RytmRandomizer appliance home" onClick={() => setPage('perform')}><span className="appliance-logo" aria-hidden="true">RR</span><span>RYTM RANDOMIZER<small>PERFORMANCE APPLIANCE</small></span></a><span className={`appliance-mode ${state?.mode === 'simulation' ? 'simulation' : ''}`}>{state === null ? 'DISCONNECTED' : state.mode === 'simulation' ? 'SIMULATION / NO MIDI' : state.armed ? 'OUTPUT ARMED' : 'PASSIVE / DISARMED'}</span><button type="button" className="appliance-disarm" disabled={state === null || (!state.armed && (busy || state.mode === 'simulation'))} onClick={() => state?.armed ? void disarm() : state !== null && setConfirmation({ kind: 'arm', revision: state.revision })}>{state?.armed ? 'DISARM' : 'ARM…'}</button></header>
+    <header className="appliance-top"><a href="#/appliance" aria-label="RytmRandomizer appliance home" onClick={() => setPage('perform')}><span className="appliance-logo" aria-hidden="true">RR</span><span>RYTM RANDOMIZER<small>PERFORMANCE APPLIANCE</small></span></a><span className={`appliance-mode ${state?.mode === 'simulation' ? 'simulation' : ''}`}>{state === null ? 'DISCONNECTED' : state.mode === 'simulation' ? 'SIMULATION / NO MIDI' : state.armed ? 'OUTPUT ARMED' : 'PASSIVE / DISARMED'}</span><button type="button" className="appliance-disarm" disabled={state === null || (!state.armed && !capturePending && (busy || state.mode === 'simulation'))} onClick={() => state?.armed || capturePending ? void disarm() : state !== null && setConfirmation({ kind: 'arm', revision: state.revision })}>{state?.armed ? 'DISARM' : capturePending ? 'CANCEL CAPTURE' : 'ARM…'}</button></header>
     <div className="appliance-content" key={page}>
       {state === null ? <section className="appliance-unavailable"><h1>PASSIVE / WAITING</h1><p>Connect the authenticated sidecar to receive current device catalogs and session state.</p><button type="button" onClick={() => client.retryNow()}>RETRY CONNECTION</button><a href="#/">OPEN STUDIO</a></section> : <>
         {state.mode === 'simulation' && (state.target !== 'rytm' || page === 'a4' || page === 'both') && <p className="appliance-simulation-values">A4 SIMULATED 7-BIT VALUES / 0–127 / NOT NATIVE DISPLAY PRECISION</p>}
