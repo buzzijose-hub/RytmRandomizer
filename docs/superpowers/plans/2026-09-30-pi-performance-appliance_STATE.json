@@ -186,14 +186,31 @@
       "note": "Real temp archive/files; OS services/processes faked, Linux symlinks represented by test pointer facade. Not on-Pi acceptance."
     },
     {
-      "scope": "final integrated code backend",
+      "scope": "pre-final typed-state backend checkpoint",
       "tree": "8dd16377b776d39fdf946f487d9c17cf647f0746",
       "result": "passed",
       "passed": 10620,
       "skipped": 5,
       "duration_seconds": 199.484,
       "command": "python -m pytest -n4 -o faulthandler_timeout=90 --cov=rytm_randomizer --cov-branch --cov-report=term-missing --cov-report=xml --cov-report=json --junitxml=backend-tests.xml -q",
-      "note": "Subsequent docs-only review corrections preserve production/test trees exactly; final receipts record both source SHAs and equality proof."
+      "note": "Later typed-record/canonical-validator/native-iterator repairs require final backend rerun; its exact source-bound receipt is in the ignored acceptance directory."
+    },
+    {
+      "scope": "final unchanged frontend tree",
+      "tree": "34fa5ae020098867b5b62525756da2fa04a2cf4a",
+      "result": "passed",
+      "passed": 1075,
+      "files": 78,
+      "coverage": "100%:3939 statements,3097 branches,1375 functions,3399 lines",
+      "duration_seconds": 48.093
+    },
+    {
+      "scope": "browser regression",
+      "tree": "34fa5ae020098867b5b62525756da2fa04a2cf4a",
+      "result": "passed",
+      "passed": 33,
+      "skipped": 2,
+      "duration_seconds": 56.5
     }
   ],
   "integration_shas": [
@@ -215,7 +232,9 @@
     "c4dbee6a",
     "3f1c2ba1",
     "abf0ea61",
-    "a685df2d"
+    "a685df2d",
+    "8067387e",
+    "226aa0f0"
   ],
   "blockers": [
     "physical Raspberry Pi unavailable",
@@ -236,10 +255,10 @@
   },
   "review": {
     "architecture": "canonical facts870d3227; public native type facade preserves frozen AL02 source; independent reviewer approved narrow downward dual_machine-to-data matrix declarationa0db2724",
-    "types": "validated DTOs repaired9051e849; constants runtime repair",
+    "types": "Final scoped review repaired fixed state/lane/parameter/provenance/history/profile-summary/document contracts in226aa0f0; strict23modules and94focusedtests pass, changed facade modules100%branchcoverage.",
     "safety": "passive capture touch cancel repaired746eea41",
     "observability": "runtime d3e934ce, root0a0b1281, controls eeffe1a9",
-    "abstraction": "HistoryStore pointers authoritative, canonicaltargetfacts; rollback2993393 restores previous release service assets throughsharedrender/activationhelpers and preserves autostartchoice.",
+    "abstraction": "HistoryStore pointers authoritative, canonicaltargetfacts; rollback2993393 restores previous release service assets throughsharedrender/activationhelpers and preserves autostartchoice. Final review reused canonical require_object in226aa0f0 and public A4Kit.iter_sounds in8067387e;126nativeprojection tests pass.",
     "tests": "Full backend10608pass at3f1c2ba1; Gate1 all23modules100%; frontend1075pass100%; lifecycle90focusedpass ata685df2d. Final clean-commit rerun recorded in external source-bound receipts.",
     "docs": "Operator/deployment/CONTRIBUTING and architecture/diagram updated; lessons capture source binding, native precision, modal visibility and release recovery.",
     "maintainability": "Independent review complete: wheelhouse source identity, retained immutable inventory, prior-release service activation, UTF8 metadata and compact modal action visibility repaired and regression-tested through a685df2d and99a0e419.",
