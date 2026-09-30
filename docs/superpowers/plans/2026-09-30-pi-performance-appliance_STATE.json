@@ -294,6 +294,25 @@
       "result": "passed; unarmed, no output selected, unsaved_sends=0; process stopped; no capture or hardware mutation",
       "count": 2,
       "receipt": "output/local/touring-readiness-2026-09-30/usb-input-discovery.json"
+    },
+    {
+      "scope": "computer continuation integrated backend",
+      "tree": "2b63621b67bac7809308f513bf4064bcfba75364",
+      "command": "full pytest -n4 branch coverage; touched coverage; lint/types/dead code",
+      "result": "passed; all 25 touched production modules 100% lines/branches; eight serial checks exit zero; no real hardware actions",
+      "passed": 10653,
+      "skipped": 5,
+      "duration_seconds": 197.02,
+      "receipt": "output/local/touring-readiness-2026-09-30/backend-verification.json"
+    },
+    {
+      "scope": "computer continuation frontend unit coverage",
+      "tree": "569a3214cc4ec0e0432f286ec693233959ec7bba",
+      "command": "npm run test:coverage -- --maxWorkers=2 --cache=false",
+      "result": "passed; statements/branches/functions/lines 100%; final source applicability is separately verified",
+      "passed": 1076,
+      "files": 78,
+      "receipt": "output/local/touring-readiness-2026-09-30/frontend-coverage-receipt.json"
     }
   ],
   "integration_shas": [
@@ -325,7 +344,9 @@
     "c0e0dcc8",
     "025e2551",
     "4d674d5f",
-    "577993dd"
+    "577993dd",
+    "6c36f9ae",
+    "61815097"
   ],
   "blockers": [
     "physical Raspberry Pi unavailable",

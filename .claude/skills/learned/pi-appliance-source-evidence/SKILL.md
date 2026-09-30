@@ -62,3 +62,10 @@ separate generated paired-refusal case. Source/package checksum equality proves
 integrity, not publisher authentication, trusted dependencies or physical Pi
 service validation. Exclude standard log pathname metadata when checking private
 saved content, while asserting the complete application-owned field set.
+
+Browser journeys must observe the authenticated socket that delivers session
+bootstrap, rather than the first matching URL: React StrictMode can create and
+close a throwaway connection. When no public seed control exists, a bounded
+public REGEN/inspection/Target workflow may select a genuinely supported scope.
+Assert the refused broad plan, retained seed/source/proposed values and exact
+supported packet subset; never add a production test backdoor or replay SEND.

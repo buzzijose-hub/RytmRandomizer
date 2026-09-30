@@ -185,3 +185,26 @@ checking, unhashed dependency resolution and pending Pi/systemd validation;
 `--hardware-input` names its existing output capability. The saved-content
 privacy assertion inspects application fields rather than source pathnames.
 Replacement integrated acceptance and publication must still run.
+
+## 2026-09-30 — integrated backend acceptance and browser scope correction
+
+At clean `2b63621b`, the full four-worker backend suite passed 10,653 tests,
+with five documented skips and eight warnings in 197.02 seconds. All 25 touched
+production modules reached 100% line/branch coverage; Ruff, Black, isort,
+strict touched typing, Vulture80 and touched dead-code checks passed. The
+frontend unit source at `569a3214` passed 1,076 cases in 78 files with 100%
+measured coverage. Exact input equivalence and final artifacts remain in the
+continuation receipts.
+
+The first replacement browser run at `2b63621b` had 32 passes, two existing
+skips and one failure after the configured retries: its broad random dry-run
+plan correctly refused a changed paired control. The browser workstream now
+inspects each genuine broad plan, selects a supported pad through public
+Target controls without changing its seed, and checks exact plan packets. A
+separate case checks paired refusal and its visible explanation. The first
+focused attempt at `6c36f9ae` failed both running cases because its observer
+selected StrictMode's first throwaway socket. `61815097` instead observes the
+socket that delivers actual session bootstrap. No production shortcut, plan
+rewrite, timeout increase or assertion removal was used. Both failed browser
+attempts remain preserved. Final browser/build/package and hosted gates must
+still validate the replacement delivery source.
