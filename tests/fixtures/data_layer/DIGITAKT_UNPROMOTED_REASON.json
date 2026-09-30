@@ -1,1 +1,1 @@
-"Digitakt offsets are candidate-only; saved-project parameter byte offsets, value encodings, per-track stride, and exact fixture evidence must be promoted before real send"
+"Digitakt sends are not enabled: only MK1 track 1 filter frequency is hardware-verified; per-track stride, other parameters, and a planner that emits the verified field must be promoted before real send"

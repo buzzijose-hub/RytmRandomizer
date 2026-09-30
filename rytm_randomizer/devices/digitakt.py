@@ -12,9 +12,10 @@ count and SysEx family byte. Per
 ``devices/<family>.py`` plus strategy modules under
 ``devices/strategies/`` -- never a sibling subpackage at the package root.
 
-**Send authority: none.** Both devices accept synthetic candidate snapshots but plan
-zero-event, not-ready mutations, because Digitakt saved-project offsets
-have never been validated against hardware. See
+**Send authority: none.** The MK1 decodes and validates real PATTERN dumps
+(one parameter, track 1 filter frequency, is hardware-verified); the
+Digitakt II decodes nothing yet. Both plan zero-event, not-ready mutations
+until a planner that emits verified fields is promoted. See
 :mod:`rytm_randomizer.devices.strategies.digitakt_mutation_planner`.
 """
 
@@ -32,6 +33,10 @@ from .strategies.digitakt_message_renderer import DigitaktMessageRenderer
 from .strategies.digitakt_mutation_planner import (
     DigitaktMutationPlan,
     DigitaktMutationPlanner,
+)
+from .strategies.digitakt_pattern_codec import (
+    DIGITAKT_MK1_PATTERN_LAYOUT,
+    DigitaktPatternLayout,
 )
 from .strategies.digitakt_snapshot_decoder import (
     DigitaktKitSnapshot,
@@ -110,6 +115,7 @@ class DigitaktDevice:
         display_order: int,
         track_count: int,
         family_byte: int,
+        pattern_layout: DigitaktPatternLayout | None = None,
     ) -> None:
         """Compose the three capability strategies for one generation."""
 
@@ -125,6 +131,7 @@ class DigitaktDevice:
         self.snapshot_decoder: DigitaktSnapshotDecoder = DigitaktSnapshotDecoder(
             family_byte=family_byte,
             device_id=device_id,
+            pattern_layout=pattern_layout,
         )
         self.mutation_planner: DigitaktMutationPlanner = DigitaktMutationPlanner(
             track_domain=track_domain,
@@ -188,6 +195,7 @@ def build_digitakt_mk1_device() -> DigitaktDevice:
         display_order=_MK1_DISPLAY_ORDER,
         track_count=DIGITAKT_MK1_TRACK_COUNT,
         family_byte=DIGITAKT_MK1_FAMILY,
+        pattern_layout=DIGITAKT_MK1_PATTERN_LAYOUT,
     )
 
 

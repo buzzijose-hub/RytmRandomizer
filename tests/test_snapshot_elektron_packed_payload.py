@@ -52,6 +52,33 @@ def test_packed_payload_contract_round_trips_device_facts() -> None:
     assert encoded.encoded_length == len(_PACKED) + 5
 
 
+def test_trailer_length_keeps_the_low_14_bits_of_a_body_over_16383_bytes() -> None:
+    """A Digitakt MK1 PATTERN is 31598 packed bytes; its trailer says 15219."""
+
+    unpacked = bytes(range(256)) * 108  # 27648 bytes, the real pattern size
+    encoded = encode_elektron_packed_payload(
+        unpacked,
+        checksum_start=0,
+        length_adjustment=5,
+        expected_packed_size=31598,
+        device_label=_LABEL,
+        mask_order=Elektron7BitMaskOrder.MSB_FIRST,
+    )
+    assert encoded.encoded_length == (31598 + 5) & 0x3FFF == 15219
+    assert encoded.trailer[2:] == encode_elektron_u14(15219)
+
+    validated = validate_elektron_packed_payload(
+        encoded.packed,
+        encoded.trailer,
+        checksum_start=0,
+        length_adjustment=5,
+        expected_packed_size=31598,
+        expected_trailer_size=ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE,
+        device_label=_LABEL,
+    )
+    assert validated == encoded
+
+
 def test_packed_payload_contract_supports_native_msb_order_and_dynamic_size() -> None:
     encoded = encode_elektron_packed_payload(
         _UNPACKED,

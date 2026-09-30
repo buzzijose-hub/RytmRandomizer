@@ -96,7 +96,7 @@ on one line for an existing module, you probably need a new module instead.
 | `data/param_maps.py`  | Per-machine CC maps, anchors, safe ranges, deltas, zones. Pure data.            |
 | `data/analog_four_midi.py` | Manual-backed Analog Four CC mappings from Appendix D. Pure data.        |
 | `data/digitakt_midi.py` | Separate manual-backed Digitakt MK1 and II CC/NRPN mappings and audio-capable track-count limits. Pure data; no hardware or saved-project authority. |
-| `data/digitakt_saved_kit_layout.py` | Synthetic candidate Digitakt family/name-layout facts and an explicit unpromoted-offset posture; not a verified hardware dump layout. |
+| `data/digitakt_saved_kit_layout.py` | Digitakt dump facts verified from real MK1 PATTERN captures (family/object bytes, envelope, exact sizes, track 1 filter frequency offset) and the explicit unpromoted-send posture. Digitakt II facts and per-track stride are unverified. |
 | `data/analog_four_display.py` | Analog Four front-panel scales, labels, and CC/NRPN-ready patch-value metadata. Pure data. |
 | `data/midi_event_kinds.py` | Canonical typed CC/NRPN event kinds and manual skip-code vocabulary. Pure data. |
 | `data/analog_four_sysex_calibration.py` | Operator-captured Analog Four SysEx field/native-encoding metadata and immutable hardware-write validation evidence; pure schema-agreement and exact value checks. |
@@ -154,7 +154,8 @@ on one line for an existing module, you probably need a new module instead.
 | `snapshot/mutation_scope.py` | Device-neutral immutable include-target/deny-lock scope and lazily registry-derived mutation domains; empty targets mean the full device domain before locks are subtracted. |
 | `devices/saved_kit_capture.py` | Optional registry-resolved saved-KIT capture capability and canonical round-trip frame DTO; keeps Cockpit from importing concrete family codecs. |
 | `devices/digitakt.py` | Registry composition for passive Digitakt MK1 and II devices; no saved-KIT capture capability or Cockpit listener. |
-| `devices/strategies/digitakt_snapshot_decoder.py` | Pure synthetic candidate prefix/name intake with strict slot and family checks; does not validate a real saved-project dump. |
+| `devices/strategies/digitakt_snapshot_decoder.py` | Strict slot/family checks; fully validates and unpacks a MK1 PATTERN dump through the pattern codec, and accepts any other same-family payload as undecoded `unverified` evidence. Never reads a guessed name. |
+| `devices/strategies/digitakt_pattern_codec.py` | Digitakt PATTERN envelope decode/encode on the shared `snapshot/elektron_packed_payload.py` contract (MSB-first packing, 14-bit checksum and low-14-bit length field); byte-exact round trip on real captures. No I/O, no send authority. |
 | `devices/strategies/digitakt_mutation_planner.py` | Validates generation, depth, targets, and locks, then returns a zero-event, not-ready plan for every accepted request. |
 | `devices/strategies/digitakt_message_renderer.py` | Inert mock-message and CC-triple formatting seam; the Digitakt planner produces no events. |
 | `devices/strategies/digitakt_track_domain.py` | Digitakt generation constants and specialization of the shared one-based track domain. |

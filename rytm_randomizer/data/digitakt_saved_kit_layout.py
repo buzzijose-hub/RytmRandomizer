@@ -1,71 +1,95 @@
-"""Candidate Digitakt saved-project SysEx layout facts.
+"""Digitakt SysEx dump layout facts.
 
-**Promotion status: CANDIDATE.** Unlike
-:mod:`rytm_randomizer.data.analog_four_saved_kit_layout`, nothing in this
-module is promoted. The one hardware-verified fact is the MK1 family byte
-(``0x0A``), read from real PATTERN dumps pinned by
-``tests/test_digitakt_real_captures.py``. The name position is still the
-repository's synthetic candidate format: on a real dump it reads header
-bytes, not a name. ``DIGITAKT_II_FAMILY_BYTE`` is an unverified guess.
+**Verified (Digitakt MK1, OS 1.52A)** from two real PATTERN dumps captured by
+a hardware verifier and pinned byte for byte by
+``tests/test_digitakt_real_captures.py`` and
+``tests/test_devices_strategies_digitakt_pattern_codec.py``:
 
-Deliberately **absent** here, and required before any Digitakt mutation can
-become sendable (``.claude/rules/targeted-mutation-safety.md`` #6):
+* the MK1 family byte, the PATTERN object byte and the 9-byte header,
+* the envelope: MSB-first 7-bit packing (the ``BE EF BA CE`` kit marker
+  unpacks only in that order), a 14-bit checksum over the whole packed body,
+  and a 14-bit length field holding ``(packed + 5) & 0x3FFF``,
+* the exact packed and unpacked sizes, and a byte-exact re-encode,
+* **one** parameter: track 1 filter frequency, a plain 0..127 byte. The two
+  captures differ in exactly that unpacked byte (0 -> 127) plus the checksum.
 
-* saved-project parameter byte offsets,
-* per-track stride and value encodings,
-* unpacked / packed / framed payload sizes,
-* fixture-backed byte-diff isolation and exact re-encode evidence.
+A Digitakt has no separate KIT dump: SETTINGS > SYSEX DUMP > SYSEX SEND >
+PATTERN sends the pattern together with the kit it plays, so "kit" in these
+names means the sound data *inside* a pattern dump.
 
-Those must be promoted from real captures. Inferring them from the live CC
-facts in :mod:`rytm_randomizer.data.digitakt_midi` is explicitly forbidden
-by that rule -- CC assignments describe working-RAM dials, not the layout
-of a stored project.
+**Not verified, and deliberately absent as facts** (required before anything
+beyond that one field can be written; ``.claude/rules/targeted-mutation-
+safety.md`` #6):
+
+* per-track stride. The dump strongly suggests eight 160-byte sound blocks
+  starting at unpacked offset 25136, with filter frequency 68 bytes in -- but
+  a stride is promoted only from a matched capture on another track,
+* any other parameter, and mid-range value encoding (only 0 and 127 seen),
+* everything about the Digitakt II, including its family byte.
+
+Never infer these from the live CC facts in
+:mod:`rytm_randomizer.data.digitakt_midi`: CC assignments describe
+working-RAM dials, not the layout of a stored dump.
 """
 
 from __future__ import annotations
 
 from typing import Final
 
-#: Candidate family selectors, used only by synthetic-layout intake.
-#: Real captures must validate these values and positions before promotion.
-DIGITAKT_MK1_FAMILY_BYTE: Final[int] = 0x0A  # verified: real MK1 PATTERN dump, OS 1.52A
+#: Byte after the Elektron manufacturer id. MK1 verified from real dumps
+#: (it was a 0x0C guess until then); the Digitakt II value is still a guess.
+DIGITAKT_MK1_FAMILY_BYTE: Final[int] = 0x0A
 DIGITAKT_II_FAMILY_BYTE: Final[int] = 0x10
 
-#: Candidate payload type byte, mirroring the A4 candidate-kit convention.
-DIGITAKT_CANDIDATE_KIT_TYPE_BYTE: Final[int] = 0x07
+#: Object byte at payload index 5 of a PATTERN dump.
+DIGITAKT_PATTERN_OBJECT_BYTE: Final[int] = 0x50
 
-#: Snapshot layout discriminators, mirroring the A4 vocabulary so reports
-#: and decoders speak one language across device families.
-DIGITAKT_SNAPSHOT_LAYOUT_CANDIDATE: Final[str] = "candidate"
-DIGITAKT_SNAPSHOT_LAYOUT_SAVED_KIT: Final[str] = "saved_kit"
+#: Envelope, identical in shape to the Analog Four saved-kit envelope.
+DIGITAKT_PATTERN_HEADER_SIZE_WITHOUT_F0: Final[int] = 9
+DIGITAKT_PATTERN_TRAILER_SIZE: Final[int] = 4
+DIGITAKT_PATTERN_CHECKSUM_PACKED_OFFSET: Final[int] = 0
+DIGITAKT_PATTERN_LENGTH_ADJUSTMENT: Final[int] = 5
 
-#: Kit-name field in a candidate payload: ASCII in the clear immediately
-#: after the 3-byte manufacturer id + 1 family/type byte, matching the
-#: shape the shared ``read_ascii_name`` helper already handles.
-DIGITAKT_KIT_NAME_OFFSET: Final[int] = 4
-DIGITAKT_KIT_NAME_LENGTH: Final[int] = 16
+#: Exact MK1 PATTERN sizes (framed = F0 + header + packed + trailer + F7).
+DIGITAKT_MK1_PATTERN_PACKED_SIZE: Final[int] = 31598
+DIGITAKT_MK1_PATTERN_UNPACKED_SIZE: Final[int] = 27648
+DIGITAKT_MK1_PATTERN_FRAMED_SIZE: Final[int] = 31613
 
-#: Flipped to ``True`` only by the change set that lands hardware-verified
-#: offsets together with their capture fixtures. The current planner is
-#: independently hard-blocked; changing this flag alone cannot enable sends.
+#: The one promoted parameter: MK1 track 1 filter frequency, unpacked offset,
+#: stored as the plain 0..127 value the FREQ display shows.
+DIGITAKT_MK1_TRACK1_FILTER_FREQUENCY_OFFSET: Final[int] = 25204
+
+#: Snapshot layout discriminators.
+DIGITAKT_SNAPSHOT_LAYOUT_PATTERN: Final[str] = "pattern"
+DIGITAKT_SNAPSHOT_LAYOUT_UNVERIFIED: Final[str] = "unverified"
+
+#: Flipped to ``True`` only by the change set that lands a planner able to
+#: emit the promoted field(s). The planner is independently hard-blocked;
+#: changing this flag alone cannot enable sends.
 DIGITAKT_OFFSETS_PROMOTED: Final[bool] = False
 
 #: Operator-facing explanation used verbatim as a plan ``readiness_reason``.
 DIGITAKT_UNPROMOTED_REASON: Final[str] = (
-    "Digitakt offsets are candidate-only; saved-project parameter byte offsets, "
-    "value encodings, per-track stride, and exact fixture evidence must be "
-    "promoted before real send"
+    "Digitakt sends are not enabled: only MK1 track 1 filter frequency is "
+    "hardware-verified; per-track stride, other parameters, and a planner that "
+    "emits the verified field must be promoted before real send"
 )
 
 
 __all__ = [
-    "DIGITAKT_CANDIDATE_KIT_TYPE_BYTE",
     "DIGITAKT_II_FAMILY_BYTE",
-    "DIGITAKT_KIT_NAME_LENGTH",
-    "DIGITAKT_KIT_NAME_OFFSET",
     "DIGITAKT_MK1_FAMILY_BYTE",
+    "DIGITAKT_MK1_PATTERN_FRAMED_SIZE",
+    "DIGITAKT_MK1_PATTERN_PACKED_SIZE",
+    "DIGITAKT_MK1_PATTERN_UNPACKED_SIZE",
+    "DIGITAKT_MK1_TRACK1_FILTER_FREQUENCY_OFFSET",
     "DIGITAKT_OFFSETS_PROMOTED",
-    "DIGITAKT_SNAPSHOT_LAYOUT_CANDIDATE",
-    "DIGITAKT_SNAPSHOT_LAYOUT_SAVED_KIT",
+    "DIGITAKT_PATTERN_CHECKSUM_PACKED_OFFSET",
+    "DIGITAKT_PATTERN_HEADER_SIZE_WITHOUT_F0",
+    "DIGITAKT_PATTERN_LENGTH_ADJUSTMENT",
+    "DIGITAKT_PATTERN_OBJECT_BYTE",
+    "DIGITAKT_PATTERN_TRAILER_SIZE",
+    "DIGITAKT_SNAPSHOT_LAYOUT_PATTERN",
+    "DIGITAKT_SNAPSHOT_LAYOUT_UNVERIFIED",
     "DIGITAKT_UNPROMOTED_REASON",
 ]

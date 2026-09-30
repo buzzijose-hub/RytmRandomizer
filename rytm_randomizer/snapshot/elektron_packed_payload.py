@@ -60,6 +60,19 @@ def split_elektron_packed_payload_body(
     )
 
 
+def _trailer_length(packed_size: int, length_adjustment: int) -> int:
+    """Return the trailer's length field: the low 14 bits of the encoded length.
+
+    The field is two 7-bit bytes, so a body longer than 16383 bytes cannot
+    fit. Real hardware keeps the low 14 bits: a Digitakt MK1 PATTERN dump
+    (31598 packed bytes) carries 15219 == (31598 + 5) & 0x3FFF
+    (``tests/fixtures/digitakt_saved_kit/``). Every shorter body -- all Rytm
+    and Analog Four objects -- is unchanged by the mask.
+    """
+
+    return (packed_size + length_adjustment) & ELEKTRON_U14_MAX
+
+
 def elektron_packed_payload_checksum(
     packed: bytes,
     *,
@@ -94,7 +107,7 @@ def encode_elektron_packed_payload(
         checksum_start=checksum_start,
         device_label=device_label,
     )
-    encoded_length = len(packed) + length_adjustment
+    encoded_length = _trailer_length(len(packed), length_adjustment)
     trailer = encode_elektron_u14(checksum) + encode_elektron_u14(encoded_length)
     return ElektronPackedPayload(
         packed=packed,
@@ -145,7 +158,7 @@ def validate_elektron_packed_payload(
             f"{device_label} checksum does not match the packed payload"
         )
 
-    expected_length = len(packed) + length_adjustment
+    expected_length = _trailer_length(len(packed), length_adjustment)
     if encoded_length != expected_length:
         length_name = "packed length" if length_adjustment == 0 else "encoded length"
         raise ElektronPackedPayloadError(f"{device_label} {length_name} does not match its trailer")

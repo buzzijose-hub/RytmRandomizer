@@ -24,7 +24,7 @@ import pytest
 
 from rytm_randomizer.data.digitakt_saved_kit_layout import (
     DIGITAKT_MK1_FAMILY_BYTE,
-    DIGITAKT_SNAPSHOT_LAYOUT_SAVED_KIT,
+    DIGITAKT_SNAPSHOT_LAYOUT_PATTERN,
 )
 from rytm_randomizer.devices import get_device
 from rytm_randomizer.snapshot.envelope import ELEKTRON_MFR_ID
@@ -99,7 +99,7 @@ def test_mk1_decodes_the_real_capture_and_digitakt_ii_refuses_it() -> None:
     (payload,) = extract_sysex_payloads(_LOW.read_bytes())
 
     snapshot = get_device("digitakt_mk1").decode_snapshot(payload, 0)
-    assert snapshot.snapshot_layout == DIGITAKT_SNAPSHOT_LAYOUT_SAVED_KIT
+    assert snapshot.snapshot_layout == DIGITAKT_SNAPSHOT_LAYOUT_PATTERN
     assert snapshot.offsets_promoted is False
 
     with pytest.raises(ValueError, match="got 0x0a"):

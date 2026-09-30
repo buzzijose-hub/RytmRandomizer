@@ -3,8 +3,9 @@
 Structurally conforms to :class:`rytm_randomizer.snapshot.planner.MutationPlanner`.
 
 **This planner is deliberately zero-event.** Every plan it returns carries
-``ready=False`` and a ``readiness_reason``, because Digitakt saved-project
-byte offsets have never been validated against hardware. This mirrors the
+``ready=False`` and a ``readiness_reason``. One MK1 field (track 1 filter
+frequency) is now hardware-verified, but no planner path emits it yet and
+per-track stride is unverified. This mirrors the
 Analog Four precedent and satisfies
 ``.claude/rules/targeted-mutation-safety.md`` #6: offsets must be promoted
 from real captures with exact re-encode evidence before anything becomes

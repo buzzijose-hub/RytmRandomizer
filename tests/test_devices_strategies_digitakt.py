@@ -9,15 +9,17 @@ unvalidated device from ever reaching a real output port.
 from __future__ import annotations
 
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
 from rytm_randomizer.data.digitakt_saved_kit_layout import (
-    DIGITAKT_CANDIDATE_KIT_TYPE_BYTE,
     DIGITAKT_II_FAMILY_BYTE,
     DIGITAKT_MK1_FAMILY_BYTE,
-    DIGITAKT_SNAPSHOT_LAYOUT_CANDIDATE,
-    DIGITAKT_SNAPSHOT_LAYOUT_SAVED_KIT,
+    DIGITAKT_MK1_PATTERN_UNPACKED_SIZE,
+    DIGITAKT_MK1_TRACK1_FILTER_FREQUENCY_OFFSET,
+    DIGITAKT_SNAPSHOT_LAYOUT_PATTERN,
+    DIGITAKT_SNAPSHOT_LAYOUT_UNVERIFIED,
 )
 from rytm_randomizer.devices import all_devices, get_device
 from rytm_randomizer.devices.digitakt import (
@@ -35,6 +37,10 @@ from rytm_randomizer.devices.strategies.digitakt_mutation_planner import (
     DigitaktMutationPlanner,
     DigitaktPlanEvent,
 )
+from rytm_randomizer.devices.strategies.digitakt_pattern_codec import (
+    DIGITAKT_MK1_PATTERN_LAYOUT,
+    DigitaktPatternCodecError,
+)
 from rytm_randomizer.devices.strategies.digitakt_snapshot_decoder import (
     DigitaktKitSnapshot,
     DigitaktSnapshotDecoder,
@@ -43,22 +49,29 @@ from rytm_randomizer.devices.strategies.digitakt_snapshot_decoder import (
 from rytm_randomizer.devices.strategies.digitakt_track_domain import DigitaktTrackDomain
 from rytm_randomizer.snapshot.envelope import ELEKTRON_MFR_ID
 from rytm_randomizer.snapshot.mutation_scope import MutationScope
+from rytm_randomizer.snapshot.sysex_file import extract_sysex_payloads
 
 pytestmark = pytest.mark.fast
 
-_KIT_NAME = b"HOUSEKIT\x00\x00\x00\x00\x00\x00\x00\x00"
+_REAL_PATTERN_PATH = (
+    Path(__file__).resolve().parent
+    / "fixtures"
+    / "digitakt_saved_kit"
+    / "digitakt_mk1_kit_filter_low.syx"
+)
 
 
-def _candidate_payload(name: bytes = _KIT_NAME) -> bytes:
-    """Build a minimal candidate-layout Digitakt payload."""
+def _real_mk1_pattern() -> bytes:
+    """Steve's real MK1 PATTERN dump, unframed (see test_digitakt_real_captures)."""
 
-    return ELEKTRON_MFR_ID + bytes([DIGITAKT_CANDIDATE_KIT_TYPE_BYTE]) + name + bytes(16)
+    (payload,) = extract_sysex_payloads(_REAL_PATTERN_PATH.read_bytes())
+    return payload
 
 
-def _saved_kit_payload(family_byte: int, name: bytes = _KIT_NAME) -> bytes:
-    """Build a minimal saved-kit-layout Digitakt payload."""
+def _unverified_payload(family_byte: int, body: bytes = bytes(32)) -> bytes:
+    """A same-family payload that is not a verified PATTERN (e.g. another object)."""
 
-    return ELEKTRON_MFR_ID + bytes([family_byte]) + name + bytes(16)
+    return ELEKTRON_MFR_ID + bytes([family_byte, 0x00, 0x7E]) + body
 
 
 # ---------------------------------------------------------------------------
@@ -95,31 +108,56 @@ def test_require_track_accepts_in_domain_and_rejects_outside() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_decoder_reads_candidate_payload() -> None:
-    decoder = DigitaktSnapshotDecoder(
-        family_byte=DIGITAKT_MK1_FAMILY_BYTE, device_id="digitakt_mk1"
-    )
-    snap = decoder.decode(_candidate_payload(), slot=3)
+def test_mk1_decodes_a_real_pattern_dump_into_its_unpacked_body() -> None:
+    snap = get_device("digitakt_mk1").decode_snapshot(_real_mk1_pattern(), 3)
 
-    assert snap.kit_name == "HOUSEKIT"
+    assert isinstance(snap, DigitaktKitSnapshot)
+    assert snap.snapshot_layout == DIGITAKT_SNAPSHOT_LAYOUT_PATTERN
+    assert len(snap.unpacked) == DIGITAKT_MK1_PATTERN_UNPACKED_SIZE
+    assert snap.unpacked[DIGITAKT_MK1_TRACK1_FILTER_FREQUENCY_OFFSET] == 0  # the "low" capture
     assert snap.slot == 3
     assert snap.device_id == "digitakt_mk1"
-    assert snap.snapshot_layout == DIGITAKT_SNAPSHOT_LAYOUT_CANDIDATE
+    # No verified name position exists; guessed bytes are never shown as a name.
+    assert snap.kit_name == ""
     assert snap.offsets_promoted is False
 
 
-def test_decoder_recognizes_saved_kit_family_byte() -> None:
-    decoder = DigitaktSnapshotDecoder(family_byte=DIGITAKT_II_FAMILY_BYTE, device_id="digitakt_ii")
-    snap = decoder.decode(_saved_kit_payload(DIGITAKT_II_FAMILY_BYTE), slot=0)
+def test_mk1_refuses_a_pattern_whose_checksum_does_not_match() -> None:
+    corrupted = bytearray(_real_mk1_pattern())
+    corrupted[1000] ^= 0x01
+    with pytest.raises(DigitaktPatternCodecError, match="checksum"):
+        get_device("digitakt_mk1").decode_snapshot(bytes(corrupted), 0)
 
-    assert snap.snapshot_layout == DIGITAKT_SNAPSHOT_LAYOUT_SAVED_KIT
-    assert snap.offsets_promoted is False
+
+def test_same_family_non_pattern_payloads_are_accepted_as_unverified() -> None:
+    for device_id, family in (
+        ("digitakt_mk1", DIGITAKT_MK1_FAMILY_BYTE),
+        ("digitakt_ii", DIGITAKT_II_FAMILY_BYTE),
+    ):
+        snap = get_device(device_id).decode_snapshot(_unverified_payload(family), 0)
+        assert snap.snapshot_layout == DIGITAKT_SNAPSHOT_LAYOUT_UNVERIFIED
+        assert snap.unpacked == b""
+        assert snap.kit_name == ""
+
+
+def test_digitakt_ii_has_no_verified_layout_so_even_a_pattern_header_is_unverified() -> None:
+    header_only = ELEKTRON_MFR_ID + bytes([DIGITAKT_II_FAMILY_BYTE, 0x00, 0x50]) + bytes(40)
+    snap = get_device("digitakt_ii").decode_snapshot(header_only, 0)
+    assert snap.snapshot_layout == DIGITAKT_SNAPSHOT_LAYOUT_UNVERIFIED
+
+
+def test_decoder_refuses_a_pattern_layout_for_another_family() -> None:
+    with pytest.raises(ValueError, match="pattern layout is for another family"):
+        DigitaktSnapshotDecoder(
+            family_byte=DIGITAKT_II_FAMILY_BYTE,
+            device_id="d",
+            pattern_layout=DIGITAKT_MK1_PATTERN_LAYOUT,
+        )
 
 
 def test_decoder_rejects_negative_slot() -> None:
-    decoder = DigitaktSnapshotDecoder(family_byte=DIGITAKT_MK1_FAMILY_BYTE, device_id="d")
     with pytest.raises(ValueError, match="slot must be non-negative"):
-        decoder.decode(_candidate_payload(), slot=-1)
+        get_device("digitakt_mk1").decode_snapshot(_real_mk1_pattern(), -1)
 
 
 def test_decoder_rejects_foreign_manufacturer_id() -> None:
@@ -130,28 +168,24 @@ def test_decoder_rejects_foreign_manufacturer_id() -> None:
 
 def test_decoder_rejects_payload_too_short_for_family_byte() -> None:
     decoder = DigitaktSnapshotDecoder(family_byte=DIGITAKT_MK1_FAMILY_BYTE, device_id="d")
-    with pytest.raises(ValueError, match="too short for family/type byte"):
+    with pytest.raises(ValueError, match="too short for family byte"):
         decoder.decode(ELEKTRON_MFR_ID, slot=0)
 
 
-def test_decoder_rejects_unknown_family_byte() -> None:
-    decoder = DigitaktSnapshotDecoder(family_byte=DIGITAKT_MK1_FAMILY_BYTE, device_id="d")
-    with pytest.raises(ValueError, match="expected candidate kit type byte"):
-        decoder.decode(ELEKTRON_MFR_ID + bytes([0x7E]) + bytes(32), slot=0)
+@pytest.mark.parametrize("device_id", ["digitakt_mk1", "digitakt_ii"])
+def test_decoder_refuses_an_analog_rytm_dump(device_id: str) -> None:
+    """0x07 is the Rytm's family byte; it once passed as a Digitakt "candidate"."""
 
-
-def test_decoder_rejects_payload_too_short_for_kit_name() -> None:
-    decoder = DigitaktSnapshotDecoder(family_byte=DIGITAKT_MK1_FAMILY_BYTE, device_id="d")
-    truncated = ELEKTRON_MFR_ID + bytes([DIGITAKT_CANDIDATE_KIT_TYPE_BYTE]) + b"AB"
-    with pytest.raises(ValueError, match="too short for kit name"):
-        decoder.decode(truncated, slot=0)
+    rytm_like = ELEKTRON_MFR_ID + bytes([0x07, 0x00, 0x52]) + bytes(40)
+    with pytest.raises(ValueError, match="got 0x07"):
+        get_device(device_id).decode_snapshot(rytm_like, 0)
 
 
 def test_snapshot_fingerprint_is_stable_and_payload_sensitive() -> None:
-    decoder = DigitaktSnapshotDecoder(family_byte=DIGITAKT_MK1_FAMILY_BYTE, device_id="d")
-    first = decoder.decode(_candidate_payload(), slot=0)
-    same = decoder.decode(_candidate_payload(), slot=0)
-    other = decoder.decode(_candidate_payload(b"OTHERKIT\x00\x00\x00\x00\x00\x00\x00\x00"), slot=0)
+    device = get_device("digitakt_mk1")
+    first = device.decode_snapshot(_real_mk1_pattern(), 0)
+    same = device.decode_snapshot(_real_mk1_pattern(), 0)
+    other = device.decode_snapshot(_unverified_payload(DIGITAKT_MK1_FAMILY_BYTE), 0)
 
     assert digitakt_snapshot_payload_fingerprint(first) == digitakt_snapshot_payload_fingerprint(
         same
@@ -171,16 +205,16 @@ def test_snapshot_fingerprint_falls_back_to_raw_when_unpacked_empty() -> None:
 def test_decoder_refuses_non_integer_slot_ids(bad_slot: object) -> None:
     decoder = DigitaktSnapshotDecoder(family_byte=DIGITAKT_MK1_FAMILY_BYTE, device_id="d")
     with pytest.raises(ValueError, match="slot must be non-negative integer"):
-        decoder.decode(_candidate_payload(), bad_slot)  # type: ignore[arg-type]
+        decoder.decode(_unverified_payload(DIGITAKT_MK1_FAMILY_BYTE), bad_slot)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize("device_id", ["digitakt_mk1", "digitakt_ii"])
-def test_decoder_refuses_the_other_generation_candidate_family_prefix(device_id: str) -> None:
+def test_decoder_refuses_the_other_generations_family_byte(device_id: str) -> None:
     other_family = (
         DIGITAKT_II_FAMILY_BYTE if device_id == "digitakt_mk1" else DIGITAKT_MK1_FAMILY_BYTE
     )
-    with pytest.raises(ValueError, match="expected candidate kit type byte"):
-        get_device(device_id).decode_snapshot(_saved_kit_payload(other_family), 0)
+    with pytest.raises(ValueError, match="expected Digitakt family byte"):
+        get_device(device_id).decode_snapshot(_unverified_payload(other_family), 0)
 
 
 # ---------------------------------------------------------------------------
@@ -189,10 +223,7 @@ def test_decoder_refuses_the_other_generation_candidate_family_prefix(device_id:
 
 
 def _snapshot(slot: int = 0) -> DigitaktKitSnapshot:
-    decoder = DigitaktSnapshotDecoder(
-        family_byte=DIGITAKT_MK1_FAMILY_BYTE, device_id="digitakt_mk1"
-    )
-    return decoder.decode(_candidate_payload(), slot=slot)
+    return get_device("digitakt_mk1").decode_snapshot(_real_mk1_pattern(), slot)  # type: ignore[return-value]
 
 
 def _planner(track_count: int = 8) -> DigitaktMutationPlanner:
@@ -210,7 +241,7 @@ def test_planner_is_zero_event_and_not_ready_at_every_depth(depth: int) -> None:
 
     assert plan.ready is False
     assert plan.events == ()
-    assert "candidate-only" in plan.readiness_reason
+    assert "sends are not enabled" in plan.readiness_reason
     assert plan.depth == depth
 
 
@@ -252,7 +283,7 @@ def test_unpromoted_device_refuses_all_scopes_even_with_a_claimed_promoted_snaps
     device_id: str, track_count: int
 ) -> None:
     device = get_device(device_id)
-    snapshot = device.decode_snapshot(_candidate_payload(), 0)
+    snapshot = device.decode_snapshot(_unverified_payload(device.family_byte), 0)
     assert isinstance(snapshot, DigitaktKitSnapshot)
     claimed = replace(snapshot, offsets_promoted=True)
     for scope in (
@@ -390,7 +421,7 @@ def test_passive_registration_does_not_claim_saved_kit_capture(device_id: str) -
 
 def test_device_decode_delegates_to_the_decoder_strategy() -> None:
     device = get_device("digitakt_ii")
-    snap = device.decode_snapshot(_saved_kit_payload(DIGITAKT_II_FAMILY_BYTE), 2)
+    snap = device.decode_snapshot(_unverified_payload(DIGITAKT_II_FAMILY_BYTE), 2)
 
     assert isinstance(snap, DigitaktKitSnapshot)
     assert snap.slot == 2
@@ -402,7 +433,7 @@ def test_device_render_paths_emit_nothing_for_a_not_ready_plan() -> None:
 
     for device_id in ("digitakt_mk1", "digitakt_ii"):
         device = get_device(device_id)
-        snap = device.decode_snapshot(_candidate_payload(), 0)
+        snap = device.decode_snapshot(_unverified_payload(device.family_byte), 0)
         plan = device.plan_mutation(snap, MAX_DIGITAKT_DEPTH)
 
         assert plan.ready is False

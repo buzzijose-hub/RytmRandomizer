@@ -3,9 +3,19 @@
 Structurally conforms to :class:`rytm_randomizer.snapshot.decoder.SnapshotDecoder`.
 
 One decoder class serves both Digitakt generations; the family byte it
-accepts is supplied at construction. Decoding stops at envelope + name
-intake because the saved-project parameter offsets are not promoted -- see
-:mod:`rytm_randomizer.data.digitakt_saved_kit_layout`.
+accepts, and the pattern layout it can fully validate, are supplied at
+construction. Only the Digitakt MK1 has a verified layout
+(:data:`~rytm_randomizer.devices.strategies.digitakt_pattern_codec.DIGITAKT_MK1_PATTERN_LAYOUT`):
+
+* a MK1 PATTERN dump is checksum-, length- and size-validated and unpacked
+  (layout ``"pattern"``);
+* anything else carrying the right family byte -- another object type, or
+  any Digitakt II dump -- is accepted for evidence intake only, undecoded
+  (layout ``"unverified"``).
+
+No layout yields a name: where a Digitakt stores one has not been verified,
+and reading guessed bytes as text produced control-character "names" on
+real hardware.
 """
 
 from __future__ import annotations
@@ -15,26 +25,29 @@ from hashlib import sha256
 from typing import Final
 
 from ...data.digitakt_saved_kit_layout import (
-    DIGITAKT_CANDIDATE_KIT_TYPE_BYTE,
-    DIGITAKT_KIT_NAME_LENGTH,
-    DIGITAKT_KIT_NAME_OFFSET,
     DIGITAKT_MK1_FAMILY_BYTE,
-    DIGITAKT_SNAPSHOT_LAYOUT_CANDIDATE,
-    DIGITAKT_SNAPSHOT_LAYOUT_SAVED_KIT,
+    DIGITAKT_SNAPSHOT_LAYOUT_PATTERN,
+    DIGITAKT_SNAPSHOT_LAYOUT_UNVERIFIED,
 )
 from ...snapshot.decoder import SnapshotDecoder
-from ...snapshot.envelope import ELEKTRON_MFR_ID, read_ascii_name
+from ...snapshot.envelope import ELEKTRON_MFR_ID
+from .digitakt_pattern_codec import (
+    DIGITAKT_MK1_PATTERN_LAYOUT,
+    DigitaktPatternLayout,
+    decode_digitakt_pattern_payload,
+    is_digitakt_pattern_payload,
+)
 
-_FAMILY_BYTE_INDEX: Final[int] = 3
+_FAMILY_BYTE_INDEX: Final[int] = len(ELEKTRON_MFR_ID)
 
 
 @dataclass(frozen=True)
 class DigitaktKitSnapshot:
-    """Candidate Digitakt kit snapshot captured from a SysEx payload.
+    """A Digitakt dump captured from a SysEx payload.
 
-    ``offsets_promoted`` stays ``False`` for every Digitakt snapshot until
-    saved-project offsets are validated against hardware. The mutation
-    planner reads it and refuses to emit sendable events while it is unset.
+    ``unpacked`` holds the decoded body for a verified pattern and is empty
+    otherwise. ``offsets_promoted`` stays ``False``: the mutation planner
+    reads it and refuses to emit sendable events while it is unset.
     """
 
     slot: int
@@ -43,23 +56,30 @@ class DigitaktKitSnapshot:
     device_id: str
     offsets_promoted: bool = False
     unpacked: bytes = b""
-    snapshot_layout: str = DIGITAKT_SNAPSHOT_LAYOUT_CANDIDATE
+    snapshot_layout: str = DIGITAKT_SNAPSHOT_LAYOUT_UNVERIFIED
 
 
 class DigitaktSnapshotDecoder:
-    """Decode a candidate Digitakt kit snapshot from raw bytes."""
+    """Decode a Digitakt dump from an unframed SysEx payload."""
 
-    def __init__(self, *, family_byte: int, device_id: str) -> None:
+    def __init__(
+        self,
+        *,
+        family_byte: int,
+        device_id: str,
+        pattern_layout: DigitaktPatternLayout | None = None,
+    ) -> None:
+        if pattern_layout is not None and pattern_layout.family_byte != family_byte:
+            raise ValueError("DigitaktSnapshotDecoder: pattern layout is for another family")
         self.family_byte = family_byte
         self.device_id = device_id
+        self.pattern_layout = pattern_layout
 
     def decode(self, raw: bytes, slot: int) -> DigitaktKitSnapshot:
         """Decode ``raw`` into a :class:`DigitaktKitSnapshot`.
 
-        Checks the candidate manufacturer/family prefix and name field.
-        This is synthetic-layout intake, not a verified hardware dump codec.
-        Parameter extraction belongs to a later
-        offset-promotion workstream and is deliberately absent.
+        Raises :class:`ValueError` for a bad slot, a non-Elektron or
+        other-family payload, or a pattern that fails validation.
         """
 
         if type(slot) is not int or slot < 0:
@@ -67,38 +87,31 @@ class DigitaktSnapshotDecoder:
         if not raw.startswith(ELEKTRON_MFR_ID):
             raise ValueError("DigitaktSnapshotDecoder.decode: missing Elektron manufacturer id")
         if len(raw) <= _FAMILY_BYTE_INDEX:
+            raise ValueError("DigitaktSnapshotDecoder.decode: payload too short for family byte")
+        family = raw[_FAMILY_BYTE_INDEX]
+        if family != self.family_byte:
             raise ValueError(
-                "DigitaktSnapshotDecoder.decode: payload too short for family/type byte"
+                "DigitaktSnapshotDecoder.decode: expected Digitakt family byte "
+                f"0x{self.family_byte:02x}, got 0x{family:02x}"
             )
 
-        family_or_type = raw[_FAMILY_BYTE_INDEX]
-        if family_or_type == DIGITAKT_CANDIDATE_KIT_TYPE_BYTE:
-            layout = DIGITAKT_SNAPSHOT_LAYOUT_CANDIDATE
-        elif family_or_type == self.family_byte:
-            layout = DIGITAKT_SNAPSHOT_LAYOUT_SAVED_KIT
-        else:
-            raise ValueError(
-                "DigitaktSnapshotDecoder.decode: expected candidate kit type byte "
-                f"0x{DIGITAKT_CANDIDATE_KIT_TYPE_BYTE:02x} or Digitakt family byte "
-                f"0x{self.family_byte:02x}, got 0x{family_or_type:02x}"
+        if self.pattern_layout is not None and is_digitakt_pattern_payload(
+            raw, self.pattern_layout
+        ):
+            pattern = decode_digitakt_pattern_payload(raw, self.pattern_layout)
+            return DigitaktKitSnapshot(
+                slot=slot,
+                kit_name="",
+                raw=bytes(raw),
+                device_id=self.device_id,
+                unpacked=pattern.unpacked,
+                snapshot_layout=DIGITAKT_SNAPSHOT_LAYOUT_PATTERN,
             )
-
-        if len(raw) < DIGITAKT_KIT_NAME_OFFSET + DIGITAKT_KIT_NAME_LENGTH:
-            raise ValueError("DigitaktSnapshotDecoder.decode: payload too short for kit name")
-
-        kit_name = read_ascii_name(
-            raw,
-            offset=DIGITAKT_KIT_NAME_OFFSET,
-            length=DIGITAKT_KIT_NAME_LENGTH,
-        )
         return DigitaktKitSnapshot(
             slot=slot,
-            kit_name=kit_name,
+            kit_name="",
             raw=bytes(raw),
             device_id=self.device_id,
-            offsets_promoted=False,
-            unpacked=bytes(raw),
-            snapshot_layout=layout,
         )
 
 
@@ -118,7 +131,11 @@ def _satisfies_snapshot_decoder(value: object) -> bool:
 def _assert_decoder_protocol_conformance() -> None:
     """Document structural conformance to the WS-S6 ``SnapshotDecoder``."""
 
-    probe = DigitaktSnapshotDecoder(family_byte=DIGITAKT_MK1_FAMILY_BYTE, device_id="_probe")
+    probe = DigitaktSnapshotDecoder(
+        family_byte=DIGITAKT_MK1_FAMILY_BYTE,
+        device_id="_probe",
+        pattern_layout=DIGITAKT_MK1_PATTERN_LAYOUT,
+    )
     if not _satisfies_snapshot_decoder(probe):
         # Structural-typing invariant; see docs/ARCHITECTURE.md §8.
         raise AssertionError(  # pragma: no cover - structural-typing invariant
