@@ -278,6 +278,16 @@ class ApplianceWorkspace:
         self.candidates.clear()
         self.revision += 1
 
+    def revoke_context(self) -> None:
+        """Drop transient source assumptions on disconnect, leaving saved rules."""
+        self.context = None
+        self.invalidate()
+        self.sources.clear()
+        self.histories.clear()
+        self.timeline.clear()
+        self.anchor = None
+        self.cursor = 0
+
     def sync(self, source: Snapshot | None, *, context: str) -> None:
         if context == self.context:
             return
