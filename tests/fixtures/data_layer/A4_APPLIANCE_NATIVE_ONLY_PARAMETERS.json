@@ -1,0 +1,30 @@
+{
+  "Filter1 Resonance Boost": [
+    "FILTERS",
+    "filter1_resonance_boost"
+  ],
+  "Legato Mode": [
+    "OSC COMMON",
+    "legato_mode"
+  ],
+  "Noise Color": [
+    "NOISE",
+    "noise_color"
+  ],
+  "OSC1 Fine": [
+    "OSC 1",
+    "osc1_fine"
+  ],
+  "OSC2 Fine": [
+    "OSC 2",
+    "osc2_fine"
+  ],
+  "Oscillator Drift": [
+    "OSC COMMON",
+    "oscillator_drift"
+  ],
+  "Portamento": [
+    "OSC COMMON",
+    "portamento"
+  ]
+}

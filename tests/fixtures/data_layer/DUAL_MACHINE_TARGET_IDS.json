@@ -1,0 +1,18 @@
+{
+  "a4": [
+    "analog_four_mk2"
+  ],
+  "a4-only": [
+    "analog_four_mk2"
+  ],
+  "both": [
+    "analog_rytm_mk2",
+    "analog_four_mk2"
+  ],
+  "rytm": [
+    "analog_rytm_mk2"
+  ],
+  "rytm-only": [
+    "analog_rytm_mk2"
+  ]
+}

@@ -1,4 +1,11 @@
 {
+  "appliance_scopes": {
+    "store_id": "appliance_scopes",
+    "schema_version": 1,
+    "owner_module": "rytm_randomizer.cockpit.appliance",
+    "description": "Bounded touch scope presets; no transient hardware authority.",
+    "migrations": []
+  },
   "library_store": {
     "store_id": "library_store",
     "schema_version": 1,

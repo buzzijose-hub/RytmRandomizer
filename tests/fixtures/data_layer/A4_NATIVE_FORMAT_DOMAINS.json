@@ -1,0 +1,74 @@
+{
+  "bipolar": [
+    "bipolar",
+    "u7",
+    0,
+    127,
+    -64,
+    63,
+    "bipolar",
+    1,
+    0,
+    true
+  ],
+  "fine_component": [
+    "fine_component",
+    "centered-pitch-word",
+    0,
+    32767,
+    -64,
+    63,
+    "fine_display",
+    1,
+    0,
+    false
+  ],
+  "pitch_word": [
+    "pitch_word",
+    "centered-pitch-word",
+    0,
+    32767,
+    0,
+    32767,
+    "semitones",
+    256,
+    16384,
+    true
+  ],
+  "q8.7": [
+    "q8.7",
+    "centered-q8.7",
+    0,
+    32767,
+    0,
+    32767,
+    "fixed_point",
+    128,
+    16384,
+    true
+  ],
+  "q8.8": [
+    "q8.8",
+    "unsigned-big-endian-q8.8",
+    0,
+    32767,
+    0,
+    32767,
+    "fixed_point",
+    256,
+    0,
+    true
+  ],
+  "u7": [
+    "u7",
+    "u7",
+    0,
+    127,
+    0,
+    127,
+    "u7",
+    1,
+    0,
+    true
+  ]
+}

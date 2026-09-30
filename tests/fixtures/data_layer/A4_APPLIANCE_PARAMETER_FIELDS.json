@@ -1,0 +1,285 @@
+{
+  "Bend Amount": [
+    "bend_depth"
+  ],
+  "Chorus Send Level": [
+    "amp_chorus_send"
+  ],
+  "Delay Send Level": [
+    "amp_delay_send"
+  ],
+  "Env2 Attack Time": [
+    "env2_attack"
+  ],
+  "Env2 Decay Time": [
+    "env2_decay"
+  ],
+  "Env2 Depth A": [
+    "env2_depth_a",
+    "env2_depth_a_fraction"
+  ],
+  "Env2 Depth B": [
+    "env2_depth_b",
+    "env2_depth_b_fraction"
+  ],
+  "Env2 Destination A": [
+    "env2_destination_a"
+  ],
+  "Env2 Destination B": [
+    "env2_destination_b"
+  ],
+  "Env2 Env Shape": [
+    "env2_shape"
+  ],
+  "Env2 Gate Length": [
+    "env2_length"
+  ],
+  "Env2 Release Time": [
+    "env2_release"
+  ],
+  "Env2 Sustain Level": [
+    "env2_sustain"
+  ],
+  "EnvA Attack Time": [
+    "amp_attack"
+  ],
+  "EnvA Decay Time": [
+    "amp_decay"
+  ],
+  "EnvA Env Shape": [
+    "amp_shape"
+  ],
+  "EnvA Release Time": [
+    "amp_release"
+  ],
+  "EnvA Sustain Level": [
+    "amp_sustain"
+  ],
+  "EnvF Attack Time": [
+    "envf_attack"
+  ],
+  "EnvF Decay Time": [
+    "envf_decay"
+  ],
+  "EnvF Depth A": [
+    "envf_depth_a",
+    "envf_depth_a_fraction"
+  ],
+  "EnvF Depth B": [
+    "envf_depth_b",
+    "envf_depth_b_fraction"
+  ],
+  "EnvF Destination A": [
+    "envf_destination_a"
+  ],
+  "EnvF Destination B": [
+    "envf_destination_b"
+  ],
+  "EnvF Env Shape": [
+    "envf_shape"
+  ],
+  "EnvF Gate Length": [
+    "envf_length"
+  ],
+  "EnvF Release Time": [
+    "envf_release"
+  ],
+  "EnvF Sustain Level": [
+    "envf_sustain"
+  ],
+  "Filter Overdrive": [
+    "filter1_overdrive"
+  ],
+  "Filter1 Envelope Amount": [
+    "filter1_env_depth"
+  ],
+  "Filter1 Frequency": [
+    "filter1_frequency"
+  ],
+  "Filter1 Keytracking": [
+    "filter1_tracking"
+  ],
+  "Filter1 Resonance": [
+    "filter1_resonance"
+  ],
+  "Filter2 Envelope Amount": [
+    "filter2_env_depth"
+  ],
+  "Filter2 Frequency": [
+    "filter2_frequency"
+  ],
+  "Filter2 Keytracking": [
+    "filter2_tracking"
+  ],
+  "Filter2 Resonance": [
+    "filter2_resonance"
+  ],
+  "Filter2 Type": [
+    "filter2_type"
+  ],
+  "LFO1 Depth A": [
+    "lfo1_depth_a",
+    "lfo1_depth_a_fraction"
+  ],
+  "LFO1 Depth B": [
+    "lfo1_depth_b",
+    "lfo1_depth_b_fraction"
+  ],
+  "LFO1 Destination A": [
+    "lfo1_destination_a"
+  ],
+  "LFO1 Destination B": [
+    "lfo1_destination_b"
+  ],
+  "LFO1 Fade": [
+    "lfo1_fade"
+  ],
+  "LFO1 Mode": [
+    "lfo1_mode"
+  ],
+  "LFO1 Speed": [
+    "lfo1_speed"
+  ],
+  "LFO1 Speed Multiplier": [
+    "lfo1_multiplier"
+  ],
+  "LFO1 Start Phase": [
+    "lfo1_phase"
+  ],
+  "LFO1 Waveform": [
+    "lfo1_waveform"
+  ],
+  "LFO2 Depth A": [
+    "lfo2_depth_a",
+    "lfo2_depth_a_fraction"
+  ],
+  "LFO2 Depth B": [
+    "lfo2_depth_b",
+    "lfo2_depth_b_fraction"
+  ],
+  "LFO2 Destination A": [
+    "lfo2_destination_a"
+  ],
+  "LFO2 Destination B": [
+    "lfo2_destination_b"
+  ],
+  "LFO2 Fade": [
+    "lfo2_fade"
+  ],
+  "LFO2 Mode": [
+    "lfo2_mode"
+  ],
+  "LFO2 Speed": [
+    "lfo2_speed"
+  ],
+  "LFO2 Speed Multiplier": [
+    "lfo2_multiplier"
+  ],
+  "LFO2 Start Phase": [
+    "lfo2_phase"
+  ],
+  "LFO2 Waveform": [
+    "lfo2_waveform"
+  ],
+  "Noise Fade": [
+    "noise_fade"
+  ],
+  "Noise Level": [
+    "noise_level"
+  ],
+  "Noise S&H": [
+    "noise_sample_hold"
+  ],
+  "Note Sync": [
+    "osc_retrigger"
+  ],
+  "OSC1 AM": [
+    "osc1_am"
+  ],
+  "OSC1 Detune": [
+    "osc1_detune"
+  ],
+  "OSC1 Keytracking": [
+    "osc1_tracking"
+  ],
+  "OSC1 Level": [
+    "osc1_level"
+  ],
+  "OSC1 PWM Depth": [
+    "osc1_pwm_depth"
+  ],
+  "OSC1 PWM Speed": [
+    "osc1_pwm_speed"
+  ],
+  "OSC1 Pitch": [
+    "osc1_tune",
+    "osc1_fine"
+  ],
+  "OSC1 Pulsewidth": [
+    "osc1_pw"
+  ],
+  "OSC1 Sub Oscillator": [
+    "osc1_sub"
+  ],
+  "OSC1 Waveform": [
+    "osc1_waveform"
+  ],
+  "OSC2 AM": [
+    "osc2_am"
+  ],
+  "OSC2 Detune": [
+    "osc2_detune"
+  ],
+  "OSC2 Keytracking": [
+    "osc2_tracking"
+  ],
+  "OSC2 Level": [
+    "osc2_level"
+  ],
+  "OSC2 PWM Depth": [
+    "osc2_pwm_depth"
+  ],
+  "OSC2 PWM Speed": [
+    "osc2_pwm_speed"
+  ],
+  "OSC2 Pitch": [
+    "osc2_tune",
+    "osc2_fine"
+  ],
+  "OSC2 Pulsewidth": [
+    "osc2_pw"
+  ],
+  "OSC2 Sub Oscillator": [
+    "osc2_sub"
+  ],
+  "OSC2 Waveform": [
+    "osc2_waveform"
+  ],
+  "Pan": [
+    "amp_pan"
+  ],
+  "Reverb Send Level": [
+    "amp_reverb_send"
+  ],
+  "Slide Time": [
+    "slide_time"
+  ],
+  "Sync Amount": [
+    "sync_amount"
+  ],
+  "Sync Mode": [
+    "sync_mode"
+  ],
+  "Vibrato Depth": [
+    "vibrato_depth"
+  ],
+  "Vibrato Fade": [
+    "vibrato_fade"
+  ],
+  "Vibrato Speed": [
+    "vibrato_speed"
+  ],
+  "Volume": [
+    "amp_volume"
+  ]
+}
