@@ -183,11 +183,11 @@ def appliance_snapshot_from_a4_capture(result: KitCaptureResult) -> Snapshot:
         result.captured_at,
         tuple(
             PadState(
-                track + 1,
+                track_id,
                 "A4 CAPTURED SAVED KIT",
-                {encoding.parameter_id: encoding.read(kit.sound(track)) for encoding in encodings},
+                {encoding.parameter_id: encoding.read(sound) for encoding in encodings},
             )
-            for track in range(4)
+            for track_id, sound in enumerate(kit.iter_sounds(), start=1)
         ),
         None,
         None,
