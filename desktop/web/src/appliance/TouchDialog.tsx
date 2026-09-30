@@ -11,9 +11,10 @@ export function TouchDialog({ title, children, onClose }: TouchDialogProps): JSX
   const titleId = useId();
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const prior = document.activeElement as HTMLElement | null;
-    root.current?.querySelector<HTMLElement>('button:not([disabled])')?.focus();
-    return () => { prior?.focus(); };
+    const prior = document.activeElement as HTMLElement;
+    // The mounted dialog always renders its enabled Close button first.
+    (root.current!.querySelector<HTMLElement>('button:not([disabled])')!).focus();
+    return () => { prior.focus(); };
   }, []);
   return (
     <div className="appliance-dialog-backdrop">
@@ -32,9 +33,9 @@ export function TouchDialog({ title, children, onClose }: TouchDialogProps): JSX
           const first = controls[0];
           const last = controls[controls.length - 1];
           if (event.shiftKey && document.activeElement === first) {
-            event.preventDefault(); last?.focus();
+            event.preventDefault(); last!.focus();
           } else if (!event.shiftKey && document.activeElement === last) {
-            event.preventDefault(); first?.focus();
+            event.preventDefault(); first!.focus();
           }
         }}
       >

@@ -8,6 +8,7 @@ export interface ApplianceController {
   state: ApplianceState | null;
   busy: boolean;
   notice: string;
+  getState: () => ApplianceState | null;
   execute: (operation: ApplianceOperation, payload?: Record<string, unknown>) => Promise<CommandAck | null>;
   command: (command: Command, timeoutMs?: number) => Promise<CommandAck | null>;
 }
@@ -30,14 +31,16 @@ export function useAppliance(client: CockpitClient): ApplianceController {
         if (!mounted || generation !== epoch.current) return;
         if (ack.ok && ack.appliance !== undefined) {
           setState(ack.appliance);
+          stateRef.current = ack.appliance;
           setNotice('State received. Outputs require explicit arming and exact confirmation.');
         } else setNotice(ack.message ?? 'This sidecar does not provide appliance state. Update the sidecar.');
       }).catch(() => { if (mounted) setNotice('Sidecar unavailable. No action was queued.'); });
     };
-    const off = client.on('appliance_changed', (event) => setState(event.state));
+    const off = client.on('appliance_changed', (event) => { stateRef.current = event.state; setState(event.state); });
     const statusOff = client.onStatusChange((status) => {
       epoch.current += 1;
       setState(null);
+      stateRef.current = null;
       busyRef.current = false;
       setBusy(false);
       if (status === 'connected') refresh();
@@ -59,7 +62,7 @@ export function useAppliance(client: CockpitClient): ApplianceController {
       const ack = await client.send(request, timeoutMs === undefined ? {} : { timeoutMs });
       if (generation !== epoch.current) return null;
       const next = ack.appliance;
-      if (next !== undefined) setState(next);
+      if (next !== undefined) { stateRef.current = next; setState(next); }
       const message = ack.ok ? (ack.message ?? 'Command acknowledged. Hardware acceptance is not verified.') : (ack.message ?? ack.code ?? 'Command refused. Readiness remains blocked.');
       setNotice(message);
       announce(message);
@@ -77,5 +80,5 @@ export function useAppliance(client: CockpitClient): ApplianceController {
     if (operation !== 'state' && current === null) return null;
     return command({ type: 'appliance', operation, payload, ...(operation === 'state' ? {} : { expected_revision: current?.revision }) });
   }, [command]);
-  return { state, busy, notice, execute, command };
+  return { state, busy, notice, execute, command, getState: () => stateRef.current };
 }

@@ -50,7 +50,7 @@ function TargetGrid({ lane, disabled, onScope, compact = false }: LaneProps): JS
 
 function LaneEditor({ lane, disabled, onScope, revision }: LaneProps): JSX.Element {
   const [section, setSection] = useState<'targets' | 'pages' | 'protect'>('targets');
-  const [track, setTrack] = useState(1);
+  const [track, setTrack] = useState(lane.reference_track_id ?? 1);
   const pages = [...new Set(lane.parameters.map((parameter) => parameter.page))];
   const [filterPage, setFilterPage] = useState('');
   const visiblePage = pages.includes(filterPage) ? filterPage : (pages[0] ?? '');
@@ -73,7 +73,9 @@ function LaneEditor({ lane, disabled, onScope, revision }: LaneProps): JSX.Eleme
       {section === 'pages' && <div className="appliance-page-list">{pages.map((page) => <article key={page} className="appliance-page-rule"><button type="button" aria-pressed={lane.scope.page_ids.includes(page)} disabled={disabled} onClick={() => onScope({ page_ids: toggle(lane.scope.page_ids, page) })}><span>{page}</span><strong>{lane.scope.page_ids.includes(page) ? 'TARGET' : 'OFF'}</strong></button><TouchNumber key={`${page}:${revision}`} label={page} value={percent(lane.scope.page_depths[page] ?? 1)} disabled={disabled} onChange={(value) => onScope({ page_depths: { ...lane.scope.page_depths, [page]: value / 100 } })} /></article>)}<p>Page families come from the device catalog. Master × track × page depth governs the next roll.</p></div>}
       {section === 'protect' && <div><label className="appliance-page-filter">PARAMETER PAGE<select aria-label="Parameter page" value={visiblePage} onChange={(event) => setFilterPage(event.target.value)}>{pages.map((page) => <option value={page} key={page}>{page}</option>)}</select></label><p>Parameter protection applies to all chosen tracks. Categorical and unsupported policies always win.</p><div className="appliance-parameter-list">{lane.parameters.filter((parameter) => parameter.page === visiblePage).map((parameter) => {
         const locked = parameter.categorical === true || lane.scope.parameter_locks.includes(parameter.parameter_id);
-        return <article key={parameter.parameter_id}><div><strong>{parameter.parameter}</strong><small>{parameter.categorical === true ? 'CATEGORICAL / NO VALIDATED MUTATION' : parameter.default_protected ? 'DEFAULT PROTECTION POLICY' : parameter.blockers.length ? parameter.blockers.map(readable).join(' · ') : 'CATALOG POLICY'}{parameter.value !== null ? ` · TRACK 1: ${parameter.value}` : ' · VALUE UNKNOWN'}{parameter.protection_reasons?.length ? ` · ${parameter.protection_reasons.map(readable).join(' · ')}` : ''}</small></div><button type="button" disabled={disabled || parameter.categorical === true} aria-pressed={locked} aria-label={`${locked ? 'Unlock' : 'Protect'} ${parameter.parameter}`} onClick={() => onScope({ parameter_locks: toggle(lane.scope.parameter_locks, parameter.parameter_id) })}>{locked ? 'LOCKED' : 'PROTECT'}</button></article>;
+        const value = parameter.values_by_track[String(track)];
+        const display = parameter.display_values_by_track?.[String(track)] ?? value;
+        return <article key={parameter.parameter_id}><div><strong>{parameter.parameter}{parameter.machine_key === null ? '' : ` / ${parameter.machine_key}`}</strong><small>{parameter.categorical === true ? 'CATEGORICAL / NO VALIDATED MUTATION' : parameter.default_protected ? 'DEFAULT PROTECTION POLICY' : parameter.blockers.length ? parameter.blockers.map(readable).join(' · ') : 'CATALOG POLICY'}{value !== undefined ? ` · TRACK ${track}: ${display}` : ` · TRACK ${track}: VALUE UNKNOWN`}{parameter.protection_reasons?.length ? ` · ${parameter.protection_reasons.map(readable).join(' · ')}` : ''}</small></div><button type="button" disabled={disabled || parameter.categorical === true} aria-pressed={locked} aria-label={`${locked ? 'Unlock' : 'Protect'} ${parameter.parameter}`} onClick={() => onScope({ parameter_locks: toggle(lane.scope.parameter_locks, parameter.parameter_id) })}>{locked ? 'LOCKED' : 'PROTECT'}</button></article>;
       })}</div></div>}
     </section>
   );
@@ -86,7 +88,7 @@ function Provenance({ lane }: { lane: ApplianceLane }): JSX.Element {
 
 function CandidateDiff({ candidate }: { candidate: ApplianceCandidate | null }): JSX.Element {
   if (candidate === null) return <div className="appliance-empty"><span>01 / CHOOSE TARGETS</span><span>02 / SET DEPTH + PROTECTION</span><span>03 / MUTATE TO PREVIEW</span><p>One roll. No background mutation.</p></div>;
-  return <div className="appliance-diff"><div className="appliance-section-heading"><h3>EXACT NEXT APPLY</h3><span>{candidate.changes.length} CHANGES</span></div>{candidate.changes.length === 0 ? <p>No eligible changes. Zero depth and locks produce no writes.</p> : <table><thead><tr><th>TRACK / PARAMETER</th><th>BEFORE</th><th>AFTER</th></tr></thead><tbody>{candidate.changes.map((change) => <tr key={`${change.device_id}:${change.track_id}:${change.parameter_id}`}><th>{DEVICE_LABELS[change.device_id]} {change.track_id} / {change.parameter}</th><td>{change.before}</td><td>{change.after}</td></tr>)}</tbody></table>}<p>{candidate.blocked_reasons.map(readable).join(' · ')}</p></div>;
+  return <div className="appliance-diff"><div className="appliance-section-heading"><h3>EXACT NEXT APPLY</h3><span>{candidate.changes.length} CHANGES</span></div>{candidate.changes.length === 0 ? <p>No eligible changes. Zero depth and locks produce no writes.</p> : <table><thead><tr><th>TRACK / PARAMETER</th><th>BEFORE</th><th>AFTER</th></tr></thead><tbody>{candidate.changes.map((change) => <tr key={`${change.device_id}:${change.track_id}:${change.parameter_id}`}><th>{DEVICE_LABELS[change.device_id]} {change.track_id} / {change.parameter}</th><td>{change.before_display ?? change.before}</td><td>{change.after_display ?? change.after}</td></tr>)}</tbody></table>}<p>{candidate.blocked_reasons.map(readable).join(' · ')}</p></div>;
 }
 
 function ProfileTools({ state, controller }: { state: ApplianceState; controller: ApplianceController }): JSX.Element {
@@ -125,11 +127,11 @@ function CaptureTools({ state, controller }: { state: ApplianceState; controller
   const [input, setInput] = useState('');
   const [enabled, setEnabled] = useState(false);
   const scan = async (): Promise<void> => {
-    const ack = await controller.command({ type: 'list_capture_inputs', device_id: device === 'analog_four_mk2' ? 'analog_four_mk2' : device });
+    const ack = await controller.command({ type: 'list_capture_inputs', device_id: device });
     if (ack?.ok) { setInputs(ack.capture_inputs ?? []); setEnabled(ack.capture_enabled ?? false); setInput(''); }
   };
   const capture = async (): Promise<void> => {
-    const ack = await controller.command({ type: 'capture_current_kit', device_id: device === 'analog_four_mk2' ? 'analog_four_mk2' : device, input_port: input }, 125_000);
+    const ack = await controller.command({ type: 'capture_current_kit', device_id: device, input_port: input }, 125_000);
     if (ack?.ok) await controller.execute('state');
   };
   return <section><h2>CONNECTION / CAPTURE</h2><div className="appliance-device-choice">{DEVICE_IDS.map((id) => <button type="button" key={id} aria-pressed={device === id} disabled={controller.busy} onClick={() => { setDevice(id); setInputs([]); setInput(''); setEnabled(false); }}>{DEVICE_LABELS[id]}</button>)}</div><Provenance lane={state.lanes[device]} /><div className="appliance-inline-actions"><button type="button" disabled={controller.busy} onClick={() => void scan()}>SCAN INPUTS</button><button type="button" disabled={controller.busy} onClick={() => void controller.execute('state')}>RESYNC APP STATE</button></div><label>MIDI INPUT<select aria-label="Exact capture input" value={input} disabled={controller.busy} onChange={(event) => setInput(event.target.value)}><option value="">CHOOSE EXACT INPUT</option>{inputs.map((port, index) => <option key={`${port}:${index}`} value={port}>{port}</option>)}</select></label><button type="button" className="appliance-primary" disabled={!enabled || input === '' || controller.busy || inputs.filter((port) => port === input).length !== 1} onClick={() => void capture()}>{controller.busy ? 'WAITING FOR INPUT / COMMAND' : 'LISTEN FOR KIT CAPTURE'}</button><p>Input only. On the selected instrument, send its KIT via SYSEX DUMP. No automatic request or hardware save is sent.</p><p>A saved-KIT capture does not prove unsaved front-panel values. RESYNC APP STATE only refreshes the software projection. NEW ANCHOR separately adopts its known baseline.</p></section>;
@@ -149,6 +151,7 @@ export function Appliance({ client }: { client: CockpitClient }): JSX.Element {
   const [tool, setTool] = useState<Tool>('profiles');
   const [confirmation, setConfirmation] = useState<{ kind: 'apply' | 'anchor' | 'arm'; revision: number; candidateId?: string } | null>(null);
   const [output, setOutput] = useState('');
+  const outputOccurrences = connection?.available_outputs.filter((port) => port === output).length ?? 0;
   const confirmationCurrent = confirmation !== null && state !== null && confirmation.revision === state.revision && (confirmation.kind !== 'apply' || confirmation.candidateId === state.candidate?.candidate_id);
   useEffect(() => { if (confirmation !== null && !confirmationCurrent) { setConfirmation(null); setOutput(''); } }, [confirmation, confirmationCurrent]);
   const updateScope = (payload: Record<string, unknown>): void => { void controller.execute('scope', payload); };
@@ -162,14 +165,17 @@ export function Appliance({ client }: { client: CockpitClient }): JSX.Element {
     if (state !== null && (next === 'rytm' || next === 'a4' || next === 'both') && next !== state.target) updateScope({ target: next });
   };
   const apply = async (): Promise<void> => {
-    if (!confirmationCurrent || state?.candidate === null || state === null || !canApply) return;
-    const candidate = state.candidate;
+    const current = controller.getState();
+    if (current === null || current.candidate === null || confirmation === null || confirmation.revision !== current.revision || confirmation.candidateId !== current.candidate.candidate_id || (current.mode === 'production' && (!current.armed || !current.candidate.live_ready))) return;
+    const candidate = current.candidate;
     setConfirmation(null);
     await controller.execute('apply', { candidate_id: candidate.candidate_id, confirmed: true, ...(candidate.send_plan_id === null ? {} : { send_plan_id: candidate.send_plan_id }) });
   };
   const arm = async (): Promise<void> => {
     const secret = resolveArmSecret();
-    if (!confirmationCurrent || state?.mode !== 'production' || secret === null || output === '' || (connection?.available_outputs.filter((port) => port === output).length ?? 0) !== 1) return;
+    const current = controller.getState();
+    const available = useCockpitStore.getState().connection?.available_outputs ?? [];
+    if (!confirmationCurrent || current?.mode !== 'production' || current.revision !== confirmation?.revision || secret === null || output === '' || available.filter((port) => port === output).length !== 1) return;
     setConfirmation(null);
     const ack = await controller.command({ type: 'arm', arm_token: secret, confirm: true, port_name: output });
     setOutput('');
@@ -193,6 +199,6 @@ export function Appliance({ client }: { client: CockpitClient }): JSX.Element {
     <nav className="appliance-nav" aria-label="Appliance pages">{([['perform', 'HOME'], ['rytm', 'RYTM'], ['a4', 'A4'], ['both', 'BOTH'], ['history', 'HISTORY'], ['more', 'MORE']] as const).map(([id, label]) => <button type="button" key={id} aria-current={page === id ? 'page' : undefined} disabled={busy && (id === 'rytm' || id === 'a4' || id === 'both')} onClick={() => choosePage(id)}>{label}</button>)}</nav>
     {confirmationCurrent && state !== null && confirmation?.kind === 'apply' && <TouchDialog title={state.mode === 'simulation' ? 'CONFIRM LOCAL APPLY' : 'CONFIRM EXACT HARDWARE APPLY'} onClose={() => setConfirmation(null)}><p>{state.mode === 'simulation' ? 'Simulation only. No output port is opened and no MIDI is sent.' : 'Confirm this exact plan once. Local send success does not verify hardware acceptance. Saved kits and sounds are not written.'}</p><dl className="appliance-details"><div><dt>CANDIDATE</dt><dd>{state.candidate?.candidate_id}</dd></div><div><dt>PLAN</dt><dd>{state.candidate?.send_plan_id ?? 'LOCAL ONLY'}</dd></div><div><dt>REVISION</dt><dd>{state.revision}</dd></div><div><dt>OUTPUT</dt><dd>{state.mode === 'simulation' ? 'NONE / SIMULATED' : connection?.selected_output ?? 'EXACT OUTPUT UNAVAILABLE'}</dd></div></dl><CandidateDiff candidate={state.candidate} /><div className="appliance-dialog-actions"><button type="button" onClick={() => setConfirmation(null)}>CANCEL</button><button type="button" disabled={busy || !canApply} className="appliance-primary" onClick={() => void apply()}>{state.mode === 'simulation' ? 'CONFIRM LOCAL APPLY' : 'CONFIRM EXACT APPLY'}</button></div></TouchDialog>}
     {confirmationCurrent && confirmation?.kind === 'anchor' && <TouchDialog title="ADOPT NEW LOCAL ANCHOR" onClose={() => setConfirmation(null)}><p>Adopt the currently known software baseline as the next local return point. This does not request a capture, save a hardware kit, or restore the instrument.</p><div className="appliance-dialog-actions"><button type="button" onClick={() => setConfirmation(null)}>CANCEL</button><button type="button" className="appliance-primary" disabled={busy} onClick={() => { setConfirmation(null); void controller.execute('anchor'); }}>ADOPT KNOWN BASELINE</button></div></TouchDialog>}
-    {confirmationCurrent && confirmation?.kind === 'arm' && state?.mode === 'production' && <TouchDialog title="ARM EXACT OUTPUT" onClose={() => { setConfirmation(null); setOutput(''); }}><p>Choose the exact paired instrument output. Arming does not bypass capability, known-state or per-action confirmation checks. Reconnect clears authority.</p><label>MIDI OUTPUT<select aria-label="Exact MIDI output" value={output} onChange={(event) => setOutput(event.target.value)}><option value="">CHOOSE EXACT OUTPUT</option>{(connection?.available_outputs ?? []).map((port, index) => <option key={`${port}:${index}`} value={port}>{port}</option>)}</select></label>{resolveArmSecret() === null && <p>Arm secret unavailable. Relaunch through the supervised launcher.</p>}<div className="appliance-dialog-actions"><button type="button" onClick={() => setConfirmation(null)}>CANCEL</button><button type="button" disabled={busy || output === '' || resolveArmSecret() === null || (connection?.available_outputs.filter((port) => port === output).length ?? 0) !== 1} onClick={() => void arm()}>CONFIRM ARM</button></div></TouchDialog>}
+    {confirmationCurrent && confirmation?.kind === 'arm' && state?.mode === 'production' && <TouchDialog title="ARM EXACT OUTPUT" onClose={() => { setConfirmation(null); setOutput(''); }}><p>Choose the exact paired instrument output. Arming does not bypass capability, known-state or per-action confirmation checks. Reconnect clears authority.</p><label>MIDI OUTPUT<select aria-label="Exact MIDI output" value={output} onChange={(event) => setOutput(event.target.value)}><option value="">CHOOSE EXACT OUTPUT</option>{(connection?.available_outputs ?? []).map((port, index) => <option key={`${port}:${index}`} value={port}>{port}</option>)}</select></label>{resolveArmSecret() === null && <p>Arm secret unavailable. Relaunch through the supervised launcher.</p>}<div className="appliance-dialog-actions"><button type="button" onClick={() => setConfirmation(null)}>CANCEL</button><button type="button" disabled={busy || output === '' || resolveArmSecret() === null || outputOccurrences !== 1} onClick={() => void arm()}>CONFIRM ARM</button></div></TouchDialog>}
   </main>;
 }
