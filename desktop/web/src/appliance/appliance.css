@@ -1,0 +1,204 @@
+@font-face {
+  font-family: 'Appliance Pixel';
+  src: url('./assets/appliance-pixel.ttf') format('truetype');
+  font-display: swap;
+}
+
+.appliance {
+  --ink: #e8f0d4;
+  --muted: #acb79a;
+  --panel: #151a16;
+  --line: #3c4739;
+  --accent: #dce59f;
+  color: var(--ink);
+  background: #0b0f0c;
+  font-family: 'Appliance Pixel', monospace;
+  font-size: 14px;
+  font-synthesis: none;
+  line-height: 1.5;
+  letter-spacing: 0;
+  width: 100%;
+  height: 100dvh;
+  min-height: 320px;
+  display: grid;
+  grid-template-rows: 56px minmax(0, 1fr) 32px 52px 52px;
+  overflow: hidden;
+  isolation: isolate;
+}
+.appliance *, .appliance *::before, .appliance *::after { box-sizing: border-box; }
+.appliance h1, .appliance h2, .appliance h3, .appliance p { margin: 0; }
+.appliance h1, .appliance h2 { font-size: 16px; font-weight: 400; line-height: 1.4; }
+.appliance h3 { font-size: 14px; font-weight: 400; }
+.appliance p, .appliance small { color: var(--muted); }
+.appliance p { margin-top: 8px; font: 14px/1.45 ui-monospace, monospace; overflow-wrap: anywhere; }
+.appliance button, .appliance a, .appliance select {
+  appearance: none;
+  font: inherit;
+  line-height: 1.3;
+  text-decoration: none;
+  color: var(--ink);
+  background: #19211a;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  box-shadow: none;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 10px;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.appliance button:disabled { color: #858e7d; background: #131814; cursor: default; border-style: dashed; }
+.appliance button:focus-visible, .appliance a:focus-visible, .appliance select:focus-visible { outline: 3px solid #f3e590; outline-offset: -3px; }
+.appliance button[aria-pressed='true'], .appliance button[aria-current='page'] { background: var(--ink); color: #0d160e; border-color: var(--ink); }
+.appliance button:active:not(:disabled) { transform: translateY(1px); }
+.appliance select { display: block; width: 100%; padding-right: 30px; background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%); background-position: calc(100% - 18px) 19px, calc(100% - 12px) 19px; background-size: 6px 6px; background-repeat: no-repeat; }
+.appliance label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0; }
+.appliance label select { margin-top: 5px; }
+.appliance-top { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid var(--line); padding: 4px 12px; min-width: 0; }
+.appliance-top > a { display: flex; align-items: center; gap: 9px; padding: 0; border: 0; background: none; flex-shrink: 0; }
+.appliance-top > a > span:last-child { display: flex; flex-direction: column; }
+.appliance-top small { font-size: 10px; letter-spacing: 1px; }
+.appliance-logo { font-size: 23px; padding: 3px 6px; border: 2px solid var(--ink); line-height: 1.2; }
+.appliance-mode { font-size: 11px; color: var(--muted); margin-left: auto; text-align: right; line-height: 1.5; }
+.appliance-mode.simulation { color: #ffe294; }
+.appliance-top .appliance-disarm { min-width: 92px; border-color: #877444; color: #ffe294; }
+.appliance-content { padding: 12px 14px; overflow: auto; overscroll-behavior: contain; scrollbar-color: var(--line) #111710; min-width: 0; animation: appliance-page 100ms ease-out; }
+.appliance-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; min-width: 0; }
+.appliance-section-heading > span { color: var(--muted); font-size: 11px; }
+.appliance-section-heading > button { font-size: 12px; }
+.appliance-device-choice, .appliance-subnav, .appliance-inline-actions, .appliance-adjust, .appliance-presets, .appliance-dialog-actions { display: flex; gap: 6px; margin: 8px 0; }
+.appliance-device-choice > button, .appliance-subnav > button, .appliance-adjust > button, .appliance-presets > button { flex: 1; }
+.appliance-subnav { border-bottom: 1px solid var(--line); padding-bottom: 8px; margin-top: 0; }
+.appliance-inline-actions { flex-wrap: wrap; }
+.appliance-inline-actions > * { flex: 1 1 auto; text-align: center; }
+.appliance-perform { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, .9fr); gap: 16px; }
+.appliance-performance-targets { display: flex; gap: 8px; }
+.appliance-performance-targets > section { flex: 1; min-width: 0; }
+.appliance-target-grid { display: grid; grid-template-columns: repeat(4, minmax(44px, 1fr)); gap: 6px; }
+.appliance-target-grid > button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 52px; padding: 5px 3px; }
+.appliance-target-grid > button strong { font-size: 20px; font-weight: 400; }
+.appliance-target-grid > button span { font-size: 9px; }
+.appliance-target-grid > button.locked { border: 2px solid #b3b481; background-image: repeating-linear-gradient(135deg, transparent, transparent 5px, #7a81531a 5px, #7a81531a 7px); }
+.appliance-target-grid.a4 { grid-template-columns: repeat(2, minmax(44px, 1fr)); }
+.appliance-target-grid.a4 > button { min-height: 80px; }
+.appliance-target-grid.compact { grid-template-columns: repeat(4, minmax(44px, 1fr)); }
+.appliance-target-grid.compact > button { min-height: 52px; }
+.appliance-depth { width: 100%; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px 10px; text-align: left; }
+.appliance-depth strong { font-size: 30px; font-weight: 400; line-height: 1.2; }
+.appliance-depth small { font-size: 12px; color: inherit; }
+.appliance-meter { display: block; height: 7px; background: #364132; grid-column: 1 / -1; margin: 4px 0; overflow: hidden; }
+.appliance-meter i { display: block; height: 100%; background: var(--accent); }
+.appliance-perform-right .appliance-depth { min-height: 76px; }
+.appliance-empty { margin-top: 12px; border: 1px dashed var(--line); padding: 12px; }
+.appliance-empty > span { display: block; font-size: 11px; margin-bottom: 9px; }
+.appliance-diff { margin-top: 10px; }
+.appliance-diff table { width: 100%; border-collapse: collapse; font: 12px/1.4 ui-monospace, monospace; }
+.appliance-diff th { text-align: left; font-weight: normal; }
+.appliance-diff td { text-align: right; }
+.appliance-diff th, .appliance-diff td { padding: 6px 3px; border-bottom: 1px solid var(--line); }
+.appliance-diff thead { color: var(--muted); font-size: 10px; }
+.appliance-receipt { padding: 8px; border: 1px solid var(--line); }
+.appliance-target-editor { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
+.appliance-track-rules { padding-left: 16px; border-left: 1px solid var(--line); }
+.appliance-lock { width: 100%; margin-top: 8px; }
+.appliance-page-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.appliance-page-list > p { grid-column: 1 / -1; }
+.appliance-page-rule { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 6px; background: var(--panel); border: 1px solid var(--line); }
+.appliance-page-rule > button { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; font-size: 11px; overflow-wrap: anywhere; text-align: left; }
+.appliance-page-rule > button strong { font-size: 11px; }
+.appliance-page-rule .appliance-depth > span:first-child { display: none; }
+.appliance-page-rule .appliance-depth strong { grid-column: 1 / -1; font-size: 22px; }
+.appliance-page-filter { max-width: 420px; }
+.appliance-parameter-list { margin-top: 8px; }
+.appliance-parameter-list > article { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--line); padding: 7px 0; }
+.appliance-parameter-list > article > div { flex: 1; min-width: 0; }
+.appliance-parameter-list strong { display: block; font-size: 12px; font-weight: 400; }
+.appliance-parameter-list small { display: block; margin-top: 4px; font: 11px/1.4 ui-monospace, monospace; overflow-wrap: anywhere; }
+.appliance-parameter-list button { width: 100px; font-size: 11px; }
+.appliance-linked-lanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 10px 0; }
+.appliance-provenance { border: 1px solid var(--line); padding: 10px; background: var(--panel); margin-bottom: 10px; }
+.appliance-provenance > div { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.appliance-provenance > div > span { font-size: 10px; color: var(--muted); text-align: right; }
+.appliance-provenance h3 { margin-top: 9px; }
+.appliance-history-overview { display: flex; align-items: center; gap: 20px; padding: 12px; border: 1px solid var(--line); margin: 10px 0; }
+.appliance-history-overview strong { font-size: 32px; font-weight: 400; }
+.appliance-history-overview small { display: block; font-size: 11px; }
+.appliance-profile-list > article { border: 1px solid var(--line); padding: 10px; margin-top: 10px; }
+.appliance-details { margin: 10px 0; }
+.appliance-details > div { display: grid; grid-template-columns: 120px minmax(0, 1fr); border-bottom: 1px solid var(--line); padding: 6px 0; }
+.appliance-details dt { font-size: 11px; color: var(--muted); }
+.appliance-details dd { font: 13px/1.4 ui-monospace, monospace; margin: 0; overflow-wrap: anywhere; }
+.appliance-diagnostic-row { padding: 9px 0; border-bottom: 1px solid var(--line); }
+.appliance-diagnostic-row small { display: block; }
+.appliance-notice { border-top: 1px solid var(--line); padding: 4px 14px; display: flex; align-items: center; gap: 9px; min-width: 0; }
+.appliance-notice > span { color: var(--accent); font-size: 10px; }
+.appliance-notice > p { margin: 0; font-size: 11px; line-height: 1.2; overflow: auto; max-height: 26px; }
+.appliance-action-row { display: grid; grid-template-columns: 1.2fr 1.2fr 1fr 1.5fr; gap: 6px; padding: 4px 14px; background: #121a12; border-top: 1px solid var(--line); }
+.appliance-action-row button { font-size: 12px; padding: 6px 3px; }
+.appliance button.appliance-primary:not(:disabled) { color: #111710; background: var(--accent); border-color: var(--accent); }
+.appliance button.appliance-mutate:not(:disabled) { border: 2px solid var(--accent); color: var(--accent); }
+.appliance-nav { display: grid; grid-template-columns: repeat(6, minmax(44px, 1fr)); gap: 6px; padding: 4px 14px; border-top: 1px solid var(--line); }
+.appliance-nav button { font-size: 11px; padding: 5px 3px; }
+.appliance-unavailable { max-width: 540px; margin: 25px auto; }
+.appliance-unavailable > button, .appliance-unavailable > a { display: inline-flex; align-items: center; margin: 15px 6px 0 0; }
+.appliance-dialog-backdrop { position: fixed; inset: 0; z-index: 1000; background: #020702e8; display: flex; align-items: center; justify-content: center; padding: 8px; }
+.appliance-dialog { width: min(600px, 100%); max-height: calc(100dvh - 16px); overflow: auto; border: 2px solid var(--ink); background: #131a13; box-shadow: 5px 5px 0 #000; padding: 12px; }
+.appliance-dialog > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.appliance-dialog > header h2 { font-size: 14px; }
+.appliance-dialog > header button { font-size: 11px; }
+.appliance-number { display: block; font-size: 54px; line-height: 1.5; text-align: center; margin: 8px 0; }
+.appliance-name { display: block; min-height: 44px; border: 1px solid var(--line); padding: 8px; margin: 8px 0; overflow-wrap: anywhere; }
+.appliance-keyboard { display: grid; grid-template-columns: repeat(8, minmax(44px, 1fr)); gap: 5px; }
+.appliance-keyboard button { padding: 5px; }
+.appliance-dialog-actions { justify-content: flex-end; margin-top: 16px; }
+.appliance-dialog-actions > button { flex: 1; }
+@keyframes appliance-page { from { opacity: .65; } to { opacity: 1; } }
+@media (min-width: 1000px) {
+  .appliance { grid-template-rows: 60px minmax(0, 1fr) 32px 56px 56px; font-size: 16px; }
+  .appliance-content { padding: 16px 20px; }
+  .appliance-target-grid > button { min-height: 74px; }
+  .appliance-target-grid.a4 > button { min-height: 120px; }
+  .appliance-action-row, .appliance-nav { padding-left: 20px; padding-right: 20px; }
+}
+@media (max-width: 650px) {
+  .appliance { grid-template-rows: 48px minmax(0, 1fr) 28px 48px 48px; font-size: 12px; }
+  .appliance-top { gap: 8px; padding: 2px 8px; }
+  .appliance-top > a > span:last-child { font-size: 10px; }
+  .appliance-top small { font-size: 8px; letter-spacing: 0; }
+  .appliance-logo { font-size: 19px; }
+  .appliance-mode { font-size: 9px; }
+  .appliance-top .appliance-disarm { min-width: 68px; padding: 5px; font-size: 10px; }
+  .appliance-content { padding: 8px; }
+  .appliance h1, .appliance h2 { font-size: 14px; }
+  .appliance-perform { grid-template-columns: minmax(0, 1fr) minmax(170px, .85fr); gap: 10px; }
+  .appliance-target-grid { gap: 4px; }
+  .appliance-target-grid > button, .appliance-target-grid.compact > button { min-height: 44px; }
+  .appliance-target-grid > button strong { font-size: 16px; }
+  .appliance-target-grid > button span { font-size: 8px; }
+  .appliance-target-grid.a4 > button { min-height: 64px; }
+  .appliance-target-grid.compact { grid-template-columns: repeat(2, minmax(44px, 1fr)); }
+  .appliance-performance-targets { gap: 6px; }
+  .appliance-performance-targets .appliance-section-heading { flex-wrap: wrap; gap: 3px; }
+  .appliance-performance-targets .appliance-section-heading button { font-size: 10px; padding: 5px; }
+  .appliance-device-choice, .appliance-subnav { gap: 4px; margin: 5px 0; }
+  .appliance-empty { padding: 8px; margin-top: 8px; }
+  .appliance-empty > span { font-size: 9px; margin-bottom: 5px; }
+  .appliance-empty p { font-size: 11px; }
+  .appliance-perform-right .appliance-depth { min-height: 64px; padding: 5px 7px; }
+  .appliance-depth strong { font-size: 24px; }
+  .appliance-depth > span:first-child { font-size: 11px; }
+  .appliance-target-editor { grid-template-columns: minmax(0, 1fr) minmax(150px, .85fr); gap: 8px; }
+  .appliance-track-rules { padding-left: 8px; }
+  .appliance-page-list { grid-template-columns: 1fr; }
+  .appliance-action-row, .appliance-nav { padding: 2px 8px; gap: 4px; }
+  .appliance-action-row button { font-size: 10px; }
+  .appliance-nav button { font-size: 9px; }
+  .appliance-notice { padding: 3px 8px; }
+  .appliance-notice > p { font-size: 10px; max-height: 22px; }
+  .appliance-keyboard { grid-template-columns: repeat(7, minmax(44px, 1fr)); }
+  .appliance-number { font-size: 36px; margin: 4px 0; }
+  .appliance-dialog { padding: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .appliance *, .appliance *::before, .appliance *::after { animation: none !important; transition: none !important; } }
+html[data-appliance-motion='reduced'] .appliance * { animation: none !important; transition: none !important; }
