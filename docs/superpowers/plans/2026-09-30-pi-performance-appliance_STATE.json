@@ -251,6 +251,23 @@
       "wall_seconds": 195.094,
       "workers": 4,
       "note": "Includes the auth-log isolation regression cases. Hosted replacement CI remains pending; no physical Pi, native ARM64 or live-hardware acceptance claim."
+    },
+    {
+      "scope": "hosted POSIX privacy assertion portability",
+      "tree": "b5a7e43237d63a3601fb35c2e0c5e7a8b61a4979",
+      "result": "failed; retained for audit",
+      "passed": 10622,
+      "failed": 2,
+      "skipped": 2,
+      "note": "macOS job 109999524103 and Ubuntu job 109999522862 passed exact seven-event assertions, then both variants failed a broad /appliance substring exclusion because standard LogRecord.pathname ends in /appliance_runtime.py. Source metadata must be distinguished from request data while retaining whole-record credential and unique request-path exclusion. Replacement hosted acceptance remains pending."
+    },
+    {
+      "scope": "runtime agent POSIX pathname regression repair",
+      "tree": "f4ff03e7cc9a232238d8a0bb8b9388abc8798f1a",
+      "result": "focused checks passed; hosted CI pending",
+      "passed": 19,
+      "ordered_neighbor_passed": 48,
+      "note": "Reproduced both failures with POSIX-normalized source metadata on Windows. Verifies source pathname resolves to runtime module and exempts only that field from broad route exclusion. Original-record credential scan includes a unique actually requested path sentinel; seven-event/category/metric/zero-MIDI assertions remain. Lint and independent review clean; production unchanged."
     }
   ],
   "integration_shas": [

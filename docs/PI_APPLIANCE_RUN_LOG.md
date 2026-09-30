@@ -80,3 +80,25 @@ skips and eight warnings, using four workers: 192.92 seconds pytest and 195.094
 seconds wall. This result includes the auth-log isolation regression cases.
 These software and desktop CI observations grant no physical Pi, native ARM64
 or live-hardware acceptance.
+
+## 2026-09-30 — POSIX log metadata assertion
+
+Hosted macOS job `109999524103` and Ubuntu job `109999522862` at `b5a7e432`
+passed the repaired seven-event assertions, then exposed a second portability
+issue: the broad request-path exclusion also matched Python's standard source
+`pathname`, which ends in `/appliance_runtime.py` on POSIX. Each job reported
+two failed parameter variants, 10,622 passed and two platform/reference skips.
+This is distinct from a request-path leak; the production event contains only
+the fixed message, refusal category and transport. The next test checkpoint
+must distinguish verified source metadata from request data, exercise POSIX
+paths on Windows, and retain whole-record credential and unique request-path
+exclusion. Earlier results remain historical; new hosted acceptance is required.
+
+Test-only repair `f4ff03e7cc9a232238d8a0bb8b9388abc8798f1a` first reproduced
+both failures locally by normalizing source metadata to POSIX. It verifies that
+each original source pathname belongs to the runtime module, exempts only that
+trusted field from the broad route check, and scans full original records for
+credentials and a unique path used in an actual refused request. Both inherited
+propagation variants and all seven refusal assertions remain. Local runtime
+19-case and ordered 48-case checks passed, with lint and independent review
+clean. Production behavior is unchanged; hosted replacement CI is still pending.
