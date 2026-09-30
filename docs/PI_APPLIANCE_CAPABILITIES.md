@@ -1,6 +1,6 @@
 # Appliance parameter evidence and optional controls
 
-`rytm_randomizer.cockpit.appliance_capabilities.appliance_capability_matrix()`
+`rytm_randomizer.cockpit.capture.appliance_capabilities.appliance_capability_matrix()`
 provides the versioned JSON-compatible matrix consumed by appliance diagnostics
 and the parameter UI. It computes its rows from the existing catalogs rather
 than a checked-in copy that could drift. It performs no MIDI or filesystem I/O.

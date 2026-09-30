@@ -6,7 +6,6 @@ from pathlib import Path
 
 import pytest
 
-from rytm_randomizer.cockpit.appliance_capabilities import parameter_capabilities
 from rytm_randomizer.cockpit.capture import appliance_a4 as projection
 from rytm_randomizer.cockpit.capture.appliance_a4 import (
     A4ApplianceFieldEncoding,
@@ -14,14 +13,14 @@ from rytm_randomizer.cockpit.capture.appliance_a4 import (
     appliance_a4_parameter_encodings,
     appliance_snapshot_from_a4_capture,
 )
+from rytm_randomizer.cockpit.capture.appliance_capabilities import parameter_capabilities
 from rytm_randomizer.cockpit.capture.service import KitCaptureResult, decode_kit_capture_frame
 from rytm_randomizer.cockpit.data.stage import ANALOG_FOUR_DEVICE_ID, ANALOG_RYTM_DEVICE_ID
-from rytm_randomizer.devices.strategies.analog_four_kit_fields import A4Kit
+from rytm_randomizer.devices import A4Kit, AnalogFourKitSnapshot
 from rytm_randomizer.devices.strategies.analog_four_saved_kit_codec import (
     decode_analog_four_saved_kit_payload,
     encode_analog_four_saved_kit_payload,
 )
-from rytm_randomizer.devices.strategies.analog_four_snapshot_decoder import AnalogFourKitSnapshot
 
 
 @pytest.fixture

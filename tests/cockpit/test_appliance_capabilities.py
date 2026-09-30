@@ -8,8 +8,8 @@ from decimal import Decimal
 
 import pytest
 
-from rytm_randomizer.cockpit import appliance_capabilities as capabilities
-from rytm_randomizer.cockpit.appliance_capabilities import (
+from rytm_randomizer.cockpit.capture import appliance_capabilities as capabilities
+from rytm_randomizer.cockpit.capture.appliance_capabilities import (
     ApplianceParameterCapability,
     appliance_capability_matrix,
     get_parameter_capability,
