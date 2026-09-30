@@ -994,6 +994,10 @@ export interface ApplianceParameter {
   parameter: string;
   cockpit_key: string | null;
   value: number | null;
+  machine_key: string | null;
+  values_by_track: Record<string, number>;
+  display_value?: string | null;
+  display_values_by_track?: Record<string, string>;
   default_protected: boolean;
   categorical?: boolean;
   protection_reasons?: string[];
@@ -1001,6 +1005,7 @@ export interface ApplianceParameter {
 }
 export interface ApplianceLane {
   device_id: ApplianceDeviceId;
+  reference_track_id: number | null;
   scope: ApplianceScope;
   provenance: {
     source_type: 'simulation' | 'saved_kit' | 'disconnected';
@@ -1020,6 +1025,8 @@ export interface ApplianceChange {
   page: string;
   before: number;
   after: number;
+  before_display?: string;
+  after_display?: string;
 }
 export interface ApplianceCandidate {
   candidate_id: string;

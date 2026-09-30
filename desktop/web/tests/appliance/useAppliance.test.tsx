@@ -79,4 +79,35 @@ describe('authenticated appliance controller', () => {
     const second = renderHook(() => useAppliance(fake.asClient())); second.unmount();
     await act(async () => resolve({ request_id: 'state', ok: true, appliance: applianceState() }));
   });
+
+  it('lets disarm supersede a pending action and ignores its eventual result', async () => {
+    const fake = new ApplianceFakeClient(); fake.ackQueue.push({ request_id: 'state', ok: true, appliance: applianceState({ armed: true }) });
+    const { result } = renderHook(() => useAppliance(fake.asClient())); await waitFor(() => expect(result.current.state).not.toBeNull());
+    let resolve!: (ack: CommandAck) => void; fake.responseQueue.push(new Promise((done) => { resolve = done; }));
+    let pending!: Promise<CommandAck | null>; act(() => { pending = result.current.execute('mutate'); });
+    await act(async () => { await result.current.command({ type: 'disarm' }); });
+    expect(fake.sent.at(-1)).toEqual({ type: 'disarm' });
+    await act(async () => { resolve({ request_id: 'old', ok: true, appliance: applianceState({ armed: true, revision: 8 }) }); await pending; });
+    expect(result.current.state?.revision).toBe(3);
+  });
+
+  it('renders default refusal message and explicit bootstrap refusal', async () => {
+    const fake = new ApplianceFakeClient(); fake.ackQueue.push({ request_id: 'state', ok: false, message: 'Upgrade required' });
+    const { result } = renderHook(() => useAppliance(fake.asClient())); await waitFor(() => expect(result.current.notice).toBe('Upgrade required'));
+    act(() => fake.emit({ type: 'appliance_changed', state: applianceState() }));
+    fake.ackQueue.push({ request_id: 'refuse', ok: false }); await act(async () => { await result.current.execute('mutate'); });
+    expect(result.current.notice).toMatch(/Command refused/);
+    fake.ackQueue.push({ request_id: 'refuse', ok: false, message: 'Locked' }); await act(async () => { await result.current.execute('mutate'); }); expect(result.current.notice).toBe('Locked');
+  });
+
+  it('ignores rejected late commands and both resolved/rejected late bootstrap results', async () => {
+    const fake = new ApplianceFakeClient(); fake.ackQueue.push({ request_id: 'state', ok: true, appliance: applianceState() });
+    const { result, unmount } = renderHook(() => useAppliance(fake.asClient())); await waitFor(() => expect(result.current.state).not.toBeNull());
+    let reject!: (reason: Error) => void; fake.responseQueue.push(new Promise((_resolve, fail) => { reject = fail; })); let pending!: Promise<CommandAck | null>;
+    act(() => { pending = result.current.execute('mutate'); }); act(() => fake.setStatus('closed'));
+    await act(async () => { reject(new Error('late')); await pending; }); expect(result.current.notice).toMatch(/Transport disconnected/); unmount();
+    let resolve!: (ack: CommandAck) => void; fake.responseQueue.push(new Promise((done) => { resolve = done; })); fake.setStatus('connected');
+    const late = renderHook(() => useAppliance(fake.asClient())); act(() => fake.setStatus('closed')); await act(async () => resolve({ request_id: 'late', ok: true, appliance: applianceState() })); expect(late.result.current.state).toBeNull(); late.unmount();
+    fake.setStatus('connected'); fake.responseQueue.push(new Promise((_resolve, fail) => { reject = fail; })); const gone = renderHook(() => useAppliance(fake.asClient())); gone.unmount(); await act(async () => reject(new Error('late bootstrap')));
+  });
 });

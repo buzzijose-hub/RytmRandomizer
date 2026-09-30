@@ -5,13 +5,14 @@ import { FakeCockpitClient } from '../cockpit/_fixtures';
 function lane(device_id: ApplianceLane['device_id']): ApplianceLane {
   return {
     device_id,
+    reference_track_id: 1,
     scope: { target_ids: [1, 2], locked_ids: [2], page_ids: ['FILTER'], track_depths: {}, page_depths: {}, parameter_locks: ['pitch'] },
     provenance: { source_type: 'simulation', fingerprint: `fixture-${device_id}`, captured_at: '2026-09-30T14:00:00Z', kit_name: 'TOUCH REHEARSAL', working_state_verified: false },
     parameters: [
-      { parameter_id: 'cutoff', page: 'FILTER', parameter: 'CUTOFF', cockpit_key: 'flt', value: 64, default_protected: false, categorical: false, protection_reasons: [], blockers: [] },
-      { parameter_id: 'pitch', page: 'FILTER', parameter: 'TUNING', cockpit_key: 'tun', value: 64, default_protected: true, categorical: false, protection_reasons: ['tuning'], blockers: [] },
-      { parameter_id: 'route', page: 'FILTER', parameter: 'ROUTING', cockpit_key: null, value: null, default_protected: true, categorical: true, protection_reasons: ['routing'], blockers: ['offset_unknown'] },
-      { parameter_id: 'decay', page: 'AMP', parameter: 'DECAY', cockpit_key: 'dec', value: 70, default_protected: false, categorical: false, protection_reasons: [], blockers: ['capture_mapping_pending'] },
+      { parameter_id: 'cutoff', page: 'FILTER', parameter: 'CUTOFF', cockpit_key: 'flt', value: 64, machine_key: null, values_by_track: { '1': 64, '2': 72 }, default_protected: false, categorical: false, protection_reasons: [], blockers: [] },
+      { parameter_id: 'pitch', page: 'FILTER', parameter: 'TUNING', cockpit_key: 'tun', value: 64, machine_key: null, values_by_track: { '1': 64, '2': 72 }, default_protected: true, categorical: false, protection_reasons: ['tuning'], blockers: [] },
+      { parameter_id: 'route', page: 'FILTER', parameter: 'ROUTING', cockpit_key: null, value: null, machine_key: null, values_by_track: {}, default_protected: true, categorical: true, protection_reasons: ['routing'], blockers: ['offset_unknown'] },
+      { parameter_id: 'decay', page: 'AMP', parameter: 'DECAY', cockpit_key: 'dec', value: 70, machine_key: null, values_by_track: { '1': 70, '2': 80 }, default_protected: false, categorical: false, protection_reasons: [], blockers: ['capture_mapping_pending'] },
     ], blocked_reasons: [],
   };
 }
