@@ -284,6 +284,7 @@ def test_failed_dependency_update_keeps_current_units_and_previous_release(
         "invalid_template",
         "omitted_source",
         "added_source",
+        "standalone_pyc",
         "metadata_sha",
         "metadata_version",
     ],
@@ -322,6 +323,10 @@ def test_rollback_refuses_unusable_previous_before_stopping_current(
         (previous / "manifest.json").write_text(json.dumps(manifest))
     elif damage == "added_source":
         (previous / "src/rytm_randomizer/cockpit/untracked.py").write_text("changed module")
+    elif damage == "standalone_pyc":
+        (previous / "src/rytm_randomizer/cockpit/ws/untracked.pyc").write_bytes(
+            b"unlisted sourceless import module"
+        )
     elif damage in {"omitted_source", "metadata_sha", "metadata_version"}:
         manifest = json.loads((previous / "manifest.json").read_text())
         if damage == "omitted_source":
