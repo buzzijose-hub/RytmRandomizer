@@ -264,20 +264,39 @@ def test_packaging_missing_git_is_actionable_before_output(
     assert not (tmp_path / "artifact.tar").exists()
 
 
-def test_source_identity_refuses_untracked_frontend_inputs(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize(
+    "untracked",
+    ["desktop/web/public/untracked.png", "rytm_randomizer/cockpit/untracked.py"],
+)
+def test_source_identity_refuses_untracked_build_inputs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, untracked: str
 ) -> None:
     monkeypatch.setattr(cli, "ROOT", tmp_path)
     monkeypatch.setattr(cli.shutil, "which", lambda _name: "/full/git")
     monkeypatch.setattr(
         cli,
         "checked",
-        lambda command, **_kwargs: (
-            "?? desktop/web/public/untracked.png" if command[1] == "status" else ""
-        ),
+        lambda command, **_kwargs: ("?? " + untracked if command[1] == "status" else ""),
     )
     with pytest.raises(ValueError, match="untracked files"):
         cli.committed_source()
+
+
+def test_source_identity_covers_python_and_frontend_build_inputs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(cli, "ROOT", tmp_path)
+    monkeypatch.setattr(cli.shutil, "which", lambda _name: "/full/git")
+    seen: list[list[str]] = []
+
+    def git(command: list[str], **_kwargs: object) -> str:
+        seen.append(command)
+        return "a" * 40 if command[1] == "rev-parse" else ""
+
+    monkeypatch.setattr(cli, "checked", git)
+    assert cli.committed_source() == ("/full/git", "a" * 40)
+    assert seen[0] == ["/full/git", "diff", "--exit-code", "HEAD"]
+    assert seen[1][-4:] == ["desktop/web", "rytm_randomizer", "pyproject.toml", "VERSION"]
 
 
 def web_project(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
@@ -377,8 +396,9 @@ def test_receipt_size_bound_and_nested_receipt_asset_are_verified(
         cli.verify_web_receipt(web / "dist", "a" * 40)
 
 
-def test_valid_build_receipt_is_included_in_verified_package(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize("source_changed", [False, True])
+def test_verified_package_publishes_only_from_stable_source_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, source_changed: bool
 ) -> None:
     web = web_project(tmp_path, monkeypatch)
     monkeypatch.setattr(cli, "checked", fake_web_build)
@@ -393,10 +413,21 @@ def test_valid_build_receipt_is_included_in_verified_package(
         member = tarfile.TarInfo("pyproject.toml")
         member.size = 7
         source.addfile(member, io.BytesIO(b"fixture"))
-    monkeypatch.setattr(
-        cli.subprocess, "run", lambda *_args, **_kwargs: SimpleNamespace(stdout=buffer.getvalue())
-    )
+
+    def source_archive(command: list[str], **_kwargs: object) -> SimpleNamespace:
+        assert command[3] == "a" * 40
+        assert "LICENSE" in command
+        return SimpleNamespace(stdout=buffer.getvalue())
+
+    monkeypatch.setattr(cli.subprocess, "run", source_archive)
     output = tmp_path / "artifact.tar"
+    if source_changed:
+        identities = iter([("/full/git", "a" * 40), ("/full/git", "b" * 40)])
+        monkeypatch.setattr(cli, "committed_source", lambda: next(identities))
+        with pytest.raises(ValueError, match="changed during packaging"):
+            cli.package(output, web_root=web / "dist", wheelhouse=None)
+        assert not output.exists() and not output.with_suffix(".tar.sha256").exists()
+        return
     cli.package(output, web_root=web / "dist", wheelhouse=None)
     metadata = cli.unpack_verified(output, tmp_path / "verified")
     assert metadata["source_sha"] == "a" * 40
