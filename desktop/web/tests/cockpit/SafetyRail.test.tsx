@@ -73,4 +73,22 @@ describe('SafetyRail', () => {
 
     expect(screen.getByText('Blocked')).toBeInTheDocument();
   });
+
+  it('explains that a paired-control refusal blocks every packet in the plan', () => {
+    act(() => {
+      useCockpitStore.getState().setSendPlan({
+        ...sendPlan,
+        ready: false,
+        readiness_reason: 'paired_control_precision_unverified',
+        blocked_reasons: ['paired_control_precision_unverified'],
+      });
+    });
+
+    render(<SafetyRail />);
+
+    expect(screen.getByText('Blocked')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Paired-control precision is unverified. No part of this plan will be sent.',
+    );
+  });
 });

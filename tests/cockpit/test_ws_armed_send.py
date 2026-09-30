@@ -24,14 +24,14 @@ not move).
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 import pytest
 from cockpit.conftest import TEST_WS_TOKEN, _make_default_snapshot, complete_handshake
 from fastapi.testclient import TestClient
 
-from rytm_randomizer.cockpit.data import CockpitSendPlan, SendPlanPacket
+from rytm_randomizer.cockpit.data import CockpitSendPlan, PadDelta, SendPlanPacket
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
@@ -145,6 +145,51 @@ def _stage_send(session: CockpitSession, *, ready: bool = True) -> CockpitSendPl
     plan = _plan(ready=ready)
     session.current_send_plan = plan
     return plan
+
+
+def test_armed_send_refuses_whole_plan_when_paired_control_is_changed(tmp_path: Path) -> None:
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+
+    reset_metrics()
+    session = _make_session(tmp_path)
+    provider = _FakeProvider()
+    session.arm_port_provider = provider
+    assert _arm(session)["ok"] is True
+    _stage_send(session)
+    candidate = session.current_candidate
+    assert candidate is not None
+    session.current_candidate = replace(
+        candidate,
+        pad_deltas=(
+            PadDelta(
+                pad_id=1,
+                proposed_params={"tun": 45, "lfo_depth": 81},
+                changed_keys=frozenset({"tun", "lfo_depth"}),
+            ),
+        ),
+        estimated_midi_msgs=2,
+    )
+    before_snapshot = session.device.capture_snapshot()
+    before_history = session.history_store.current
+
+    prepared = _dispatch(session, {"type": "prepare_send_plan"})
+    assert prepared["ok"] is True
+    assert prepared["send_plan"]["readiness_reason"] == "paired_control_precision_unverified"
+    assert prepared["send_plan"]["packets"] == [
+        {"pad_id": 1, "parameter": "tun", "channel": 0, "control": 17, "value": 45}
+    ]
+    refused = _dispatch(
+        session,
+        {"type": "send", "confirm": True, "send_plan_id": prepared["send_plan"]["plan_id"]},
+    )
+
+    assert refused["ok"] is False
+    assert provider.port.sent == []
+    assert get_metrics().cc_sent_by_channel == {}
+    assert session.device.capture_snapshot() == before_snapshot
+    assert session.history_store.current == before_history
+    assert _dispatch(session, {"type": "disarm"})["ok"] is True
+    reset_metrics()
 
 
 # ---------------------------------------------------------------------------
