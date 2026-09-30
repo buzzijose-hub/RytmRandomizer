@@ -3,11 +3,12 @@ import { useEffect, useId, useRef, type ReactNode } from 'react';
 interface TouchDialogProps {
   title: string;
   children: ReactNode;
+  actions?: ReactNode;
   onClose: () => void;
 }
 
 /** One accessible touch dialog shared by exact-action and numeric controls. */
-export function TouchDialog({ title, children, onClose }: TouchDialogProps): JSX.Element {
+export function TouchDialog({ title, children, actions, onClose }: TouchDialogProps): JSX.Element {
   const titleId = useId();
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -40,7 +41,8 @@ export function TouchDialog({ title, children, onClose }: TouchDialogProps): JSX
         }}
       >
         <header><h2 id={titleId}>{title}</h2><button type="button" aria-label="Close dialog" onClick={onClose}>CLOSE</button></header>
-        {children}
+        <div className="appliance-dialog-body">{children}</div>
+        {actions !== undefined && <footer className="appliance-dialog-footer">{actions}</footer>}
       </div>
     </div>
   );

@@ -34,21 +34,42 @@ async function check(name, width, height) {
     const surface = document.querySelector('[role="dialog"]') ?? root;
     const boxes = [...surface.querySelectorAll('button, select, a[href]')].map((element) => {
       const rect = element.getBoundingClientRect();
-      const clip = element.closest('.appliance-content')?.getBoundingClientRect() ?? { top: 0, bottom: innerHeight, left: 0, right: innerWidth };
+      const clip = element.closest('.appliance-dialog-body, .appliance-content')?.getBoundingClientRect() ?? { top: 0, bottom: innerHeight, left: 0, right: innerWidth };
       return { label: element.textContent?.trim().slice(0, 50), width: Math.round(rect.width), height: Math.round(rect.height), visible: rect.height > 0 && rect.bottom > Math.max(0, clip.top) && rect.top < Math.min(innerHeight, clip.bottom) && rect.right > 0 && rect.left < innerWidth };
     }).filter((box) => box.visible);
-    return { viewport: [innerWidth, innerHeight], documentWidth: document.documentElement.scrollWidth, applianceWidth: root.scrollWidth, touchFailures: boxes.filter((box) => box.width < 44 || box.height < 44), visibleTouchControls: boxes.length, pixelFontLoaded: [...document.fonts].some((font) => font.family === 'Appliance Pixel' && font.status === 'loaded') };
+    const dialog = document.querySelector('[role="dialog"]');
+    const modalChromeFailures = dialog ? [...dialog.querySelectorAll(':scope > header h2, :scope > header button, :scope > footer button')].filter((element) => {
+      const rect = element.getBoundingClientRect();
+      const bounds = dialog.getBoundingClientRect();
+      return rect.height <= 0 || rect.top < Math.max(0, bounds.top) - .5 || rect.bottom > Math.min(innerHeight, bounds.bottom) + .5 || rect.left < Math.max(0, bounds.left) - .5 || rect.right > Math.min(innerWidth, bounds.right) + .5;
+    }).map((element) => element.textContent?.trim()) : [];
+    const body = dialog?.querySelector('.appliance-dialog-body');
+    if (dialog) {
+      const header = dialog.querySelector(':scope > header');
+      const footer = dialog.querySelector(':scope > footer');
+      if (!header || !body || !footer?.querySelector('button')) modalChromeFailures.push('Missing fixed dialog header/body/actions');
+      else if (body.getBoundingClientRect().top < header.getBoundingClientRect().bottom - .5 || body.getBoundingClientRect().bottom > footer.getBoundingClientRect().top + .5) modalChromeFailures.push('Dialog body overlaps fixed controls');
+    }
+    return { viewport: [innerWidth, innerHeight], documentWidth: document.documentElement.scrollWidth, applianceWidth: root.scrollWidth, touchFailures: boxes.filter((box) => box.width < 44 || box.height < 44), visibleTouchControls: boxes.length, modalChromeFailures, modalBodyScroll: body ? { top: body.scrollTop, height: body.clientHeight, contentHeight: body.scrollHeight } : null, pixelFontLoaded: [...document.fonts].some((font) => font.family === 'Appliance Pixel' && font.status === 'loaded') };
   });
   const screenshot = `${name}-${width}x${height}.png`;
   await page.screenshot({ path: resolve(directory, screenshot), fullPage: false });
   receipts.push({ screenshot, ...metrics });
-  if (metrics.documentWidth > width || metrics.applianceWidth > width || metrics.touchFailures.length || !metrics.pixelFontLoaded) {
+  if (metrics.documentWidth > width || metrics.applianceWidth > width || metrics.touchFailures.length || metrics.modalChromeFailures.length || !metrics.pixelFontLoaded) {
     throw new Error(`Visual/touch check failed: ${JSON.stringify({ screenshot, ...metrics })}`);
   }
 }
+async function checkFullyVisible(locator) {
+  const visible = await locator.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const clip = element.closest('.appliance-dialog-body, .appliance-content').getBoundingClientRect();
+    return rect.height > 0 && rect.top >= Math.max(0, clip.top) - .5 && rect.bottom <= Math.min(innerHeight, clip.bottom) + .5 && rect.left >= 0 && rect.right <= innerWidth;
+  });
+  if (!visible) throw new Error(`Required capture evidence is clipped: ${await locator.textContent()}`);
+}
 async function checkTargetMatrix(expectedCount) {
   const result = await page.evaluate(() => {
-    const surface = document.querySelector('[role="dialog"]') ?? document.querySelector('.appliance-content');
+    const surface = document.querySelector('.appliance-dialog-body') ?? document.querySelector('.appliance-content');
     const clip = surface.getBoundingClientRect();
     const targets = [...surface.querySelectorAll('.appliance-target-grid > button')].filter((button) => button.getBoundingClientRect().height > 0);
     return { count: targets.length, clipped: targets.some((button) => {
@@ -77,8 +98,18 @@ try {
       }
       await clickNav('MORE');
       await page.getByRole('button', { name: 'CAPTURE', exact: true }).click();
-      await page.getByText('Capture input is unavailable. Scan inputs or launch with the passive capture provider.', { exact: true }).waitFor();
-      if (!await page.getByRole('button', { name: 'LISTEN FOR KIT CAPTURE', exact: true }).isDisabled()) throw new Error('Unavailable capture must be blocked.');
+      const blocker = page.getByText('Capture input is unavailable. Scan inputs or launch with the passive capture provider.', { exact: true });
+      await blocker.waitFor();
+      const scan = page.getByRole('button', { name: 'SCAN INPUTS', exact: true });
+      await scan.evaluate((element) => element.scrollIntoView({ block: 'start' }));
+      await checkFullyVisible(scan);
+      await checkFullyVisible(page.getByRole('button', { name: 'RESYNC APP STATE', exact: true }));
+      await check('production-capture-controls', width, height);
+      const listen = page.getByRole('button', { name: 'LISTEN FOR KIT CAPTURE', exact: true });
+      if (!await listen.isDisabled()) throw new Error('Unavailable capture must be blocked.');
+      await listen.evaluate((element) => element.scrollIntoView({ block: 'start' }));
+      await checkFullyVisible(listen);
+      await checkFullyVisible(blocker);
       await check('production-capture-unavailable', width, height);
       await page.getByRole('button', { name: 'DIAGNOSTICS', exact: true }).click();
       await check('production-diagnostics', width, height);
@@ -117,6 +148,8 @@ try {
     await check('profiles', width, height);
     await page.getByRole('button', { name: 'NAME: PERFORMANCE 1', exact: true }).click();
     await check('touch-keyboard', width, height);
+    await page.locator('.appliance-dialog-body').evaluate((body) => { body.scrollTop = body.scrollHeight; });
+    await check('touch-keyboard-scrolled', width, height);
     await page.getByRole('button', { name: 'Close dialog', exact: true }).click();
     await page.getByRole('button', { name: 'CAPTURE', exact: true }).click();
     await page.getByRole('button', { name: 'SCAN INPUTS', exact: true }).click();
@@ -130,6 +163,8 @@ try {
     await page.getByRole('button', { name: /^MASTER \d+ percent\. Adjust$/ }).click();
     await check('touch-depth', width, height);
     await page.getByRole('button', { name: '0%', exact: true }).click();
+    await page.locator('.appliance-dialog-body').evaluate((body) => { body.scrollTop = body.scrollHeight; });
+    await check('touch-depth-scrolled', width, height);
     await page.getByRole('button', { name: 'SET 0%', exact: true }).click();
     await page.waitForFunction(() => !document.querySelector('.appliance-notice')?.textContent?.includes('BUSY'));
     if (!await page.getByRole('button', { name: 'MUTATE', exact: true }).isDisabled()) throw new Error('Zero depth did not disable mutation.');
@@ -148,7 +183,13 @@ try {
   await page.getByText('EXACT NEXT APPLY', { exact: true }).waitFor();
   await check('mutation-preview', 800, 480);
   await page.getByRole('button', { name: 'LOCAL APPLY…', exact: true }).click();
-  await check('exact-apply-confirmation', 800, 480);
+  for (const [width, height] of [[800, 480], [480, 320], [1024, 600]]) {
+    await page.setViewportSize({ width, height });
+    await check('exact-apply-confirmation', width, height);
+    await page.locator('.appliance-dialog-body').evaluate((body) => { body.scrollTop = body.scrollHeight; });
+    await check('exact-apply-confirmation-scrolled', width, height);
+  }
+  await page.setViewportSize({ width: 800, height: 480 });
   await page.getByRole('button', { name: 'CONFIRM LOCAL APPLY', exact: true }).click();
   await page.locator('.appliance-receipt').waitFor();
   await check('local-apply-receipt', 800, 480);

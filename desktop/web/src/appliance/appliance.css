@@ -150,12 +150,15 @@
 .appliance-unavailable { max-width: 540px; margin: 25px auto; }
 .appliance-unavailable > button, .appliance-unavailable > a { display: inline-flex; align-items: center; margin: 15px 6px 0 0; }
 .appliance-dialog-backdrop { position: fixed; inset: 0; z-index: 1000; background: #020702e8; display: flex; align-items: center; justify-content: center; padding: 8px; }
-.appliance-dialog { width: min(600px, 100%); max-height: calc(100dvh - 16px); overflow: auto; border: 2px solid var(--ink); background: #131a13; box-shadow: 5px 5px 0 #000; padding: 12px; }
-.appliance-dialog > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.appliance-dialog { width: min(600px, 100%); max-height: calc(100dvh - 16px); display: flex; flex-direction: column; overflow: hidden; border: 2px solid var(--ink); background: #131a13; box-shadow: 5px 5px 0 #000; padding: 12px; }
+.appliance-dialog > header { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
 .appliance-dialog > header h2 { font-size: 14px; }
 .appliance-dialog > header button { font-size: 11px; }
+.appliance-dialog-body { min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-color: var(--line) #111710; }
+.appliance-dialog-footer { flex-shrink: 0; border-top: 1px solid var(--line); padding-top: 8px; }
+.appliance-dialog-footer > .appliance-dialog-actions, .appliance-dialog-footer > .appliance-inline-actions { margin: 0; }
 .appliance-number { display: block; font-size: 54px; line-height: 1.5; text-align: center; margin: 8px 0; }
-.appliance-name { display: block; min-height: 44px; border: 1px solid var(--line); padding: 8px; margin: 8px 0; overflow-wrap: anywhere; }
+.appliance-name { display: block; position: sticky; top: 0; z-index: 1; min-height: 44px; border: 1px solid var(--line); background: #131a13; padding: 8px; margin: 8px 0; overflow-wrap: anywhere; }
 .appliance-keyboard { display: grid; grid-template-columns: repeat(8, minmax(44px, 1fr)); gap: 5px; }
 .appliance-keyboard button { padding: 5px; }
 .appliance-dialog-actions { justify-content: flex-end; margin-top: 16px; }
