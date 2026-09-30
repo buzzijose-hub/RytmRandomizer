@@ -330,6 +330,32 @@ def test_build_writes_exact_receipt_only_after_success(
     cli.verify_web_receipt(web / "dist", "a" * 40)
 
 
+def test_dependency_metadata_is_explicit_utf8_even_under_a_legacy_locale(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    web = web_project(tmp_path, monkeypatch)
+    installed = web / "node_modules/example/package.json"
+    installed.parent.mkdir(parents=True)
+    installed.write_bytes('{"version":"1.2.3","author":"Unicode \u201d quote"}'.encode("utf-8"))
+    (web / "package-lock.json").write_bytes(
+        (
+            '{"name":"Unicode \u201d quote","packages":'
+            '{"node_modules/example":{"version":"1.2.3"}}}'
+        ).encode("utf-8")
+    )
+    original_read = Path.read_text
+    seen: list[Path] = []
+
+    def explicit_read(path: Path, encoding: str | None = None, errors: str | None = None) -> str:
+        assert encoding == "utf-8", "Dependency metadata must not use the host locale"
+        seen.append(path)
+        return original_read(path, encoding=encoding, errors=errors)
+
+    monkeypatch.setattr(Path, "read_text", explicit_read)
+    cli.verify_locked_dependencies(web)
+    assert seen == [web / "package-lock.json", installed]
+
+
 @pytest.mark.parametrize("mismatch", ["source", "lock", "asset", "extra", "missing", "schema"])
 def test_package_refuses_stale_or_tampered_web_receipt_before_output(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mismatch: str

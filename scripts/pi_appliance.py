@@ -146,7 +146,7 @@ def web_inventory(web_root: Path) -> dict[str, str]:
 
 def verify_locked_dependencies(web: Path) -> None:
     """Refuse installed dependency versions that differ from the existing npm lock."""
-    lock = json.loads((web / "package-lock.json").read_text())
+    lock = json.loads((web / "package-lock.json").read_text(encoding="utf-8"))
     packages = lock.get("packages") if isinstance(lock, dict) else None
     if not isinstance(packages, dict):
         raise ValueError("A packages-based npm lockfile is required; run npm ci in desktop/web")
@@ -166,7 +166,8 @@ def verify_locked_dependencies(web: Path) -> None:
             continue
         if (
             not installed.is_file()
-            or json.loads(installed.read_text()).get("version") != package["version"]
+            or json.loads(installed.read_text(encoding="utf-8")).get("version")
+            != package["version"]
         ):
             raise ValueError(
                 "Installed frontend dependencies differ from lockfile; run npm ci in desktop/web"
@@ -256,7 +257,7 @@ def package(output: Path, *, web_root: Path, wheelhouse: Path | None) -> None:
                 files[f"{prefix}/{path.relative_to(directory).as_posix()}"] = path.read_bytes()
     files["pi_appliance.py"] = Path(__file__).read_bytes()
     if wheelhouse is not None:
-        receipt = json.loads((wheelhouse / "receipt.json").read_text())
+        receipt = json.loads((wheelhouse / "receipt.json").read_text(encoding="utf-8"))
         if receipt.get("source_sha") != source_sha or receipt.get("machine") not in {
             "aarch64",
             "arm64",
@@ -271,7 +272,7 @@ def package(output: Path, *, web_root: Path, wheelhouse: Path | None) -> None:
         "format_version": 1,
         "source_sha": source_sha,
         "target": "linux-arm64",
-        "version": (ROOT / "VERSION").read_text().strip(),
+        "version": (ROOT / "VERSION").read_text(encoding="utf-8").strip(),
         "presentation": "shared-react-chromium-wayland",
         "physical_validation": False,
         "files": {name: digest(data) for name, data in sorted(files.items())},
@@ -287,7 +288,9 @@ def package(output: Path, *, web_root: Path, wheelhouse: Path | None) -> None:
             member.mode = 0o644
             member.mtime = 0
             archive.addfile(member, io.BytesIO(data))
-    output.with_suffix(output.suffix + ".sha256").write_text(digest(output.read_bytes()) + "\n")
+    output.with_suffix(output.suffix + ".sha256").write_text(
+        digest(output.read_bytes()) + "\n", encoding="utf-8"
+    )
     print(json.dumps({"package": str(output), "source_sha": source_sha, "files": len(files)}))
 
 
@@ -296,7 +299,11 @@ def unpack_verified(archive_path: Path, destination: Path) -> dict[str, object]:
     if archive_path.stat().st_size > MAX_PACKAGE_BYTES:
         raise ValueError("Appliance package exceeds the size limit")
     data = archive_path.read_bytes()
-    expected = archive_path.with_suffix(archive_path.suffix + ".sha256").read_text().strip()
+    expected = (
+        archive_path.with_suffix(archive_path.suffix + ".sha256")
+        .read_text(encoding="utf-8")
+        .strip()
+    )
     if not re.fullmatch(r"[a-f0-9]{64}", expected) or digest(data) != expected:
         raise ValueError("Package checksum mismatch; transfer the matching .sha256 file")
     entries: dict[str, bytes] = {}
@@ -341,14 +348,16 @@ def unpack_verified(archive_path: Path, destination: Path) -> dict[str, object]:
         path = destination / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(content)
-    (destination / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    (destination / "manifest.json").write_text(
+        json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+    )
     return manifest
 
 
 def supported_target() -> bool:
     if sys.platform != "linux" or platform.machine() not in {"aarch64", "arm64"}:
         return False
-    release = Path("/etc/os-release").read_text()
+    release = Path("/etc/os-release").read_text(encoding="utf-8")
     return bool(re.search(r'^VERSION_CODENAME=(?:"?)(bookworm|trixie)(?:"?)$', release, re.M))
 
 
@@ -430,9 +439,7 @@ def release_inventory(release: Path) -> set[str]:
             raise ValueError("Retained release inventory contains an unsafe directory")
         for name in files:
             path = root / name
-            if path.suffix == ".pyc" or (
-                root == release and name in {"manifest.json", "installed-requirements.txt"}
-            ):
+            if root == release and name in {"manifest.json", "installed-requirements.txt"}:
                 continue
             relative = path.relative_to(release).as_posix()
             if path.is_symlink() or not path.is_file():
@@ -521,7 +528,7 @@ def install(archive: Path, *, prefix: Path, online: bool, autostart: bool = Fals
             raise ValueError("Invalid appliance release identity")
         release = prefix / "releases" / release_name
         if release.exists():
-            if json.loads((release / "manifest.json").read_text()) != manifest:
+            if json.loads((release / "manifest.json").read_text(encoding="utf-8")) != manifest:
                 raise ValueError("Existing release identity has different contents")
             verify_release_files(release, manifest)
             checked([str(release / ".venv/bin/python"), "-m", "pip", "check"])
@@ -531,7 +538,7 @@ def install(archive: Path, *, prefix: Path, online: bool, autostart: bool = Fals
                     "Offline install needs an ARM64 wheelhouse; use wheelhouse on the target first"
                 )
             if not online:
-                receipt = json.loads((stage / "wheels/receipt.json").read_text())
+                receipt = json.loads((stage / "wheels/receipt.json").read_text(encoding="utf-8"))
                 if (
                     receipt.get("source_sha") != manifest["source_sha"]
                     or receipt.get("machine") not in {"aarch64", "arm64"}
@@ -553,7 +560,7 @@ def install(archive: Path, *, prefix: Path, online: bool, autostart: bool = Fals
                 checked([python, "-m", "pip", "install", *options, requirement], timeout=900)
                 checked([python, "-m", "pip", "check"])
                 (release / "installed-requirements.txt").write_text(
-                    checked([python, "-m", "pip", "freeze"]) + "\n"
+                    checked([python, "-m", "pip", "freeze"]) + "\n", encoding="utf-8"
                 )
             except BaseException:
                 if release.resolve().is_relative_to((prefix / "releases").resolve()):
@@ -724,7 +731,7 @@ def rollback(prefix: Path) -> None:
         or manifest_path.stat().st_size > MAX_MANIFEST_BYTES
     ):
         raise ValueError("Previous release is incomplete; user data has not been changed")
-    manifest = json.loads(manifest_path.read_text())
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if not isinstance(manifest, dict):
         raise ValueError("Previous release has an invalid manifest; user data has not been changed")
     verify_release_files(release, manifest)
@@ -783,7 +790,7 @@ def build_wheelhouse(directory: Path) -> None:
         "python": platform.python_version(),
         "files": {path.name: digest(path.read_bytes()) for path in directory.glob("*.whl")},
     }
-    receipt_path.write_text(json.dumps(receipt, indent=2) + "\n")
+    receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
 
 
 def main(argv: list[str] | None = None) -> None:
