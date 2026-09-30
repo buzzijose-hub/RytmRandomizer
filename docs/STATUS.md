@@ -4,12 +4,17 @@ Last updated: 2026-09-30. This file is a hand-authored snapshot and is meant to 
 
 ## Current Snapshot
 
-The Pi touch appliance is being integrated on `codex/pi-performance-appliance`
+The Pi touch appliance is implemented on `codex/pi-performance-appliance`
 from `892aaffc`. It reuses the shared Cockpit frontend, authenticated sidecar,
 deterministic mutation engine, capture codecs and persistence writer. Its
 complete sound-page catalog separates saved-state native A4 previews from live
-authority. The local simulated production preview is running without output
-authority; final combined verification and physical Pi acceptance are distinct.
+authority. Its desktop-host production preview uses explicit simulation without
+output authority, or a disconnected production session. Checkpoint `3f1c2ba1`
+passed 10,608 Python tests with five documented platform/reference skips and
+100% line/branch coverage on all 23 touched production modules. Subsequent
+deployment and compact-dialog repairs have additional focused checks. Final
+source-bound receipts and screenshots are generated from the clean integration
+commit under `output/local/pi-appliance/`; physical Pi acceptance is separate.
 Scoped hardware APPLY, precise device restoration, general A4 live SEND and
 unsaved working-state readback remain blocked. See the
 [operator guide](PI_APPLIANCE_OPERATOR.md), [deployment guide](PI_APPLIANCE_DEPLOYMENT.md)

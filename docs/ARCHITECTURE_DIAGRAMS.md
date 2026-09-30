@@ -10,6 +10,9 @@ flowchart LR
   WS --> Scope[Revision-bound scope and local history]
   Scope --> Engine[Existing deterministic engine]
   Scope --> Catalog[Canonical parameter evidence]
+  Scope --> Aliases[data/device_targets immutable aliases]
+  Resolver[Existing dual_machine target resolver] --> Aliases
+  Resolver --> Registry[Existing devices registry]
   WS --> Capture[Existing input-only KIT capture]
   WS --> Cancel[DISARM or owner disconnect]
   Cancel --> Generation[Revoke capture generation]
@@ -17,7 +20,7 @@ flowchart LR
   Capture --> Provider
   Generation --> Late[Discard late capture results]
   Capture --> Saved[Saved-state evidence]
-  Saved --> Native[Existing typed A4 fields and Rytm promotion]
+  Saved --> Native[Public typed A4 field facade and Rytm promotion]
   Native --> Scope
   Pins[Explicit optional input adapter] --> Queue[One kiosk bounded event queue]
   Queue --> Touch

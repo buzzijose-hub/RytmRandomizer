@@ -2,7 +2,9 @@
 
 > Status: in-flight
 
-Implementation and integrated verification are ongoing; hardware acceptance is unverified.
+Software is implemented; final source-bound acceptance and publication are
+recorded by the execution ledger and `output/local/pi-appliance/RUN_REPORT.md`.
+Protected human review and hardware acceptance remain separate external steps.
 
 Per docs/PLAN_REQUIREMENTS.md. Starting integration SHA:
 `892aaffc` (`origin/modularize-v1.34`, fetched 2026-09-30).

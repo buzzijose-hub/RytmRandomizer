@@ -79,7 +79,9 @@ python3 -m venv .venv-appliance-build
 The command downloads/builds the project's existing `[cockpit]` dependency set,
 including the pinned MIDI dependencies, and writes `receipt.json` alongside the
 wheels. Its source SHA and machine identity must match during packaging. Build
-on a clean exact commit. Transfer that wheelhouse back to the packaging host if
+on a clean exact commit into a new or empty wheelhouse directory. The command
+refuses leftover wheels and rechecks the source identity after building, so a
+receipt cannot relabel an older build. Transfer that wheelhouse back to the packaging host if
 necessary, then include it without resolving dependencies again:
 
 ```sh
@@ -259,8 +261,11 @@ backend is missing, start it; if a service is rate-limited, inspect its journal,
 repair the cause and reset its failed state before restarting. Inspect the
 bounded backend log under `~/.local/state/rytm-appliance/backend.log`.
 
-Rollback stops the target, validates the retained prior release path, switches
-the active pointer and starts the shared target. It does not migrate user data
+Rollback validates the prior release identity, immutable file inventory, hashes,
+dependencies and service templates before stopping the healthy target. It then
+restores that release's service configuration, switches the active pointer,
+reloads the user service manager and starts the shared target. The existing
+autostart choice is preserved. It does not migrate user data
 backward or replay any hardware transaction. Without a prior release it refuses.
 Uninstall removes only the appliance's user service/autostart entries, retaining
 release artifacts, browser profile, logs, all shared Cockpit profiles and captures.

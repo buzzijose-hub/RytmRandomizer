@@ -42,6 +42,10 @@ shows storage errors. Optional physical mappings emit the same touch intents;
 no GPIO pins activate without a selected board configuration and controls cannot
 arm or implicitly confirm APPLY. Numeric adjustment and profile naming work
 through visible touch keypads.
+Dialog titles, Close and confirmation/cancellation actions stay visible while
+the contents scroll. On compact screens, the target picker retains the full
+12-pad layout; long parameter lists and connection details scroll within their
+own panel.
 
 | Variable | Default and purpose |
 |---|---|

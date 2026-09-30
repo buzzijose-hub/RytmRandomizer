@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "integrated backend repairs; final runtime review and combined acceptance pending",
+  "status": "software implemented; source-bound final acceptance and PR publication recorded separately",
   "starting_sha": "892aaffca2484d1939ba3e133263aaadde2f22de",
   "original_checkout_sha": "a73aded67211b1e4a4cf294eb13ecfd3887de7e8",
   "integration_branch": "codex/pi-performance-appliance",
@@ -120,6 +120,70 @@
         0,
         0
       ]
+    },
+    {
+      "scope": "combined backend",
+      "tree": "3f1c2ba1aea623348b17040b41c14ab63bfe2dea",
+      "command": "python -m pytest -n4 --cov=rytm_randomizer --cov-branch --cov-report=xml --cov-report=json -q",
+      "result": "passed",
+      "passed": 10608,
+      "skipped": 5,
+      "duration_seconds": 197.26,
+      "touched_coverage": "23 production modules at100% lines+branches",
+      "project_pure_branch_percent": 99.38698522477209
+    },
+    {
+      "scope": "combined frontend after compact-dialog repair",
+      "tree": "abf0ea6117fe3930ee8313d64c2818da850be9e7",
+      "command": "npm run test:coverage -- --maxWorkers=2",
+      "result": "passed",
+      "passed": 1075,
+      "files": 78,
+      "coverage": "100%:3939 statements,3097 branches,1375 functions,3399 lines"
+    },
+    {
+      "scope": "production-bundle visual and touch checks",
+      "tree": "abf0ea6117fe3930ee8313d64c2818da850be9e7",
+      "result": "passed",
+      "checks": 80,
+      "viewports": [
+        [
+          800,
+          480
+        ],
+        [
+          480,
+          320
+        ],
+        [
+          1024,
+          600
+        ]
+      ],
+      "modes": [
+        "explicit simulation",
+        "disconnected production"
+      ],
+      "browser": "Chromium148.0.7778.96",
+      "note": "58 simulation+22 production checks,2 further Studio screenshots; all touch targets>=44px, modal actions fully visible, fonts loaded, no browser errors. Independent corrected-dialog pixel review passed."
+    },
+    {
+      "scope": "combined browser regression",
+      "tree": "3f1c2ba1aea623348b17040b41c14ab63bfe2dea",
+      "command": "npm run e2e -- --workers=1",
+      "result": "passed",
+      "passed": 33,
+      "skipped": 2,
+      "duration_seconds": 56.2,
+      "note": "Existing skeleton keyboard skip; real armed-send skip because no output port enumerated. No hardware output authorized."
+    },
+    {
+      "scope": "runtime agent lifecycle",
+      "tree": "a685df2dd3da3ea318cc783fd5f2f4f748b72b74",
+      "result": "passed",
+      "passed": 90,
+      "duration_seconds": 3.83,
+      "note": "Real temp archive/files; OS services/processes faked, Linux symlinks represented by test pointer facade. Not on-Pi acceptance."
     }
   ],
   "integration_shas": [
@@ -138,7 +202,10 @@
     "a0db2724",
     "3028ea30",
     "2e4b32ef",
-    "c4dbee6a"
+    "c4dbee6a",
+    "3f1c2ba1",
+    "abf0ea61",
+    "a685df2d"
   ],
   "blockers": [
     "physical Raspberry Pi unavailable",
@@ -147,11 +214,11 @@
     "ARM64 native dependency build unavailable (no Docker/Rust, no configured WSL distribution)",
     "automatic approval review blocked obsolete credential directory deletion and original node_modules junction unlink; both preserved; clean isolated dependency installation used"
   ],
-  "resume": "Integration c4dbee6a, original checkout preserved. No preview servers running. Runtime agent finalizing lifecycle/wheelhouse repairs; capabilities and review_docs independently reviewing latest runtime diff. Capabilities worktree clean locked npm install reserved for root build/E2E after fast-forward. Merge runtime, run full backend coverage + exact integrated frontend E2E, source-bound production build, both preview modes and inspect three viewport PNGs, deterministic package/matrix/receipts. No push/PR yet. First failed backend receipt preserved; final acceptance must not use it as green. Automatic approval review blocked old credential directory deletion and original node_modules junction unlink; do not retry either.",
+  "resume": "Preserve original dirty checkout. Read final verification.json and RUN_REPORT.md under source_bound_acceptance_directory before treating checkpoint receipts as final. Final clean-commit acceptance covers backend/coverage, frontend/axe/browser, lint/type/deadcode, deterministic archive and extracted source wheel, exactSHA preview screenshots, and consolidated PR review. Hardware/Pi/ARM64 live validation remains external and unperformed. Publication is one PR against modularize-v1.34, never a merge or self-approval. Existing obsolete credential directory and original node_modules junction were preserved after automatic approval rejection; do not retry deletion.",
   "resources": {
     "logical_cpus": 24,
     "ram_total_gib": 31.75,
-    "ram_available_gib_latest": 15.83,
+    "ram_available_gib_latest": 15.76,
     "disk_free_gib_initial": 432,
     "python": "3.12.14 Windows x64",
     "lint_tools": "ruff0.15.13 black26.3.1 isort8.0.1 pyright1.1.411 isolated under ignored output/local/pi-appliance/venv/python-tools",
@@ -162,9 +229,12 @@
     "types": "validated DTOs repaired9051e849; constants runtime repair",
     "safety": "passive capture touch cancel repaired746eea41",
     "observability": "runtime d3e934ce, root0a0b1281, controls eeffe1a9",
-    "abstraction": "authoritative HistoryStored7f62648; canonical target facts and original public resolvera0db2724",
-    "tests": "actual cookie assertion and fractional depths; canonical data snapshots6789685; cancellation edgesb42f3e91; authenticated wire roundtrips2d1fdf3c; installer lifecycle final review pending",
-    "docs": "cancellation Protocol prose/diagram; actual route axe895fd0b2; four envvars documenteda0db2724",
-    "maintainability": "independent review found wheelhouse source identity gap; runtime repair pending merge"
-  }
+    "abstraction": "HistoryStore pointers authoritative, canonicaltargetfacts; rollback2993393 restores previous release service assets throughsharedrender/activationhelpers and preserves autostartchoice.",
+    "tests": "Full backend10608pass at3f1c2ba1; Gate1 all23modules100%; frontend1075pass100%; lifecycle90focusedpass ata685df2d. Final clean-commit rerun recorded in external source-bound receipts.",
+    "docs": "Operator/deployment/CONTRIBUTING and architecture/diagram updated; lessons capture source binding, native precision, modal visibility and release recovery.",
+    "maintainability": "independent review found wheelhouse source identity gap; runtime repair pending merge",
+    "visual": "Independent pixel review found compact modal actions clipped;99a0e419 repaired fixed header/footer with scrollingbody. Actual80productionbundlechecks and independent8shot originalresolutionrecheck pass.",
+    "security": "Exact retained file inventory and identity; previous release service templates; fresh wheelhouse receipt; standalonebytecode refusal; explicitUTF8 metadata reads/writes repaired througha685df2d with regressiontests. No unresolved material finding in implemented scope."
+  },
+  "source_bound_acceptance_directory": "output/local/pi-appliance/"
 }

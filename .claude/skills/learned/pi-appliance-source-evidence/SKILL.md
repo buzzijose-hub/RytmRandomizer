@@ -30,7 +30,16 @@ Use this when changing the appliance runtime or its captured-value presentation.
   of unsaved working RAM.
 - Test the actual production bundle at all three viewport targets. Count touch
   targets and inspect clipping; unit coverage does not establish touch usability.
+  Measure complete dialog header/footer visibility, including after scrolling.
+  A 44-pixel button below the viewport does not satisfy immediate-action access.
+  Scroll capture panels to their actual refusal text before recording error-state
+  screenshots; a visible tab alone is not evidence of an understandable blocker.
   Private launch credentials stay outside screenshots, logs, URLs and packages.
+- Release rollback must restore the previous release's service templates as well
+  as its source pointer. Verify retained immutable file inventory before stopping
+  the healthy service, preserve the user's autostart choice, and test releases
+  whose launch settings differ. A wheelhouse receipt may certify only a fresh
+  build's wheels, never leftover wheels from another source revision.
 
 See `docs/PI_APPLIANCE_OPERATOR.md`, `docs/PI_APPLIANCE_CAPABILITIES.md` and
 `docs/PI_APPLIANCE_DEPLOYMENT.md` for the current product contract.
