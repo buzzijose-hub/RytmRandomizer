@@ -41,6 +41,8 @@ describe('touch performance appliance', () => {
   it('targets recognizable 12 pads without silently expanding an empty selection', async () => {
     const fake = await mount();
     expect(screen.getByText('SIMULATION / NO MIDI')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Illustrative stepped envelope' })).toBeInTheDocument();
+    expect(screen.getByText('ILLUSTRATIVE ENVELOPE')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /^Pad \d+,/ })).toHaveLength(12);
     click('Pad 1, selected'); await settled(fake);
     expect(fake.sent.at(-1)).toMatchObject({ type: 'appliance', operation: 'scope', expected_revision: 3, payload: { lanes: { analog_rytm_mk2: { target_ids: [2] } } } });

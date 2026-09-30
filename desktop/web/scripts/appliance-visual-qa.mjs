@@ -88,6 +88,7 @@ try {
     await check('anchor-confirmation', width, height);
     await page.getByRole('button', { name: 'CANCEL', exact: true }).click();
     await clickNav('MORE');
+    await page.getByRole('button', { name: 'PROFILES', exact: true }).click();
     await check('profiles', width, height);
     await page.getByRole('button', { name: 'NAME: PERFORMANCE 1', exact: true }).click();
     await check('touch-keyboard', width, height);
