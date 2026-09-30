@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Callable, Iterable
+from threading import Event
 from time import monotonic, sleep
 from typing import TYPE_CHECKING, Protocol, cast
 
@@ -431,6 +432,7 @@ class MidoMidiPortProvider:
         port_name: str,
         *,
         timeout_seconds: float,
+        cancel_event: Event | None = None,
     ) -> tuple[bytes, ...]:
         """Capture the first complete SysEx frame from a hardware input.
 
@@ -441,6 +443,8 @@ class MidoMidiPortProvider:
         checked_port_name = _require_mido_port_name(port_name, direction="input")
         if timeout_seconds <= 0:
             raise RealMidiPortError("midi_sysex_capture_timeout_seconds_required")
+        if cancel_event is not None and cancel_event.is_set():
+            raise RealMidiPortError("midi_sysex_capture_cancelled")
 
         with operation("capture_sysex_messages"):
             rtmidi = _import_rtmidi()
@@ -470,6 +474,8 @@ class MidoMidiPortProvider:
                 deadline = monotonic() + timeout_seconds
                 sysex_buffer = bytearray()
                 while monotonic() < deadline:
+                    if cancel_event is not None and cancel_event.is_set():
+                        raise RealMidiPortError("midi_sysex_capture_cancelled")
                     message = midi_in.get_message()
                     frame = _coerce_sysex_frame(message)
                     if frame is None:
@@ -477,8 +483,13 @@ class MidoMidiPortProvider:
                         if data is not None:
                             frame = _append_sysex_chunk(sysex_buffer, data)
                     if frame is not None:
+                        if cancel_event is not None and cancel_event.is_set():
+                            raise RealMidiPortError("midi_sysex_capture_cancelled")
                         return (frame,)
-                    sleep(0.01)
+                    if cancel_event is None:
+                        sleep(0.01)
+                    else:
+                        cancel_event.wait(0.01)
             except (
                 OSError,
                 RuntimeError,
@@ -498,6 +509,14 @@ class MidoMidiPortProvider:
                         _logger.debug("rtmidi_sysex_capture_close_failed_best_effort")
 
         raise RealMidiPortError("midi_sysex_capture_timeout")
+
+    def capture_sysex_messages_cancellable(
+        self, port_name: str, *, timeout_seconds: float, cancel_event: Event
+    ) -> tuple[bytes, ...]:
+        """Reuse the guarded input loop with an interruptible polling wait."""
+        return self.capture_sysex_messages(
+            port_name, timeout_seconds=timeout_seconds, cancel_event=cancel_event
+        )
 
 
 def build_mido_midi_port_provider() -> MidoMidiPortProvider:
