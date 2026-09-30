@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=RytmRandomizer Appliance
+Comment=Start the authenticated local touchscreen performance application
+Exec="@PYTHON@" "@LAUNCHER@" session-start
+Terminal=false
+Categories=AudioVideo;Audio;

@@ -1,0 +1,26 @@
+[Unit]
+Description=RytmRandomizer shared production touchscreen presentation
+Wants=rytm-appliance-backend.service
+After=rytm-appliance-backend.service
+PartOf=rytm-appliance.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart="@PYTHON@" "@LAUNCHER@" kiosk --runtime-dir %t/rytm-appliance
+Restart=always
+RestartSec=10
+TimeoutStopSec=15
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.local/state/rytm-appliance
+LogRateLimitIntervalSec=60
+LogRateLimitBurst=500
+
+[Install]
+WantedBy=rytm-appliance.target

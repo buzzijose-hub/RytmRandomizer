@@ -1,0 +1,241 @@
+"""Real ASGI token/origin/bootstrap refusal and bounded asset checks."""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+from pathlib import Path
+from types import SimpleNamespace
+from urllib.parse import urlencode
+
+import pytest
+from fastapi.testclient import TestClient
+from starlette.websockets import WebSocketDisconnect
+
+from rytm_randomizer.cockpit import appliance_runtime as runtime
+from rytm_randomizer.cockpit.__main__ import build_session
+from rytm_randomizer.cockpit.ws.server import create_app
+
+pytestmark = pytest.mark.fast
+AUTH = "test-ws-token"
+NEXT_AUTH = "new-ws-token"
+ARM_AUTH = "new-arm-secret"
+
+
+@pytest.fixture
+def prepared(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[TestClient, Path, Path]:
+    monkeypatch.delenv(runtime.WEB_ROOT_ENV, raising=False)
+    app = create_app(build_session(), token=AUTH)
+    web = tmp_path / "web"
+    private = tmp_path / "private"
+    web.mkdir()
+    (web / "index.html").write_text('<html><head></head><body><div id="root"></div></body></html>')
+    (web / "bundle.js").write_text("window.production=true")
+    (web / "font.unknownfiletype").write_bytes(b"bitmap")
+    monkeypatch.setenv(runtime.WEB_ROOT_ENV, str(web))
+    monkeypatch.setenv(runtime.RUNTIME_DIR_ENV, str(private))
+    monkeypatch.setenv("RYTM_RAND_WS_PORT", "4317")
+    runtime.install_appliance_routes(app, token=AUTH, arm_secret=None)
+    return TestClient(app, base_url="http://127.0.0.1:4317"), web, private
+
+
+def credential(private: Path) -> str:
+    match = re.search(r'name="credential" value="([^"]+)"', (private / "launch.html").read_text())
+    assert match is not None
+    return match.group(1)
+
+
+def enter(client: TestClient, private: Path) -> None:
+    response = client.post(
+        "/bootstrap", data={"credential": credential(private)}, headers={"Origin": "null"}
+    )
+    assert response.status_code == 200
+
+
+def test_private_launch_post_handoff_and_authenticated_production_document(
+    prepared: tuple[TestClient, Path, Path],
+) -> None:
+    client, _, private = prepared
+    launch = (private / "launch.html").read_text()
+    assert 'method="post"' in launch
+    assert "test-ws-token" not in launch
+    if os.name == "posix":
+        assert private.stat().st_mode & 0o777 == 0o700
+        assert (private / "launch.html").stat().st_mode & 0o777 == 0o600
+    with client:
+        assert client.get("/health").status_code == 200
+        assert client.get("/appliance").status_code == 403
+        response = client.post(
+            "/bootstrap", data={"credential": credential(private)}, headers={"Origin": "null"}
+        )
+        assert response.status_code == 200
+        assert "HttpOnly" in response.headers["set-cookie"]
+        assert "SameSite=strict" in response.headers["set-cookie"]
+        assert '__RYTM_RAND_WS_TOKEN__="test-ws-token"' in response.text
+        assert "__RYTM_RAND_ARM_SECRET__" not in response.text
+        assert "history.replaceState" in response.text
+        assert response.headers["cache-control"] == "no-store"
+        assert "frame-ancestors 'none'" in response.headers["content-security-policy"]
+        assert response.headers["x-frame-options"] == "DENY"
+        assert client.get("/appliance").status_code == 200
+        assert client.get("/").status_code == 200
+        assert client.get("/bundle.js").text == "window.production=true"
+        assert (
+            client.get("/font.unknownfiletype").headers["content-type"]
+            == "application/octet-stream"
+        )
+        assert client.get("/index.html").status_code == 404
+        assert client.get("/missing.js").status_code == 404
+
+
+@pytest.mark.parametrize(
+    "headers",
+    [
+        {"Host": "attacker.invalid:4317"},
+        {"Origin": "https://attacker.invalid"},
+        {"Origin": "null"},
+        {"Cookie": "rytm-appliance-session=wrong"},
+    ],
+)
+def test_document_refuses_rebinding_cross_origin_and_bad_cookie(
+    prepared: tuple[TestClient, Path, Path], headers: dict[str, str]
+) -> None:
+    client, _, private = prepared
+    enter(client, private)
+    assert client.get("/appliance", headers=headers).status_code == 403
+
+
+def test_bootstrap_rejects_wrong_unicode_oversize_and_malformed(
+    prepared: tuple[TestClient, Path, Path],
+) -> None:
+    client, _, _ = prepared
+    assert client.post("/bootstrap", data={"credential": "wrong"}).status_code == 403
+    assert client.post("/bootstrap", data={"credential": "é"}).status_code == 403
+    assert client.post("/bootstrap", content=b"x" * 2049).status_code == 413
+    assert client.post("/bootstrap", content="a=1&b=2&c=3&d=4&e=5").status_code == 400
+    assert (
+        client.post("/bootstrap", headers={"Origin": "https://attacker.invalid"}).status_code == 403
+    )
+    assert client.post("/bootstrap", content="a=1").status_code == 403
+
+
+def test_ws_requires_same_origin_cookie_and_existing_hello_token(
+    prepared: tuple[TestClient, Path, Path],
+) -> None:
+    client, _, private = prepared
+    with pytest.raises(WebSocketDisconnect) as denied:
+        with client.websocket_connect(
+            "ws://127.0.0.1:4317/ws",
+            headers={"Origin": "http://127.0.0.1:4317"},
+            subprotocols=["rytm-rand-cockpit-v1"],
+        ):
+            pass
+    assert denied.value.code == 1008
+    enter(client, private)
+    for headers in ({}, {"Origin": "https://attacker.invalid"}):
+        with pytest.raises(WebSocketDisconnect) as denied:
+            with client.websocket_connect(
+                "ws://127.0.0.1:4317/ws", headers=headers, subprotocols=["rytm-rand-cockpit-v1"]
+            ):
+                pass
+        assert denied.value.code == 1008
+    with client.websocket_connect(
+        "ws://127.0.0.1:4317/ws",
+        headers={"Origin": "http://127.0.0.1:4317"},
+        subprotocols=["rytm-rand-cockpit-v1"],
+    ) as socket:
+        socket.send_text(json.dumps({"type": "hello", "token": "wrong"}))
+        assert socket.receive_json()["code"] == "auth_failed"
+    with client.websocket_connect(
+        "ws://127.0.0.1:4317/ws",
+        headers={"Origin": "http://127.0.0.1:4317"},
+        subprotocols=["rytm-rand-cockpit-v1"],
+    ) as socket:
+        socket.send_text(json.dumps({"type": "hello", "token": "test-ws-token"}))
+        assert socket.receive_json() == {"ok": True}
+        assert socket.receive_json()["type"] == "session_status"
+
+
+def test_assets_are_bounded_and_do_not_escape_web_root(
+    prepared: tuple[TestClient, Path, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client, web, private = prepared
+    enter(client, private)
+    monkeypatch.setattr(runtime, "MAX_ASSET_BYTES", 5)
+    assert client.get("/bundle.js").status_code == 413
+    assert client.get("/%2e%2e/private/launch.html").status_code == 404
+    assert client.get("/directory/").status_code == 404
+    (web / "directory").mkdir()
+    assert client.get("/directory/").status_code == 404
+
+
+def test_restart_rotates_every_authentication_capability(
+    prepared: tuple[TestClient, Path, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    first, _, private = prepared
+    old = credential(private)
+    enter(first, private)
+    monkeypatch.delenv(runtime.WEB_ROOT_ENV)
+    app = create_app(build_session(), token=NEXT_AUTH)
+    monkeypatch.setenv(runtime.WEB_ROOT_ENV, str(prepared[1]))
+    runtime.install_appliance_routes(app, token=NEXT_AUTH, arm_secret=ARM_AUTH)
+    second = TestClient(app, base_url="http://127.0.0.1:4317")
+    assert second.post("/bootstrap", data={"credential": old}).status_code == 403
+    assert (
+        second.get("/appliance", headers={"Cookie": first.headers.get("cookie", "")}).status_code
+        == 403
+    )
+    response = second.post("/bootstrap", data={"credential": credential(private)})
+    assert "new-arm-secret" in response.text
+    assert "new-ws-token" in response.text
+
+
+@pytest.mark.parametrize("port", ["1", "65536"])
+def test_runtime_refuses_privileged_or_invalid_port(
+    prepared: tuple[TestClient, Path, Path], monkeypatch: pytest.MonkeyPatch, port: str
+) -> None:
+    monkeypatch.setenv("RYTM_RAND_WS_PORT", port)
+    with pytest.raises(ValueError, match="unprivileged"):
+        runtime.install_appliance_routes(prepared[0].app, token=AUTH, arm_secret=None)
+
+
+def test_runtime_refuses_bad_or_oversized_index(
+    prepared: tuple[TestClient, Path, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client, web, _ = prepared
+    (web / "index.html").write_text("not-production")
+    with pytest.raises(ValueError, match="head"):
+        runtime.install_appliance_routes(client.app, token=AUTH, arm_secret=None)
+    monkeypatch.setattr(runtime, "MAX_ASSET_BYTES", 1)
+    with pytest.raises(ValueError, match="bounded"):
+        runtime.install_appliance_routes(client.app, token=AUTH, arm_secret=None)
+
+
+def test_document_labels_explicit_simulation(
+    prepared: tuple[TestClient, Path, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("RYTM_RAND_APPLIANCE_SIMULATION", "1")
+    client, _, private = prepared
+    enter(client, private)
+    assert '__RYTM_RAND_RUNTIME_MODE__="simulation"' in client.get("/appliance").text
+
+
+def test_launch_credential_is_not_an_http_query(prepared: tuple[TestClient, Path, Path]) -> None:
+    client, _, private = prepared
+    assert (
+        client.get("/bootstrap?" + urlencode({"credential": credential(private)})).status_code
+        == 404
+    )
+
+
+def test_posix_permission_path_and_index_containment(
+    prepared: tuple[TestClient, Path, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    client, _, private = prepared
+    monkeypatch.setattr(runtime, "os", SimpleNamespace(name="posix", environ=os.environ))
+    runtime.install_appliance_routes(client.app, token=AUTH, arm_secret=None)
+    assert (private / "launch.html").exists()
+    monkeypatch.setattr(Path, "is_relative_to", lambda *_: False)
+    with pytest.raises(ValueError, match="inside web root"):
+        runtime.install_appliance_routes(client.app, token=AUTH, arm_secret=None)
