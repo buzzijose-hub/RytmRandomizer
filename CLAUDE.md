@@ -107,3 +107,13 @@ Refuse these patterns by default; require explicit user override to proceed.
 ---
 
 This file is kept short on purpose. The full context lives in CONTRIBUTING + AGENTS + the rules / skills / diagrams. Update this file only when a new project-wide guardrail lands.
+
+## Pi appliance evidence handoff
+
+Changes to the shared touch/kiosk surface follow the narrow
+[Pi appliance evidence rule](.claude/rules/pi-appliance-evidence.md) and
+[learned source/evidence skill](.claude/skills/learned/pi-appliance-source-evidence/SKILL.md).
+Read the [run report](docs/PI_APPLIANCE_RUN_REPORT.md) for verified checkpoints
+and physical limits, and the [replay playbook](docs/PI_APPLIANCE_REPLAY_PLAYBOOK.md)
+before continuing the plan. Future runs record the maintainability baseline
+before implementation; this run's formal audit was explicitly retrospective.

@@ -622,6 +622,15 @@ arming, candidates, or pending commands. See the environment index in
 install, and rollback procedures in
 [`PI_APPLIANCE_DEPLOYMENT.md`](docs/PI_APPLIANCE_DEPLOYMENT.md).
 
+The Pi kiosk also reads inherited platform settings: `WAYLAND_DISPLAY` must
+come from an existing graphical Wayland session; when it is unset, `kiosk`
+refuses to launch. `XDG_RUNTIME_DIR` supplies the default parent for private
+runtime files; when unset, the launcher uses Python's platform temporary
+directory. `--runtime-dir` overrides that choice. `session-start` imports the
+existing `WAYLAND_DISPLAY`, `DISPLAY` and `XDG_CURRENT_DESKTOP` into the user's
+service manager; it does not create a compositor or invent display values.
+These settings do not enable MIDI and are not needed for the default CLI.
+
 The installer workflow also defines build-only `TAURI_CLI_VERSION` (pinned
 to `2.11.4`) and `STUDIO_WINDOWS` (the `studio_windows` dispatch input, false
 by default). These select the packaging tool and optional Windows studio copy;

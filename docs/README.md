@@ -39,6 +39,9 @@ lives under `docs/archive/` and is historical — safe to skip on first pass.
 - **[LOCAL_DEV_TOOLING_NOTES.md](LOCAL_DEV_TOOLING_NOTES.md)** — env-var documentation home per `PLAN_REQUIREMENTS.md` Gate 13.
 
 ### Orchestrator state and current live-KIT evidence (runtime/reference; exempt)
+- **[Pi appliance plan](superpowers/plans/2026-09-30-pi-performance-appliance.md)** — shared touch/kiosk integration and index of its maintainability, architecture, learning and replay records.
+- **[Pi appliance run report](PI_APPLIANCE_RUN_REPORT.md)** — source-identified software checkpoints, five tracked-only onboarding answers and explicit physical/platform gaps.
+- **[Pi appliance state](superpowers/plans/2026-09-30-pi-performance-appliance_STATE.json)** — resumable ledger with [schema](superpowers/plans/2026-09-30-pi-performance-appliance_STATE.schema.json) and [append-only run log](PI_APPLIANCE_RUN_LOG.md).
 - **[Release closeout plan](superpowers/plans/2026-09-08-release-closeout.md)** — current Forge/updater/Digitakt coordination, bounded verification and protected review.
 - **[Release closeout report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md)** — exact software receipts, studio artifact and remaining physical/platform limits.
 - **[Release closeout state](superpowers/plans/2026-09-08-release-closeout_STATE.json)** — resumable checkpoint with [schema](superpowers/plans/2026-09-08-release-closeout_STATE.schema.json) and [run log](superpowers/plans/2026-09-08-release-closeout_RUN_LOG.md).
