@@ -23,11 +23,11 @@ from rytm_randomizer.cockpit.appliance import (
     ApplianceWorkspace,
     validated_object,
 )
-from rytm_randomizer.cockpit.appliance_capabilities import parameter_capabilities
 from rytm_randomizer.cockpit.capture.appliance_a4 import (
     appliance_a4_parameter_encodings,
     appliance_snapshot_from_a4_capture,
 )
+from rytm_randomizer.cockpit.capture.appliance_capabilities import parameter_capabilities
 from rytm_randomizer.cockpit.capture.service import decode_kit_capture_frame
 from rytm_randomizer.cockpit.data import PadState, ProfileModel, Snapshot
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
@@ -36,12 +36,11 @@ from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws import appliance_handlers
 from rytm_randomizer.cockpit.ws.handlers import handle_command
 from rytm_randomizer.cockpit.ws.session import CockpitSession
-from rytm_randomizer.devices.strategies.analog_four_kit_fields import A4Kit
+from rytm_randomizer.devices import A4Kit, AnalogFourKitSnapshot
 from rytm_randomizer.devices.strategies.analog_four_saved_kit_codec import (
     decode_analog_four_saved_kit_payload,
     encode_analog_four_saved_kit_payload,
 )
-from rytm_randomizer.devices.strategies.analog_four_snapshot_decoder import AnalogFourKitSnapshot
 
 pytestmark = pytest.mark.fast
 
