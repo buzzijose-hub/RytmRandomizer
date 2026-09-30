@@ -319,6 +319,49 @@ def test_launch_credential_is_not_an_http_query(prepared: tuple[TestClient, Path
     )
 
 
+@pytest.mark.parametrize("platform_name", ["posix", "nt"])
+def test_private_runtime_permissions_and_bootstrap_on_each_platform(
+    prepared: tuple[TestClient, Path, Path],
+    monkeypatch: pytest.MonkeyPatch,
+    platform_name: str,
+) -> None:
+    _, web, previous_private = prepared
+    private = previous_private / "platform-permissions"
+    monkeypatch.delenv(runtime.WEB_ROOT_ENV)
+    app = create_app(build_session(), token=AUTH)
+    monkeypatch.setenv(runtime.WEB_ROOT_ENV, str(web))
+    monkeypatch.setenv(runtime.RUNTIME_DIR_ENV, str(private))
+    # Patch the module's OS view without changing pathlib's native platform.
+    monkeypatch.setattr(runtime, "os", SimpleNamespace(name=platform_name, environ=os.environ))
+    chmod_calls: list[tuple[Path, int]] = []
+    original_chmod = Path.chmod
+
+    def chmod(path: Path, mode: int, *, follow_symlinks: bool = True) -> None:
+        chmod_calls.append((path.resolve(), mode))
+        original_chmod(path, mode, follow_symlinks=follow_symlinks)
+
+    monkeypatch.setattr(Path, "chmod", chmod)
+    runtime.install_appliance_routes(app, token=AUTH, arm_secret=None)
+    launch = private / "launch.html"
+    expected_chmod = [(launch.resolve(), 0o600)]
+    if platform_name == "posix":
+        expected_chmod.insert(0, (private.resolve(), 0o700))
+    assert chmod_calls == expected_chmod
+    if os.name == "posix":
+        assert private.stat().st_mode & 0o777 == 0o700
+        assert launch.stat().st_mode & 0o777 == 0o600
+    assert AUTH not in launch.read_text()
+    assert ARM_AUTH not in launch.read_text()
+    with TestClient(app, base_url="http://127.0.0.1:4317") as client:
+        assert client.get("/appliance").status_code == 403
+        assert client.post("/bootstrap", data={"credential": "wrong"}).status_code == 403
+        enter(client, private)
+        response = client.get("/appliance")
+        assert response.status_code == 200
+        assert '__RYTM_RAND_WS_TOKEN__="test-ws-token"' in response.text
+        assert "__RYTM_RAND_ARM_SECRET__" not in response.text
+
+
 def test_posix_permission_path_and_index_containment(
     prepared: tuple[TestClient, Path, Path], monkeypatch: pytest.MonkeyPatch
 ) -> None:
