@@ -15,9 +15,10 @@ current graph remains [ARCHITECTURE.md](ARCHITECTURE.md) and
 | No appliance physical-input bridge | `cockpit/appliance_controls.py` adds `ApplianceInputAdapter`, explicit board configuration, bounded event mapping and the shared UI intent sink. | Input-only Protocol; selected pins required; no MIDI methods. |
 | Desktop packaging and Python/frontend tools | `scripts/pi_appliance.py` and `installer-assets/pi-appliance/` add source-bound packaging, private launch, supervised kiosk and verified rollback. | Shared Python source/frontend lockfile; per-user services, preserved profiles, no host boot/firmware mutation. |
 
-New Protocol seams are the configured input adapter and the capture cancellation
-signal; the concrete `threading.Event` satisfies the latter without importing
-Cockpit into the MIDI provider. Optional engine arguments supply per-cell native
+New Protocol seams are `ApplianceInputAdapter` and the optional
+`CancellableSysexCaptureProvider` extension. The latter accepts a concrete
+`threading.Event` cancellation parameter without importing Cockpit into the
+MIDI provider. Optional engine arguments supply per-cell native
 bounds and depth to the existing engine. Shared strict object validation and
 `A4Kit.iter_sounds()` are reused instead of local copies.
 
