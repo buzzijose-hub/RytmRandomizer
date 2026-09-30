@@ -6,8 +6,12 @@ import argparse
 import importlib.util
 import io
 import json
+import os
+import subprocess
+import sys
 import tarfile
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 
@@ -147,6 +151,64 @@ def test_serve_refuses_mixed_hardware_simulation(
     )
     with pytest.raises(ValueError, match="separate"):
         cli.serve(args)
+
+
+def test_packaged_launcher_binds_its_source_before_foreign_editable_install(tmp_path: Path) -> None:
+    release = tmp_path / "release"
+    package = release / "src/rytm_randomizer"
+    (package / "cockpit").mkdir(parents=True)
+    (package / "__init__.py").write_text("")
+    (package / "cockpit/__init__.py").write_text("")
+    marker = tmp_path / "source.txt"
+    (package / "cockpit/__main__.py").write_text(
+        "from pathlib import Path\n"
+        "import os\n"
+        "def run():\n"
+        "    Path(os.environ['TEST_SOURCE_MARKER']).write_text(__file__)\n"
+    )
+    (release / "pi_appliance.py").write_bytes(script_path.read_bytes())
+    foreign = tmp_path / "foreign/rytm_randomizer"
+    foreign.mkdir(parents=True)
+    (foreign / "__init__.py").write_text("raise RuntimeError('foreign source imported')\n")
+    env = {**os.environ, "PYTHONPATH": str(foreign.parent), "TEST_SOURCE_MARKER": str(marker)}
+    subprocess.run(
+        [
+            sys.executable,
+            str(release / "pi_appliance.py"),
+            "serve",
+            "--simulation",
+            "--runtime-dir",
+            str(tmp_path / "runtime"),
+            "--web-root",
+            str(tmp_path / "web"),
+        ],
+        check=True,
+        env=env,
+        cwd=tmp_path,
+        capture_output=True,
+        timeout=10,
+    )
+    assert Path(marker.read_text()) == package / "cockpit/__main__.py"
+
+
+def test_loaded_foreign_source_is_refused_without_replacing_modules(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    foreign = ModuleType("rytm_randomizer")
+    foreign.__file__ = str(tmp_path / "foreign/rytm_randomizer/__init__.py")
+    monkeypatch.setitem(sys.modules, "rytm_randomizer", foreign)
+    with pytest.raises(ValueError, match="fresh process"):
+        cli.bind_runtime_source()
+    assert sys.modules["rytm_randomizer"] is foreign
+
+
+def test_packaging_missing_git_is_actionable_before_output(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(cli.shutil, "which", lambda _name: None)
+    with pytest.raises(ValueError, match="Git is required"):
+        cli.package(tmp_path / "artifact.tar", web_root=tmp_path, wheelhouse=None)
+    assert not (tmp_path / "artifact.tar").exists()
 
 
 def test_kiosk_missing_graphical_session_is_actionable(
