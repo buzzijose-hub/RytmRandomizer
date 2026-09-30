@@ -89,6 +89,7 @@ from ..data import (
     Snapshot,
     StageDeviceId,
 )
+from ..data.appliance import ApplianceProvenanceRecord
 from ..device.connection import ConnectionState, active_connection_manager
 from ..diagnostics import build_diagnostics_payload
 from ..engine import mutate, prepare_send_plan
@@ -2287,7 +2288,7 @@ def _revoked_appliance_events(session: CockpitSession) -> list[dict[str, object]
     workspace = session.appliance
     if workspace is None:
         return []
-    provenance = {
+    provenance: dict[StageDeviceId, ApplianceProvenanceRecord] = {
         device_id: {
             "source_type": "simulation" if workspace.simulation else "disconnected",
             "fingerprint": None,

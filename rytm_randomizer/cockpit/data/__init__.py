@@ -14,7 +14,7 @@ from ...data.persisted_state import (
     classify_payload,
     require_schema_version,
 )
-from ...guardrails.input_validation import require_int
+from ...guardrails.input_validation import require_int, require_object
 from .history import History, HistoryEntry
 from .mutation_candidate import MutationCandidate, PadDelta
 from .profile_model import ProfileModel, StyleTrait, TraitPadWeight
@@ -100,5 +100,6 @@ __all__ = [
     "PERSISTED_STATE_REFUSAL_METRIC_CODES",
     "DUAL_MACHINE_TARGET_IDS",
     "require_int",
+    "require_object",
     "require_schema_version",
 ]
