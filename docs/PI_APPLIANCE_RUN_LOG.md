@@ -33,3 +33,50 @@ coverage was 12,642/12,720. Whole-repository lint, strict typing and touched-mod
 Vulture checks passed. The final documentation-only release SHA and its generated
 artifact identity were still pending. This entry appends the new outcome without
 changing the earlier launch/pending record.
+
+## 2026-09-30 — hosted CI incident and local isolation repair
+
+After [PR #252](https://github.com/buzzijose-hub/RytmRandomizer/pull/252) opened,
+Python CI at `13b00003` failed the same auth-refusal logging test on Linux,
+macOS and Windows: capture contained 14 records where exactly seven were
+required. The Windows job reported 10,619 passed and five skipped alongside
+that failure. Inherited logger propagation duplicated the capture; a stale
+closed ancestor-handler stream also exposed dependence on earlier test order.
+
+The runtime agent reproduced the failure before repair with both ambient
+package propagation settings. Test-only commit `e36979a93a925c1886138593b3d7ef364137a330`
+uses monkeypatch-restored handlers and disables propagation on the logger under
+test. It preserves the exact seven-record, privacy, metric and zero-MIDI
+assertions and adds exact refusal-category and clean-stderr assertions. Local
+verification reported 19 runtime cases and 48 ordered neighboring cases passed,
+with lint clean. No production behavior or coverage threshold was changed.
+
+Hosted CI for the replacement head has not passed yet. A separate desktop-shell
+job at `13b00003` reported 31 passed and one failed (`backend_restart`); that
+failure remains under investigation. The logging repair is not a claim that all
+CI failures are resolved. Earlier `13b00003` software receipts remain historical
+checkpoints; the test tree changed in `e36979a9` and must be identified separately
+in subsequent verification.
+
+## 2026-09-30 — native readiness diagnosis and integrated backend checkpoint
+
+The capability agent traced the separate `backend_restart` failure to an
+existing harness readiness race. `native_update_driver.ts` is unchanged from
+baseline `892aaffc`: it waits for rotated credential files, then immediately
+probes with the stale token. Python writes those files before uvicorn starts
+listening, so the probe can race socket readiness and fail for startup timing.
+This evidence does not establish a production regression.
+
+The baseline CI job `109149261285` passed 32 native cases and two installer
+cases. At the same appliance source `13b00003`, PR job `109992075623` also
+passed 32 plus two, while push job `109991619778` reported 31 native cases
+passed and one failed. The differing outcomes and unchanged harness support
+the pre-existing race diagnosis. No retry, assertion relaxation or harness
+change is claimed as a repair; replacement CI remains pending.
+
+The new integrated backend checkpoint
+`5f911385f58fb0453813484df9678ef3797c14a2` passed 10,621 tests with five existing
+skips and eight warnings, using four workers: 192.92 seconds pytest and 195.094
+seconds wall. This result includes the auth-log isolation regression cases.
+These software and desktop CI observations grant no physical Pi, native ARM64
+or live-hardware acceptance.
