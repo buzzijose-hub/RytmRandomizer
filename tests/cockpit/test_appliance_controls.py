@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 from collections import deque
 
 import pytest
 
+from rytm_randomizer.cockpit import appliance_controls as controls_module
 from rytm_randomizer.cockpit.appliance_controls import (
     ApplianceBoardConfiguration,
     ApplianceControlIntent,
@@ -18,8 +20,21 @@ from rytm_randomizer.cockpit.appliance_controls import (
     ControlButtonBinding,
     make_appliance_control_sink,
 )
+from rytm_randomizer.observability.metrics import MidiMetrics
 
 pytestmark = pytest.mark.fast
+_EXPECTED_HISTORY_LIMIT = 128
+
+
+@pytest.fixture
+def control_logs(
+    caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> pytest.LogCaptureFixture:
+    # The shared harness intentionally stops package logs at its null handler.
+    caplog.set_level(logging.DEBUG, logger=controls_module.__name__)
+    monkeypatch.setattr(controls_module._logger, "handlers", [caplog.handler])
+    monkeypatch.setattr(controls_module._logger, "propagate", False)
+    return caplog
 
 
 def test_configured_input_sink_uses_existing_kiosk_event_contract() -> None:
@@ -133,7 +148,7 @@ def test_mapping_is_configurable_and_encoder_moves_focus_only() -> None:
     assert mapper.handle(_event("unbound", "anchor")) is None
     for index in range(256):
         mapper.handle(_event(str(index), "encoder", timestamp=1100 + index))
-    assert len(mapper._seen) == 128
+    assert len(mapper._seen) == _EXPECTED_HISTORY_LIMIT
 
 
 @pytest.mark.parametrize(
@@ -271,3 +286,164 @@ def test_only_board_configured_sources_are_forwarded() -> None:
     assert controls.poll() == 1
     assert intents == [ApplianceControlIntent("mutate")]
     controls.stop()
+
+
+def test_filter_observability_is_bounded_and_excludes_event_identity(
+    control_logs: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    caplog = control_logs
+    metrics = MidiMetrics()
+    monkeypatch.setattr(controls_module, "get_metrics", lambda: metrics)
+    mapper = ApplianceControlMapper(
+        ApplianceControlMapping(buttons=(ControlButtonBinding("mutate", "mutate"),))
+    )
+    event = _event("private-event-identity")
+    assert mapper.handle(event) == ApplianceControlIntent("mutate")
+    assert mapper.handle(event) is None
+    assert mapper.handle(_event("private-stale", "undo", timestamp=900)) is None
+    assert mapper.handle(_event("private-release", value=0, timestamp=1001)) is None
+    assert mapper.handle(_event("private-bounce", timestamp=1020)) is None
+    assert mapper.handle(_event("private-release2", value=0, timestamp=1200)) is None
+    assert mapper.handle(_event("private-next", timestamp=1201)) == ApplianceControlIntent("mutate")
+    assert mapper.handle(_event("private-repeat", timestamp=1202)) is None
+    assert mapper.handle(_event("private-unbound", "anchor", timestamp=1250)) is None
+    assert mapper.handle(
+        _event("private-detent", "encoder", timestamp=1270)
+    ) == ApplianceControlIntent("focus_step", 1)
+    outcomes = [
+        record.__dict__["outcome"]
+        for record in caplog.records
+        if record.message == "appliance_control_input"
+    ]
+    assert outcomes == [
+        "accepted",
+        "duplicate",
+        "stale",
+        "released",
+        "debounced",
+        "released",
+        "accepted",
+        "repeated_press",
+        "unconfigured",
+        "accepted",
+    ]
+    assert "private-" not in str([record.__dict__ for record in caplog.records])
+    assert metrics.errors_by_kind == {}
+    assert metrics.cc_sent_by_channel == {}
+
+
+def test_control_lifecycle_logs_counts_without_board_wiring_or_input_payload(
+    control_logs: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    caplog = control_logs
+    metrics = MidiMetrics()
+    monkeypatch.setattr(controls_module, "get_metrics", lambda: metrics)
+    reader = _Input(
+        (
+            _event("private-unconfigured", "undo"),
+            _event("private-press"),
+            _event("private-release", value=0, timestamp=1001),
+        )
+    )
+    expected_processed_count = len(reader.events)
+    board = ApplianceBoardConfiguration(
+        "private-board-identity", "/dev/gpiochip9", (BoardPinAssignment("mutate", 79),)
+    )
+    intents: list[ApplianceControlIntent] = []
+    controls = ConfiguredApplianceControls(reader, intents.append, board)
+    controls.start()
+    controls.start()
+    assert controls.poll() == 1
+    controls.stop()
+    controls.stop()
+    assert intents == [ApplianceControlIntent("mutate")]
+    started = [
+        record for record in caplog.records if record.message == "appliance_controls_started"
+    ]
+    stopped = [
+        record for record in caplog.records if record.message == "appliance_controls_stopped"
+    ]
+    polls = [record for record in caplog.records if record.message == "appliance_controls_poll"]
+    assert len(started) == 1 and started[0].__dict__["configured_sources_count"] == 1
+    assert len(stopped) == 1 and stopped[0].__dict__["sent_midi"] is False
+    assert len(polls) == 1
+    assert polls[0].__dict__["processed_count"] == expected_processed_count
+    assert polls[0].__dict__["emitted_count"] == len(intents)
+    records = str([record.__dict__ for record in caplog.records])
+    assert "private-" not in records and "/dev/gpiochip9" not in records
+    assert "board_id" not in records and "event_id" not in records and "timestamp_ms" not in records
+    assert metrics.errors_by_kind == {} and metrics.cc_sent_by_channel == {}
+
+
+@pytest.mark.parametrize(
+    "failure", ["configure_failed", "configure_cleanup_failed", "poll_failed", "close_failed"]
+)
+def test_actual_adapter_failures_record_bounded_errors_and_cleanup_state(
+    failure: str, control_logs: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    caplog = control_logs
+    metrics = MidiMetrics()
+    monkeypatch.setattr(controls_module, "get_metrics", lambda: metrics)
+    reader = _Input()
+    controls = ConfiguredApplianceControls(reader, lambda _: None, _board())
+    controls.mapper.handle(_event("private-transient-state"))
+
+    def fail_configure(_: ApplianceBoardConfiguration) -> None:
+        raise RuntimeError("private-adapter-fault")
+
+    def fail_read() -> None:
+        raise RuntimeError("private-adapter-fault")
+
+    expected = {f"appliance.controls.{failure}": 1}
+    if failure.startswith("configure"):
+        monkeypatch.setattr(reader, "configure", fail_configure)
+        if failure == "configure_cleanup_failed":
+            reader.fail_close = True
+            expected["appliance.controls.configure_failed"] = 1
+        with pytest.raises(RuntimeError, match="private-adapter-fault"):
+            controls.start()
+        assert reader.closed == 1
+    else:
+        controls.start()
+        if failure == "poll_failed":
+            monkeypatch.setattr(reader, "read_event", fail_read)
+            with pytest.raises(RuntimeError, match="private-adapter-fault"):
+                controls.poll()
+            controls.stop()
+        else:
+            reader.fail_close = True
+            with pytest.raises(OSError, match="reader failed"):
+                controls.stop()
+    assert controls.poll() == 0
+    assert not controls.mapper._seen and not controls._configured_sources
+    assert metrics.errors_by_kind == expected
+    assert metrics.cc_sent_by_channel == {}
+    reasons = [
+        record.__dict__["reason"]
+        for record in caplog.records
+        if record.message == "appliance_controls_failed"
+    ]
+    assert {f"appliance.controls.{reason}" for reason in reasons} == expected.keys()
+    assert "private-" not in str([record.__dict__ for record in caplog.records])
+
+
+def test_failed_intent_sink_is_not_replayed_or_counted_as_a_midi_send(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    metrics = MidiMetrics()
+    monkeypatch.setattr(controls_module, "get_metrics", lambda: metrics)
+    reader = _Input((_event("private-press"),))
+
+    def fail_sink(_: ApplianceControlIntent) -> None:
+        raise RuntimeError("kiosk unavailable")
+
+    controls = ConfiguredApplianceControls(reader, fail_sink, _board())
+    controls.start()
+    with pytest.raises(RuntimeError, match="kiosk unavailable"):
+        controls.poll()
+    delivered: list[ApplianceControlIntent] = []
+    controls.intent_sink = delivered.append
+    assert controls.poll() == 0 and not delivered
+    controls.stop()
+    assert metrics.errors_by_kind == {"appliance.controls.poll_failed": 1}
+    assert metrics.cc_sent_by_channel == {}
