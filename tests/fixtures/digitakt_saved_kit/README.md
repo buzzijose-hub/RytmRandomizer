@@ -24,12 +24,15 @@ done in this PR.
 
 ## Status
 
-These are **candidate** captures. They are evidence for a future
-offset-promotion workstream and grant no send authority: Digitakt
-saved-project byte offsets remain unpromoted
-(`DIGITAKT_OFFSETS_PROMOTED = False`), and promotion requires
-fixture-backed byte isolation, checksum and exact re-decode evidence
-per `.claude/rules/targeted-mutation-safety.md` #6.
+These captures are **evidence**, not send authority. The first MK1 pair
+promoted exactly one fact: the location of track 1 filter frequency
+(`DIGITAKT_MK1_TRACK1_FILTER_FREQUENCY_OFFSET` in
+`rytm_randomizer/data/digitakt_saved_kit_layout.py`), pinned byte for byte by
+`tests/test_digitakt_real_captures.py` and
+`tests/test_devices_strategies_digitakt_pattern_codec.py`. Anything further
+needs its own fixture-backed byte isolation, checksum and exact re-encode
+evidence per `.claude/rules/targeted-mutation-safety.md` #6, and nothing here
+enables a send (`DIGITAKT_OFFSETS_PROMOTED = False`).
 
 ## Provenance
 

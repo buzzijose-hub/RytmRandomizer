@@ -1,1 +1,1 @@
-"Digitakt sends are not enabled: only MK1 track 1 filter frequency is hardware-verified; per-track stride, other parameters, and a planner that emits the verified field must be promoted before real send"
+"Digitakt sends are not enabled: no planner emits hardware-verified Digitakt fields yet, and the only verified location so far is Digitakt MK1 track 1 filter frequency; value encoding, per-track stride, and other parameters must be promoted before real send"

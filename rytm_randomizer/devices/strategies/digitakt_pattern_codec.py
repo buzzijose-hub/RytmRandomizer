@@ -122,6 +122,7 @@ def decode_digitakt_pattern_payload(
             expected_packed_size=layout.packed_size,
             expected_trailer_size=DIGITAKT_PATTERN_TRAILER_SIZE,
             device_label=_DEVICE_LABEL,
+            length_field_wraps=True,
         )
         unpacked = unpack_elektron_7bit(packed, mask_order=_MASK_ORDER)
     except ValueError as exc:
@@ -159,6 +160,7 @@ def encode_digitakt_pattern_payload(
         expected_packed_size=layout.packed_size,
         device_label=_DEVICE_LABEL,
         mask_order=_MASK_ORDER,
+        length_field_wraps=True,
     )
     return prefix + encoded.packed + encoded.trailer
 

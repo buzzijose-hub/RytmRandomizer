@@ -10,8 +10,8 @@ a hardware verifier and pinned byte for byte by
   unpacks only in that order), a 14-bit checksum over the whole packed body,
   and a 14-bit length field holding ``(packed + 5) & 0x3FFF``,
 * the exact packed and unpacked sizes, and a byte-exact re-encode,
-* **one** parameter: track 1 filter frequency, a plain 0..127 byte. The two
-  captures differ in exactly that unpacked byte (0 -> 127) plus the checksum.
+* **one** parameter's location: track 1 filter frequency. The two captures
+  differ in exactly that unpacked byte (0 -> 127) plus the checksum.
 
 A Digitakt has no separate KIT dump: SETTINGS > SYSEX DUMP > SYSEX SEND >
 PATTERN sends the pattern together with the kit it plays, so "kit" in these
@@ -24,7 +24,8 @@ safety.md`` #6):
 * per-track stride. The dump strongly suggests eight 160-byte sound blocks
   starting at unpacked offset 25136, with filter frequency 68 bytes in -- but
   a stride is promoted only from a matched capture on another track,
-* any other parameter, and mid-range value encoding (only 0 and 127 seen),
+* any other parameter, and mid-range value encoding (only 0 and 127 seen;
+  a possible fine byte after the promoted one is unconfirmed),
 * everything about the Digitakt II, including its family byte.
 
 Never infer these from the live CC facts in
@@ -55,8 +56,11 @@ DIGITAKT_MK1_PATTERN_PACKED_SIZE: Final[int] = 31598
 DIGITAKT_MK1_PATTERN_UNPACKED_SIZE: Final[int] = 27648
 DIGITAKT_MK1_PATTERN_FRAMED_SIZE: Final[int] = 31613
 
-#: The one promoted parameter: MK1 track 1 filter frequency, unpacked offset,
-#: stored as the plain 0..127 value the FREQ display shows.
+#: The one promoted parameter: MK1 track 1 filter frequency, unpacked offset.
+#: Observed values are the endpoints only: 0 (FREQ 0) and 127 (FREQ 127).
+#: Mid-range encoding is unverified, and so is the next byte (25205, 0x00 in
+#: both captures), which may be a fine/LSB half -- a writer must not assume
+#: a single-byte 0..127 field until a mid-value capture settles both.
 DIGITAKT_MK1_TRACK1_FILTER_FREQUENCY_OFFSET: Final[int] = 25204
 
 #: Snapshot layout discriminators.
@@ -70,9 +74,10 @@ DIGITAKT_OFFSETS_PROMOTED: Final[bool] = False
 
 #: Operator-facing explanation used verbatim as a plan ``readiness_reason``.
 DIGITAKT_UNPROMOTED_REASON: Final[str] = (
-    "Digitakt sends are not enabled: only MK1 track 1 filter frequency is "
-    "hardware-verified; per-track stride, other parameters, and a planner that "
-    "emits the verified field must be promoted before real send"
+    "Digitakt sends are not enabled: no planner emits hardware-verified Digitakt "
+    "fields yet, and the only verified location so far is Digitakt MK1 track 1 "
+    "filter frequency; value encoding, per-track stride, and other parameters "
+    "must be promoted before real send"
 )
 
 

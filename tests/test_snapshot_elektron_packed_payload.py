@@ -63,6 +63,7 @@ def test_trailer_length_keeps_the_low_14_bits_of_a_body_over_16383_bytes() -> No
         expected_packed_size=31598,
         device_label=_LABEL,
         mask_order=Elektron7BitMaskOrder.MSB_FIRST,
+        length_field_wraps=True,
     )
     assert encoded.encoded_length == (31598 + 5) & 0x3FFF == 15219
     assert encoded.trailer[2:] == encode_elektron_u14(15219)
@@ -75,8 +76,29 @@ def test_trailer_length_keeps_the_low_14_bits_of_a_body_over_16383_bytes() -> No
         expected_packed_size=31598,
         expected_trailer_size=ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE,
         device_label=_LABEL,
+        length_field_wraps=True,
     )
     assert validated == encoded
+
+    # Without the opt-in, every other caller keeps refusing an oversize body.
+    with pytest.raises(ValueError, match="outside 0..16383"):
+        encode_elektron_packed_payload(
+            unpacked,
+            checksum_start=0,
+            length_adjustment=5,
+            expected_packed_size=None,
+            device_label=_LABEL,
+        )
+    with pytest.raises(ElektronPackedPayloadError, match="encoded length does not match"):
+        validate_elektron_packed_payload(
+            encoded.packed,
+            encoded.trailer,
+            checksum_start=0,
+            length_adjustment=5,
+            expected_packed_size=None,
+            expected_trailer_size=ELEKTRON_CHECKSUM_LENGTH_TRAILER_SIZE,
+            device_label=_LABEL,
+        )
 
 
 def test_packed_payload_contract_supports_native_msb_order_and_dynamic_size() -> None:
