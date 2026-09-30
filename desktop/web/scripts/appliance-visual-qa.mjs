@@ -1,5 +1,5 @@
 /** Bounded, one-browser acceptance against the production appliance runtime.
- * Usage: node scripts/appliance-visual-qa.mjs <private launch.html> <output directory> <runtime source SHA>
+ * Usage: node scripts/appliance-visual-qa.mjs <private launch.html> <output directory> <runtime source SHA> [simulation|production]
  * The private bootstrap is navigated without reading, printing or copying its secrets.
  */
 import { chromium } from '@playwright/test';
@@ -10,7 +10,9 @@ import { pathToFileURL } from 'node:url';
 const bootstrap = process.argv[2];
 const output = process.argv[3];
 const sourceSha = process.argv[4];
+const mode = process.argv[5] ?? 'simulation';
 if (!bootstrap || !output || !/^[a-f0-9]{40}$/.test(sourceSha ?? '')) throw new Error('Expected private launch.html path, screenshot output directory and exact runtime source SHA.');
+if (!['simulation', 'production'].includes(mode)) throw new Error('Expected explicit simulation or production mode.');
 const directory = resolve(output);
 mkdirSync(directory, { recursive: true });
 const browser = await chromium.launch({ headless: true });
@@ -59,8 +61,30 @@ async function checkTargetMatrix(expectedCount) {
 try {
   await page.goto(pathToFileURL(resolve(bootstrap)).href);
   await page.getByRole('heading', { name: 'HOME / PERFORM' }).waitFor();
-  await page.getByText('SIMULATION / NO MIDI', { exact: true }).waitFor();
+  await page.getByText(mode === 'simulation' ? 'SIMULATION / NO MIDI' : 'PASSIVE / DISARMED', { exact: true }).waitFor();
   await page.evaluate(() => document.fonts.ready);
+  if (mode === 'production') {
+    for (const [width, height] of [[800, 480], [480, 320], [1024, 600]]) {
+      await page.setViewportSize({ width, height });
+      await clickNav('RYTM');
+      await clickNav('HOME');
+      if (!await page.getByRole('button', { name: 'APPLY…', exact: true }).isDisabled()) throw new Error('Disconnected production apply must be blocked.');
+      await check('production-disconnected-home', width, height);
+      if (width >= 650) await checkTargetMatrix(12);
+      for (const label of ['RYTM', 'A4', 'BOTH']) {
+        await clickNav(label);
+        await check(`production-disconnected-${label.toLowerCase()}`, width, height);
+      }
+      await clickNav('MORE');
+      await page.getByRole('button', { name: 'CAPTURE', exact: true }).click();
+      await page.getByText('Capture input is unavailable. Scan inputs or launch with the passive capture provider.', { exact: true }).waitFor();
+      if (!await page.getByRole('button', { name: 'LISTEN FOR KIT CAPTURE', exact: true }).isDisabled()) throw new Error('Unavailable capture must be blocked.');
+      await check('production-capture-unavailable', width, height);
+      await page.getByRole('button', { name: 'DIAGNOSTICS', exact: true }).click();
+      await check('production-diagnostics', width, height);
+      if (await page.getByText(/SIMULATION \/ NO MIDI|SIMULATED 7-BIT VALUES/).count()) throw new Error('Production disconnected state displayed simulated authority.');
+    }
+  } else {
   for (const [width, height] of [[800, 480], [480, 320], [1024, 600]]) {
     await page.setViewportSize({ width, height });
     await clickNav('RYTM');
@@ -128,6 +152,8 @@ try {
   await page.getByRole('button', { name: 'CONFIRM LOCAL APPLY', exact: true }).click();
   await page.locator('.appliance-receipt').waitFor();
   await check('local-apply-receipt', 800, 480);
+  }
+  await page.setViewportSize({ width: 800, height: 480 });
   await clickNav('MORE');
   await page.getByRole('button', { name: 'DIAGNOSTICS', exact: true }).click();
   await page.getByRole('link', { name: 'STUDIO VIEW', exact: true }).click();
@@ -135,11 +161,11 @@ try {
   await page.screenshot({ path: resolve(directory, 'studio-navigation-800x480.png'), fullPage: false });
   await page.evaluate(() => { location.hash = '/appliance'; });
   await page.getByRole('heading', { name: 'HOME / PERFORM' }).waitFor();
-  await page.getByText('SIMULATION / NO MIDI', { exact: true }).waitFor();
+  await page.getByText(mode === 'simulation' ? 'SIMULATION / NO MIDI' : 'PASSIVE / DISARMED', { exact: true }).waitFor();
   await check('studio-return', 800, 480);
   if (browserErrors.length) throw new Error(`Browser page errors: ${browserErrors.join(', ')}`);
-  writeFileSync(resolve(directory, 'visual-qa-receipt.json'), JSON.stringify({ sourceSha, tested: 'production frontend + explicitly simulated backend; no hardware authority', browser: await browser.version(), screenshots: receipts, studioNavigation: true, browserErrors }, null, 2));
-  console.log(JSON.stringify({ passed: true, screenshots: receipts.length, targetSizes: [[800, 480], [480, 320], [1024, 600]], browserErrors: 0 }));
+  writeFileSync(resolve(directory, 'visual-qa-receipt.json'), JSON.stringify({ sourceSha, mode, tested: `production frontend + ${mode === 'simulation' ? 'explicitly simulated backend' : 'disconnected passive production backend'}; no hardware authority`, browser: await browser.version(), screenshots: receipts, studioNavigation: true, browserErrors }, null, 2));
+  console.log(JSON.stringify({ passed: true, mode, screenshots: receipts.length, targetSizes: [[800, 480], [480, 320], [1024, 600]], browserErrors: 0 }));
 } finally {
   await context.close();
   await browser.close();
