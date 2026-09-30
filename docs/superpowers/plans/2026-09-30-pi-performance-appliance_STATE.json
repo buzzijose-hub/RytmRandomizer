@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "integrated independent-review repairs; full verification pending",
+  "status": "integrated backend repairs; final runtime review and combined acceptance pending",
   "starting_sha": "892aaffca2484d1939ba3e133263aaadde2f22de",
   "original_checkout_sha": "a73aded67211b1e4a4cf294eb13ecfd3887de7e8",
   "integration_branch": "codex/pi-performance-appliance",
@@ -80,6 +80,46 @@
       "result": "passed",
       "count": 49,
       "coverage": "100% of416 statements452branches169functions241lines"
+    },
+    {
+      "scope": "full integrated frontend",
+      "tree": "3d0b3c92542535d04a8d9592f1e79c99442169e4",
+      "command": "npm run test:coverage -- --maxWorkers=2",
+      "result": "passed",
+      "count": 1074,
+      "files": 78,
+      "coverage": "100%:3939 statements,3095 branches,1375 functions,3399 lines",
+      "duration_seconds": 61.57
+    },
+    {
+      "scope": "first combined backend",
+      "tree": "3d0b3c92542535d04a8d9592f1e79c99442169e4",
+      "command": "python -m pytest -n4 --cov=rytm_randomizer --cov-branch -q",
+      "result": "failed; retained for audit",
+      "passed": 10502,
+      "failed": 40,
+      "skipped": 5,
+      "duration_seconds": 210.94,
+      "repairs": "canonical data snapshots; exact wire inventories and real roundtrips; preserved native evidence hash; reviewed canonical target-fact edge; early auto-disarm refusal; cancellation race coverage"
+    },
+    {
+      "scope": "integrated architecture",
+      "tree": "c4dbee6a",
+      "command": "python -m pytest tests/architecture -n4 -q",
+      "result": "passed",
+      "count": 873,
+      "duration_seconds": 34.49
+    },
+    {
+      "scope": "whole repository lint",
+      "tree": "c4dbee6a",
+      "command": "pinned ruff check .; black --check --target-version=py311 .; isort --profile black --check-only .",
+      "result": "passed",
+      "exit_codes": [
+        0,
+        0,
+        0
+      ]
     }
   ],
   "integration_shas": [
@@ -92,7 +132,13 @@
     "d68dc3a9",
     "c32f6207",
     "0a0b1281",
-    "09b1fe6e"
+    "09b1fe6e",
+    "d7f62648",
+    "3d0b3c92",
+    "a0db2724",
+    "3028ea30",
+    "2e4b32ef",
+    "c4dbee6a"
   ],
   "blockers": [
     "physical Raspberry Pi unavailable",
@@ -101,24 +147,24 @@
     "ARM64 native dependency build unavailable (no Docker/Rust, no configured WSL distribution)",
     "automatic approval review blocked obsolete credential directory deletion and original node_modules junction unlink; both preserved; clean isolated dependency installation used"
   ],
-  "resume": "Root integration is pi-performance-appliance; preserve original dirty checkout. Own preview sessions70839 simulation4317 and74497 passive4318 serve c029600a source and oldassets, require restart/rebuild. Capabilities worktree has clean locked npm dependencies; agent controls commit pending, then fast-forward clean checkout to root for exactSHA build. Runtime agent authoring deployment lifecycle tests; review_docs authoring final maintainability report (UIaxe895fd0b2 ready). Root owns authoritative history+target facts+docs uncommitted. Need merge all, full bounded backendcoverage/architecture/parity, pinnedlint/type/deadcode, locked frontendcoverage/build/E2E, actual 3size visualQA, deterministicpackage+matrix+receipts, consolidatedpostpushreview, onePR. No push yet.",
+  "resume": "Integration c4dbee6a, original checkout preserved. No preview servers running. Runtime agent finalizing lifecycle/wheelhouse repairs; capabilities and review_docs independently reviewing latest runtime diff. Capabilities worktree clean locked npm install reserved for root build/E2E after fast-forward. Merge runtime, run full backend coverage + exact integrated frontend E2E, source-bound production build, both preview modes and inspect three viewport PNGs, deterministic package/matrix/receipts. No push/PR yet. First failed backend receipt preserved; final acceptance must not use it as green. Automatic approval review blocked old credential directory deletion and original node_modules junction unlink; do not retry either.",
   "resources": {
     "logical_cpus": 24,
     "ram_total_gib": 31.75,
-    "ram_available_gib_latest": 16.26,
+    "ram_available_gib_latest": 15.83,
     "disk_free_gib_initial": 432,
     "python": "3.12.14 Windows x64",
     "lint_tools": "ruff0.15.13 black26.3.1 isort8.0.1 pyright1.1.411 isolated under ignored output/local/pi-appliance/venv/python-tools",
     "frontend_dependencies": "npm ci,396 locked packages in pi-appliance-capabilities worktree; original node_modules preserved"
   },
   "review": {
-    "architecture": "duplicate native facts repaired870d3227",
+    "architecture": "canonical facts870d3227; public native type facade preserves frozen AL02 source; independent reviewer approved narrow downward dual_machine-to-data matrix declarationa0db2724",
     "types": "validated DTOs repaired9051e849; constants runtime repair",
     "safety": "passive capture touch cancel repaired746eea41",
-    "observability": "runtime d3e934ce, root0a0b1281; controls pending",
-    "abstraction": "authoritative shared HistoryStore and shared target facts being validated",
-    "tests": "old-cookie assertion corrected; fractional page depths added; install/rollback/kiosk lifecycle authoring",
-    "docs": "cancellation Protocol prose/diagram added; route axe895fd0b2 pending merge",
-    "maintainability": "independent reviewer active"
+    "observability": "runtime d3e934ce, root0a0b1281, controls eeffe1a9",
+    "abstraction": "authoritative HistoryStored7f62648; canonical target facts and original public resolvera0db2724",
+    "tests": "actual cookie assertion and fractional depths; canonical data snapshots6789685; cancellation edgesb42f3e91; authenticated wire roundtrips2d1fdf3c; installer lifecycle final review pending",
+    "docs": "cancellation Protocol prose/diagram; actual route axe895fd0b2; four envvars documenteda0db2724",
+    "maintainability": "independent review found wheelhouse source identity gap; runtime repair pending merge"
   }
 }
