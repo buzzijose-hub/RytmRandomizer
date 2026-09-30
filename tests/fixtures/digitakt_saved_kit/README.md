@@ -4,7 +4,18 @@ Captured by: Steve
 Date: 2026-09-30
 Device: Digitakt (MK1) (`digitakt_mk1`)
 OS version: 1.52A
-Dump menu path: SETTINGS > SYSEX DUMP > SYSEX SEND > KIT
+Dump menu path: SETTINGS > SYSEX DUMP > SYSEX SEND > PATTERN
+
+Note: the on-screen menu item is labeled **PATTERN**, not KIT. Digitakt does
+not have a separately-named Kit object the way the Analog Rytm / Analog Four
+do; PATTERN is the closest equivalent — it carries the per-track sound
+settings (the "Kit" role) *and* the sequencer/trig data together. The
+`digitakt_saved_kit` naming in this fixture directory, and the "kit"-flavored
+naming throughout `rytm_randomizer/data/digitakt_saved_kit_layout.py` and
+`rytm_randomizer/devices/strategies/digitakt_snapshot_decoder.py`, was
+inherited from the Rytm/A4 Kit/Pattern split and does not accurately describe
+the Digitakt object model. Renaming that is tracked as follow-up work, not
+done in this PR.
 
 ## Files
 
