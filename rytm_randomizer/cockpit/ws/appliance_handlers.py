@@ -9,8 +9,11 @@ from typing import Final
 
 from ...observability.logging import get_logger
 from ..appliance import DEVICE_IDS, OPERATIONS, ApplianceWorkspace, context_digest, validated_object
+from ..capture import KitCaptureResult
 from ..capture.appliance_a4 import appliance_snapshot_from_a4_capture
 from ..capture.bridge import cockpit_snapshot_from_rytm_capture
+from ..data.appliance import ApplianceProfileDocumentRecord, ApplianceProvenanceRecord
+from ..data.stage import StageDeviceId
 from ..profiles import default_profiles_dir
 from .handlers import HandlerResult, session_is_armed
 from .protocol import EVENT_APPLIANCE_CHANGED
@@ -27,9 +30,9 @@ def _execute_operation(
     payload: Mapping[str, object],
     session: CockpitSession,
     fingerprints: Mapping[str, object],
-) -> dict[str, object] | None:
+) -> ApplianceProfileDocumentRecord | None:
     """Execute only after synchronization and revision validation."""
-    exported: dict[str, object] | None = None
+    exported: ApplianceProfileDocumentRecord | None = None
     if operation == "scope":
         workspace.change_scope(payload)
     elif operation == "mutate":
@@ -64,7 +67,9 @@ async def handle_appliance(cmd: dict[str, object], session: CockpitSession) -> H
             simulation=os.environ.get(SIMULATION_ENV) == "1", profile_file=profile_file
         )
     workspace = session.appliance
-    captures = {device: session.kit_captures.get(device) for device in DEVICE_IDS}
+    captures: dict[StageDeviceId, KitCaptureResult | None] = {
+        device: session.kit_captures.get(device) for device in DEVICE_IDS
+    }
     fingerprints: dict[str, object] = {
         device: capture.fingerprint if capture else None for device, capture in captures.items()
     }
@@ -102,7 +107,7 @@ async def handle_appliance(cmd: dict[str, object], session: CockpitSession) -> H
             raise ValueError("appliance revision changed; refresh and review the current action")
     payload = validated_object(cmd.get("payload", {}))
     exported = _execute_operation(workspace, operation, payload, session, fingerprints)
-    provenance: dict[str, dict[str, object]] = {}
+    provenance: dict[StageDeviceId, ApplianceProvenanceRecord] = {}
     for device, capture in captures.items():
         provenance[device] = {
             "source_type": (

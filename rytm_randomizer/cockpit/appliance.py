@@ -30,14 +30,20 @@ from .data import (
     Snapshot,
     classify_payload,
     new_ulid,
+    require_object,
     require_schema_version,
 )
 from .data.appliance import (
     ApplianceCandidateRecord,
     ApplianceChangeRecord,
+    ApplianceLaneRecord,
+    ApplianceParameterRecord,
+    ApplianceProfileDocumentRecord,
     ApplianceProfileRecord,
+    ApplianceProvenanceRecord,
     ApplianceReceiptRecord,
     ApplianceScopeRecord,
+    ApplianceStateRecord,
     ApplianceTarget,
 )
 from .data.rytm_parameter_map import cockpit_parameter_mapping
@@ -98,12 +104,10 @@ def _record_profile_refusal(
 
 
 def validated_object(value: object) -> Mapping[str, object]:
-    if not isinstance(value, Mapping):
-        raise ValueError("expected an object with string keys")
-    checked = cast(Mapping[object, object], value)
-    if not all(isinstance(key, str) for key in checked):
-        raise ValueError("expected an object with string keys")
-    return cast(Mapping[str, object], value)
+    try:
+        return require_object(value, "appliance payload", ValueError)
+    except ValueError as exc:
+        raise ValueError("expected an object with string keys") from exc
 
 
 def _depth(value: object) -> float:
@@ -345,9 +349,11 @@ class ApplianceWorkspace:
     def _publish(
         self, profiles: dict[str, ApplianceProfileRecord], *, recovery: bool = False
     ) -> None:
-        data = json.dumps(
-            {"schema_version": SCHEMA_VERSION, "profiles": profiles}, allow_nan=False
-        ).encode()
+        document: ApplianceProfileDocumentRecord = {
+            "schema_version": SCHEMA_VERSION,
+            "profiles": profiles,
+        }
+        data = json.dumps(document, allow_nan=False).encode()
         if len(data) > STORAGE_LIMIT:
             raise ValueError("profile storage limit exceeded")
         if self.storage_error and not recovery:
@@ -417,7 +423,8 @@ class ApplianceWorkspace:
                 DEVICE_IDS[1],
                 datetime.now(timezone.utc),
                 tuple(
-                    PadState(track, "SIMULATED NORMALIZED MIDI", params) for track in range(1, 5)
+                    PadState(track, "SIMULATED NORMALIZED MIDI", params)
+                    for track in sorted(registered_mutation_ids(DEVICE_IDS[1]))
                 ),
                 None,
                 None,
@@ -653,7 +660,7 @@ class ApplianceWorkspace:
 
     def profile_action(
         self, operation: str, payload: Mapping[str, object], fingerprints: Mapping[str, object]
-    ) -> dict[str, object] | None:
+    ) -> ApplianceProfileDocumentRecord | None:
         if operation == "profile_import":
             document = payload.get("document")
             if len(json.dumps(document).encode()) > STORAGE_LIMIT:
@@ -701,9 +708,9 @@ class ApplianceWorkspace:
         return None
 
     def state(
-        self, *, provenance: Mapping[str, Mapping[str, object]], armed: bool
-    ) -> dict[str, object]:
-        lanes: dict[str, object] = {}
+        self, *, provenance: Mapping[StageDeviceId, ApplianceProvenanceRecord], armed: bool
+    ) -> ApplianceStateRecord:
+        lanes: dict[StageDeviceId, ApplianceLaneRecord] = {}
         native_encodings = {
             encoding.parameter_id: encoding for encoding in appliance_a4_parameter_encodings()
         }
@@ -717,7 +724,7 @@ class ApplianceWorkspace:
                 source: Snapshot | None = source,
                 device_id: StageDeviceId = device_id,
                 reference_track: int | None = reference_track,
-            ) -> dict[str, object]:
+            ) -> ApplianceParameterRecord:
                 values: dict[str, int] = {}
                 if source is not None:
                     for pad in source.pads:
