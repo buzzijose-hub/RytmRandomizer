@@ -7,6 +7,7 @@ import type { ApplianceOperation, ApplianceState, Command, CommandAck } from '..
 export interface ApplianceController {
   state: ApplianceState | null;
   busy: boolean;
+  pendingCommand: Command['type'] | null;
   notice: string;
   getState: () => ApplianceState | null;
   isBusy: () => boolean;
@@ -18,6 +19,7 @@ export interface ApplianceController {
 export function useAppliance(client: CockpitClient): ApplianceController {
   const [state, setState] = useState<ApplianceState | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pendingCommand, setPendingCommand] = useState<Command['type'] | null>(null);
   const [notice, setNotice] = useState('Waiting for authenticated appliance state.');
   const busyRef = useRef(false);
   const stateRef = useRef(state);
@@ -35,20 +37,29 @@ export function useAppliance(client: CockpitClient): ApplianceController {
           stateRef.current = ack.appliance;
           setNotice('State received. Outputs require explicit arming and exact confirmation.');
         } else setNotice(ack.message ?? 'This sidecar does not provide appliance state. Update the sidecar.');
-      }).catch(() => { if (mounted) setNotice('Sidecar unavailable. No action was queued.'); });
+      }).catch(() => { if (mounted && generation === epoch.current) setNotice('Sidecar unavailable. No action was queued.'); });
     };
-    const off = client.on('appliance_changed', (event) => { stateRef.current = event.state; setState(event.state); });
-    const statusOff = client.onStatusChange((status) => {
+    const dropAuthority = (): void => {
       epoch.current += 1;
       setState(null);
       stateRef.current = null;
       busyRef.current = false;
       setBusy(false);
+      setPendingCommand(null);
+    };
+    const off = client.on('appliance_changed', (event) => { stateRef.current = event.state; setState(event.state); });
+    const statusOff = client.onStatusChange((status) => {
+      dropAuthority();
       if (status === 'connected') refresh();
       else setNotice('Transport disconnected. Fresh state and arming are required.');
     });
+    const contextOffs = (['connection_changed', 'kit_captures_changed', 'snapshot_changed', 'performance_console_changed', 'show_bank_changed', 'dual_machine_stage_changed', 'profile_changed'] as const).map((type) => client.on(type, () => {
+      dropAuthority();
+      setNotice('Device or Studio context changed. Waiting for fresh appliance state.');
+      if (client.getStatus() === 'connected') refresh();
+    }));
     if (client.getStatus() === 'connected') refresh();
-    return () => { mounted = false; epoch.current += 1; off(); statusOff(); };
+    return () => { mounted = false; epoch.current += 1; off(); statusOff(); contextOffs.forEach((unsubscribe) => unsubscribe()); };
   }, [client]);
 
   const command = useCallback(async (request: Command, timeoutMs?: number): Promise<CommandAck | null> => {
@@ -59,6 +70,7 @@ export function useAppliance(client: CockpitClient): ApplianceController {
     const generation = epoch.current;
     busyRef.current = true;
     setBusy(true);
+    setPendingCommand(request.type);
     try {
       const ack = await client.send(request, timeoutMs === undefined ? {} : { timeoutMs });
       if (generation !== epoch.current) return null;
@@ -72,7 +84,7 @@ export function useAppliance(client: CockpitClient): ApplianceController {
       if (generation === epoch.current) setNotice('Command interrupted or timed out. Do not replay without fresh state.');
       return null;
     } finally {
-      if (generation === epoch.current) { busyRef.current = false; setBusy(false); }
+      if (generation === epoch.current) { busyRef.current = false; setBusy(false); setPendingCommand(null); }
     }
   }, [client]);
 
@@ -81,5 +93,5 @@ export function useAppliance(client: CockpitClient): ApplianceController {
     if (operation !== 'state' && current === null) return null;
     return command({ type: 'appliance', operation, payload, ...(operation === 'state' ? {} : { expected_revision: current?.revision }) });
   }, [command]);
-  return { state, busy, notice, execute, command, getState: () => stateRef.current, isBusy: () => busyRef.current };
+  return { state, busy, pendingCommand, notice, execute, command, getState: () => stateRef.current, isBusy: () => busyRef.current };
 }
