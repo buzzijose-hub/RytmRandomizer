@@ -1,6 +1,6 @@
 /**
- * E2E axe-core scan per top-level route. Same per-route grandfathered
- * floor map as the Vitest smoke suite so they cannot drift apart.
+ * E2E axe-core scans for Cockpit, Wizard and Appliance. Each route has a
+ * zero-violation floor and must reach its real, sidecar-backed state first.
  *
  * Uses the wizard_fixture which boots a real Python sidecar — the
  * Cockpit only renders <main data-testid="cockpit-root"> after a
@@ -13,13 +13,21 @@ import AxeBuilder from '@axe-core/playwright';
 
 import { expect, test } from './fixtures/wizard_fixture';
 
+test.use({ sidecarEnv: { RYTM_RAND_APPLIANCE_SIMULATION: '0' } });
+
 // Per-route floor map. Each fix-cluster task drops its entry to 0.
 const FLOORS: Record<string, number> = {
   '/': 0,
   '/#/wizard': 0,
+  '/#/appliance': 0,
 };
 
 const ROUTES = Object.keys(FLOORS);
+const ROOTS: Record<string, string> = {
+  '/': 'cockpit-root',
+  '/#/wizard': 'wizard-root',
+  '/#/appliance': 'appliance',
+};
 
 for (const route of ROUTES) {
   // Fixture parameter `sidecar` is mandatory even though we don't use it
@@ -28,11 +36,16 @@ for (const route of ROUTES) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   test(`axe-core scan on route ${route}`, async ({ page, sidecar }) => {
     await page.goto(route);
-    // Wait for the cockpit/wizard root to mount (no `domcontentloaded`
-    // race — the Cockpit waits for a session_status event).
+    // The Appliance mounts its disconnected shell immediately; wait for
+    // authenticated appliance state so we do not audit only that placeholder.
     await page
-      .getByTestId(route === '/' ? 'cockpit-root' : 'wizard-root')
+      .getByTestId(ROOTS[route]!)
       .waitFor({ state: 'visible', timeout: 10_000 });
+    if (route === '/#/appliance') {
+      await expect(page.getByRole('heading', { name: 'HOME / PERFORM' })).toBeVisible();
+      await expect(page.getByText('PASSIVE / DISARMED', { exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Pad \d+,/ })).toHaveCount(12);
+    }
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
       .analyze();
