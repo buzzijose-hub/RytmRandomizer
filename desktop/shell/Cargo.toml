@@ -47,9 +47,15 @@ semver = "1"
 # plugin bump could remove. Minimal features: the check-in needs a GET and
 # nothing else, and must not drag in cookie/JSON machinery it will never use.
 # No features requested: cargo unions features across the graph, so the beacon
-# inherits whatever TLS backend tauri-plugin-updater already selected rather
-# than forcing a second one into the binary.
+# uses the same TLS stack tauri-plugin-updater selected rather than forcing a
+# second one into the binary.
 reqwest = { version = "0.13", default-features = false }
+# That stack is reqwest's `rustls-no-provider`: the plugin installs rustls'
+# `ring` provider itself, but only inside `Updater::check()`. A beacon client
+# built before that panics inside reqwest (issue #251), so the shell installs
+# the SAME provider first -- see `update_transport::ensure_tls_crypto_provider`.
+# Already in the binary via the plugin; declared to name `ring` directly.
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
 # CI pin: tauri-utils 2.9.2 conflicts with time 0.3.48 on Windows/Rust 1.88.
 time = "=0.3.47"
 # CI pin: 2026-06-14 brotli-decompressor/alloc-stdlib releases can resolve

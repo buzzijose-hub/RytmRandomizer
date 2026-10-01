@@ -31,7 +31,7 @@ from ..data.a4_preparation import (
     A4PreparationReport,
 )
 from ..data.show_bank import ShowBankEntry, ShowKitCandidate, ShowKitCapture
-from ..data.stage import ANALOG_FOUR_DEVICE_ID
+from ..data.stage import ANALOG_FOUR_DEVICE_ID, is_analog_four_stage_slot
 
 _MAX_OUTPUT_NAME: Final[int] = 256
 _ASCII_SPACE: Final[int] = 32
@@ -93,7 +93,7 @@ def _frame_fingerprint(frame: bytes) -> str:
 
 def _source_matches(source: ShowKitCapture, frame: bytes) -> bool:
     return (
-        source.device_id == ANALOG_FOUR_DEVICE_ID
+        is_analog_four_stage_slot(source.device_id)
         and source.round_trip_verified is True
         and source.sysex.frame_bytes == len(frame)
         and source.sysex.frame_sha256 == hashlib.sha256(frame).hexdigest()
@@ -170,7 +170,7 @@ def _review_current_capture(
     try:
         _require_aware_time(capture.captured_at, "current capture")
         if (
-            capture.device_id != ANALOG_FOUR_DEVICE_ID
+            not is_analog_four_stage_slot(capture.device_id)
             or capture.round_trip_verified is not True
             or capture.input_only is not True
             or capture.sent_midi is not False

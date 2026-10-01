@@ -60,6 +60,22 @@ def split_elektron_packed_payload_body(
     )
 
 
+def _trailer_length(packed_size: int, length_adjustment: int, *, wraps: bool) -> int:
+    """Return the value the trailer's 14-bit length field must hold.
+
+    By default that is the full encoded length, so a body too long for 14
+    bits is refused (the encoder raises; the validator reports a mismatch).
+    ``wraps=True`` is for objects proven on hardware to store only the low 14
+    bits: a Digitakt MK1 PATTERN (31598 packed bytes) carries
+    15219 == (31598 + 5) & 0x3FFF (``tests/fixtures/digitakt_saved_kit/``).
+    A wrapped field cannot catch a body that is short by a multiple of 16384;
+    such callers must also pin an exact ``expected_packed_size``.
+    """
+
+    encoded = packed_size + length_adjustment
+    return encoded & ELEKTRON_U14_MAX if wraps else encoded
+
+
 def elektron_packed_payload_checksum(
     packed: bytes,
     *,
@@ -81,6 +97,7 @@ def encode_elektron_packed_payload(
     expected_packed_size: int | None,
     device_label: str,
     mask_order: Elektron7BitMaskOrder = Elektron7BitMaskOrder.LSB_FIRST,
+    length_field_wraps: bool = False,
 ) -> ElektronPackedPayload:
     """Pack one body and append its device-defined checksum/length trailer."""
 
@@ -94,7 +111,7 @@ def encode_elektron_packed_payload(
         checksum_start=checksum_start,
         device_label=device_label,
     )
-    encoded_length = len(packed) + length_adjustment
+    encoded_length = _trailer_length(len(packed), length_adjustment, wraps=length_field_wraps)
     trailer = encode_elektron_u14(checksum) + encode_elektron_u14(encoded_length)
     return ElektronPackedPayload(
         packed=packed,
@@ -113,6 +130,7 @@ def validate_elektron_packed_payload(
     expected_packed_size: int | None,
     expected_trailer_size: int,
     device_label: str,
+    length_field_wraps: bool = False,
 ) -> ElektronPackedPayload:
     """Validate one packed body against its device-defined integrity trailer."""
 
@@ -145,7 +163,7 @@ def validate_elektron_packed_payload(
             f"{device_label} checksum does not match the packed payload"
         )
 
-    expected_length = len(packed) + length_adjustment
+    expected_length = _trailer_length(len(packed), length_adjustment, wraps=length_field_wraps)
     if encoded_length != expected_length:
         length_name = "packed length" if length_adjustment == 0 else "encoded length"
         raise ElektronPackedPayloadError(f"{device_label} {length_name} does not match its trailer")

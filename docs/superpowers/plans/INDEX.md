@@ -15,6 +15,7 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 
 | Date | Plan | Status | PR |
 |---|---|---|---|
+| 2026-09-08 | [digitakt-review-repairs](2026-09-08-digitakt-review-repairs.md) | in-flight | #240 |
 | 2026-09-08 | [release-closeout](2026-09-08-release-closeout.md) | in-flight — local and hosted verification passed; protected review required | #238–243; #245; replacement #248 |
 | 2026-09-08 | [release-closeout learning and replay](2026-09-08-release-closeout_LEARNING_REPORT.md) | in-flight — lessons and verified replay retained; review required | #238–243; #245; #248 |
 | 2026-09-08 | [release-closeout collaborator guide](2026-09-08-release-closeout_REBASE_GUIDE.md) | in-flight — originals closed as superseded; #248 awaits protected review | #239, #241–243; #248 |

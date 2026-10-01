@@ -24,6 +24,25 @@ use std::sync::{Arc, Mutex};
 
 use crate::update_policy::ErrorCode;
 
+/// Make sure rustls has a process-wide crypto provider before a client is built.
+///
+/// tauri-plugin-updater builds reqwest with `rustls-no-provider` and installs
+/// rustls' `ring` provider itself -- but only inside `Updater::check()`. Any
+/// client built before that point, or in a process where no check has run,
+/// panics inside reqwest ("No rustls crypto provider is configured"). The
+/// panic kills the beacon task, so its outcome never reaches the journal
+/// (issue #251: native `journal_ui` timing out on "real beacon completion").
+///
+/// Installs the same provider the plugin would, so behaviour does not depend
+/// on which runs first. Idempotent: a no-op when a provider already exists.
+pub(crate) fn ensure_tls_crypto_provider() {
+    if rustls::crypto::CryptoProvider::get_default().is_none() {
+        // Can only fail if another thread installed one in between, which is
+        // exactly the state this function exists to reach.
+        let _ = rustls::crypto::ring::default_provider().install_default();
+    }
+}
+
 /// One network operation's outcome, reported back to the driver.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TransportOutcome {
@@ -167,6 +186,22 @@ mod tests {
     /// checking in), a second check arriving while the first request was open
     /// destroyed the first's evidence. This test pins that real cancellation
     /// defect without claiming it caused a separate intermittent native test.
+    /// Issue #251: the beacon must be able to build its client in a process
+    /// where the updater plugin's `check()` never ran. Nothing else in this
+    /// test binary installs a provider, so dropping the install makes reqwest
+    /// panic here exactly as it did in CI.
+    #[test]
+    fn beacon_client_builds_without_the_updater_check_having_run() {
+        ensure_tls_crypto_provider();
+        assert!(rustls::crypto::CryptoProvider::get_default().is_some());
+        assert!(reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(1))
+            .build()
+            .is_ok());
+        // Idempotent: a second call with a provider present is a no-op.
+        ensure_tls_crypto_provider();
+    }
+
     #[test]
     fn a_second_beacon_does_not_cancel_the_first() {
         let operations = Operations::default();
@@ -825,6 +860,7 @@ impl<R: tauri::Runtime> Transport for PluginTransport<R> {
                         attempt.error("beacon redirect refused")
                     }
                 });
+                ensure_tls_crypto_provider();
                 let Ok(client) = reqwest::Client::builder()
                     .timeout(std::time::Duration::from_secs(10))
                     .redirect(redirects)

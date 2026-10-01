@@ -47,6 +47,29 @@ def test_importing_active_boundary_report_prints_nothing():
     assert result.stderr == ""
 
 
+def test_unknown_profile_is_reported_without_inventing_a_machine_or_target(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.reports import build_active_boundary_report
+    from rytm_randomizer.reports._core import active_boundary
+
+    monkeypatch.setattr(active_boundary, "UNSUPPORTED_ACTIVE_BOUNDARY_PROFILE_KEYS", ("missing",))
+
+    report = build_active_boundary_report()
+
+    assert report["unsupported_profiles"] == (
+        {
+            "profile_key": "missing",
+            "name": None,
+            "group_pad": None,
+            "machine_value": None,
+            "target": None,
+            "reason": "unsupported by active boundary",
+        },
+    )
+    assert report["accepted_candidate"]["profile_key"] == "2"
+
+
 def test_report_summarizes_active_boundary_candidate_and_unsupported_profiles():
     from rytm_randomizer.reports import build_active_boundary_report
 

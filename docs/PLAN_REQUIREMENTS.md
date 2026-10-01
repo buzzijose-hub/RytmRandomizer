@@ -1,6 +1,6 @@
 # Plan Requirements — RytmRandomizer
 
-**Status:** Required for every plan that touches `rytm_randomizer/`, `tests/`, or `Scripts/`.
+**Status:** Required for every plan that touches `rytm_randomizer/`, `tests/`, or `scripts/`.
 **Scope:** This document is the canonical contract. Any `docs/*PLAN*.md` (manual or auto-generated) that proposes code changes must either satisfy these requirements per workstream or explicitly document why a requirement does not apply (with a one-line rationale).
 **Authority:** This file is the single source of truth. If `docs/SIMPLIFICATION_PLAN.md` and this file ever disagree, this file wins.
 **Owner:** Updated by any PR that demonstrably uncovers a new gated requirement (see "How to update" at the bottom).

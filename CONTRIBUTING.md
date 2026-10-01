@@ -274,7 +274,8 @@ The codebase runs on **Windows, macOS, and Linux**. CI exercises all three on `p
 - Use `pathlib.Path`, never raw `os.path.join` with hard-coded separators.
 - Use `tempfile.gettempdir()` for temp paths; never `/tmp` literals.
 - Use `subprocess.run([...], check=True)` with list-of-args, not shell-string commands.
-- When writing scripts under `scripts/`, prefer Python (`scripts/closeout_check.py`) over PowerShell-only (`Scripts/closeout_check.ps1`). The PowerShell scripts under `Scripts/` are legacy duplicates kept for Windows-default operator convenience; new tooling goes under lowercase `scripts/` as Python.
+- All scripts live in one lowercase `scripts/` directory. Never create a second casing (`Scripts/`): the two are one directory on macOS and two on case-sensitive Linux CI, so a file committed under the wrong casing resolves locally and fails only in CI. `tests/architecture/test_repo_root_perimeter.py::test_scripts_directory_has_one_casing` enforces this against git's index.
+- Prefer Python (`scripts/closeout_check.py`) over PowerShell (`scripts/closeout_check.ps1`). The two `.ps1` files are legacy duplicates kept for Windows-default operator convenience; new tooling is Python.
 
 ## End-to-end contributor flow
 
@@ -716,6 +717,9 @@ report. **Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md` §13 Test Suite L
 | `test_ci_workflow.py` | The CI workflow files match the documented contract. |
 | `test_data_not_code.py` | "Tables of facts" live as data, not as functions. |
 | `test_device_protocol_enforcement.py` | Device-family subpackages register through `devices/registry.py`; no cross-family private imports; `dual_machine/` consumes only `devices.all_devices()`; only one device registry exists; every registered Device satisfies the Protocol; Protocol surface (9 attrs + 4 methods) is pinned against accidental drift. |
+| `test_every_device_reaches_operator_surfaces.py` | Every registered device appears, with its track count, in every operator census surface (device inventory model, performance console model). Adding a device anywhere fails here until each surface shows it. |
+| `test_stage_slots_match_devices.py` | Each device's `stage_slot` declaration, `cockpit/data/stage.py`'s slot table and stage types, and the frontend stage-device mirrors all agree. Its failure message lists every place to update when a device joins or leaves the stage. |
+| `test_tests_do_not_mutate_tracked_files.py` | Tests write to temporary paths, never tracked artifacts. Opt-in `RYTM_TEST_MUTATION_CHECK=1` also runs the whole suite once in a bounded child and diffs `git status`. |
 | `test_readme_freshness.py` | `README.md` names every registered device; every internal README link resolves; no stale placeholder tokens (`<owner>`, `TODO`, "follow-up wave", ...); the README references `docs/ARCHITECTURE.md`. Catches "added a device/command, forgot the README" (Gate 5). |
 
 **Parity fixtures.** The 685 JSON goldens under `tests/fixtures/v134_parity/` are the authoritative V1.34 reference. Regenerate only when an intentional reference-output change is being committed:
@@ -736,6 +740,11 @@ Remove-Item Env:\PARITY_CAPTURE_MODE
 ```
 
 See [`.claude/rules/parity-fixture-discipline.md`](.claude/rules/parity-fixture-discipline.md) for the full discipline.
+
+**Other deliberate-only environment controls** (full table in [`docs/LOCAL_DEV_TOOLING_NOTES.md`](docs/LOCAL_DEV_TOOLING_NOTES.md) §7b):
+
+- `RYTM_AL16_MANIFEST_REFRESH=1` lets `scripts/refresh_al16_evidence_manifest.py` rewrite the AL02 evidence manifest's source digests after an edit to a pinned generator dependency; paste the printed SHA into `tests/test_al16_rytm_export.py`. Never hand-edit the manifest.
+- `RYTM_TEST_MUTATION_CHECK=1` enables the expensive whole-suite "tests do not modify tracked files" check. It runs the suite once more in a child process (4 workers, 30-minute ceiling, flag cleared so it cannot recurse) and fails if that child fails or leaves tracked files changed.
 
 **Pytest markers** (registered in `pyproject.toml`):
 

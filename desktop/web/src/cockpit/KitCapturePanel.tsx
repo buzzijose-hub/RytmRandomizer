@@ -21,15 +21,36 @@ export interface KitCapturePanelProps {
   onClose: () => void;
 }
 
+/**
+ * Per-device copy, as records keyed by EVERY `CockpitDeviceId`.
+ *
+ * A `Record<CockpitDeviceId, string>` is exhaustive at compile time: widen the
+ * union (add a Digitakt, say) and TypeScript refuses to build until each record
+ * has an entry for it. That is the guarantee the old two-branch ternary lacked
+ * - `deviceId === RYTM ? 'Rytm' : 'Analog Four'` silently labelled any new
+ * device "Analog Four MKII".
+ *
+ * A `switch` with a `never` default gave the same compile-time guarantee but
+ * left an unreachable runtime branch behind, which the 100% coverage gate
+ * rightly counted as untested code. A lookup has no such branch.
+ */
+const DEVICE_NAME: Readonly<Record<CockpitDeviceId, string>> = {
+  [RYTM_DEVICE_ID]: 'Analog Rytm MKII',
+  [ANALOG_FOUR_DEVICE_ID]: 'Analog Four MKII',
+};
+
+const HARDWARE_INSTRUCTION: Readonly<Record<CockpitDeviceId, string>> = {
+  [RYTM_DEVICE_ID]: 'On the Rytm: GLOBAL SETTINGS → SYSEX DUMP → SYSEX SEND → KIT.',
+  [ANALOG_FOUR_DEVICE_ID]:
+    'On the A4: open SYSEX DUMP, choose the currently loaded KIT, then send it.',
+};
+
 function deviceName(deviceId: CockpitDeviceId): string {
-  return deviceId === RYTM_DEVICE_ID ? 'Analog Rytm MKII' : 'Analog Four MKII';
+  return DEVICE_NAME[deviceId];
 }
 
 function hardwareInstruction(deviceId: CockpitDeviceId): string {
-  if (deviceId === RYTM_DEVICE_ID) {
-    return 'On the Rytm: GLOBAL SETTINGS → SYSEX DUMP → SYSEX SEND → KIT.';
-  }
-  return 'On the A4: open SYSEX DUMP, choose the currently loaded KIT, then send it.';
+  return HARDWARE_INSTRUCTION[deviceId];
 }
 
 function readinessCopy(capture: KitCaptureResult): string {

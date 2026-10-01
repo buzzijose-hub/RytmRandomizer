@@ -1,12 +1,14 @@
 RytmRandomizer passive Cockpit performance console model
 Console summary:
-- console id: 30ba524365955734
+- console id: 71152bc15f8baae6
 - session: Live Session
 - status: mock-safe
 - hardware mode: passive
 Device rail:
 - analog_rytm_mk2 / Elektron Analog Rytm MKII / 12 tracks
 - analog_four_mk2 / Elektron Analog Four MKII / 4 tracks
+- digitakt_mk1 / Elektron Digitakt / 8 tracks
+- digitakt_ii / Elektron Digitakt II / 16 tracks
 Rytm pad surface:
 - pads: 12
 - active V1.34 pads: 4

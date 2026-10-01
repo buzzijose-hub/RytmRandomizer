@@ -1208,7 +1208,7 @@ _GRANDFATHERED_DUPLICATE_NAMES: Final[frozenset[tuple[str, ...]]] = frozenset(
             "func",
             "_target_concept",
             "rytm_randomizer/mock_message_mapper.py",
-            "rytm_randomizer/reports/__init__.py",
+            "rytm_randomizer/reports/_core/profile_summary.py",
         ),
         (
             "func",

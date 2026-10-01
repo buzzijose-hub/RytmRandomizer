@@ -25,7 +25,6 @@ from ...devices import (
 )
 from ..capture import (
     ANALOG_FOUR_DEVICE_ID,
-    ANALOG_RYTM_DEVICE_ID,
     KitCaptureResult,
     cockpit_snapshot_from_rytm_capture,
 )
@@ -43,6 +42,7 @@ from ..data.show_bank import (
     ShowKitRecipe,
     ShowKitSysex,
 )
+from ..data.stage import is_analog_four_stage_slot, is_rytm_stage_slot
 from ..engine.mutate import mutate
 from ..engine.prng import xorshift32
 
@@ -89,12 +89,12 @@ def capture_reference(
         )
     if not result.frame or result.frame[0] != _SYSEX_START or result.frame[-1] != _SYSEX_END:
         raise ValueError("show-bank source capture must retain one framed SysEx message")
-    if result.device_id == ANALOG_RYTM_DEVICE_ID:
+    if is_rytm_stage_slot(result.device_id):
         device_id = RYTM_SHOW_KIT_DEVICE_ID
         device_label = "rytm"
         if not snapshot_id:
             raise ValueError("Rytm source capture requires its promoted snapshot id")
-    elif result.device_id == ANALOG_FOUR_DEVICE_ID:
+    elif is_analog_four_stage_slot(result.device_id):
         device_id = A4_SHOW_KIT_DEVICE_ID
         device_label = "a4"
         if snapshot_id is not None:
@@ -412,7 +412,7 @@ def analog_four_recapture_semantically_matches(
 ) -> bool:
     """Compare only promoted A4 Filter 1 Frequency values in a fresh capture."""
 
-    if result.device_id != ANALOG_FOUR_DEVICE_ID or not result.round_trip_verified:
+    if not is_analog_four_stage_slot(result.device_id) or not result.round_trip_verified:
         return False
     return analog_four_capture_semantic_fingerprint(result, candidate) == (
         candidate.semantic_fingerprint
@@ -425,7 +425,7 @@ def analog_four_capture_semantic_fingerprint(
 ) -> str | None:
     """Fingerprint the promoted A4 values corresponding to ``candidate``."""
 
-    if result.device_id != ANALOG_FOUR_DEVICE_ID or not result.round_trip_verified:
+    if not is_analog_four_stage_slot(result.device_id) or not result.round_trip_verified:
         return None
     if not candidate.values:
         # A fully locked A4 partner must retain the complete source payload;

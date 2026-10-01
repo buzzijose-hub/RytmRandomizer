@@ -4,6 +4,17 @@ This report composes the already-passive live GUI readiness packets into one
 operator-facing contract for the near-term cockpit target: all 12 Analog Rytm
 pads visible, with Analog Four tracks staged for later routing. It does not
 launch the GUI, enumerate ports, open MIDI, or send hardware messages.
+
+**Two different scopes live in this model, deliberately.** The per-track
+detail (``tracks``, and the ``total_track_count`` / ``active_track_count`` /
+``planned_track_count`` roll-ups derived from it) is Rytm + Analog Four only:
+those rows carry hand-authored pad labels and track roles that exist for no
+other family, and the "dual-device" target is what this report is *for*. The
+per-device rows, by contrast, iterate every registered device via
+``all_devices()``, so a newly registered family appears there immediately.
+When adding a family, expect a device row and no track rows -- and make sure
+any per-device number is derived from that device's own card rather than
+from a peer's constants.
 """
 
 from __future__ import annotations
@@ -244,11 +255,23 @@ def _device_status(device_id: str) -> DeviceReadinessStatus:
 def _device_track_counts(
     *,
     device_id: str,
+    device_track_count: int,
     pad_surface: LiveGuiRytmTwelvePadSurfaceModel,
 ) -> tuple[int, int]:
+    """Return ``(active, planned)`` track counts for one registered device.
+
+    The Rytm is the only machine with a live pad surface, so its counts come
+    from that surface. Every other device is staged rather than active, and
+    its planned count is its **own** track count -- never a peer's. The
+    previous ``return 0, len(A4_TRACK_PLAN)`` fallback silently told every
+    non-Rytm device it had four tracks, which was invisible while the Analog
+    Four was the only other family and became wrong the moment an 8-track
+    Digitakt and a 16-track Digitakt II registered.
+    """
+
     if device_id == RYTM_DEVICE_ID:
         return pad_surface.active_pad_count, pad_surface.planned_pad_count
-    return 0, len(A4_TRACK_PLAN)
+    return 0, device_track_count
 
 
 def _dual_rig_devices(
@@ -261,6 +284,7 @@ def _dual_rig_devices(
         card = device_inventory.cards_by_device_id[device_id]
         active_track_count, planned_track_count = _device_track_counts(
             device_id=device_id,
+            device_track_count=card.track_count,
             pad_surface=pad_surface,
         )
         status = _device_status(device_id)

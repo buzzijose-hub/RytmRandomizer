@@ -106,7 +106,7 @@ closeout:
 
 # Windows-only PowerShell closeout (legacy)
 closeout-ps:
-    powershell -ExecutionPolicy Bypass -File Scripts/closeout_check.ps1
+    powershell -ExecutionPolicy Bypass -File scripts/closeout_check.ps1
 
 # Full pre-PR check: version drift + lint + strict production typing + arch + full test suite + coverage
 check: version-check lint typecheck arch test cov

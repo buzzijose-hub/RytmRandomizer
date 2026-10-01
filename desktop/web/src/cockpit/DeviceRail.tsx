@@ -76,6 +76,20 @@ export function DeviceRail({
   const connection = useCockpitStore((s) => s.connection);
   const stage = useCockpitStore((s) => s.dualMachineStage);
   const patchGenomeStale = useCockpitStore((s) => s.patchGenomeStale);
+  const performanceConsole = useCockpitStore((s) => s.performanceConsole);
+  // Every OTHER registered device, taken from the backend's registry-derived
+  // inventory rather than a list typed here. The Rytm and Analog Four keep
+  // their hand-built cards because those carry live runtime state (pad map,
+  // port, stage); anything else is shown passively. Adding a device family to
+  // the backend registry therefore makes it appear here with no frontend edit
+  // - the previous rail was a fourth hardcoded roster, which is why a
+  // registered Digitakt never appeared in the app at all.
+  const passiveDevices = (performanceConsole?.device_inventory.cards ?? [])
+    .filter(
+      (card) => card.device_id !== RYTM_DEVICE_ID && card.device_id !== ANALOG_FOUR_DEVICE_ID,
+    )
+    .slice()
+    .sort((left, right) => left.order - right.order);
   const model = buildDeviceRailReadinessModel({ snapshot, session, connection });
   const hardwareNotice = HARDWARE_NOTICE_BY_PHASE[resolveConnectionPhase(connection, session)];
   const rytmDevice = model.devices.find(
@@ -168,6 +182,9 @@ export function DeviceRail({
           </p>
         )}
       </DeviceCard>
+      {passiveDevices.map((card) => (
+        <PassiveDeviceCard card={card} key={card.device_id} />
+      ))}
       <section className="oxi-ownership-boundary" data-testid="oxi-ownership-boundary">
         <strong>OXI owns sequencing, notes, triggers, mutes, and pattern motion.</strong>
         <span>
@@ -497,6 +514,38 @@ function snapshotCompatibilityPad(pad: PadState): LiveGuiSnapshotCompatibilityPa
     machine_labels: [pad.machine],
     test_id: `device-rail-compat-pad-${pad.pad_id}`,
   };
+}
+
+/**
+ * A registered device with no Cockpit capture or send lane yet.
+ *
+ * Deliberately has no "View" or "Capture Current Kit" button: those actions
+ * are not implemented for these devices, and a button that does nothing (or
+ * worse, pretends to capture) is less honest than saying plainly what the app
+ * can and cannot do with the machine today.
+ */
+function PassiveDeviceCard({ card }: { card: LiveGuiDeviceInventoryCardDict }): JSX.Element {
+  const slug = card.device_id.replace(/_/g, '-');
+  return (
+    <section
+      className="device-card passive"
+      aria-label={card.display_name}
+      data-testid={`device-card-${slug}`}
+    >
+      <div className="device-card-header">
+        <div>
+          <h2>{card.display_name}</h2>
+          <p>
+            {card.track_count} tracks · MIDI channel {card.default_midi_channel_label}
+          </p>
+        </div>
+        <span className="device-status staged">Passive</span>
+      </div>
+      <p className="device-port-state" data-testid={`device-card-${slug}-note`}>
+        Recognised. Capture and live control are not available for this device yet.
+      </p>
+    </section>
+  );
 }
 
 function DeviceCard({

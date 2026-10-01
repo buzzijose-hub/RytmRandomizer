@@ -1,0 +1,57 @@
+RytmRandomizer passive live GUI device inventory model
+Summary:
+- Model version: live_gui_device_inventory_v1
+- Devices: 4
+Devices:
+Device analog_rytm_mk2 / Elektron Analog Rytm MKII:
+  Tracks: 12
+  Role: 12-pad drum and sample performance surface
+  Default MIDI channel: 1
+  Manufacturer ID: 00 20 3c
+  MIDI port: not_open
+  Hardware: locked
+  Mock state: mock_safe
+  Capabilities: snapshot_decode, mutation_plan, mock_render, guarded_send
+Device analog_four_mk2 / Elektron Analog Four MKII:
+  Tracks: 4
+  Role: 4-track synth performance surface
+  Default MIDI channel: 1
+  Manufacturer ID: 00 20 3c
+  MIDI port: not_open
+  Hardware: locked
+  Mock state: mock_safe
+  Capabilities: snapshot_decode, mutation_plan, mock_render, guarded_send
+Device digitakt_mk1 / Elektron Digitakt:
+  Tracks: 8
+  Role: 8-track drum and sample performance surface
+  Default MIDI channel: 1
+  Manufacturer ID: 00 20 3c
+  MIDI port: not_open
+  Hardware: locked
+  Mock state: mock_safe
+  Capabilities: snapshot_decode, mutation_plan, mock_render, guarded_send
+Device digitakt_ii / Elektron Digitakt II:
+  Tracks: 16
+  Role: 16-track drum and sample performance surface
+  Default MIDI channel: 1
+  Manufacturer ID: 00 20 3c
+  MIDI port: not_open
+  Hardware: locked
+  Mock state: mock_safe
+  Capabilities: snapshot_decode, mutation_plan, mock_render, guarded_send
+Blocked actions:
+- open_midi_port
+- arm_hardware
+- send_midi
+- write_sysex
+- mutate_hardware
+Safety:
+- passive/read-only
+- in-memory only
+- device registry metadata only
+- no MIDI sending
+- no port opening
+- no command execution
+- no hardware mutation
+Source: rytm_randomizer.reports.live_gui_device_inventory_model
+In-memory only: True

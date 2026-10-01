@@ -83,7 +83,7 @@ Collaborator Review Triage Template:
 Closeout:
 - closeout_contract: present
 - failure_propagation: guarded
-- closeout_script: Scripts/closeout_check.ps1
+- closeout_script: scripts/closeout_check.ps1
 Convergence:
 - active_execution: present
 - active_execution_gate: --arm flag

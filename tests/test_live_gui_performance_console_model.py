@@ -10,6 +10,8 @@ import pytest
 
 pytestmark = pytest.mark.fast
 
+from rytm_randomizer.devices import all_devices
+
 FORBIDDEN_REAL_MIDI_AND_ADAPTER_MODULES = (
     "mido",
     "rtmidi",
@@ -32,9 +34,15 @@ def test_performance_console_model_composes_live_cockpit_sections() -> None:
     assert model.console_status == "mock-safe"
     assert model.hardware_mode == "passive"
 
-    assert model.device_inventory["device_count"] == 2
+    assert model.device_inventory["device_count"] == len(all_devices())
+    # Ordering comes from each device's own display_order; the exact roster is
+    # pinned once in tests/test_device_family_conformance.py.
     device_ids = [card["device_id"] for card in model.device_inventory["cards"]]
-    assert device_ids == ["analog_rytm_mk2", "analog_four_mk2"]
+    assert device_ids == sorted(
+        device_ids,
+        key=lambda did: all_devices()[did].display_order,
+    )
+    assert device_ids[0] == "analog_rytm_mk2"
 
     assert model.rytm_pad_surface["pad_count"] == 12
     assert len(model.rytm_pad_surface["cards"]) == 12
@@ -829,7 +837,7 @@ def test_performance_console_cli_text_and_json_modes(capsys: pytest.CaptureFixtu
     payload = json.loads(json_output)
     model = payload["live_gui_performance_console"]
     assert model["console_status"] == "mock-safe"
-    assert model["device_inventory"]["device_count"] == 2
+    assert model["device_inventory"]["device_count"] == len(all_devices())
     assert model["analyzer_panel"]["panel_mode"] == "split"
     assert model["rytm_lane_policy_matrix"]["matrix_status"] == "passive-ready"
     assert model["controller_brain_panel"]["panel_status"] == "passive-ready"

@@ -22,6 +22,7 @@ codebase. Humans can use them too.
 - [Recipe 9 — Run the pre-PR verification gate cleanly](#recipe-9--run-the-pre-pr-verification-gate-cleanly)
 - [Recipe 10 — Open a PR end-to-end (no human intervention)](#recipe-10--open-a-pr-end-to-end-no-human-intervention)
 - [Recipe 11 — Add a schema-driven cockpit panel](#recipe-11--add-a-schema-driven-cockpit-panel)
+- [Recipe 12 — Put a device on the live stage](#recipe-12--put-a-device-on-the-live-stage)
 
 ---
 
@@ -198,6 +199,13 @@ codebase. Humans can use them too.
        track_count: Final[int] = <N>
        sysex_manufacturer_id: Final[bytes] = bytes([0x00, 0x20, 0x3C])
        report_header: Final[str] = "RytmRandomizer <Family> Guarded Send"
+       # Presentation metadata the device owns. Consumers must never infer a
+       # role from track_count (a 12-track Syntakt is not a 12-pad Rytm), and
+       # display_order keeps per-device ordering tables out of reports/.
+       # Both are required by the Device Protocol -- omitting either makes the
+       # import-time isinstance(..., Device) conformance check fail.
+       role_summary: Final[str] = "<N>-track <what the machine is> surface"
+       display_order: Final[int] = <next unused int; must be unique>
 
        def __init__(self) -> None:
            self.snapshot_decoder = <Family>SnapshotDecoder()
@@ -224,6 +232,7 @@ codebase. Humans can use them too.
    - `tests/test_devices_strategies_<family>_mutation_planner.py` (100% branch coverage)
    - `tests/test_devices_strategies_<family>_message_renderer.py` (100% branch coverage)
    - Update `tests/test_devices.py` with `<Family>Device` registry + protocol checks.
+   - **Add the new `device_id`(s) to `EXPECTED_DEVICE_IDS` in `tests/test_device_family_conformance.py`.** That tuple is the single roster tripwire — it is the only place in the suite that pins which families exist, and the ~15 shared conformance tests (identity, Elektron manufacturer id, track/channel bounds, decoder rejects foreign SysEx, planner rejects foreign snapshots, unique `display_order`) then run against the new family for free. Do not re-add per-device `device_count == N` assertions elsewhere; report-model tests derive the count from `len(all_devices())` on purpose.
 7. **Verify:**
    ```bash
    just test
@@ -235,6 +244,10 @@ codebase. Humans can use them too.
 - **Do not create a parallel sibling subpackage at the package root** (`rytm_randomizer/<family>/`). Use `rytm_randomizer/devices/<family>.py`. Enforced by `test_no_new_top_level_modules` + `test_every_device_family_subpackage_registers_with_devices_registry`.
 - **Do not import private symbols** (`_foo`) from a sibling family's strategies. Enforced by `test_no_cross_family_private_api_imports`.
 - The reference implementation is `rytm_randomizer/devices/analog_rytm.py` + three `analog_rytm_*` strategies. Read them first.
+- **Registering a family invalidates the AL02 evidence manifest.** `rytm_randomizer/devices/__init__.py` is a pinned entry in `AL16_GENERATOR_DEPENDENCIES`, so adding the registration import changes its digest and fails `tests/test_al16_rytm_export.py`. Refresh with `RYTM_AL16_MANIFEST_REFRESH=1 .venv/bin/python scripts/refresh_al16_evidence_manifest.py`, then paste the printed SHA into `_COMMITTED_EVIDENCE_HASHES` in that test. Never hand-edit the manifest.
+- **Registering a family changes report output.** `reports/live_gui_device_inventory_model.py` fans out over `all_devices()`, and the performance-console and rig-readiness models embed its payload, so their goldens and the cockpit TS fixture all legitimately change. Regenerate with `RYTM_REPORT_GOLDEN_CAPTURE=1 .venv/bin/python scripts/capture_report_goldens.py` and `.venv/bin/python scripts/generate_live_gui_protocol_ts.py --fixture`, then review the diff — it should contain *only* your new device's rows.
+- **Joining the live stage is a separate, optional step.** A family is *not* on the dual-machine stage unless its device class declares `stage_slot` (`devices/stage_slot.py`). To put it on stage, see Recipe 12; to keep it off, do nothing.
+- **A new family must appear in `README.md`** (`.claude/rules/readme-freshness.md`, enforced by `tests/architecture/test_readme_freshness.py`). If the family is passive-only — no validated saved-kit offsets — say so plainly there rather than implying send authority.
 
 ---
 
@@ -436,3 +449,40 @@ All four must pass. If any fail, fix the cause (don't bypass with `--no-verify` 
 - [`docs/PLAN_REQUIREMENTS.md`](PLAN_REQUIREMENTS.md) — 18 gates
 - [`.claude/rules/`](../.claude/rules/) — mandatory project rules
 - [`.claude/skills/`](../.claude/skills/) — repo-specific and learned task skills
+
+---
+
+## Recipe 12 — Put a device on the live stage
+
+**When:** a registered device should fill a slot on the dual-machine stage
+(today: one Rytm slot, one Analog Four slot) — for example a future Rytm
+model in the Rytm slot.
+
+### Steps
+1. On the device class in `rytm_randomizer/devices/<family>.py`, declare the
+   slot: `stage_slot: StageSlot = RYTM_STAGE_SLOT` (import from
+   `rytm_randomizer.snapshot.stage_slots`). That makes it satisfy
+   `StageSlotCapability`; nothing else in `devices/` changes.
+2. Run the guard: `python -m pytest tests/architecture/test_stage_slots_match_devices.py -q`.
+   It fails and lists every mirror to update — `STAGE_SLOT_BY_DEVICE_ID`,
+   `StageDeviceId` and `STAGE_DEVICE_IDS` in `cockpit/data/stage.py`, and the
+   frontend `StageDeviceId` (`ws/protocol.ts`) and `*_DEVICE_ID` constants
+   (`cockpit/devices.ts`). Update exactly those and rerun until green.
+3. Do **not** add `device_id == ...` comparisons anywhere: stage code asks
+   `is_rytm_stage_slot(...)` / `stage_slot_of(...)`. `test_no_device_identity_branching`
+   rejects comparisons outside `devices/`, with no exemptions.
+
+### A brand-new slot is bigger
+A device in an **existing** slot is the three steps above. A **new** slot
+(e.g. a Digitakt slot) also needs a `STAGE_SLOTS` entry in
+`snapshot/stage_slots.py`, and the stage's per-slot structures — today the
+paired `rytm_*` / `analog_four_*` fields in `cockpit/data/show_bank.py` and the
+Forge/readiness flows built on them — must become slot-keyed. Plan that as its
+own change.
+
+### Common pitfalls
+- Declaring `stage_slot` on a passive device with no capture or send path puts
+  it in stage flows it cannot serve. Join the stage only with those in place.
+- The guard fails closed on missing frontend files or unparseable declarations
+  — fix the declaration, never loosen the regex.
+

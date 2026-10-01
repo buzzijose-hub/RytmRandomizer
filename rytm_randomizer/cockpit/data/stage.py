@@ -2,13 +2,56 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Final, Literal, TypedDict
+
+from ...snapshot.stage_slots import ANALOG_FOUR_STAGE_SLOT, RYTM_STAGE_SLOT, StageSlot
 
 StageDeviceId = Literal["analog_rytm_mk2", "analog_four_mk2"]
 STAGE_DEVICE_IDS: Final[tuple[StageDeviceId, ...]] = ("analog_rytm_mk2", "analog_four_mk2")
 ANALOG_RYTM_DEVICE_ID: Final[StageDeviceId] = STAGE_DEVICE_IDS[0]
 ANALOG_FOUR_DEVICE_ID: Final[StageDeviceId] = STAGE_DEVICE_IDS[1]
+
+
+#: Which slot each stage device fills. A static mirror of the devices' own
+#: ``stage_slot`` declarations (``devices/stage_slot.py``), kept here because
+#: ``cockpit/data`` may not import the device registry.
+#: ``tests/architecture/test_stage_slots_match_devices.py`` fails -- and lists
+#: what to update -- whenever this table, ``StageDeviceId``, the frontend
+#: mirrors and the device declarations disagree.
+STAGE_SLOT_BY_DEVICE_ID: Final[Mapping[str, StageSlot]] = MappingProxyType(
+    {
+        ANALOG_RYTM_DEVICE_ID: RYTM_STAGE_SLOT,
+        ANALOG_FOUR_DEVICE_ID: ANALOG_FOUR_STAGE_SLOT,
+    }
+)
+
+
+def stage_slot_of(device_id: str) -> StageSlot | None:
+    """Return the stage slot ``device_id`` fills, or ``None`` if it is not on stage.
+
+    Consumers ask *which slot* rather than comparing a device id against a
+    literal, so registering a new device family (Digitakt, Digitone, ...)
+    never makes "not the Rytm" silently mean "the Analog Four".
+    """
+
+    return STAGE_SLOT_BY_DEVICE_ID.get(device_id)
+
+
+def is_rytm_stage_slot(device_id: str) -> bool:
+    """True when ``device_id`` fills the stage's Rytm slot."""
+
+    return stage_slot_of(device_id) == RYTM_STAGE_SLOT
+
+
+def is_analog_four_stage_slot(device_id: str) -> bool:
+    """True when ``device_id`` fills the stage's Analog Four slot."""
+
+    return stage_slot_of(device_id) == ANALOG_FOUR_STAGE_SLOT
+
+
 StageConnectionState = Literal["unknown", "connected", "disconnected"]
 StageCaptureState = Literal["not_captured", "captured", "failed"]
 StageArtifactState = Literal["none", "ready", "stale", "blocked"]
@@ -104,6 +147,10 @@ __all__ = [
     "STAGE_DEVICE_IDS",
     "ANALOG_RYTM_DEVICE_ID",
     "ANALOG_FOUR_DEVICE_ID",
+    "STAGE_SLOT_BY_DEVICE_ID",
+    "is_analog_four_stage_slot",
+    "is_rytm_stage_slot",
+    "stage_slot_of",
     "DualMachineStageState",
     "DualMachineStageStateDict",
     "MachineStageState",

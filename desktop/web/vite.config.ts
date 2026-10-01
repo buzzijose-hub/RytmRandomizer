@@ -44,6 +44,7 @@ export default defineConfig({
         'src/wizard/**',
         'src/types/wizard_protocol.ts',
         'src/updateProtocol.ts',
+        'src/AppErrorBoundary.tsx',
       ],
       exclude: ['src/**/index.ts', 'src/cockpit/**/*.css', 'src/wizard/**/*.css'],
       thresholds: {

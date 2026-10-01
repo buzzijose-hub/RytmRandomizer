@@ -1,0 +1,92 @@
+{
+  "Amp Overdrive": {
+    "parameter": "Amp Overdrive",
+    "section": "AMP",
+    "encoder": "D",
+    "cc_msb": 81,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 27
+  },
+  "Delay Send": {
+    "parameter": "Delay Send",
+    "section": "AMP",
+    "encoder": "E",
+    "cc_msb": 82,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 28
+  },
+  "Filter Envelope Depth": {
+    "parameter": "Filter Envelope Depth",
+    "section": "FILTER",
+    "encoder": "H",
+    "cc_msb": 77,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 23
+  },
+  "Filter Frequency": {
+    "parameter": "Filter Frequency",
+    "section": "FILTER",
+    "encoder": "E",
+    "cc_msb": 74,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 20
+  },
+  "Filter Resonance": {
+    "parameter": "Filter Resonance",
+    "section": "FILTER",
+    "encoder": "F",
+    "cc_msb": 75,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 21
+  },
+  "Reverb Send": {
+    "parameter": "Reverb Send",
+    "section": "AMP",
+    "encoder": "F",
+    "cc_msb": 83,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 29
+  },
+  "Sample Select": {
+    "parameter": "Sample Select",
+    "section": "SRC",
+    "encoder": "D",
+    "cc_msb": 19,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 3
+  },
+  "Sample Tune": {
+    "parameter": "Sample Tune",
+    "section": "SRC",
+    "encoder": "A",
+    "cc_msb": 16,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 0
+  },
+  "Track Level": {
+    "parameter": "Track Level",
+    "section": "TRACK",
+    "encoder": "-",
+    "cc_msb": 95,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 100
+  },
+  "Track Mute": {
+    "parameter": "Track Mute",
+    "section": "TRACK",
+    "encoder": "-",
+    "cc_msb": 94,
+    "cc_lsb": null,
+    "nrpn_msb": 1,
+    "nrpn_lsb": 101
+  }
+}

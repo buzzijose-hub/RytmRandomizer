@@ -330,6 +330,7 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         "ElektronPackedPayloadError",
         "AnalogFourSavedKitCodecError",
         "AnalogRytmSavedKitCodecError",
+        "DigitaktPatternCodecError",
         # Shared saved-KIT field/recipe errors preserve stdlib ValueError
         # compatibility while participating in the shared data taxonomy.
         "ElektronKitFieldError",

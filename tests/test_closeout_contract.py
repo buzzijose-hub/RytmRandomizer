@@ -7,7 +7,7 @@ import pytest
 pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-CLOSEOUT_SCRIPT = PROJECT_ROOT / "Scripts" / "closeout_check.ps1"
+CLOSEOUT_SCRIPT = PROJECT_ROOT / "scripts" / "closeout_check.ps1"
 
 
 def _script_text():

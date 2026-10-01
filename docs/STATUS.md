@@ -91,7 +91,18 @@ The [plan](superpowers/plans/2026-09-08-release-closeout.md),
 Digitakt #240 remains a separate passive device PR; it is not included as merged
 support in this updater checkpoint.
 
+Digitakt and Digitakt II are under review in #240. Both are registered passive families with manual-backed CC/NRPN reports, strict 8/16-track domains and synthetic candidate decoding. Hardware saved-project offsets remain unpromoted; mutation plans always refuse and render zero events. September 8 corrections distinguish II Source Sample Select from MISC Sample Slot and preserve Rytm/A4 capture authority. The targeted repair suite passes 459 tests; combined verification is pending.
+
 ## Recent Cleanup
+
+- 2026-09-28: #240 now surfaces registered devices to operators. The cockpit
+  device rail renders every registered device beyond the Rytm and Analog Four
+  from the backend inventory as a passive card (no capture/send), a new
+  `live-gui-device-inventory-report` CLI exposes per-device facts, and
+  `test_every_device_reaches_operator_surfaces` guards census visibility.
+  Added a non-technical Digitakt verification guide with a scripted SysEx
+  capture intake (`scripts/intake_digitakt_capture.py`). Saved-kit offsets stay
+  unpromoted; no Digitakt send authority is granted.
 
 - 2026-09-21: Resumed the six-PR closeout and verified #248's hosted checks at
   `e2e46d6e`, including both required aggregates and actual Windows acceptance.
@@ -100,6 +111,14 @@ support in this updater checkpoint.
   updater PRs as superseded after verifying their latest heads are included.
   Protected review and
   production/hardware evidence remain separate from these passing software gates.
+
+- 2026-09-13: Reconciled the Digitakt review repairs with the author's merged
+  Forge integration. The fixed Rytm/A4 stage now exposes two slot predicates,
+  and Forge consumers use that closed stage domain; Digitakt registration
+  does not expand capture or send authority. The `Device` Protocol owns report
+  roles and ordering, shared family conformance tests pin the clean-process
+  roster, and the guarded AL16 refresh tool maintains source fingerprints.
+  Full combined validation and code-owner review remain pending for #240.
 
 - 2026-09-13: Resumed the six-PR closeout after the user's continuation. Preserved
   the dirty original checkout, reconciled concurrent author commits and kept
@@ -121,7 +140,7 @@ support in this updater checkpoint.
   strengthen refusal assertions; and add the inert A4 preparation review.
   The renderer remains offline-only. Final local Python, frontend, browser,
   coverage and static checks passed. The identified studio build, actual GUI
-  smoke and source CI also passed; required review remains pending. The dated studio
+  smoke and source CI also passed; the maintainer approved the source and #238 merged. The dated studio
   checklist retains every outstanding physical observation.
 - 2026-08-27: Integrated the targeted dual-machine live-performance Cockpit
   bundle on the latest `modularize-v1.34` base.

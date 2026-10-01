@@ -534,6 +534,10 @@ _EXPECTED_DEVICE_ATTRIBUTES: Final[tuple[str, ...]] = (
     "message_renderer",
     # Operator-facing report header used by guarded / hardware senders.
     "report_header",
+    # Operator-facing presentation metadata. Owned by the device so
+    # consumers never infer a machine's role from track_count.
+    "role_summary",
+    "display_order",
 )
 
 _EXPECTED_DEVICE_PROPERTIES: Final[tuple[str, ...]] = (
@@ -543,6 +547,8 @@ _EXPECTED_DEVICE_PROPERTIES: Final[tuple[str, ...]] = (
     "track_count",
     "sysex_manufacturer_id",
     "report_header",
+    "role_summary",
+    "display_order",
     "snapshot_decoder",
     "mutation_planner",
     "message_renderer",
