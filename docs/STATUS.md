@@ -5,7 +5,8 @@ Last updated: 2026-10-01. This file is a hand-authored snapshot and is meant to 
 ## Current Snapshot
 
 The [studio evidence handoff](superpowers/plans/2026-10-01-studio-evidence-handoff.md)
-is implemented on `codex/studio-evidence-handoff`, directly based on
+is implemented in [PR #254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254)
+on `codex/studio-evidence-handoff`, directly based on
 `modularize-v1.34`. It extracts shared Studio safety repairs from PR #252:
 cancellable capture and stale-result refusal, passive preview retention,
 side-effect-free rejected DISARM, duplicate exact input-name refusal, and
@@ -18,7 +19,9 @@ deployment remain held for their own evidence. PR #248 is merged in current
 integration head `892aaffc`; older results below are historical receipts, not
 verification of this new handoff revision. Final Windows software verification:
 9,794 Python tests passed, five skipped; combined coverage 99.65%, with every
-touched production module at 100% line/branch coverage. Frontend: 1,045 tests
+touched production module at 100% line/branch coverage (pure branch 99.37%).
+The pre-push hook passed 860 architecture and 697 not-fast/parity tests,
+including all 685 frozen V1.34 cases. Frontend: 1,045 tests
 passed at 100% measured coverage; browser: 32 passed, two skipped with disabled
 MIDI. Lint, strict touched-module typing, dead-code checks and the production
 web build passed. New-head CI and maintainer review remain required. The local

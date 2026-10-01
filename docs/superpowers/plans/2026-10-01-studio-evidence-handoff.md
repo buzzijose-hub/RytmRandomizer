@@ -9,6 +9,9 @@ review of PR #252 asks that shared Studio safety fixes ship independently from
 the Pi touchscreen and packaging groundwork. This work targets
 `modularize-v1.34` directly; it does not depend on another open PR.
 
+Delivery: [PR #254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254),
+branch `codex/studio-evidence-handoff`. Maintainer review requested; no merge.
+
 ## Scope And Ownership
 
 | Workstream | Owner | Files | Dependencies |
@@ -46,8 +49,9 @@ for hardware validation.
   --cov-report=xml --cov-report=term-missing:skip-covered`: 9,794 passed, five
   skipped, six existing warnings, 263.45 seconds; combined coverage 99.65%.
 - All 15 touched production modules have 100% line/branch coverage. Project
-  pure-branch coverage remains above the 99% ratchet floor. Architecture and
-  frozen parity are included in the full suite and checked again by pre-push.
+  pure-branch coverage is 99.37% above the 99% ratchet floor. Pre-push passed
+  860 architecture and 697 not-fast/parity tests, including all 685 frozen
+  V1.34 cases. No hook bypass, fixture rewrite or allowlist widening occurred.
 - Strict touched-module Pyright: zero errors/warnings; Ruff, Black, isort,
   Vulture at confidence 80 and `git diff --check` pass.
 - Frontend coverage: 1,045 tests / 73 files pass; statements, branches,
