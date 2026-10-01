@@ -7,6 +7,8 @@ for the WebSocket/desktop UI and safe to inspect without opening MIDI ports.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from rytm_randomizer.cockpit.data import CockpitSendPlan, SendPlanPacket
@@ -99,6 +101,21 @@ def test_send_plan_round_trips_and_exposes_ui_counts() -> None:
     assert restored.to_dict()["estimated_midi_msgs"] == 2
     assert restored.to_dict()["pad_count"] == 2
     assert restored.to_dict()["locked_pad_ids"] == [2]
+
+
+def test_paired_control_refusal_round_trips_without_becoming_ready() -> None:
+    plan = replace(
+        _plan(),
+        ready=False,
+        readiness_reason="paired_control_precision_unverified",
+        blocked_reasons=("paired_control_precision_unverified",),
+    )
+
+    restored = CockpitSendPlan.from_dict(plan.to_dict())
+
+    assert restored == plan
+    assert restored.ready is False
+    assert restored.packets == plan.packets
 
 
 def test_blocked_plan_requires_blocked_reason() -> None:

@@ -1,7 +1,7 @@
 /**
- * E2E: the full ARMED SEND operator journey, browser → sidecar → seam.
+ * E2E: PREPARE refuses the mock source's unverified paired controls.
  *
- *   arm → exact port + token → PREPARE → confirmed SEND → disarm
+ *   PREPARE → visible whole-plan refusal → no SEND
  *
  * ## Why this spec has to exist
  *
@@ -37,7 +37,7 @@
  *      lane that silently lost its virtual port reads as "not run", never as
  *      "passed".
  *
- * The unarmed half of the journey — which needs no MIDI port at all — is a
+ * The unarmed refusal — which needs no MIDI port at all — is a
  * separate, always-running test below, so this file has real teeth on every
  * host. See the PR body for the current CI status of the armed lane.
  */
@@ -92,7 +92,7 @@ async function enablePreview(page: Page): Promise<void> {
   }
 }
 
-/** Drive the cockpit to a PREPARE-d, ready send plan. */
+/** The broad mock candidate includes paired fields and must not become sendable. */
 async function prepareSendPlan(page: Page): Promise<void> {
   await enablePreview(page);
   // REGEN guarantees a fresh candidate regardless of the boot-time depth.
@@ -100,11 +100,12 @@ async function prepareSendPlan(page: Page): Promise<void> {
   const prepare = page.getByTestId('action-prepare-send-plan');
   await expect(prepare).toBeEnabled({ timeout: ENUMERATION_TIMEOUT_MS });
   await prepare.click();
-  await expect(page.getByTestId('action-send')).toBeEnabled();
+  await expect(page.getByRole('status').filter({ hasText: 'Paired-control precision is unverified' })).toBeVisible();
+  await expect(page.getByTestId('action-send')).toBeDisabled();
 }
 
 test.describe('armed SEND journey (I2)', () => {
-  test('unarmed SEND is a single click and needs no confirmation dialog', async ({
+  test('unarmed paired-control plan stays visible and refuses the whole send', async ({
     page,
     sidecar,
   }) => {
@@ -116,18 +117,14 @@ test.describe('armed SEND journey (I2)', () => {
     await prepareSendPlan(page);
 
     const send = page.getByTestId('action-send');
-    // Mock session ⇒ dry-run label, and the sidecar does not demand confirm.
+    // A dry-run label does not bypass the plan's precision refusal.
     await expect(send).toContainText('DRY-RUN SEND');
-    await send.click();
-
-    // No confirmation dialog appears on the unarmed path...
-    await expect(page.getByTestId('send-confirm-dialog')).toHaveCount(0);
-    // ...and the send landed: the plan is consumed, so SEND disables again
-    // until the operator PREPAREs a fresh one.
     await expect(send).toBeDisabled();
+    await expect(page.getByTestId('send-confirm-dialog')).toHaveCount(0);
+    await expect(page.getByTestId('action-prepare-send-plan')).toBeEnabled();
   });
 
-  test('arm → exact port + token → prepare → confirmed SEND → disarm', async ({
+  test('armed paired-control plan refuses SEND before confirmation and disarms', async ({
     page,
     sidecar,
   }) => {
@@ -165,19 +162,9 @@ test.describe('armed SEND journey (I2)', () => {
     await expect(send).toContainText('SEND');
     await expect(send).not.toContainText('DRY-RUN SEND');
 
-    // --- SEND: per-action confirmation is mandatory -------------------------
-    await send.click();
-    const dialog = page.getByTestId('send-confirm-dialog');
-    await expect(dialog).toBeVisible();
-    await expect(dialog).toContainText(portName);
-
-    await page.getByTestId('send-confirm-button').click();
-    await expect(dialog).toHaveCount(0);
-
-    // The sidecar accepted the confirmed send: the plan is consumed and no
-    // error surfaced. A refusal (`confirm` missing / seam refusal) would leave
-    // the plan in place and log an operator error instead.
+    // Explicit authority cannot make an unverified paired plan sendable.
     await expect(send).toBeDisabled();
+    await expect(page.getByTestId('send-confirm-dialog')).toHaveCount(0);
 
     // --- DISARM: always one click, never behind a dialog --------------------
     await page.getByTestId('disarm-button').click();

@@ -1,8 +1,29 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-09-21. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-10-01. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
+
+The [studio evidence handoff](superpowers/plans/2026-10-01-studio-evidence-handoff.md)
+is implemented on `codex/studio-evidence-handoff`, directly based on
+`modularize-v1.34`. It extracts shared Studio safety repairs from PR #252:
+cancellable capture and stale-result refusal, passive preview retention,
+side-effect-free rejected DISARM, duplicate exact input-name refusal, and
+whole-plan refusal for unverified paired controls. The passive
+[device support inventory](DEVICE_SUPPORT_INVENTORY.md) separates catalog,
+native-file, live-send and physical-evidence coverage. No MIDI/USB access or
+hardware writes are performed in this software session. PR #252 is now titled
+touchscreen UI and Pi packaging groundwork; non-simulation appliance APPLY and
+deployment remain held for their own evidence. PR #248 is merged in current
+integration head `892aaffc`; older results below are historical receipts, not
+verification of this new handoff revision. Final Windows software verification:
+9,794 Python tests passed, five skipped; combined coverage 99.65%, with every
+touched production module at 100% line/branch coverage. Frontend: 1,045 tests
+passed at 100% measured coverage; browser: 32 passed, two skipped with disabled
+MIDI. Lint, strict touched-module typing, dead-code checks and the production
+web build passed. New-head CI and maintainer review remain required. The local
+cache uses Python 3.12.14, Pyright 1.1.407 and Vite 8.0.14; clean CI must verify
+the pinned toolchain. Physical observations remain blank.
 
 Show Kit Forge merged through PR #238 on September 8 as one
 versioned, paired Analog Rytm/Analog Four preparation workflow. It keeps

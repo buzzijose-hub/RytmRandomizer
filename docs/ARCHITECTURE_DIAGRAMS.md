@@ -30,6 +30,7 @@ Current baseline used while creating / refreshing this document:
 | Registry, lookup, inspection | `rytm_randomizer/registry.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/validation.py`, `rytm_randomizer/cli_registry.py` |
 | Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{_passive_section,formatter,manual_feedback_packet,cockpit_send_plan_operator_readiness,cockpit_send_plan_rehearsal_surface,controller_brain_rehearsal,controller_mapping_profile_catalog,reference_style_blueprint,local_model_copilot,analog_four_baseline,analog_four_kit_catalog,analog_four_patch_genome,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_oxi_macro_set_planner,analog_four_style_kit_readiness,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_style_snapshot_routing,dual_machine_style_kit_readiness,dual_machine_style_kit_selection,dual_machine_style_live_audition,dual_machine_style_mutation_intent,dual_machine_style_mutation_mock_preview,dual_machine_style_performance_set_plan,dual_machine_style_selection_mock_preview,dual_machine_style_snapshot_routing,live_analyzer_handoff,live_analyzer_targets,live_command_deck,live_control_surface,live_gui_action_reducer,live_gui_analyzer_frame,live_gui_analyzer_overlay,live_gui_analyzer_readiness,live_gui_capture_queue,live_gui_capture_review,live_gui_controller_state,live_gui_desktop_app_plan,live_gui_desktop_blueprint,live_gui_desktop_component_contract,live_gui_desktop_view_model,live_gui_implementation_bridge,live_gui_interaction_script,live_gui_performance_console_model,live_gui_playback_transcript,live_gui_playback_validation,live_gui_rehearsal_session,live_gui_render_tree,live_gui_screen_contract,live_gui_sidecar_session,live_gui_test_harness_contract,live_gui_test_harness_readiness,live_performance_readiness,live_performance_runbook,live_performance_state,live_set_cockpit,live_show_export,live_stage_rehearsal_state,live_stage_snapshot_routing,live_transition_timeline,rytm_machine_matrix,rytm_snapshot_pad_compatibility,rytm_snapshot_intelligence,rytm_snapshot_mutation_preview,rytm_style_kit_readiness,rytm_style_mutation_intent,rytm_style_mutation_mock_preview,rytm_style_mutation_render_plan,rytm_style_snapshot_routing,style_performance_arcs,style_profiles,style_targets}.py` plus `reports/performance_console/{live_kit_capture_workbench,live_kit_package_audition,live_kit_operator_package,live_kit_operator_review_ledger,payload_helpers}.py` (subpackage; was the old top-level `reports.py`) |
 | Long-form reference report | `rytm_randomizer/reports/reference_audio_atlas.py` |
+| Passive support inventory | `rytm_randomizer/reports/device_support_inventory.py`, `rytm_randomizer/data/device_support_inventory.py`, canonical MIDI/field/calibration catalogs, typed field codecs and passive Cockpit binding/stage policy |
 | Local AI packets | `rytm_randomizer/local_ai/{provider,local_model,rag,mutation_intent}.py` |
 | Behavior parity evaluators | `rytm_randomizer/behavior/*.py` (subpackage; was 8 top-level `behavior_*.py` files) |
 | Runtime-adjacent state | `rytm_randomizer/state/{anchor,group,pad_mode,scene,selection,anchor_validation,selected_target_validation,selected_isolated_pad_validation}.py` |
@@ -176,6 +177,7 @@ flowchart TB
         ShowBankPkg["show_bank/ nested subpackage<br/>forge · readiness · workspace<br/>store · export"]
         ShowBankData["data/show_bank.py<br/>immutable paired evidence DTOs"]
         ShowBankServices["capture/ · engine/<br/>export/ · profiles/<br/>reused Cockpit services"]
+        SupportPolicy["data/rytm_parameter_map.py + data/stage.py<br/>passive key bindings + authority blockers"]
     end
 
     subgraph GuardrailsPkg["guardrails/"]
@@ -188,6 +190,7 @@ flowchart TB
     subgraph ReportsPkg["reports/ subpackage<br/>(was reports.py)"]
         RInit["__init__.py<br/>report builders"]
         RFormatter["formatter.py<br/>PassiveReportHeader"]
+        RSupportInventory["device_support_inventory.py<br/>canonical support/evidence view<br/>text / JSON; no readiness grant"]
         RManualFeedback["manual_feedback_packet.py<br/>passive manual feedback evidence packet<br/>+ registered CliCommand"]
         RMatrix["rytm_machine_matrix.py<br/>12-pad machine report + CliCommand"]
         RSnapshot["rytm_snapshot_pad_compatibility.py<br/>snapshot-safe pad/machine report + CliCommand"]
@@ -342,6 +345,9 @@ flowchart TB
     SendHardware --> RealAdapter
 
     ReportsPkg --> RFormatter
+    RSupportInventory --> DataLayer
+    RSupportInventory --> DevicesPkg
+    RSupportInventory --> SupportPolicy
     ReportsPkg --> RegistryCore
     ReportsPkg --> BehaviorPkg
     ReportsPkg --> StyleAnalysis
@@ -1204,6 +1210,7 @@ flowchart LR
 
     subgraph ReportCmds["Direct read-only report commands"]
         Report["report<br/>format_registry_report()"]
+        DeviceSupportInventory["device-support-inventory-report<br/>text or --json"]
         MockMapper["mock-mapper-report"]
         Runtime["runtime-plan-report"]
         Active["active-boundary-report"]
@@ -1287,6 +1294,10 @@ flowchart LR
     CLI --> RIO145LocalCmds
 
     ReportCmds --> ReportsPkg["reports/<br/>(PassiveReportHeader + builders)"]
+    DeviceSupportInventory --> SupportInventory["reports/device_support_inventory.py<br/>canonical evidence inventory"]
+    SupportInventory --> SupportFacts["existing Rytm/A4 catalogs + field schemas<br/>layout / calibration / evidence references"]
+    SupportInventory --> SupportCodecs["existing typed native field codecs<br/>passive Cockpit key bindings + stage policy"]
+    SupportInventory --> SupportEvidence["catalog coverage / native saved-file support<br/>live transport + precision / physical proof<br/>independent dimensions; no SEND grant"]
     ReferenceAudioAtlasReport --> ReferenceAudioAtlasCore["style_analysis/reference_audio_atlas.py<br/>bounded sequential extraction + diversity selection"]
     ReferenceAudioAtlasCore --> AtlasReuse["existing A4 patch genome + reference-style blueprint"]
     BrowseCmds --> RegistryCore["registry.py<br/>profile_lookup.py<br/>inspection.py"]
@@ -1314,6 +1325,14 @@ flowchart LR
 ```
 
 **Architecture test:** `test_real_midi_import_safety.py` + `test_real_midi_passive_cli_safety.py` enforce that the passive CLI never imports `mido` or `rtmidi` and never opens a real port (hardware safety boundaries from CONTRIBUTING.md).
+
+The support report has no provider, enumeration, mutation, PREPARE or ArmedApply
+edge. It derives current evidence and blockers from canonical owners rather
+than maintaining another support registry. JSON and text are review outputs,
+not capability promotion or a physical observation. Native Q8.8 support does
+not imply fractional or paired MIDI readiness. See
+[Device Support Inventory](DEVICE_SUPPORT_INVENTORY.md) for reproduction and
+the independent support dimensions.
 
 ---
 
@@ -2026,6 +2045,7 @@ flowchart LR
 
     subgraph Reports["Passive reports"]
         RegistryC["report"]
+        DeviceSupportInventory["device-support-inventory-report [--json]<br/>evidence only; no hardware discovery"]
         MockMapper["mock-mapper-report"]
         Runtime["runtime-plan-report"]
         Active["active-boundary-report"]
@@ -2093,6 +2113,7 @@ flowchart LR
     CLI --> Reports
 
     CliRegistry -->|"registered passive command:<br/>rytm-12-pad-machine-matrix-report"| CLI
+    CliRegistry -->|"registered passive command:<br/>device-support-inventory-report"| CLI
     CliRegistry -->|"registered passive command:<br/>manual-feedback-packet-report"| CLI
     CliRegistry -->|"registered passive command:<br/>rytm-snapshot-pad-compatibility-report"| CLI
     CliRegistry -->|"registered passive command:<br/>rytm-snapshot-intelligence-report"| CLI
@@ -2143,6 +2164,7 @@ flowchart LR
 **Current nuance:**
 
 - The `cli.py` is visibility-first. No active execution / send / hardware-test command is wired here.
+- `device-support-inventory-report` exposes canonical catalog, saved-file, transport/precision and physical-proof dimensions independently. It never grants output authority, promotes offsets, discovers a port or establishes show readiness.
 - `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The A4 manifest reader validates the complete stored CC/NRPN plan before the app constructs the provider; the passive CLI, local SysEx writer, batch generator, eight-candidate DNA workspace, ranker, bounded render refinement, and local-model copilot never open a port.
 - `audio-patch-dna` decodes the source audio once, displays exactly eight fixed candidate directions, and writes deterministic comparison artifacts. Only an explicit `--select` paired with `--source-kit` invokes the existing passive A4 file exporter, using the precomputed selected candidate without a second audio decode.
 - `audio-patch-studio-session` composes that selected export with one SHA-verified recorded render and one bounded accept/refine pass. Its JSON state is the durable commit marker; repeated requests are idempotent, artifact drift fails closed, and the service remains file-only.
@@ -3146,7 +3168,10 @@ sequenceDiagram
 flowchart LR
     Operator["Operator"] --> CaptureUI["Capture Current Kit<br/>exact input selection"]
     CaptureUI --> InputBoundary["app --arm<br/>--cockpit-kit-capture-sidecar<br/>INPUT ONLY"]
-    InputBoundary --> Codecs["Rytm/A4 saved-KIT codecs<br/>family + checksum + length<br/>exact decode/re-encode"]
+    InputBoundary --> UniqueInput["fresh input listing at open<br/>exactly one matching name<br/>ambiguity refuses before open"]
+    UniqueInput --> Codecs["Rytm/A4 saved-KIT codecs<br/>family + checksum + length<br/>exact decode/re-encode"]
+    CaptureTeardown["cancel / disconnect / context invalidated"] --> CancelCapture["cancel input polling<br/>reject stale-generation result<br/>retain previous verified source"]
+    CancelCapture --> CaptureBlocked["no new source adoption"]
 
     Codecs --> RytmAnchor["Verified Rytm anchor"]
     Codecs --> A4Anchor["Verified A4 anchor"]
@@ -3160,7 +3185,9 @@ flowchart LR
     Coordinator --> A4Lane
 
     RytmLane --> Prepare["PREPARE<br/>exact plan id + pads + count"]
-    Prepare --> Confirm["per-action confirm:true<br/>same current plan id"]
+    Prepare --> Precision["whole-plan precision check<br/>no paired-control projection<br/>no fractional MIDI"]
+    Precision -->|"ready"| Confirm["per-action confirm:true<br/>same current plan id"]
+    Precision -->|"unverified paired row"| BlockedPlan["retain blocked plan + reasons<br/>no subset send"]
     Confirm --> ArmedApply["senders/armed_apply.py<br/>sole Cockpit output handle"]
     ArmedApply --> Rytm["Analog Rytm RAM-only CC"]
 
@@ -3173,7 +3200,8 @@ flowchart LR
     Coordinator -.->|"no direct control"| OXI
 
     Disconnect["capture timeout / malformed frame<br/>Rytm output disconnect / stale scope"] --> Coordinator
-    Coordinator --> Recovery["lane-local failure/revoke<br/>Rytm reconnect or re-capture<br/>preview + PREPARE again"]
+    Coordinator --> Recovery["lane-local failure/revoke<br/>Rytm manual reload + fresh capture<br/>reselect / preview / arm / PREPARE"]
+    PassiveTeardown["passive browser disconnect / rejected DISARM"] --> RetainIdentity["preserve offline source<br/>candidate / plan identity<br/>same sidecar session; no authority"]
 
     style InputBoundary fill:#eef,stroke:#448
     style ArmedApply fill:#fee,stroke:#a44
@@ -3191,6 +3219,12 @@ to the captured source, effective scope, candidate, and exact plan id. A4
 remains useful for capture, target/lock rehearsal, and narrow offline Filter 1
 Frequency file generation, while its live output authority is structurally
 blocked.
+Capture cancellation and stale-result refusal do not adopt or erase a verified
+source. Armed disconnect revokes output evidence; passive browser disconnect
+and rejected DISARM do not erase offline work within the same running sidecar
+session. This is not durable local retention or a hardware save. A plan
+containing an unverified paired row remains blocked as a whole, even if
+single-CC packets also exist.
 
 ## 37. Show Kit Forge Evidence and Show-Time Readiness
 
@@ -3201,10 +3235,12 @@ flowchart TD
     Forge --> RytmCandidate["Rytm candidate metadata<br/>available for selection"]
     RytmCandidate --> SourceReload["before every live audition<br/>manually reload immutable Rytm source KIT"]
     SourceReload --> SourceCapture["fresh exact source capture<br/>clears current candidate + plan"]
-    SourceCapture --> Reselect["Select for audition → Preview Rytm<br/>Prepare exact plan → arm exact output"]
+    SourceCapture --> Reselect["Select for audition → Preview Rytm<br/>arm exact output → Prepare exact plan"]
     Reselect --> ExactConfirm["exact port + current plan id<br/>manual reload acknowledgment<br/>per-action confirmation"]
     ExactConfirm --> ArmedApply["ArmedApply<br/>RAM-only SEND"]
     ArmedApply --> LiveUnsaved["live unsaved audition<br/>not favorite · not saved"]
+    ArmedApply --> ManualRestore["DISARM + manually reload source KIT<br/>fresh exact baseline recapture<br/>physical recovery observation"]
+    ManualRestore -->|"every later candidate/attempt"| SourceReload
 
     Forge --> A4Candidate["A4 Filter 1 Frequency<br/>offline saved-KIT bytes only"]
     Calibration["data calibration record + saved-KIT field schema"] --> FieldCodec["generic A4 field codec + calibrated renderer<br/>exact Q8.8 / canonical byte isolation"]
@@ -3214,6 +3250,8 @@ flowchart TD
     A4Candidate --> A4Preparation["inert preparation report<br/>revalidate retained source + candidate<br/>freshness / scope / recovery / port intent"]
     A4Preparation --> NoA4Send
     A4Candidate --> NoA4Send["A4 SEND blocked<br/>hardware_send_validated=false"]
+    ExistingScratch["existing four-track scratch fixture<br/>fixed slot 20 / frame / hash"] --> ScratchReturn["manual transfer to disposable slot 20<br/>inspect / listen / save on A4<br/>fresh capture + byte/semantic review"]
+    ScratchReturn --> OfflineEvidence["offline field evidence only<br/>not paired/fractional MIDI<br/>not A4/BOTH SEND authority"]
 
     LiveUnsaved --> Favorite["operator marks paired favorite"]
     A4Candidate --> Favorite
@@ -3261,6 +3299,15 @@ before any physical observation is recorded. The frozen preparation report
 always has `ready=false` and `hardware_send_validated=false`. Saved-KIT Q8.8
 evidence does not establish a paired-CC/NRPN transport conversion; the existing
 seven-bit CC audition seam and persistent-KIT refusal remain unchanged.
+The bounded first physical test is one Rytm Pad 2 candidate at 10%, Pad 1
+protected and all A4 tracks locked, followed by manual restoration. Local
+candidate/bank save and source reset never save or reload hardware. The
+separate legacy `--arm --a4-send-param` probe is one integer, non-paired CC on
+one configured spare-kit track; it has no Forge SEND edge and cannot bypass
+a blocked candidate. No exhaustive mapping matrix is requested. Pi #252 is
+touch UI/packaging groundwork: non-simulation APPLY is refused and deployment
+is on hold pending focused work. Touch/display behavior and packaging have no
+validated acceptance edge here.
 
 <a id="38-auto-update-flow-designed--spec-complete-implementation-pending"></a>
 <a id="37-auto-update-flow-designed--spec-complete-implementation-pending"></a>

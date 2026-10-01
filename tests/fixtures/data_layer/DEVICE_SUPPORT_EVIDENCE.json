@@ -1,0 +1,26 @@
+{
+  "a4_midi": [
+    "rytm_randomizer/data/analog_four_midi.py",
+    "rytm_randomizer/cockpit/stage/policy.py",
+    "rytm_randomizer/data/analog_four_sysex_calibration.py"
+  ],
+  "a4_native": [
+    "rytm_randomizer/data/analog_four_kit_fields.py",
+    "rytm_randomizer/devices/strategies/analog_four_kit_fields.py",
+    "rytm_randomizer/devices/strategies/analog_four_kit_recipe.py",
+    "tests/test_devices_strategies_rio145_kit_fields.py",
+    "tests/test_devices_strategies_rio145_kit_recipes.py"
+  ],
+  "rytm_midi": [
+    "rytm_randomizer/data/analog_rytm_midi.py",
+    "rytm_randomizer/cockpit/data/rytm_parameter_map.py",
+    "rytm_randomizer/cockpit/engine/send_plan.py"
+  ],
+  "rytm_native": [
+    "rytm_randomizer/data/analog_rytm_kit_fields.py",
+    "rytm_randomizer/devices/strategies/analog_rytm_kit_fields.py",
+    "rytm_randomizer/devices/strategies/analog_rytm_kit_recipe.py",
+    "tests/test_devices_strategies_rio145_kit_fields.py",
+    "tests/test_devices_strategies_rio145_kit_recipes.py"
+  ]
+}

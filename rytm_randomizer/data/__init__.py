@@ -161,6 +161,7 @@ from .controller_rehearsal_scenarios import (
     CONTROLLER_REHEARSAL_SCENARIOS,
     DEFAULT_CONTROLLER_REHEARSAL_SCENARIO,
 )
+from .device_support_inventory import DEVICE_SUPPORT_EVIDENCE, DEVICE_SUPPORT_OMISSIONS
 from .live_gui_contracts import LIVE_GUI_SCREEN_COMPONENT_SPECS
 from .manual_feedback_packet import (
     DEFAULT_MANUAL_FEEDBACK_SCENARIO,
@@ -297,6 +298,8 @@ from .style_profiles import STYLE_PROFILES
 from .style_targets import STYLE_TARGET_VECTOR_AXES, STYLE_TARGET_VECTORS
 
 __all__ = [
+    "DEVICE_SUPPORT_EVIDENCE",
+    "DEVICE_SUPPORT_OMISSIONS",
     "PERSISTED_STATE_CODES",
     "PERSISTED_STATE_REFUSAL_METRIC_CODES",
     "PERSISTED_STATE_STORES",

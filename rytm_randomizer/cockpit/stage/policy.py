@@ -9,11 +9,10 @@ from typing import Final, cast
 
 from ...devices import get_device
 from ...snapshot.mutation_scope import registered_mutation_ids
+from ..data.stage import A4_MAPPING_BLOCK_REASON as A4_MAPPING_BLOCK_REASON
 from ..data.stage import ANALOG_FOUR_DEVICE_ID as ANALOG_FOUR_DEVICE_ID
 from ..data.stage import ANALOG_RYTM_DEVICE_ID as ANALOG_RYTM_DEVICE_ID
 from ..data.stage import StageDeviceId
-
-A4_MAPPING_BLOCK_REASON: Final[str] = "a4_hardware_audition_validation_pending"
 
 
 @dataclass(frozen=True)
