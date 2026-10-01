@@ -46,22 +46,34 @@ for hardware validation.
 ### Local Receipts
 
 - Full formatted-source suite: `pytest -n 2 --cov=rytm_randomizer --cov-branch
-  --cov-report=xml --cov-report=term-missing:skip-covered`: 9,794 passed, five
-  skipped, six existing warnings, 263.45 seconds; combined coverage 99.65%.
+  --cov-report=xml --cov-report=term-missing:skip-covered`: 9,795 passed, five
+  skipped, six existing warnings, 284.43 seconds; combined coverage 99.65%.
 - All 15 touched production modules have 100% line/branch coverage. Project
   pure-branch coverage is 99.37% above the 99% ratchet floor. Pre-push passed
   860 architecture and 697 not-fast/parity tests, including all 685 frozen
   V1.34 cases. No hook bypass, fixture rewrite or allowlist widening occurred.
 - Strict touched-module Pyright: zero errors/warnings; Ruff, Black, isort,
   Vulture at confidence 80 and `git diff --check` pass.
-- Frontend coverage: 1,045 tests / 73 files pass; statements, branches,
+- Frontend coverage: 1,053 tests / 73 files pass; statements, branches,
   functions and lines all 100%. ESLint, TypeScript and production build pass.
-- Playwright with disabled MIDI, one worker and zero retries: 32 passed, two
-  existing skips in 52.4 seconds. Wide/narrow Forge screenshots inspected.
+- Playwright with disabled MIDI, one worker and zero retries: 33 passed, two
+  existing skips in 54.6 seconds. Wide/narrow Forge screenshots inspected.
 - Local tools: Python 3.12.14, Pyright 1.1.407, Node 24.16.0, cached Vite
   8.0.14. No shared dependency changes; clean pinned-toolchain CI is pending.
 - No real MIDI/USB enumeration, open, arm or write occurred. Test providers
   are fake, and no physical observation is marked complete.
+
+### Review Followup
+
+The inventory now exposes typed nested schemas and consumes the public A4
+fixed-point/pitch converters. Recovery rows explicitly require manual saved-KIT
+reload and fresh capture; local UNDO cannot restore hardware. Cancelled capture
+dispatch records RED/error metrics and preserves cancellation propagation.
+An always-running browser contract reaches production handlers and ArmedApply
+with an isolated in-memory output, verifies exact confirmed plan packets, and
+closes once on DISARM. It is not hardware-send evidence. The CI-only timeout in
+the monolithic malformed-import test is addressed by splitting its independent
+cases without extending timeouts, retrying, skipping or changing assertions.
 
 ## Plan-Requirement Conformance
 

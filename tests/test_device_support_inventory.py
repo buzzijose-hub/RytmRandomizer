@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from dataclasses import asdict
 from pathlib import Path
-from typing import cast
 
 import pytest
 
@@ -16,9 +16,15 @@ from rytm_randomizer.data.analog_four_midi import (
     ANALOG_FOUR_MANUAL_CC,
     ANALOG_FOUR_SYNTH_TRACK_NRPN,
 )
+from rytm_randomizer.data.analog_four_sysex_calibration import (
+    ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS,
+    ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS,
+)
 from rytm_randomizer.data.analog_rytm_midi import ANALOG_RYTM_MANUAL_CC
 from rytm_randomizer.data.device_support_inventory import DEVICE_SUPPORT_EVIDENCE
 from rytm_randomizer.reports.device_support_inventory import (
+    DeviceSupportInventory,
+    DeviceSupportParameter,
     build_device_support_inventory,
     format_device_support_inventory,
 )
@@ -27,11 +33,11 @@ pytestmark = pytest.mark.fast
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def _rows(payload: dict[str, object]) -> list[dict[str, object]]:
-    return cast(list[dict[str, object]], payload["parameters"])
+def _rows(payload: DeviceSupportInventory) -> list[DeviceSupportParameter]:
+    return payload["parameters"]
 
 
-def _native(field: str) -> dict[str, object]:
+def _native(field: str) -> DeviceSupportParameter:
     return next(
         row
         for row in _rows(build_device_support_inventory())
@@ -69,7 +75,7 @@ def test_exact_native_fractional_domains_do_not_grant_midi_conversion() -> None:
     assert frequency["encoding"] == "unsigned_big_endian_q8.8"
     assert frequency["maximum"] == "127.99609375"
     assert frequency["step"] == "0.00390625"
-    assert len(cast(tuple[int, ...], frequency["locations"])) == 2
+    assert len(frequency["locations"]) == 2
     depth = _native("env2_depth_a")
     assert depth["minimum"] == "-128.0"
     assert depth["maximum"] == "127.9921875"
@@ -82,7 +88,7 @@ def test_exact_native_fractional_domains_do_not_grant_midi_conversion() -> None:
 
 def test_selectors_are_canonical_choices_not_all_raw_integers() -> None:
     wave = _native("osc1_waveform")
-    values = cast(tuple[tuple[int, str], ...], wave["legal_values"])
+    values = wave["legal_values"]
     assert values == (
         (0, "SAW"),
         (1, "TRP"),
@@ -106,15 +112,16 @@ def test_live_support_protection_and_unimplemented_paths_are_distinct() -> None:
     rows = _rows(payload)
     lfo = next(row for row in rows if row["device"] == "rytm" and row["field"] == "LFO Depth")
     assert lfo["live_send"] == "blocked"
-    assert "paired_control_precision_unverified" in cast(tuple[str, ...], lfo["blockers"])
+    assert "paired_control_precision_unverified" in lfo["blockers"]
     decay = next(
         row
         for row in rows
         if row["device"] == "rytm" and row["machine"] == "bd_classic" and row["field"] == "Decay"
     )
     assert decay["live_send"] == "conditional_guarded_cc7"
+    assert decay["recovery"] == "manual_saved_kit_reload_and_fresh_capture; local_history_only"
     assert decay["offline_mutation"] == "not_inferred_from_MIDI_catalog"
-    omissions = cast(list[dict[str, str]], payload["unsupported_categories"])
+    omissions = payload["unsupported_categories"]
     assert {item["kind"] for item in omissions} >= {
         "intentional_protection",
         "missing_semantic_mapping",
@@ -131,7 +138,30 @@ def test_codec_accessor_does_not_imply_a_recipe_binding() -> None:
         if row["device"] == "rytm" and row["field"] == "default_note"
     )
     assert note["offline_mutation"] == "codec_accessor_only"
-    assert "no_typed_recipe_binding" in cast(tuple[str, ...], note["blockers"])
+    assert "no_typed_recipe_binding" in note["blockers"]
+
+
+def test_typed_inventory_projection_preserves_canonical_address_and_evidence_records() -> None:
+    payload = build_device_support_inventory()
+    a4_mappings = {**ANALOG_FOUR_MANUAL_CC, **ANALOG_FOUR_SYNTH_TRACK_NRPN}
+    assert payload["midi_addresses"]["a4"] == [asdict(mapping) for mapping in a4_mappings.values()]
+    assert payload["midi_addresses"]["rytm"] == [
+        asdict(mapping) for mapping in ANALOG_RYTM_MANUAL_CC.values()
+    ]
+    for projected, source in zip(
+        payload["a4_field_calibrations"], ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS.values(), strict=True
+    ):
+        assert projected["parameter"] == source.parameter
+        assert projected["status"] == source.status
+        assert projected["native_field"] == source.native_field
+        assert projected["native_encoding"] == source.native_encoding
+        assert projected["native_width"] == source.native_width
+        assert projected["native_scale"] == source.native_scale
+        assert projected["display_bounds"] == [source.screen_min, source.screen_max]
+        assert projected["captures"] == [asdict(item) for item in source.evidence]
+        assert projected["write_validations"] == [
+            asdict(item) for item in ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS.get(source.parameter, ())
+        ]
 
 
 def test_cli_text_json_and_invalid_arguments(capsys: pytest.CaptureFixture[str]) -> None:

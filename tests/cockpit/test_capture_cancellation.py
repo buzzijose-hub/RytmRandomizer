@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import gc
 import json
+import logging
 import weakref
 from datetime import datetime, timezone
 from pathlib import Path
@@ -489,8 +490,9 @@ def test_capture_busy_refusals_record_bounded_command_metrics(
 
 
 def test_second_capture_keeps_existing_owner_and_never_calls_provider(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, ws_handler_caplog: pytest.LogCaptureFixture
 ) -> None:
+    ws_handler_caplog.set_level(logging.INFO, logger="rytm_randomizer.cockpit.ws.handlers")
     session = session_with_input(tmp_path, DelayedInput(cooperative=True))
     owner = Event()
     session.capture_cancel = owner
@@ -512,6 +514,13 @@ def test_second_capture_keeps_existing_owner_and_never_calls_provider(
     assert ack["ok"] is False and ack["message"] == "another current-kit capture is active"
     assert session.capture_cancel is owner and not owner.is_set()
     receive.assert_not_called()
+    refused = next(
+        record
+        for record in ws_handler_caplog.records
+        if record.msg == "cockpit_kit_capture_refused"
+    )
+    assert refused.device_id == "analog_rytm_mk2" and refused.reason == "capture_busy"
+    assert refused.sent_midi is False and "Test input" not in repr(refused.__dict__)
 
 
 @pytest.mark.parametrize("context_change", ["generation", "owner", "both"])
@@ -591,8 +600,12 @@ def test_successful_capture_keeps_reservation_through_snapshot_adoption(
 
 
 def test_cancelled_input_task_cleanup_does_not_raise_in_completion_callback(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, ws_handler_caplog: pytest.LogCaptureFixture
 ) -> None:
+    ws_handler_caplog.set_level(logging.INFO, logger="rytm_randomizer.cockpit.ws.handlers")
+    metrics = MidiMetrics()
+    monkeypatch.setattr(handlers, "get_metrics", lambda: metrics)
+
     async def exercise() -> None:
         session = session_with_input(tmp_path, DelayedInput(cooperative=False))
         loop = asyncio.get_running_loop()
@@ -624,6 +637,17 @@ def test_cancelled_input_task_cleanup_does_not_raise_in_completion_callback(
             loop.set_exception_handler(previous_handler)
 
     asyncio.run(exercise())
+    assert metrics.ws_command_count == {"capture_current_kit": 1}
+    assert metrics.ws_command_errors_by_code == {handlers.ERR_VALIDATION: 1}
+    assert set(metrics.ws_command_duration_ms_total) == {"capture_current_kit"}
+    assert metrics.errors_by_kind == {"cockpit.capture.cancelled": 1}
+    cancelled = next(
+        record
+        for record in ws_handler_caplog.records
+        if record.msg == "cockpit_kit_capture_cancelled"
+    )
+    assert cancelled.device_id == "analog_rytm_mk2" and cancelled.sent_midi is False
+    assert "Test input" not in repr(cancelled.__dict__)
 
 
 def test_passive_watchdog_cancels_capture_without_replacing_snapshot(tmp_path: Path) -> None:

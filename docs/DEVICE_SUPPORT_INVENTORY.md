@@ -45,7 +45,7 @@ typed-recipe compatibility. Missing source layouts are explicit gaps.
 | A4 native recipes | Typed enums, coupled pitch, exact Q8.8 frequencies and Q8.7 depth components in offline kit files | General Cockpit mutation/audition is narrower; native encoding evidence is not live-send evidence |
 | Show Kit Forge A4 | Source-preserving Filter 1 Frequency artifact and retained local evidence | General A4/BOTH SEND remains blocked; other fields are not promoted by file-codec coverage |
 | Favorites/packages | Local candidate selection, favorite records, exact retained files and validated show-pack persistence | Not a hardware save or restore; manual instrument save and fresh return captures are required |
-| Recovery | Guarded applied Rytm delta recovery in its original live context; source anchors remain available | After partial sends/context loss, stop and manually reload the backed-up source; do not assume restored hardware |
+| Recovery | Applied-delta receipts and local history are available; local UNDO does not restore hardware | Stop, manually reload the backed-up saved KIT and freshly capture it before another candidate; automated hardware restoration is not implemented |
 | Pi | PR #252 touchscreen and packaging groundwork | Non-simulation appliance APPLY refuses; ARM64, boot, kiosk and physical acceptance remain unproven |
 
 The report includes exact A4 calibration captures/write-return records, but

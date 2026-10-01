@@ -843,6 +843,10 @@ async def _handle_capture_current_kit(
     if not isinstance(input_port, str) or not input_port.strip():
         raise ValueError("capture input_port must be a non-empty string")
     if session.capture_cancel is not None:
+        _logger.info(
+            "cockpit_kit_capture_refused",
+            extra={"device_id": device_id, "reason": "capture_busy", "sent_midi": False},
+        )
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "another current-kit capture is active")
         )
@@ -862,6 +866,7 @@ async def _handle_capture_current_kit(
             result = await asyncio.shield(input_task)
         except asyncio.CancelledError:
             cancel_event.set()
+            _record_cancelled_capture(device_id)
 
             def release_cancelled_capture(completed: asyncio.Task[KitCaptureResult]) -> None:
                 if not completed.cancelled():
@@ -875,6 +880,7 @@ async def _handle_capture_current_kit(
             raise
         except (OSError, RuntimeError, TypeError, ValueError, RytmRandomizerError) as exc:
             if cancel_event.is_set() or generation != session.capture_generation:
+                _record_cancelled_capture(device_id)
                 return HandlerResult(
                     ack=_error_ack(ERR_VALIDATION, "current-kit capture cancelled")
                 )
@@ -921,6 +927,7 @@ async def _handle_capture_current_kit(
             or generation != session.capture_generation
             or session.capture_cancel is not cancel_event
         ):
+            _record_cancelled_capture(device_id)
             return HandlerResult(ack=_error_ack(ERR_VALIDATION, "current-kit capture cancelled"))
         events: list[dict[str, object]] = []
         session.stage_coordinator.record_capture(
@@ -2136,6 +2143,23 @@ _ARM_SEND_REFUSED_FINGERPRINT: Final[str] = "cockpit.arm.send_refused"
 _CAPTURE_FAILED_FINGERPRINT: Final[str] = "cockpit.capture.failed"
 """Journal fingerprint for an input-only saved-KIT capture failure."""
 
+_CAPTURE_CANCELLED_FINGERPRINT: Final[str] = "cockpit.capture.cancelled"
+"""Bounded diagnostic category for a cancelled input-only operation."""
+
+
+def _record_cancelled_capture(device_id: str) -> None:
+    _logger.info(
+        "cockpit_kit_capture_cancelled",
+        extra={
+            "device_id": device_id,
+            "reason": "capture_cancelled",
+            "fingerprint": _CAPTURE_CANCELLED_FINGERPRINT,
+            "sent_midi": False,
+        },
+    )
+    get_metrics().record_error(_CAPTURE_CANCELLED_FINGERPRINT)
+
+
 _GUARDED_SEND_FAILED_FINGERPRINT: Final[str] = "cockpit.send.guarded_boundary_failed"
 """Journal fingerprint for a guarded-device apply failure."""
 
@@ -3002,6 +3026,17 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
     with operation(op_name, logger=_logger, request_id=request_id):
         try:
             result = await handler(cmd, session)
+        except asyncio.CancelledError:
+            _metrics.record_ws_command(
+                _label,
+                (time.perf_counter() - _t0) * 1000.0,
+                error_code=ERR_VALIDATION,
+            )
+            _logger.info(
+                "ws_command_cancelled",
+                extra={"cmd_type": _label, "request_id": request_id, "outcome": "cancelled"},
+            )
+            raise
         except (KeyError, OSError, TypeError, ValueError, RuntimeError, RytmRandomizerError) as exc:
             # PR 14 / RR4f: never echo the underlying exception text back
             # over the wire -- exception messages routinely embed filesystem

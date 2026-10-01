@@ -6,8 +6,8 @@ are not evidence for native-to-MIDI conversion or physical acceptance.
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
-from typing import Final
+from dataclasses import dataclass
+from typing import Final, Literal, TypedDict
 
 from ..cli_registry import CliCommand, make_passive_report_command, register
 from ..cockpit.data.rytm_parameter_map import cockpit_parameter_key
@@ -29,6 +29,8 @@ from ..data.analog_four_midi import (
 from ..data.analog_four_sysex_calibration import (
     ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS,
     ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS,
+    AnalogFourSysexCalibrationEvidence,
+    AnalogFourSysexWriteValidationEvidence,
 )
 from ..data.analog_rytm_kit_fields import (
     RYTM_FX_OFFSETS,
@@ -38,17 +40,15 @@ from ..data.analog_rytm_kit_fields import (
     RYTM_TRACK_MACHINE_COMPATIBILITY,
 )
 from ..data.analog_rytm_kit_layout import RYTM_SOUND_FIELD_BY_NRPN_LSB
-from ..data.analog_rytm_midi import ANALOG_RYTM_MANUAL_CC
+from ..data.analog_rytm_midi import ANALOG_RYTM_MANUAL_CC, AnalogRytmCcMapping
 from ..data.device_support_inventory import DEVICE_SUPPORT_EVIDENCE, DEVICE_SUPPORT_OMISSIONS
 from ..data.rytm_machine_catalog import RYTM_MACHINE_PROFILES_BY_KEY, RYTM_PAD_CAPABILITIES
 from ..devices.strategies.analog_four_kit_fields import (
     A4_FINE_DISPLAY_MAX,
     A4_FINE_DISPLAY_MIN,
-    A4_MOD_DEPTH_UNITS_PER_DISPLAY,
-    A4_MOD_DEPTH_ZERO,
-    A4_PITCH_UNITS_PER_SEMITONE,
-    A4_PITCH_ZERO,
     A4Destination,
+    decode_a4_mod_depth,
+    decode_a4_pitch_semitones,
 )
 from ..devices.strategies.analog_four_kit_recipe import A4_RECIPE_ENUM_FIELDS
 from ..devices.strategies.analog_rytm_kit_fields import RytmSound
@@ -57,6 +57,137 @@ from .formatter import SAFETY_SECTION_HEADER, PassiveReportHeader, passive_repor
 REPORT_TITLE: Final[str] = "RytmRandomizer passive device support inventory"
 SOURCE_MODULE: Final[str] = "reports.device_support_inventory"
 _HEADER: Final[PassiveReportHeader] = PassiveReportHeader(REPORT_TITLE, SOURCE_MODULE)
+
+
+class DeviceSupportParameter(TypedDict):
+    """Fixed JSON projection of a descriptive parameter row."""
+
+    device: str
+    surface: str
+    field: str
+    machine: str | None
+    section: str
+    locations: tuple[int, ...]
+    encoding: str
+    minimum: str | None
+    maximum: str | None
+    step: str | None
+    legal_values: tuple[tuple[int, str], ...]
+    domain_authority: str
+    offline_mutation: str
+    live_send: str
+    recovery: str
+    protection: str
+    blockers: tuple[str, ...]
+    evidence: tuple[str, ...]
+
+
+class DeviceSupportCounts(TypedDict):
+    a4_native_locations_per_track: int
+    a4_named_semantic_fields_per_track: int
+    a4_synth_track_MIDI_controls: int
+    a4_midi_catalog_rows: int
+    rytm_midi_catalog_rows: int
+    rytm_typed_native_machine_layouts: int
+
+
+class A4MidiAddress(TypedDict):
+    parameter: str
+    section: str
+    encoder: str
+    cc_msb: int | None
+    cc_lsb: int | None
+    nrpn_msb: int | None
+    nrpn_lsb: int | None
+
+
+class RytmMidiAddress(TypedDict):
+    section: str
+    parameter: str
+    cc_msb: int
+    cc_lsb: int | None
+    nrpn_msb: int | None
+    nrpn_lsb: int | None
+    scope: str
+    risk: str
+    mutation_status: str
+    value_min: int
+    value_max: int
+    value_kind: str
+    value_orientation: str
+    machine_key: str | None
+
+
+class DeviceMidiAddresses(TypedDict):
+    a4: list[A4MidiAddress]
+    rytm: list[RytmMidiAddress]
+
+
+class RytmPadCompatibility(TypedDict):
+    pad: int
+    catalog_allowed_machines: list[str]
+    typed_recipe_allowed_machine_ids: list[int]
+
+
+class RytmMachineLayoutGap(TypedDict):
+    machine: str
+    machine_id: int
+    blocker: str
+
+
+class A4CaptureEvidence(TypedDict):
+    track: int
+    screen_value: str
+    primary_raw_value: int
+    kit_name: str
+    source_file: str
+    payload_fingerprint: str
+
+
+class A4WriteEvidence(TypedDict):
+    parameter: str
+    generated_file: str
+    generated_sha256: str
+    expected_track_values: tuple[tuple[int, str], ...]
+    matched_reference_file: str | None
+    operator_confirmed: bool
+    notes: tuple[str, ...]
+
+
+class A4FieldCalibration(TypedDict):
+    parameter: str
+    status: str
+    native_field: str | None
+    native_encoding: str
+    native_width: int
+    native_scale: int
+    display_bounds: list[str]
+    captures: list[A4CaptureEvidence]
+    write_validations: list[A4WriteEvidence]
+
+
+class UnsupportedCategory(TypedDict):
+    device: str
+    category: str
+    kind: str
+    blocker: str
+
+
+class DeviceSupportInventory(TypedDict):
+    """Fixed report contract; descriptive evidence cannot grant authority."""
+
+    schema: Literal["rytmrandomizer.device-support-inventory.v1"]
+    hardware_access: Literal[False]
+    hardware_validation_granted: Literal[False]
+    interpretation: str
+    counts: DeviceSupportCounts
+    midi_addresses: DeviceMidiAddresses
+    rytm_machine_compatibility: list[RytmPadCompatibility]
+    rytm_machine_layout_gaps: list[RytmMachineLayoutGap]
+    parameters: list[DeviceSupportParameter]
+    a4_field_calibrations: list[A4FieldCalibration]
+    unsupported_categories: list[UnsupportedCategory]
+    evidence_boundary: str
 
 
 @dataclass(frozen=True)
@@ -83,6 +214,83 @@ class DeviceSupportRow:
     evidence: tuple[str, ...]
 
 
+def _parameter_payload(row: DeviceSupportRow) -> DeviceSupportParameter:
+    return {
+        "device": row.device,
+        "surface": row.surface,
+        "field": row.field,
+        "machine": row.machine,
+        "section": row.section,
+        "locations": row.locations,
+        "encoding": row.encoding,
+        "minimum": row.minimum,
+        "maximum": row.maximum,
+        "step": row.step,
+        "legal_values": row.legal_values,
+        "domain_authority": row.domain_authority,
+        "offline_mutation": row.offline_mutation,
+        "live_send": row.live_send,
+        "recovery": row.recovery,
+        "protection": row.protection,
+        "blockers": row.blockers,
+        "evidence": row.evidence,
+    }
+
+
+def _a4_address_payload(mapping: AnalogFourCcMapping) -> A4MidiAddress:
+    return {
+        "parameter": mapping.parameter,
+        "section": mapping.section,
+        "encoder": mapping.encoder,
+        "cc_msb": mapping.cc_msb,
+        "cc_lsb": mapping.cc_lsb,
+        "nrpn_msb": mapping.nrpn_msb,
+        "nrpn_lsb": mapping.nrpn_lsb,
+    }
+
+
+def _rytm_address_payload(mapping: AnalogRytmCcMapping) -> RytmMidiAddress:
+    return {
+        "section": mapping.section,
+        "parameter": mapping.parameter,
+        "cc_msb": mapping.cc_msb,
+        "cc_lsb": mapping.cc_lsb,
+        "nrpn_msb": mapping.nrpn_msb,
+        "nrpn_lsb": mapping.nrpn_lsb,
+        "scope": mapping.scope,
+        "risk": mapping.risk,
+        "mutation_status": mapping.mutation_status,
+        "value_min": mapping.value_min,
+        "value_max": mapping.value_max,
+        "value_kind": mapping.value_kind,
+        "value_orientation": mapping.value_orientation,
+        "machine_key": mapping.machine_key,
+    }
+
+
+def _capture_payload(item: AnalogFourSysexCalibrationEvidence) -> A4CaptureEvidence:
+    return {
+        "track": item.track,
+        "screen_value": item.screen_value,
+        "primary_raw_value": item.primary_raw_value,
+        "kit_name": item.kit_name,
+        "source_file": item.source_file,
+        "payload_fingerprint": item.payload_fingerprint,
+    }
+
+
+def _write_payload(item: AnalogFourSysexWriteValidationEvidence) -> A4WriteEvidence:
+    return {
+        "parameter": item.parameter,
+        "generated_file": item.generated_file,
+        "generated_sha256": item.generated_sha256,
+        "expected_track_values": item.expected_track_values,
+        "matched_reference_file": item.matched_reference_file,
+        "operator_confirmed": item.operator_confirmed,
+        "notes": item.notes,
+    }
+
+
 def _a4_native_rows() -> tuple[DeviceSupportRow, ...]:
     rows: list[DeviceSupportRow] = []
     fractions = frozenset(A4_MOD_DEPTH_FIELDS.values())
@@ -104,18 +312,16 @@ def _a4_native_rows() -> tuple[DeviceSupportRow, ...]:
             authority = "typed_codec_display_domain"
         elif field in A4_MOD_DEPTH_FIELDS:
             encoding = "centered_q8.7"
-            minimum = str(-A4_MOD_DEPTH_ZERO / A4_MOD_DEPTH_UNITS_PER_DISPLAY)
-            maximum = str(
-                (A4_FIXED_8_8_RAW_MAX - A4_MOD_DEPTH_ZERO) / A4_MOD_DEPTH_UNITS_PER_DISPLAY
-            )
-            step = str(1 / A4_MOD_DEPTH_UNITS_PER_DISPLAY)
+            minimum = str(decode_a4_mod_depth(0))
+            maximum = str(decode_a4_mod_depth(A4_FIXED_8_8_RAW_MAX))
+            step = str(decode_a4_mod_depth(1) - decode_a4_mod_depth(0))
             locations = (offset, A4_TRACK_OFFSETS[A4_MOD_DEPTH_FIELDS[field]])
             authority = "typed_codec_display_domain"
         elif field.endswith("_tune"):
             encoding = "centered_pitch_word"
-            minimum = str(-A4_PITCH_ZERO / A4_PITCH_UNITS_PER_SEMITONE)
-            maximum = str((A4_FIXED_8_8_RAW_MAX - A4_PITCH_ZERO) / A4_PITCH_UNITS_PER_SEMITONE)
-            step = str(1 / A4_PITCH_UNITS_PER_SEMITONE)
+            minimum = str(decode_a4_pitch_semitones(0))
+            maximum = str(decode_a4_pitch_semitones(A4_FIXED_8_8_RAW_MAX))
+            step = str(decode_a4_pitch_semitones(1) - decode_a4_pitch_semitones(0))
             locations = (offset, offset + 1)
             authority = "native_semitones; recipe_requires_coupled_TUN_FIN"
         elif field.endswith("_fine"):
@@ -285,7 +491,7 @@ def _midi_rows() -> tuple[DeviceSupportRow, ...]:
                 "not_inferred_from_MIDI_catalog",
                 send,
                 (
-                    "exact_applied_delta_only; manual_source_reload_for_next_candidate"
+                    "manual_saved_kit_reload_and_fresh_capture; local_history_only"
                     if send == "conditional_guarded_cc7"
                     else "manual_only"
                 ),
@@ -338,7 +544,7 @@ def _a4_midi_catalog() -> tuple[AnalogFourCcMapping, ...]:
     return tuple({**ANALOG_FOUR_MANUAL_CC, **ANALOG_FOUR_SYNTH_TRACK_NRPN}.values())
 
 
-def build_device_support_inventory() -> dict[str, object]:
+def build_device_support_inventory() -> DeviceSupportInventory:
     """Build canonical, deterministic evidence without file/device access."""
 
     rows = _a4_native_rows() + _rytm_native_rows() + _midi_rows()
@@ -350,8 +556,8 @@ def build_device_support_inventory() -> dict[str, object]:
         "interpretation": "Catalog rows, native locations and software tests do not grant physical readiness. Domains are labelled by authority; native/MIDI tables are not conversion tables.",
         "counts": inventory_counts(),
         "midi_addresses": {
-            "a4": [asdict(mapping) for mapping in _a4_midi_catalog()],
-            "rytm": [asdict(mapping) for mapping in ANALOG_RYTM_MANUAL_CC.values()],
+            "a4": [_a4_address_payload(mapping) for mapping in _a4_midi_catalog()],
+            "rytm": [_rytm_address_payload(mapping) for mapping in ANALOG_RYTM_MANUAL_CC.values()],
         },
         "rytm_machine_compatibility": [
             {
@@ -372,7 +578,7 @@ def build_device_support_inventory() -> dict[str, object]:
             for key, profile in RYTM_MACHINE_PROFILES_BY_KEY.items()
             if profile.machine_value not in RYTM_MACHINE_PARAMETER_NAMES
         ],
-        "parameters": [asdict(row) for row in ordered],
+        "parameters": [_parameter_payload(row) for row in ordered],
         "a4_field_calibrations": [
             {
                 "parameter": field.parameter,
@@ -382,9 +588,9 @@ def build_device_support_inventory() -> dict[str, object]:
                 "native_width": field.native_width,
                 "native_scale": field.native_scale,
                 "display_bounds": [field.screen_min, field.screen_max],
-                "captures": [asdict(item) for item in field.evidence],
+                "captures": [_capture_payload(item) for item in field.evidence],
                 "write_validations": [
-                    asdict(item)
+                    _write_payload(item)
                     for item in ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS.get(field.parameter, ())
                 ],
             }
@@ -410,7 +616,7 @@ def format_device_support_inventory() -> list[str]:
             "Native field domains, MIDI addresses, machine compatibility and exact blockers: use --json.",
             "Rytm: targeted guarded CC7 only when scope, locks, source and complete plan pass.",
             "A4: typed offline recipes; Cockpit live audition and BOTH output remain blocked.",
-            "Recovery: precise applied Rytm delta only; hardware save/reload remains manual.",
+            "Recovery: manual saved-KIT reload and fresh capture; local UNDO does not restore hardware.",
             "Unsupported/protected categories:",
             *[
                 f"- {device}/{category}: {kind}; {reason}"
@@ -424,7 +630,7 @@ def format_device_support_inventory() -> list[str]:
     )
 
 
-def inventory_counts() -> dict[str, int]:
+def inventory_counts() -> DeviceSupportCounts:
     """Summarize dimensions without expanding runtime readiness claims."""
 
     return {

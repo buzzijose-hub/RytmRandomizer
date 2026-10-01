@@ -1,7 +1,10 @@
 /**
- * E2E: PREPARE refuses the mock source's unverified paired controls.
+ * E2E: confirmed CC7 SEND and whole-plan paired-control refusal.
  *
- *   PREPARE → visible whole-plan refusal → no SEND
+ * The always-running positive journey uses production WS handlers and the
+ * ArmedApply seam, with a test-only in-memory output and a CC7-only snapshot.
+ * No fake-port switch exists in the shipped sidecar, and this is software
+ * contract evidence, not MIDI transmission or physical hardware validation.
  *
  * ## Why this spec has to exist
  *
@@ -42,8 +45,11 @@
  * host. See the PR body for the current CI status of the armed lane.
  */
 
-import { test, expect } from './fixtures/wizard_fixture';
+import { test, expect, primeToken, resolveRepoRoot } from './fixtures/wizard_fixture';
 import type { Page } from '@playwright/test';
+import type { CockpitSendPlan } from '../src/ws/protocol';
+import { readFileSync } from 'node:fs';
+import * as path from 'node:path';
 
 /** How long to let the sidecar's connection poll publish its first enumeration. */
 const ENUMERATION_TIMEOUT_MS = 8_000;
@@ -105,6 +111,69 @@ async function prepareSendPlan(page: Page): Promise<void> {
 }
 
 test.describe('armed SEND journey (I2)', () => {
+  test('confirmed CC7 SEND reaches the real sidecar seam and disarms (memory output only)', async ({
+    page,
+    sidecarControl,
+  }) => {
+    const root = resolveRepoRoot();
+    await sidecarControl.start({
+      entrypoint: path.join(root, 'desktop/web/e2e/fixtures/send_contract_sidecar.py'),
+      env: { PYTHONPATH: [root, path.join(root, 'tests')].join(path.delimiter) },
+      onToken: (token) => primeToken(page, token),
+    });
+    const readReceipt = (): { simulated_packets: number[][]; closed: number } =>
+      JSON.parse(readFileSync(path.join(sidecarControl.tmpRoot, 'send-contract-receipt.json'), 'utf8'));
+    const sent: Array<{ request_id: string; command: { type: string; confirm?: boolean; send_plan_id?: string } }> = [];
+    const accepted: Array<{ request_id: string; ok?: boolean; send_plan_id?: string }> = [];
+    const plans: CockpitSendPlan[] = [];
+    page.on('websocket', (socket) => {
+      socket.on('framesent', ({ payload }) => {
+        const frame = JSON.parse(String(payload));
+        if (frame.command?.type === 'send') sent.push(frame);
+      });
+      socket.on('framereceived', ({ payload }) => {
+        const frame = JSON.parse(String(payload));
+        if (frame.request_id) accepted.push(frame);
+        if (frame.type === 'send_plan_changed' && frame.send_plan) plans.push(frame.send_plan);
+      });
+    });
+    await page.goto('/');
+    await expect(page.getByTestId('disarm-button')).toBeVisible();
+    await selectFirstProfile(page);
+    await enablePreview(page);
+    const prepare = page.getByTestId('action-prepare-send-plan');
+    await expect(prepare).toBeEnabled();
+    await prepare.click();
+    const send = page.getByTestId('action-send');
+    await expect(send).toBeEnabled();
+    await send.click();
+    await expect(page.getByTestId('send-confirm-dialog')).toBeVisible();
+    await expect(page.getByTestId('send-confirm-dialog')).toContainText('TEST_ONLY_CC7_RECORDER');
+    expect(sent).toEqual([]);
+    expect(readReceipt()).toEqual({ simulated_packets: [], closed: 0 });
+    const plan = plans.at(-1)!;
+    expect(plan.ready).toBe(true);
+    expect(plan.packets.length).toBeGreaterThan(0);
+    await page.getByTestId('send-confirm-button').click();
+    await expect.poll(() => sent.length).toBe(1);
+    const request = sent[0]!;
+    expect(request.command.confirm).toBe(true);
+    expect(request.command.send_plan_id).toBe(plan.plan_id);
+    await expect.poll(() => accepted.find((frame) => frame.request_id === request.request_id)).toMatchObject({
+      ok: true,
+      send_plan_id: request.command.send_plan_id,
+    });
+    await expect.poll(() => readReceipt().simulated_packets.length).toBeGreaterThan(0);
+    expect(readReceipt().simulated_packets).toEqual(
+      plan.packets.map(({ channel, control, value }) => [channel, control, value]),
+    );
+    await expect(page.getByTestId('send-confirm-dialog')).toHaveCount(0);
+    await expect(send).toBeDisabled();
+    await page.getByTestId('disarm-button').click();
+    await expect(page.getByTestId('arm-open-button')).toBeVisible();
+    await expect.poll(() => readReceipt().closed).toBe(1);
+  });
+
   test('unarmed paired-control plan stays visible and refuses the whole send', async ({
     page,
     sidecar,

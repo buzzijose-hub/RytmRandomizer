@@ -2945,7 +2945,7 @@ describe('PerformanceConsole', () => {
     );
   });
 
-  it('reports invalid local rehearsal imports and ignores malformed imported rows safely', () => {
+  it('reports invalid JSON and unsupported local rehearsal versions safely', () => {
     render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
 
     fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
@@ -2980,61 +2980,80 @@ describe('PerformanceConsole', () => {
     expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
       'Import failed: unsupported local rehearsal package',
     );
+  });
 
-    const validPackageShell = {
-      kind: 'rytmrandomizer.cockpit.local-rehearsal-package',
+  const validPackageShell = {
+    kind: 'rytmrandomizer.cockpit.local-rehearsal-package',
+    version: 1,
+    manifest: {
+      sessionLabel: 'Import failure shell',
+      packetSource: 'test',
+      selectedCrateName: 'None',
+      selectedMoveName: 'None',
+      selectedSnapshotId: 'None',
+      queuedStepCount: 0,
+      currentStepId: null,
+      journalTakeCount: 0,
+      hardwareMode: 'passive',
+    },
+    compatibility: {
+      status: 'compatible',
+      checks: [],
+    },
+    safety: {
+      devices: [],
+      checklist: [],
+    },
+    blockedActions: [],
+    recoveryNotes: [],
+    rehearsal: {
       version: 1,
-      manifest: {
-        sessionLabel: 'Import failure shell',
-        packetSource: 'test',
-        selectedCrateName: 'None',
-        selectedMoveName: 'None',
-        selectedSnapshotId: 'None',
-        queuedStepCount: 0,
-        currentStepId: null,
-        journalTakeCount: 0,
-        hardwareMode: 'passive',
-      },
-      compatibility: {
-        status: 'compatible',
-        checks: [],
-      },
-      safety: {
-        devices: [],
-        checklist: [],
-      },
-      blockedActions: [],
-      recoveryNotes: [],
-      rehearsal: {
-        version: 1,
-      },
-    };
+    },
+  };
 
-    for (const malformedPackage of [
-      { ...validPackageShell, manifest: null },
-      {
+  it.each([
+    { case: 'missing manifest', payload: { ...validPackageShell, manifest: null } },
+    {
+      case: 'invalid session label',
+      payload: {
         ...validPackageShell,
         manifest: { ...validPackageShell.manifest, sessionLabel: null },
       },
-      {
+    },
+    {
+      case: 'invalid selected move',
+      payload: {
         ...validPackageShell,
         manifest: { ...validPackageShell.manifest, selectedMoveName: null },
       },
-      { ...validPackageShell, compatibility: null },
-      { ...validPackageShell, compatibility: { checks: [] } },
-      { ...validPackageShell, safety: null },
-      { ...validPackageShell, rehearsal: { version: 99 } },
-    ]) {
-      fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
-        target: { value: JSON.stringify(malformedPackage) },
-      });
-      fireEvent.click(screen.getByRole('button', { name: /import local rehearsal package/i }));
+    },
+    {
+      case: 'missing compatibility',
+      payload: { ...validPackageShell, compatibility: null },
+    },
+    {
+      case: 'incomplete compatibility',
+      payload: { ...validPackageShell, compatibility: { checks: [] } },
+    },
+    { case: 'missing safety', payload: { ...validPackageShell, safety: null } },
+    {
+      case: 'unsupported rehearsal version',
+      payload: { ...validPackageShell, rehearsal: { version: 99 } },
+    },
+  ])('rejects local rehearsal packages with $case', ({ payload }) => {
+    render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
+    fireEvent.change(screen.getByTestId('performance-console-local-import-input'), {
+      target: { value: JSON.stringify(payload) },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /import local rehearsal package/i }));
 
-      expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
-        'Import failed: unsupported local rehearsal package',
-      );
-    }
+    expect(screen.getByTestId('performance-console-local-persistence-summary')).toHaveTextContent(
+      'Import failed: unsupported local rehearsal package',
+    );
+  });
 
+  it('ignores malformed optional metadata and invalid local rehearsal rows safely', () => {
+    render(<PerformanceConsole model={performanceConsoleModelWithSelectableHistory()} />);
     const packageWithMalformedOptionalMetadata = {
       ...validPackageShell,
       auditionSource: {

@@ -9,7 +9,7 @@ Coverage counts (locations/catalog rows, not physical acceptance):
 Native field domains, MIDI addresses, machine compatibility and exact blockers: use --json.
 Rytm: targeted guarded CC7 only when scope, locks, source and complete plan pass.
 A4: typed offline recipes; Cockpit live audition and BOTH output remain blocked.
-Recovery: precise applied Rytm delta only; hardware save/reload remains manual.
+Recovery: manual saved-KIT reload and fresh capture; local UNDO does not restore hardware.
 Unsupported/protected categories:
 - both/unknown_reserved_bytes: intentional_protection; Preserved byte-for-byte; no semantic mutation authority.
 - both/patterns_songs_chains_projects: outside_kit_workflow; Kit capture/mutation is not pattern or project editing.

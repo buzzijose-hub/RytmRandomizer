@@ -18,15 +18,23 @@ touchscreen UI and Pi packaging groundwork; non-simulation appliance APPLY and
 deployment remain held for their own evidence. PR #248 is merged in current
 integration head `892aaffc`; older results below are historical receipts, not
 verification of this new handoff revision. Final Windows software verification:
-9,794 Python tests passed, five skipped; combined coverage 99.65%, with every
+9,795 Python tests passed, five skipped; combined coverage 99.65%, with every
 touched production module at 100% line/branch coverage (pure branch 99.37%).
 The pre-push hook passed 860 architecture and 697 not-fast/parity tests,
-including all 685 frozen V1.34 cases. Frontend: 1,045 tests
-passed at 100% measured coverage; browser: 32 passed, two skipped with disabled
+including all 685 frozen V1.34 cases. Frontend: 1,053 tests
+passed at 100% measured coverage; browser: 33 passed, two skipped with disabled
 MIDI. Lint, strict touched-module typing, dead-code checks and the production
 web build passed. New-head CI and maintainer review remain required. The local
 cache uses Python 3.12.14, Pyright 1.1.407 and Vite 8.0.14; clean CI must verify
 the pinned toolchain. Physical observations remain blank.
+
+Review followup strengthens typed inventory schemas, reuses canonical A4
+converters, and clarifies manual hardware recovery. Cancelled capture records
+structured RED/error telemetry. A test-only in-memory browser harness verifies
+the exact positive confirmation/send contract without enabling any shipped
+fake-port switch or granting hardware evidence. An intermittent CI
+malformed-import timeout is addressed by splitting independent test cases,
+without increasing timeouts, retries or skips.
 
 Show Kit Forge merged through PR #238 on September 8 as one
 versioned, paired Analog Rytm/Analog Four preparation workflow. It keeps
