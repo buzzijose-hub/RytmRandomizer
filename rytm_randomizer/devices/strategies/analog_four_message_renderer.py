@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...mock_midi import MidiMessage, build_cc_message
+from ...mock_midi import MidiMessage
 from .analog_four_mutation_planner import AnalogFourMutationPlan, AnalogFourPlanEvent
 from .analog_four_track_domain import AnalogFourTrackDomain
 
@@ -18,17 +18,14 @@ class AnalogFourMessageRenderer:
 
         evt = _require_event(event)
         a4_plan = _require_plan(plan)
-        channel, control, value = self.to_cc_triple(evt, a4_plan)
-        return build_cc_message(
-            channel=channel,
-            control=control,
-            value=value,
-            metadata={
-                "device_id": "analog_four_mk2",
-                "track": evt.track,
-                "parameter": evt.parameter,
-                "snapshot_slot": a4_plan.snapshot.slot,
-            },
+        return self.track_domain.cc_message(
+            track=evt.track,
+            parameter=evt.parameter,
+            control=evt.control,
+            value=evt.value,
+            device_id="analog_four_mk2",
+            snapshot_slot=a4_plan.snapshot.slot,
+            context="AnalogFourMessageRenderer.to_cc_triple",
         )
 
     def to_cc_triple(self, event: object, plan: object) -> tuple[int, int, int]:
@@ -36,16 +33,12 @@ class AnalogFourMessageRenderer:
 
         evt = _require_event(event)
         _require_plan(plan)
-        self.track_domain.require_track(
-            evt.track,
+        return self.track_domain.cc_triple(
+            track=evt.track,
+            control=evt.control,
+            value=evt.value,
             context="AnalogFourMessageRenderer.to_cc_triple",
         )
-        if evt.control < 0 or evt.control > 127:
-            raise ValueError("AnalogFourMessageRenderer.to_cc_triple: control must be in [0, 127]")
-        if evt.value < 0 or evt.value > 127:
-            raise ValueError("AnalogFourMessageRenderer.to_cc_triple: value must be in [0, 127]")
-
-        return (evt.track - 1, evt.control, evt.value)
 
 
 def _require_event(event: object) -> AnalogFourPlanEvent:

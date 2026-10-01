@@ -5,6 +5,11 @@ one-based range bounded by the machine's own track count, itself bounded by
 the 16 addressable MIDI channels. That logic is not device knowledge, so it
 lives here once rather than being re-typed per family.
 
+Rendering one plan event into a CC is equally family-neutral -- one-based
+track to zero-based channel, 7-bit control and value -- so
+:meth:`ElektronTrackDomain.cc_triple` and :meth:`ElektronTrackDomain.cc_message`
+are the single implementation every family's message renderer calls.
+
 Per-family aliases (``AnalogFourTrackDomain``, ``DigitaktTrackDomain``) stay
 in their own modules so call sites and error messages keep naming the
 machine they are about; they are thin aliases of :class:`ElektronTrackDomain`,
@@ -15,6 +20,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Final
+
+from ...mock_midi import MidiMessage, build_cc_message
 
 #: Number of addressable MIDI channels. A hard protocol ceiling, not an
 #: attribute of any one Elektron machine -- which is why it is defined here
@@ -49,6 +56,50 @@ class ElektronTrackDomain:
         if type(track) is not int or track not in self.track_ids:
             raise ValueError(f"{context}: track must be in [1, {self.track_count}], got {track!r}")
         return track
+
+    def cc_triple(
+        self, *, track: int, control: int, value: int, context: str
+    ) -> tuple[int, int, int]:
+        """Return the zero-based ``(channel, control, value)`` for one track change.
+
+        The track must belong to this domain and the control and value must be
+        7-bit; ``context`` names the caller in every error.
+        """
+
+        self.require_track(track, context=context)
+        if control < 0 or control > 127:
+            raise ValueError(f"{context}: control must be in [0, 127]")
+        if value < 0 or value > 127:
+            raise ValueError(f"{context}: value must be in [0, 127]")
+        return (track - 1, control, value)
+
+    def cc_message(
+        self,
+        *,
+        track: int,
+        parameter: str,
+        control: int,
+        value: int,
+        device_id: str,
+        snapshot_slot: int,
+        context: str,
+    ) -> MidiMessage:
+        """Return the inert mock CC message for one validated track change."""
+
+        channel, checked_control, checked_value = self.cc_triple(
+            track=track, control=control, value=value, context=context
+        )
+        return build_cc_message(
+            channel=channel,
+            control=checked_control,
+            value=checked_value,
+            metadata={
+                "device_id": device_id,
+                "track": track,
+                "parameter": parameter,
+                "snapshot_slot": snapshot_slot,
+            },
+        )
 
 
 __all__ = ["MAX_MIDI_TRACK_COUNT", "ElektronTrackDomain"]

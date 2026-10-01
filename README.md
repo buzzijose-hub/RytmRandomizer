@@ -251,6 +251,7 @@ cockpit-export-rehearsal-report --profile-id X                        # passive 
 
 # Device + snapshot intelligence
 dual-machine-target-report rytm | a4 | both                           # safe target surface
+live-gui-device-inventory-report                                      # every registered device: tracks, channel, maker id
 rytm-snapshot-intelligence-report KITS.syx --slot N                   # one Rytm kit snapshot
 rytm-snapshot-mutation-preview-report KITS.syx --slot N --depth 2     # mock-only preview
 rytm-12-pad-machine-matrix-report                                     # pad/machine compatibility

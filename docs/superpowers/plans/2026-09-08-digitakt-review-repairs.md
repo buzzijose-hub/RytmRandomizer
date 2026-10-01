@@ -86,6 +86,108 @@ Rollback is a revert of this repair commit on PR #240. It changes neither
 persisted user state nor physical devices. Keep the Digitakt PR independent of
 the updater bundle and Forge PR; no stacked PR or automatic merge bypass.
 
+## September 28 – October 1 delta: reassessment and closeout
+
+The sections above cover the September 8 repair and the September 13 merge.
+This section covers everything added to #240 after them, as reviewed in
+jose's automated review at `bb81bca5` and the commits that followed it.
+
+### Scope added
+
+- **Operator inventory.** `live-gui-device-inventory-report` (registry-driven,
+  passive) and `test_every_device_reaches_operator_surfaces.py`, which fails
+  until every registered device appears with its track count in each census
+  surface. The Cockpit DeviceRail now shows passive cards for registered
+  devices without capture or live lanes.
+- **Hardware verification loop.** Steve's guide
+  (`docs/hardware-validation/2026-09-28-digitakt-verification-steve.md`,
+  Parts A–C) and `scripts/intake_digitakt_capture.py`, which validates real
+  captures with the registered decoder and files them with provenance.
+- **First real captures (#253, merged into this PR).** They corrected the MK1
+  family byte (`0x0C` guess, really `0x0A`), the intake's SysEx unwrapping,
+  and the dump menu (PATTERN, not KIT).
+- **Digitakt MK1 PATTERN codec.** It sits on the shared packed-payload
+  contract and is proven byte-exact on both captures. Writing 127 into the
+  low capture and re-encoding reproduces the high capture exactly. It promotes
+  one fact, the location of track 1 filter frequency; encoding, stride, every
+  other parameter and all Digitakt II facts stay unverified. Still no send path.
+- **Native end-to-end repairs (#251).**
+  - The `backend_restart` stale-token race (0/5 → 5/5 under a widened window).
+  - The update beacon panicking without a rustls provider; the regression test
+    fails on the exact CI panic when the fix is removed.
+  - Self-describing wait timeouts and an app error boundary.
+- **jose's review fixes.**
+  - The crash screen no longer claims nothing was sent.
+  - Intake files exactly the bytes it validated.
+  - Redaction covers paths with spaces.
+  - The opt-in mutation guard runs one bounded, non-recursive, exit-checked
+    child.
+  - A4 and Digitakt share one CC-rendering implementation.
+  - NRPN facts are re-exported.
+  - Docs and environment controls are completed.
+
+### Maintainability reassessment (Gate 14)
+
+- **Growth stays thin.** The codec owns only Digitakt facts. Packing, checksum
+  and length live once in `snapshot/elektron_packed_payload.py`, and CC
+  rendering lives once in `ElektronTrackDomain`. A4 and Digitakt renderers now
+  hold only their type checks and error wording.
+- **The one shared-contract widening is opt-in.** Low-14-bit length wrapping
+  (`length_field_wraps=True`) is used only by the size-pinned Digitakt codec.
+  Every other caller keeps refusing bodies longer than 16383 bytes, and a test
+  pins that.
+- **Removed:** the synthetic Digitakt "candidate" format. Its `0x07` type byte
+  is the Analog Rytm's family byte, so a Rytm dump decoded as a Digitakt.
+- **Known debt, not addressed here.**
+  - `digitakt_saved_kit_layout.py` keeps its name, although the dump is a
+    PATTERN containing the kit.
+  - Digitakt II has no verified layout.
+  - Each Digitakt "fine byte" question waits on Part C.
+
+### Learning and replay (Gate 15)
+
+1. **Placeholder formats must not reuse real protocol values.** A synthetic
+   type byte that equals another device's family byte is a cross-device
+   decode bug waiting to happen.
+2. **One real capture outranks every guess.** The family byte, the menu name
+   and the intake framing were all wrong, and none could have been found
+   without hardware.
+3. **A script with no tests can be wrong on every real input.** The intake
+   rejected every real capture until it was tested against the real framed
+   files.
+4. **Make timeouts describe the page and process.** The first failure after
+   the diagnostics landed named the beacon panic directly.
+5. **Prove a guard catches the bug.** Run each new test against a reverted
+   fix; this delta's intake, codec, redaction and beacon tests all fail on
+   the old code.
+
+**Replay for the next device field.**
+1. Add a matched capture step to the verifier guide.
+2. File the captures with the intake script.
+3. Pin the byte diff and a byte-exact re-encode in a codec test.
+4. Only then add the data fact.
+
+The existing `targeted-live-kit-mutation` skill and
+`.claude/rules/targeted-mutation-safety.md` #6 remain the authority; no new
+skill is introduced.
+
+### Verification at this delta (local, macOS, Python 3.11)
+
+- Backend: 9,978 passed, 3 skipped.
+- Gate 1: 46 touched production files at 100% lines and branches.
+- Strict Pyright: 47 touched modules, 0 errors.
+- Ruff, Black and isort pass. Architecture: 888 passed, 1 skipped.
+- Frontend: 1,044 passed in 74 files, with coverage thresholds met; `tsc`
+  and ESLint pass.
+- Rust (unchanged since `bb81bca5`): 191 tests on 1.88 `--locked`, clippy
+  and fmt clean.
+- The opt-in `RYTM_TEST_MUTATION_CHECK=1` guard ran once: passed in 55
+  seconds, no recursion.
+- Hosted CI for this head is reported on the PR, not asserted here.
+
+Gate 9's narrow `cockpit/data/stage.py` identity exemption, listed below,
+still needs explicit owner approval. Nothing in this delta supplies it.
+
 ## Plan-requirements conformance
 
 - [ ] Gate 1 — Root must verify 100% branch coverage on touched production files.
@@ -100,7 +202,7 @@ the updater bundle and Forge PR; no stacked PR or automatic merge bypass.
 - [x] Gate 10 — No new string-based production dispatch is introduced.
 - [x] Gate 11 — Existing local candidate fixtures are reused; manual fact expectations remain independent.
 - [x] Gate 12 — Immutable dataclasses, MappingProxyType, and Final facts are retained.
-- [x] Gate 13 — N/A: no environment variable is added.
+- [x] Gate 13 — September 8 repair added none; the later delta's `RYTM_AL16_MANIFEST_REFRESH` and `RYTM_TEST_MUTATION_CHECK` are documented in CONTRIBUTING and `docs/LOCAL_DEV_TOOLING_NOTES.md`.
 - [x] Gate 14 — Review dimensions and confirmed findings drive this bounded repair.
 - [x] Gate 15 — Learning: a generation's MIDI table and synthetic dump layout must be verified independently; shared names do not prove identical assignments.
 - [x] Gate 16 — Isolated worktree ownership; root serializes resource-heavy jobs and final integration.

@@ -341,3 +341,27 @@ def test_part_c_counts_raw_bytes_for_a_generation_without_a_verified_layout() ->
     longer = framed(b"\x01\x02\x03")
     # Different lengths: report the longer file's size rather than a misleading count.
     assert intake._changed_bytes(framed(b"\x01"), longer, "digitakt_ii") == len(longer)
+
+
+def test_intake_files_the_bytes_it_validated_even_if_the_source_changes(
+    fixture_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Jose's #240 review probe: swap a capture between validation and copy."""
+
+    low = tmp_path / "low.syx"
+    low.write_bytes(_LOW.read_bytes())
+    validate = intake.validate_capture
+
+    def validate_then_replace(path: Path, device_id: str) -> bytes:
+        raw = validate(path, device_id)
+        if path == low:
+            path.write_bytes(b"\xf0garbage\xf7")
+        return raw
+
+    monkeypatch.setattr(intake, "validate_capture", validate_then_replace)
+    assert intake.main(_args(low, _HIGH)) == 0
+
+    filed = (fixture_dir / "digitakt_mk1_kit_filter_low.syx").read_bytes()
+    assert filed == _LOW.read_bytes()
+    note = (fixture_dir / "README.md").read_text(encoding="utf-8")
+    assert hashlib.sha256(filed).hexdigest() in note

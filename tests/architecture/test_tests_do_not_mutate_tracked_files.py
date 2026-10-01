@@ -39,6 +39,7 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 from typing import Final
 
@@ -48,6 +49,12 @@ pytestmark = pytest.mark.fast
 
 PROJECT_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 TESTS_ROOT: Final[Path] = PROJECT_ROOT / "tests"
+
+#: Bounds for the opt-in whole-suite child run: fixed workers rather than the
+#: inherited ``-n auto``, and a wall-clock ceiling so a hang fails instead of
+#: stalling the parent forever.
+_CHILD_WORKERS: Final[str] = "4"
+_CHILD_TIMEOUT_SECONDS: Final[int] = 1800
 
 #: Committed-artifact directories a test might be tempted to rewrite
 #: (``output/``, ``specs/``, ``docs/``). Fixture directories are deliberately
@@ -148,14 +155,33 @@ def test_running_the_suite_leaves_tracked_files_unchanged() -> None:
         # present in both snapshots and cancels out.
         return {entry[3:] for entry in entries}
 
+    # The child must not re-enable this test (it would run the suite again,
+    # recursively), must use this interpreter rather than whatever "python"
+    # is on PATH, and must actually pass: a child that crashed early wrote
+    # nothing and would otherwise make the guard look green.
+    child_env = {key: value for key, value in os.environ.items() if key != _ENV_FLAG}
     before = tracked_dirty()
-    subprocess.run(
-        ["python", "-m", "pytest", "-q", "-x", "--no-header"],
+    child = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "--no-header",
+            "-p",
+            "no:cacheprovider",
+            "-n",
+            _CHILD_WORKERS,
+        ],
         cwd=PROJECT_ROOT,
+        env=child_env,
         capture_output=True,
         check=False,
+        timeout=_CHILD_TIMEOUT_SECONDS,
     )
     after = tracked_dirty()
+    tail = child.stdout.decode("utf-8", "replace").strip().splitlines()[-1:]
+    assert child.returncode == 0, f"child suite run failed ({child.returncode}): {tail}"
 
     newly_dirty = sorted(after - before)
     assert not newly_dirty, (

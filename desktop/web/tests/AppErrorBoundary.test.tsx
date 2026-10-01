@@ -36,7 +36,9 @@ describe('AppErrorBoundary', () => {
     expect(screen.getByTestId('app-render-error-message')).toHaveTextContent(
       'device_inventory is undefined',
     );
-    expect(screen.getByText(/Nothing was sent to your hardware/)).toBeInTheDocument();
+    // A crash cannot prove that nothing was sent: it may follow an armed send.
+    expect(screen.getByText(/outcome is unknown from here: check your instrument/)).toBeInTheDocument();
+    expect(screen.queryByText(/Nothing was sent/)).toBeNull();
   });
 
   it('handles a non-Error throw and an empty message', () => {

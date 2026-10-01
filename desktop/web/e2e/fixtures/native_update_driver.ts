@@ -23,11 +23,16 @@ const pageErrors: string[] = [];
 /**
  * Strip absolute paths before anything reaches CI logs. The shell forwards
  * `detail` verbatim, and an error message can carry a local file path.
+ *
+ * A path runs to the next quote or line end, not the next space: user and
+ * folder names contain spaces (`C:\Users\First Last\...`), and stopping at
+ * whitespace leaked everything after the first one. Over-redacting trailing
+ * text on the same line is the safe direction for a log boundary.
  */
 export function redact(text: string): string {
   return text
-    .replace(/[A-Za-z]:\\[^\s'"]+/g, '<path>')
-    .replace(/\/(?:Users|home|private|tmp|var)\/[^\s'"]*/g, '<path>')
+    .replace(/[A-Za-z]:[\\/][^'"\r\n]*/g, '<path>')
+    .replace(/\/(?:Users|home|private|tmp|var)\/[^'"\r\n]*/g, '<path>')
     .slice(0, 160);
 }
 

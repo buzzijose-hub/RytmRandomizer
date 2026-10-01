@@ -46,7 +46,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import shutil
 import sys
 from datetime import date
 from pathlib import Path
@@ -83,12 +82,10 @@ def _fail(message: str) -> None:
     raise SystemExit(1)
 
 
-def sha256_of(path: Path) -> str:
-    """Return the SHA256 of ``path`` as lowercase hex."""
+def sha256_of(data: bytes) -> str:
+    """Return the SHA256 of ``data`` as lowercase hex."""
 
-    digest = hashlib.sha256()
-    digest.update(path.read_bytes())
-    return digest.hexdigest()
+    return hashlib.sha256(data).hexdigest()
 
 
 def validate_capture(path: Path, device_id: str) -> bytes:
@@ -263,8 +260,10 @@ def main(argv: list[str] | None = None) -> int:
     # actually matters.
     checked: list[tuple[Path, str, str, bytes, str]] = []
     for source, target_name, description in sources:
+        # One read per file: the bytes that pass validation are the bytes that
+        # get hashed and filed, even if the source changes afterwards.
         raw = validate_capture(source, args.device)
-        checked.append((source, target_name, description, raw, sha256_of(source)))
+        checked.append((source, target_name, description, raw, sha256_of(raw)))
 
     for previous, current in zip(checked, checked[1:]):
         if previous[4] == current[4]:
@@ -276,8 +275,8 @@ def main(argv: list[str] | None = None) -> int:
 
     entries: list[tuple[str, str, str]] = []
     target_dir.mkdir(parents=True, exist_ok=True)
-    for source, target_name, description, raw, digest in checked:
-        shutil.copyfile(source, target_dir / target_name)
+    for _source, target_name, description, raw, digest in checked:
+        (target_dir / target_name).write_bytes(raw)
         entries.append((target_name, description, digest))
         print(f"ok  {target_name}  {len(raw):,} bytes  sha256={digest[:16]}...")
 

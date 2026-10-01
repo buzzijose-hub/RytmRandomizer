@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import TypeVar
 
-from ...mock_midi import MidiMessage, build_cc_message
+from ...mock_midi import MidiMessage
 from .digitakt_mutation_planner import DigitaktMutationPlan, DigitaktPlanEvent
 from .digitakt_track_domain import DigitaktTrackDomain
 
@@ -44,17 +44,14 @@ class DigitaktMessageRenderer:
 
         evt = _narrowed(event, DigitaktPlanEvent, context="DigitaktMessageRenderer")
         dt_plan = _narrowed(plan, DigitaktMutationPlan, context="DigitaktMessageRenderer")
-        channel, control, value = self.to_cc_triple(evt, dt_plan)
-        return build_cc_message(
-            channel=channel,
-            control=control,
-            value=value,
-            metadata={
-                "device_id": self.device_id,
-                "track": evt.track,
-                "parameter": evt.parameter,
-                "snapshot_slot": dt_plan.snapshot.slot,
-            },
+        return self.track_domain.cc_message(
+            track=evt.track,
+            parameter=evt.parameter,
+            control=evt.control,
+            value=evt.value,
+            device_id=self.device_id,
+            snapshot_slot=dt_plan.snapshot.slot,
+            context="DigitaktMessageRenderer.to_cc_triple",
         )
 
     def to_cc_triple(self, event: object, plan: object) -> tuple[int, int, int]:
@@ -62,16 +59,12 @@ class DigitaktMessageRenderer:
 
         evt = _narrowed(event, DigitaktPlanEvent, context="DigitaktMessageRenderer")
         _narrowed(plan, DigitaktMutationPlan, context="DigitaktMessageRenderer")
-        self.track_domain.require_track(
-            evt.track,
+        return self.track_domain.cc_triple(
+            track=evt.track,
+            control=evt.control,
+            value=evt.value,
             context="DigitaktMessageRenderer.to_cc_triple",
         )
-        if evt.control < 0 or evt.control > 127:
-            raise ValueError("DigitaktMessageRenderer.to_cc_triple: control must be in [0, 127]")
-        if evt.value < 0 or evt.value > 127:
-            raise ValueError("DigitaktMessageRenderer.to_cc_triple: value must be in [0, 127]")
-
-        return (evt.track - 1, evt.control, evt.value)
 
 
 __all__ = ["DigitaktMessageRenderer"]

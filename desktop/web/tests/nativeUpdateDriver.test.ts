@@ -70,6 +70,14 @@ describe('native acceptance timeout evidence (#251)', () => {
     expect(redact('y'.repeat(400))).toHaveLength(160);
   });
 
+  it('redacts whole paths whose folder names contain spaces', () => {
+    expect(redact('failed at C:\\Users\\First Last\\private\\take.syx')).toBe('failed at <path>');
+    expect(redact('failed at C:/Users/First Last/private/take.syx')).toBe('failed at <path>');
+    expect(redact('bad import /Users/First Last/Rytm Randomizer/x.ts')).toBe('bad import <path>');
+    expect(redact('{"file":"/home/first last/x.syx","ok":false}')).toBe('{"file":"<path>","ok":false}');
+    expect(redact('line one /tmp/a b\nline two')).toBe('line one <path>\nline two');
+  });
+
   it('says React never mounted when #root is empty', () => {
     document.body.innerHTML = '<div id="root"></div>';
     const state = JSON.parse(describePage());

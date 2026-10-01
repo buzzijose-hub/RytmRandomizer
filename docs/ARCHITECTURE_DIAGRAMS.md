@@ -449,6 +449,14 @@ classDiagram
         +hardware_send_validated = false
     }
 
+    class DigitaktDevice {
+        +device_id = "digitakt_mk1" | "digitakt_ii"
+        +track_count = 8 | 16
+        +default_midi_channel = 0
+        +decode_snapshot() delegates: MK1 PATTERN codec or unverified intake
+        +plan_mutation() zero-event, ready = false
+    }
+
     class AnalogRytmDevice {
         +device_id = "analog_rytm_mk2"
         +display_name = "Elektron Analog Rytm MKII"
@@ -529,6 +537,8 @@ classDiagram
     AnalogFourDevice ..|> AnalogFourFilter1FrequencyCandidateCapability : optionally satisfies
     AnalogFourDevice --> A4Filter1CandidateStrategy : delegates offline render
     A4Filter1CandidateStrategy --> A4Filter1CandidateResult : local bytes only, no SEND
+    DigitaktDevice ..|> Device : structurally satisfies (passive, no send)
+    DigitaktDevice --> Registry : register_device() x2 at import time
     A4Filter1CandidateResolver --> Registry : resolves registered Analog Four
     A4Filter1CandidateResolver ..> AnalogFourFilter1FrequencyCandidateCapability : narrows structurally
 ```
@@ -985,7 +995,7 @@ flowchart TB
         Gate14["test_data_not_code<br/>(data vs code)"]
         Gate15["test_device_protocol_enforcement<br/>(NEW in PR #43)<br/>7 sub-tests for Device Protocol"]
         Gate16["test_no_device_identity_branching<br/>capability-based family dispatch"]
-        Gate17["test_tests_do_not_mutate_tracked_files<br/>isolated test outputs"]
+        Gate17["test_tests_do_not_mutate_tracked_files<br/>isolated test outputs<br/>test_every_device_reaches_operator_surfaces<br/>one device list for every census surface"]
         Gate18["test_tripwires_actually_fire<br/>negative controls for guards"]
         Gate19["test_version_single_source<br/>test_persisted_state_registry"]
         Gate20["test_cross_language_event_seams_agree<br/>test_workflow_script_invocations_resolve"]
@@ -1644,6 +1654,7 @@ flowchart TB
         LiveGuiDesktopViewModelModule["live_gui_desktop_view_model.py<br/>GUI desktop view-model packet<br/>+ registered CliCommand"]
         LiveGuiDesktopRenderContractModule["live_gui_desktop_render_contract.py<br/>GUI desktop render contract<br/>+ registered CliCommand"]
         LiveGuiDesktopRenderHarnessModule["live_gui_desktop_render_harness.py<br/>GUI desktop render harness<br/>+ registered CliCommand"]
+        LiveGuiDeviceInventoryModule["live_gui_device_inventory_model.py<br/>registry-driven device inventory<br/>+ registered CliCommand"]
     end
 
     subgraph Reports["Report builders (in __init__.py)"]
@@ -1719,6 +1730,7 @@ flowchart TB
         C50["style-performance-arc-live-gui-desktop-view-model-report"]
         C51["style-performance-arc-live-gui-desktop-render-contract-report"]
         C52["style-performance-arc-live-gui-desktop-render-harness-report"]
+        C53["live-gui-device-inventory-report"]
     end
 
     subgraph Fixtures["Golden-fixture CLI tests"]
@@ -1768,6 +1780,7 @@ flowchart TB
     Reports --> LiveGuiDesktopViewModelModule
     Reports --> LiveGuiDesktopRenderContractModule
     Reports --> LiveGuiDesktopRenderHarnessModule
+    Reports --> LiveGuiDeviceInventoryModule
     Formatter --> Init
     Reports --> Init
 

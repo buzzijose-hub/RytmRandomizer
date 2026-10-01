@@ -1593,7 +1593,12 @@ The rules above are mechanically enforced by:
 * `tests/architecture/test_no_device_identity_branching.py` (shared consumers
   dispatch through device capabilities rather than hard-coded family identities)
 * `tests/architecture/test_tests_do_not_mutate_tracked_files.py` (tests use
-  isolated temporary outputs rather than mutating tracked repository artifacts)
+  isolated temporary outputs rather than mutating tracked repository artifacts;
+  the opt-in `RYTM_TEST_MUTATION_CHECK=1` whole-suite check runs one bounded,
+  non-recursive child suite and requires it to pass)
+* `tests/architecture/test_every_device_reaches_operator_surfaces.py` (every
+  registered device appears, with its track count, in each operator census
+  surface: the device inventory model and the performance console model)
 * `tests/architecture/test_tripwires_actually_fire.py` (negative-control fixtures
   prove the architecture guards reject representative violations)
 * `tests/architecture/test_cockpit_runtime_dependencies.py` (cockpit GUI /

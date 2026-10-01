@@ -48,7 +48,10 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
     return (
       <main className="app-render-error" role="alert" data-testid="app-render-error">
         <h1>Something went wrong</h1>
-        <p>The cockpit hit an unexpected error and stopped drawing. Nothing was sent to your hardware.</p>
+        <p>
+          The cockpit hit an unexpected error and stopped drawing. If you had armed and sent a change, its
+          outcome is unknown from here: check your instrument before continuing.
+        </p>
         <pre data-testid="app-render-error-message">{this.state.message}</pre>
         <button type="button" onClick={reload}>
           Reload
