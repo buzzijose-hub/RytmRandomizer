@@ -185,8 +185,13 @@ skill is introduced.
   seconds, no recursion.
 - Hosted CI for this head is reported on the PR, not asserted here.
 
-Gate 9's narrow `cockpit/data/stage.py` identity exemption, listed below,
-still needs explicit owner approval. Nothing in this delta supplies it.
+Gate 9: the `cockpit/data/stage.py` identity exemption is **removed**, not
+approved. The owner chose to make the stage slot a device capability. Devices
+declare `stage_slot` (`devices/stage_slot.py`), and `stage.py` answers from a
+slot table instead of comparing device ids. The new
+`test_stage_slots_match_devices.py` keeps that table, the stage types and the
+frontend mirrors in step with the devices. `test_no_device_identity_branching`
+now exempts only `devices/`, and pins that.
 
 ## Plan-requirements conformance
 
@@ -198,7 +203,7 @@ still needs explicit owner approval. Nothing in this delta supplies it.
 - [x] Gate 6 — Explicit types and existing Device/Strategy contracts are retained.
 - [x] Gate 7 — Existing structured refusal log and metric are preserved.
 - [x] Gate 8 — New assertions use independent official facts and real refusal scenarios; no skip or blanket exclusion is added.
-- [ ] Gate 9 — Work stays in existing data/device/strategy/test locations, but the imported author change adds a narrow `cockpit/data/stage.py` exemption to `test_no_device_identity_branching`. Its closed stage-discriminator rationale is documented; explicit owner approval of this requested exception is still pending under the codex contribution guide. Passing architecture tests does not supply that approval.
+- [x] Gate 9 — Work stays in existing data/device/strategy/test locations. The `cockpit/data/stage.py` identity exemption imported with the September 13 merge was removed in favour of an optional `StageSlotCapability`; `test_no_device_identity_branching` exempts only `devices/`.
 - [x] Gate 10 — No new string-based production dispatch is introduced.
 - [x] Gate 11 — Existing local candidate fixtures are reused; manual fact expectations remain independent.
 - [x] Gate 12 — Immutable dataclasses, MappingProxyType, and Final facts are retained.

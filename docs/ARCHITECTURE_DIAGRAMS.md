@@ -412,6 +412,11 @@ classDiagram
         +send(message) None
     }
 
+    class StageSlotCapability {
+        <<Protocol @runtime_checkable>>
+        +stage_slot StageSlot
+    }
+
     class SavedKitCaptureCapability {
         <<Protocol @runtime_checkable>>
         +decode_saved_kit_capture(frame) SavedKitCaptureFrame
@@ -531,6 +536,8 @@ classDiagram
 
     Registry --> Device : holds Mapping[str, Device]
     SavedKitCaptureResolver --> Registry : resolves registered Device
+    AnalogRytmDevice ..|> StageSlotCapability : stage_slot = rytm
+    AnalogFourDevice ..|> StageSlotCapability : stage_slot = analog_four
     SavedKitCaptureResolver ..> SavedKitCaptureCapability : narrows structurally
     AnalogRytmDevice --> Registry : register_device() at import time
     AnalogFourDevice ..|> Device : structurally satisfies
@@ -995,7 +1002,7 @@ flowchart TB
         Gate14["test_data_not_code<br/>(data vs code)"]
         Gate15["test_device_protocol_enforcement<br/>(NEW in PR #43)<br/>7 sub-tests for Device Protocol"]
         Gate16["test_no_device_identity_branching<br/>capability-based family dispatch"]
-        Gate17["test_tests_do_not_mutate_tracked_files<br/>isolated test outputs<br/>test_every_device_reaches_operator_surfaces<br/>one device list for every census surface"]
+        Gate17["test_tests_do_not_mutate_tracked_files<br/>isolated test outputs<br/>test_every_device_reaches_operator_surfaces<br/>one device list for every census surface<br/>test_stage_slots_match_devices<br/>stage slots mirror device declarations"]
         Gate18["test_tripwires_actually_fire<br/>negative controls for guards"]
         Gate19["test_version_single_source<br/>test_persisted_state_registry"]
         Gate20["test_cross_language_event_seams_agree<br/>test_workflow_script_invocations_resolve"]

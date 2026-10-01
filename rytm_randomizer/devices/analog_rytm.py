@@ -19,6 +19,7 @@ from typing import Final, Protocol, runtime_checkable
 
 from ..mock_midi import MidiMessage
 from ..snapshot.mutation_scope import DEFAULT_MUTATION_SCOPE, MutationScope
+from ..snapshot.stage_slots import RYTM_STAGE_SLOT, StageSlot
 from . import registry
 from .base import Device
 from .saved_kit_capture import SavedKitCaptureFrame
@@ -106,6 +107,8 @@ class AnalogRytmDevice:
     track_count: int = _TRACK_COUNT
     sysex_manufacturer_id: bytes = _ELEKTRON_MFR_ID
     report_header: str = _REPORT_HEADER
+    #: Optional ``StageSlotCapability``: this device fills the stage's Rytm slot.
+    stage_slot: StageSlot = RYTM_STAGE_SLOT
     role_summary: str = _ROLE_SUMMARY
     display_order: int = _DISPLAY_ORDER
 

@@ -152,6 +152,8 @@ on one line for an existing module, you probably need a new module instead.
 | `snapshot/elektron_u14.py` | Shared pure Elektron 14-bit integer validation and packing helpers used across saved-kit families. |
 | `snapshot/sysex_file.py` | Passive local SysEx frame extraction and trusted-file reading helpers; no MIDI enumeration, port access, or transmission. |
 | `snapshot/mutation_scope.py` | Device-neutral immutable include-target/deny-lock scope and lazily registry-derived mutation domains; empty targets mean the full device domain before locks are subtracted. |
+| `snapshot/stage_slots.py` | Device-neutral live-stage slot vocabulary (`StageSlot`: Rytm, Analog Four). Lives beside `mutation_scope.py` because both `devices` and `cockpit/data` may import it. |
+| `devices/stage_slot.py` | Optional registry-resolved `StageSlotCapability`: a device that can fill a stage slot declares `stage_slot`; `stage_slot_for` / `stage_slot_assignments` answer from the registry. `cockpit/data/stage.py` mirrors the assignments as `STAGE_SLOT_BY_DEVICE_ID`, and stage code asks *which slot*, never compares device ids. |
 | `devices/saved_kit_capture.py` | Optional registry-resolved saved-KIT capture capability and canonical round-trip frame DTO; keeps Cockpit from importing concrete family codecs. |
 | `devices/digitakt.py` | Registry composition for passive Digitakt MK1 and II devices; no saved-KIT capture capability or Cockpit listener. |
 | `devices/strategies/digitakt_snapshot_decoder.py` | Strict slot/family checks; fully validates and unpacks a MK1 PATTERN dump through the pattern codec, and accepts any other same-family payload as undecoded `unverified` evidence. Never reads a guessed name. |
@@ -1596,6 +1598,10 @@ The rules above are mechanically enforced by:
   isolated temporary outputs rather than mutating tracked repository artifacts;
   the opt-in `RYTM_TEST_MUTATION_CHECK=1` whole-suite check runs one bounded,
   non-recursive child suite and requires it to pass)
+* `tests/architecture/test_stage_slots_match_devices.py` (the devices'
+  `stage_slot` declarations, `cockpit/data/stage.py`'s slot table and stage
+  types, and the frontend `StageDeviceId` / `*_DEVICE_ID` mirrors all name the
+  same devices; fails closed and lists every place to update)
 * `tests/architecture/test_every_device_reaches_operator_surfaces.py` (every
   registered device appears, with its track count, in each operator census
   surface: the device inventory model and the performance console model)

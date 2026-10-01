@@ -56,19 +56,12 @@ PACKAGE_ROOT: Final[Path] = PROJECT_ROOT / "rytm_randomizer"
 
 #: ``devices/`` owns device identity, so comparisons there are legitimate.
 #:
-#: ``cockpit/data/stage.py`` is the one module outside that tree which also
-#: *defines* identity rather than consuming it: it declares ``StageDeviceId``
-#: as a closed two-value ``Literal`` (the dual-machine stage is a fixed
-#: Rytm+A4 slot pairing, not open-ended dispatch) and exposes
-#: ``is_rytm_stage_slot`` / ``is_analog_four_stage_slot`` so every consumer
-#: asks which slot instead of comparing an id. The two comparisons inside
-#: those predicates are the single place that knowledge lives; exempting the
-#: definition site is what let 13 consumer-side branches across five modules
-#: be deleted. Consumers stay covered by the gate.
-_EXEMPT_PREFIXES: Final[tuple[str, ...]] = (
-    "rytm_randomizer/devices/",
-    "rytm_randomizer/cockpit/data/stage.py",
-)
+#: Nothing else is exempt. ``cockpit/data/stage.py`` used to be: its two slot
+#: predicates compared device ids. They now look a device up in the slot table
+#: mirrored from each device's own ``stage_slot`` declaration
+#: (``devices/stage_slot.py``), kept honest by
+#: ``test_stage_slots_match_devices.py`` -- so the exemption was removed.
+_EXEMPT_PREFIXES: Final[tuple[str, ...]] = ("rytm_randomizer/devices/",)
 
 #: ``device_id == "literal"`` or ``device_id == SOME_DEVICE_ID`` (either
 #: operand order). Deliberately narrow: it targets identity comparison, not
@@ -211,3 +204,9 @@ def test_grandfathered_identity_branch_count_only_shrinks() -> None:
         "shrink; a new exemption needs explicit reviewer sign-off in the PR "
         "body, and the ceiling is never raised."
     )
+
+
+def test_only_the_devices_package_is_exempt() -> None:
+    """The stage.py exemption was removed; it must not quietly come back."""
+
+    assert _EXEMPT_PREFIXES == ("rytm_randomizer/devices/",)

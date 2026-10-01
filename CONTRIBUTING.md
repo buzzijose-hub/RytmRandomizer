@@ -718,6 +718,7 @@ report. **Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md` §13 Test Suite L
 | `test_data_not_code.py` | "Tables of facts" live as data, not as functions. |
 | `test_device_protocol_enforcement.py` | Device-family subpackages register through `devices/registry.py`; no cross-family private imports; `dual_machine/` consumes only `devices.all_devices()`; only one device registry exists; every registered Device satisfies the Protocol; Protocol surface (9 attrs + 4 methods) is pinned against accidental drift. |
 | `test_every_device_reaches_operator_surfaces.py` | Every registered device appears, with its track count, in every operator census surface (device inventory model, performance console model). Adding a device anywhere fails here until each surface shows it. |
+| `test_stage_slots_match_devices.py` | Each device's `stage_slot` declaration, `cockpit/data/stage.py`'s slot table and stage types, and the frontend stage-device mirrors all agree. Its failure message lists every place to update when a device joins or leaves the stage. |
 | `test_tests_do_not_mutate_tracked_files.py` | Tests write to temporary paths, never tracked artifacts. Opt-in `RYTM_TEST_MUTATION_CHECK=1` also runs the whole suite once in a bounded child and diffs `git status`. |
 | `test_readme_freshness.py` | `README.md` names every registered device; every internal README link resolves; no stale placeholder tokens (`<owner>`, `TODO`, "follow-up wave", ...); the README references `docs/ARCHITECTURE.md`. Catches "added a device/command, forgot the README" (Gate 5). |
 
