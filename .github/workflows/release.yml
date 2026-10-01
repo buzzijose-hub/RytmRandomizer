@@ -211,22 +211,22 @@ jobs:
       - name: Verify real signature and reject modified artifact
         run: python scripts/release_artifacts.py verify-self-test --fixture tests/fixtures/release_signature.json
       - name: Download wheel and sdist
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: python-dist
           path: release-inputs/python
       - name: Download indexed desktop bundles
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: release-bundle-*
           path: release-inputs/bundles
       - name: Download Briefcase installers
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: rytm-randomizer-installer-*
           path: release-inputs/installers
       - name: Download standalone sidecars
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           pattern: rytm-sidecar-*
           path: release-inputs/sidecars
@@ -310,7 +310,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
       - name: Download verified release assembly
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: assembled-release
           path: assembled
