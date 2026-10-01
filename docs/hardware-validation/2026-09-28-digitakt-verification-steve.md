@@ -1,13 +1,19 @@
 # Digitakt verification — step-by-step
 
 **For:** Steve
-**Time needed:** about 20 minutes for Part A, plus 15 for Part B
+**Time needed:** about 20 minutes for Part A, 15 for Part B, 30 for Part C
 **What you need:** your Digitakt (or Digitakt II), a USB cable, and a computer
 
-**This is two separate jobs.** Part A checks four numbers on a screen and needs
-no cable. Part B captures a backup file from your machine and sends it to us.
-Do Part A first — if you only have time for one, Part A is the one we need
-most.
+> **Already did Parts A and B? Thank you — go straight to
+> [Part C](#part-c--four-more-captures-the-follow-up).** Your two files
+> worked: they let us find exactly where your Digitakt stores track 1's filter
+> setting, and they caught three mistakes in our code. Part C is the follow-up
+> that turns that one finding into all eight tracks. Everything is already
+> set up from last time.
+
+**This is three separate jobs.** Part A checks four numbers on a screen and
+needs no cable. Part B captures two backup files from your machine. Part C
+captures four more. Do them in order.
 
 ---
 
@@ -520,6 +526,139 @@ a public repository and makes the file far easier for us to read.
 
 ---
 
+---
+
+# PART C — Four more captures (the follow-up)
+
+**Why we need this.** Your Part B files showed us exactly one byte: where
+track 1's filter setting lives. Looking at the rest of the file, we have a
+strong guess where the other seven tracks' filters live too — but a guess is
+not good enough to let the app touch your machine. Part C checks the guess,
+and checks how in-between values (not just 0 and 127) are stored.
+
+It is the same thing you did in Part B — set a knob, send the pattern, save
+the file — four times, with **one** change each time. About 30 minutes.
+
+> **You are still not changing your Digitakt.** Same as Part B: data only
+> flows from the Digitakt to your computer.
+
+**The four files, at a glance:**
+
+| Save as | What you change just before sending | Screen should show |
+|---|---|---|
+| `base.syx` | **nothing** — a brand-new project, untouched | — |
+| `t1_mid.syx` | track 1 filter `FREQ` to the middle | `FREQ 64` |
+| `t2_low.syx` | track 2 filter `FREQ` all the way down | `FREQ 0` |
+| `t8_low.syx` | track 8 filter `FREQ` all the way down | `FREQ 0` |
+
+**Do not undo anything between captures.** Each file builds on the one
+before: when you capture `t2_low.syx`, track 1 is still at 64.
+
+---
+
+## Step 14 — Start clean
+
+1. On your Desktop, **delete or move** any old `base.syx`, `t1_mid.syx`,
+   `t2_low.syx` or `t8_low.syx` so you cannot mix them up. (Your Part B
+   `low.syx` and `high.syx` can stay — they are not used here.)
+2. On the Digitakt, **save your current project** (`SETTINGS` → `PROJECT` →
+   `SAVE`), then start a fresh one (`SETTINGS` → `PROJECT` → `NEW`) — exactly
+   as in Step 8.
+3. **Do not touch any knob.** The next file must be the untouched project.
+4. Connect and start your capture program listening (Steps 6 and 7).
+
+---
+
+## Step 15 — Capture 1: `base.syx` (change nothing)
+
+1. Send the pattern: `SETTINGS` → `SYSEX DUMP` → `SYSEX SEND` → `PATTERN` →
+   `YES` (same as Step 9).
+2. Save it on your Desktop as **`base.syx`**. It should be about 30 KB
+   (31,613 bytes), like your Part B files.
+
+---
+
+## Step 16 — Capture 2: `t1_mid.syx` (track 1 to the middle)
+
+1. **Hold `TRK` and press `1`**, then press **`FLTR`** (same as Step 8).
+2. **Turn knob `E` until the screen shows `FREQ 64`.** Go slowly near the
+   end — it is fine to overshoot and come back. If you cannot land on exactly
+   64, stop on the closest number and **write down what it shows**.
+3. Start the capture program listening again, send the pattern (Step 9), and
+   save it as **`t1_mid.syx`**.
+
+---
+
+## Step 17 — Capture 3: `t2_low.syx` (track 2 all the way down)
+
+1. **Hold `TRK` and press `2`** — this selects track 2. Press **`FLTR`** if
+   the FILTER page is not showing.
+2. **Turn knob `E` all the way to the left** — `FREQ 0`.
+3. Leave track 1 alone (it stays at 64).
+4. Listen, send the pattern, save as **`t2_low.syx`**.
+
+---
+
+## Step 18 — Capture 4: `t8_low.syx` (track 8 all the way down)
+
+1. **Hold `TRK` and press `8`** — this selects track 8. Press **`FLTR`** if
+   needed.
+2. **Turn knob `E` all the way to the left** — `FREQ 0`.
+3. Listen, send the pattern, save as **`t8_low.syx`**.
+
+> On a **Digitakt II**, do the same — track 8 exists on both. (We would also
+> love a capture of track 16 one day, but not now.)
+
+---
+
+## Step 19 — Run one command
+
+With all four files on your Desktop:
+
+```
+.venv/bin/python scripts/intake_digitakt_capture.py \
+  --device digitakt_mk1 --part-c \
+  --captured-by "Steve" \
+  --os-version "1.52A" \
+  --screen-values "track 1 FREQ 64, track 2 FREQ 0, track 8 FREQ 0"
+```
+
+Change `--screen-values` to **what your screen actually showed** — that
+matters more than what this guide says it should be. If you have a
+Digitakt II, use `--device digitakt_ii`.
+
+> **On Windows,** start with `.venv\Scripts\python.exe` instead of
+> `.venv/bin/python` and put it all on one line. If your Desktop is inside
+> OneDrive, add `--from-dir "C:\Users\<you>\OneDrive\Desktop"`.
+
+It checks all four files, makes sure each one really differs from the one
+before, and files them in their own folder
+(`tests/fixtures/digitakt_saved_kit/part_c/`) — your Part B files and note are
+left exactly as they are. **If anything is wrong it writes nothing** and tells
+you which file to redo.
+
+At the end it prints three lines like:
+
+```
+    base.syx -> t1_mid.syx: 1 byte(s) changed
+    t1_mid.syx -> t2_low.syx: 1 byte(s) changed
+    t2_low.syx -> t8_low.syx: 1 byte(s) changed
+```
+
+**A small number on each line is perfect** (1 or 2). A large number means
+something else changed between those two captures as well — redo the second
+file of that line, or just send everything and tell us; it is still useful.
+
+---
+
+## Step 20 — Send it
+
+Same as Step 13: send Eddie the `tests/fixtures/digitakt_saved_kit/part_c`
+folder (or commit it on a new branch and open a pull request), together with
+**the three numbers your screen showed** and the three "byte(s) changed" lines.
+
+
+---
 
 ## What we do with your files
 
@@ -550,8 +689,17 @@ couple of knobs, and capture that. It works just as well for our purposes.
 |---|---|---|
 | Digitakt not in the program's device list | Usually a charge-only USB cable | Try a different cable first |
 | Program catches nothing when you press `YES` | It stopped waiting | Restart the record/receive step, then send again |
-| Menu names on the Digitakt do not match Step 9 | Expected — we have not confirmed these on a Digitakt | **Tell us what you actually see.** This is useful, not a failure |
+| Menu names on the Digitakt do not match Step 9 | Steve confirmed them on a Digitakt MK1 (OS 1.52A); a different OS or a Digitakt II may differ | **Tell us what you actually see.** This is useful, not a failure |
 | Saved file is 0 bytes | Nothing was captured | Redo Steps 7–9; make sure recording starts *before* you press `YES` |
+
+### Part C problems
+
+| What you see | What it means | What to do |
+|---|---|---|
+| `no such file: ...t2_low.syx` (or another name) | That file is not on your Desktop under exactly that name | Check the spelling, including `.syx`; or point `--from-dir` at the folder you used |
+| `... are byte-identical, so nothing changed between them` | You captured the same thing twice | Make that step's knob change, then capture the second file again |
+| A "byte(s) changed" line shows a big number | More than one thing changed between those captures | Redo that capture, or send it anyway and tell us |
+| Cannot land exactly on `FREQ 64` | Normal with a fast knob | Use the closest number and put what it showed in `--screen-values` |
 
 **Any error at all: copy the text, paste it in a message, send it.** Do not try
 to fix it. A screenshot works too.
@@ -623,6 +771,18 @@ PART B - I capture two SysEx dumps from the Digitakt:
     If it prints an error it has written nothing -- the message says what to
     redo. Help me read it rather than working around it.
 
+PART C - four more captures, ONE change each, without undoing anything:
+  - save my project, start a NEW one, touch nothing, send PATTERN, save on my
+    Desktop as base.syx
+  - track 1 (hold TRK, press 1), FLTR page, knob E to FREQ 64 -> t1_mid.syx
+  - track 2 (hold TRK, press 2), knob E all the way left, FREQ 0 -> t2_low.syx
+  - track 8 (hold TRK, press 8), knob E all the way left, FREQ 0 -> t8_low.syx
+  - then ONE command files all four:
+      .venv/bin/python scripts/intake_digitakt_capture.py --device digitakt_mk1
+        --part-c --captured-by "Steve" --os-version "1.52A"
+        --screen-values "<what the screen showed for each change>"
+    It prints one "N byte(s) changed" line per step; small numbers are good.
+
 IMPORTANT SAFETY FACTS - please do not suggest anything that contradicts these:
   - This software CANNOT send anything to my Digitakt. It is receive-only by
     design. My patterns, samples and projects cannot be altered by it.
@@ -638,11 +798,12 @@ HOW I WANT YOU TO HELP:
   - Ask me what I see on screen rather than assuming.
 
 CRITICAL - WHEN YOU DO NOT KNOW:
-  The exact Digitakt menu path for SysEx dump, and the TRK / FLTR / knob E
-  instructions, have NOT been confirmed on real hardware by the project. It is an educated guess based on other Elektron
-  devices. If my menus do not match, DO NOT invent a path that sounds
-  plausible. Say you are not certain, and tell me to report what I actually
-  see. A wrong guess here costs more time than saying "I don't know".
+  The SysEx menu path (SETTINGS > SYSEX DUMP > SYSEX SEND > PATTERN) and the
+  TRK / FLTR / knob E steps were confirmed on one Digitakt MK1 running OS
+  1.52A. Other OS versions and the Digitakt II have NOT been checked. If my
+  menus do not match, DO NOT invent a path that sounds plausible. Say you are
+  not certain, and tell me to report what I actually see. A wrong guess here
+  costs more time than saying "I don't know".
 
   The same applies to anything else you are unsure about. I would much rather
   hear "I'm not sure, ask Eddie" than a confident answer that turns out wrong.
@@ -672,19 +833,21 @@ one thing again. That is a five-minute follow-up, not a repeat of everything.
 Being straight about the limits, so nobody later thinks this proved more than
 it did:
 
-- **Part A** does not verify the Digitakt's saved-project byte layout. Those
-  offsets stay unverified and the code refuses to use them.
-- **Part B does not verify them either** — it *collects the evidence* that
-  lets us do that work later. Sending the files does not make the app able to
-  control your Digitakt; that is a separate change with its own review.
+- **Part A** does not verify the Digitakt's saved-project byte layout.
+- **Part B** collected the evidence that let us verify **one** location:
+  track 1's filter setting on a Digitakt MK1. Nothing else.
+- **Part C** collects the evidence for how that value is stored and where the
+  other tracks' filters live. Even then, the app does **not** gain the ability
+  to control your Digitakt — that is a separate change with its own review,
+  and its own careful test with you present.
 - It does **not** test sending anything to the device, because that capability
   deliberately does not exist yet.
 - It does **not** test capture, mutation, or any performance feature for the
   Digitakt — there are none.
 
-This test covers the **identity facts only**: name, track count, default MIDI
-channel, manufacturer ID. That is the full scope, and it is the part that is
-currently unverified.
+Part A covers the **identity facts**: name, track count, default MIDI channel,
+manufacturer ID. Parts B and C collect **evidence files**. Nothing in this
+guide makes the app send anything to a Digitakt.
 
 ---
 

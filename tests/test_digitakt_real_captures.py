@@ -212,3 +212,132 @@ def test_intake_refuses_missing_empty_and_oversized_files(
     huge = tmp_path / "project.syx"
     huge.write_bytes(bytes(intake.MAX_REASONABLE_KIT_BYTES + 1))
     assert "whole PROJECT" in _refused(_args(huge), capsys)
+
+
+# ---------------------------------------------------------------------------
+# Part C: the four-capture series, built from the real dump
+# ---------------------------------------------------------------------------
+
+
+def _framed_variant(edits: dict[int, int]) -> bytes:
+    """Steve's real pattern with unpacked bytes edited, re-encoded and framed."""
+
+    from rytm_randomizer.devices.strategies.digitakt_pattern_codec import (
+        DIGITAKT_MK1_PATTERN_LAYOUT,
+        decode_digitakt_pattern_payload,
+        encode_digitakt_pattern_payload,
+    )
+
+    (payload,) = extract_sysex_payloads(_LOW.read_bytes())
+    decoded = decode_digitakt_pattern_payload(payload, DIGITAKT_MK1_PATTERN_LAYOUT)
+    body = bytearray(decoded.unpacked)
+    for offset, value in edits.items():
+        body[offset] = value
+    encoded = encode_digitakt_pattern_payload(
+        decoded.prefix, bytes(body), DIGITAKT_MK1_PATTERN_LAYOUT
+    )
+    return b"\xf0" + encoded + b"\xf7"
+
+
+def _write_part_c(directory: Path) -> None:
+    """A plausible Part C sitting: each step changes exactly one byte."""
+
+    track1, track2, track8 = 25204, 25364, 26324
+    steps = {
+        "base.syx": {track1: 127},
+        "t1_mid.syx": {track1: 64},
+        "t2_low.syx": {track1: 64, track2: 0},
+        "t8_low.syx": {track1: 64, track2: 0, track8: 0},
+    }
+    directory.mkdir(parents=True, exist_ok=True)
+    for name, edits in steps.items():
+        (directory / name).write_bytes(_framed_variant(edits))
+
+
+def _part_c_args(from_dir: Path, *extra: str) -> list[str]:
+    return [
+        "--device",
+        "digitakt_mk1",
+        "--part-c",
+        "--from-dir",
+        str(from_dir),
+        "--captured-by",
+        "Tester",
+        "--os-version",
+        "1.52A",
+        *extra,
+    ]
+
+
+def test_part_c_files_the_series_in_its_own_folder(
+    fixture_dir: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    desktop = tmp_path / "Desktop"
+    _write_part_c(desktop)
+    # Part B's note must survive Part C.
+    fixture_dir.mkdir(parents=True)
+    (fixture_dir / "README.md").write_text("part b note", encoding="utf-8")
+
+    assert intake.main(_part_c_args(desktop, "--screen-values", "track 1 FREQ 64")) == 0
+
+    part_c = fixture_dir / "part_c"
+    for stem in ("base", "t1_mid", "t2_low", "t8_low"):
+        filed = part_c / f"digitakt_mk1_partc_{stem}.syx"
+        assert filed.read_bytes() == (desktop / f"{stem}.syx").read_bytes()
+    note = (part_c / "README.md").read_text(encoding="utf-8")
+    assert "Screen values reported: track 1 FREQ 64" in note
+    assert "SYSEX SEND > PATTERN" in note  # the default menu path
+    assert (fixture_dir / "README.md").read_text(encoding="utf-8") == "part b note"
+
+    out = capsys.readouterr().out
+    assert out.count("1 byte(s) changed") == 3
+
+
+def test_part_c_refuses_a_step_where_nothing_changed(
+    fixture_dir: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    desktop = tmp_path / "Desktop"
+    _write_part_c(desktop)
+    (desktop / "t2_low.syx").write_bytes((desktop / "t1_mid.syx").read_bytes())
+
+    err = _refused(_part_c_args(desktop), capsys)
+    assert "t1_mid.syx and t2_low.syx are byte-identical" in err
+    assert not fixture_dir.exists()
+
+
+def test_part_c_names_a_missing_file(
+    fixture_dir: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    desktop = tmp_path / "Desktop"
+    _write_part_c(desktop)
+    (desktop / "t8_low.syx").unlink()
+
+    assert "t8_low.syx" in _refused(_part_c_args(desktop), capsys)
+    assert not fixture_dir.exists()
+
+
+def test_part_c_rejects_high_and_low_mixed_in(
+    fixture_dir: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert "--high belongs to the low/high pair" in _refused(
+        _part_c_args(tmp_path, "--high", str(_HIGH)), capsys
+    )
+    with pytest.raises(SystemExit) as excinfo:
+        intake.main(_part_c_args(tmp_path, "--low", str(_LOW)))
+    assert excinfo.value.code == 2  # argparse: mutually exclusive
+
+
+def test_part_c_counts_raw_bytes_for_a_generation_without_a_verified_layout() -> None:
+    """Digitakt II dumps are undecoded, so the comparison falls back to raw bytes."""
+
+    from rytm_randomizer.data.digitakt_saved_kit_layout import DIGITAKT_II_FAMILY_BYTE
+
+    def framed(body: bytes) -> bytes:
+        return (
+            b"\xf0" + ELEKTRON_MFR_ID + bytes([DIGITAKT_II_FAMILY_BYTE, 0, 0x50]) + body + b"\xf7"
+        )
+
+    assert intake._changed_bytes(framed(b"\x01\x02"), framed(b"\x01\x03"), "digitakt_ii") == 1
+    longer = framed(b"\x01\x02\x03")
+    # Different lengths: report the longer file's size rather than a misleading count.
+    assert intake._changed_bytes(framed(b"\x01"), longer, "digitakt_ii") == len(longer)
