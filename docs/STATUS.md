@@ -36,6 +36,11 @@ fake-port switch or granting hardware evidence. An intermittent CI
 malformed-import timeout is addressed by splitting independent test cases,
 without increasing timeouts, retries or skips.
 
+The scoped ten-question maintainability audit is now recorded in the plan.
+Its formal receipt was added after PR open, so the Gate 14 timing deviation
+requires maintainer acknowledgment; it is not represented as a pre-plan audit
+or an approved exception. The post-merge reassessment remains outstanding.
+
 Show Kit Forge merged through PR #238 on September 8 as one
 versioned, paired Analog Rytm/Analog Four preparation workflow. It keeps
 `source -> candidate -> favorite -> hardware-saved -> verified -> show-ready`
