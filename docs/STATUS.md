@@ -125,6 +125,18 @@ support in this updater checkpoint.
 
 ## Recent Cleanup
 
+- 2026-10-01: Delivered [PR #254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254)
+  as a direct-base Studio evidence handoff, separate from Pi groundwork #252.
+  Added the reproducible canonical support inventory, cancellable capture and
+  stale-result protection, passive preview retention, non-mutating rejected
+  DISARM, exact-input ambiguity refusal and whole-plan paired-control blocking.
+  Review followup adds typed inventory contracts, canonical converter reuse,
+  cancellation telemetry and an exact in-memory browser SEND contract. Local
+  Python, frontend, browser, coverage, architecture, parity and static gates
+  pass. Primary-checkout changes and dependency pins are preserved; no real
+  MIDI/USB access occurred. Maintainer review and all physical observations
+  remain outstanding, including manual saved-KIT reload/recapture recovery.
+
 - 2026-09-21: Resumed the six-PR closeout and verified #248's hosted checks at
   `e2e46d6e`, including both required aggregates and actual Windows acceptance.
   Updated native architecture maps and the current state/report to distinguish
