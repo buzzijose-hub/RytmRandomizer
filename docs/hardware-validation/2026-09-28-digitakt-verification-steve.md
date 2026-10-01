@@ -8,8 +8,8 @@
 > [Part C](#part-c--four-more-captures-the-follow-up).** Your two files
 > worked: they let us find exactly where your Digitakt stores track 1's filter
 > setting, and they caught three mistakes in our code. Part C is the follow-up
-> that turns that one finding into all eight tracks. Everything is already
-> set up from last time.
+> that turns that one finding into all eight tracks. You only need to fetch
+> the latest version of the project first (Step 14 shows how).
 
 **This is three separate jobs.** Part A checks four numbers on a screen and
 needs no cable. Part B captures two backup files from your machine. Part C
@@ -556,7 +556,31 @@ before: when you capture `t2_low.syx`, track 1 is still at 64.
 
 ---
 
-## Step 14 — Start clean
+## Step 14 — Get the latest version, then start clean
+
+**First, update the project** — Part C needs a command that did not exist
+last time. In the Terminal, inside the project folder:
+
+- **If you use git** (you opened a pull request last time, so you probably
+  do):
+
+  ```
+  git fetch upstream
+  git checkout upstream/worktree-digitakt-device-support
+  .venv/bin/python -m pip install -e .
+  ```
+
+  If `upstream` is not recognised, use `origin` instead.
+- **If you downloaded a zip:** download it again exactly as in Setup 2,
+  replace the old folder, then redo Setup 4 and Setup 5.
+
+Check it worked: this should print a line mentioning `--part-c`.
+
+```
+.venv/bin/python scripts/intake_digitakt_capture.py --help
+```
+
+**Then start clean:**
 
 1. On your Desktop, **delete or move** any old `base.syx`, `t1_mid.syx`,
    `t2_low.syx` or `t8_low.syx` so you cannot mix them up. (Your Part B
