@@ -825,11 +825,7 @@ impl<R: tauri::Runtime> Transport for PluginTransport<R> {
                         attempt.error("beacon redirect refused")
                     }
                 });
-                let Ok(client) = reqwest::Client::builder()
-                    .timeout(std::time::Duration::from_secs(10))
-                    .redirect(redirects)
-                    .build()
-                else {
+                let Ok(client) = build_beacon_client(redirects) else {
                     return false;
                 };
                 client
@@ -855,6 +851,22 @@ impl<R: tauri::Runtime> Transport for PluginTransport<R> {
     }
 }
 
+fn build_beacon_client(
+    redirects: reqwest::redirect::Policy,
+) -> Result<reqwest::Client, reqwest::Error> {
+    // The plugin and beacon run independently. Its lazy provider installation
+    // cannot precede our client by assumption, even for an HTTP test endpoint.
+    if rustls::crypto::CryptoProvider::get_default().is_none() {
+        // Failure means another thread installed the process default first.
+        // Preserve that provider instead of replacing it or panicking.
+        let _ = rustls::crypto::ring::default_provider().install_default();
+    }
+    reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(10))
+        .redirect(redirects)
+        .build()
+}
+
 /// Bind all policy-validated artifact fields before any download begins.
 pub fn artifact_identity_matches(
     version: &str,
@@ -870,6 +882,63 @@ pub fn artifact_identity_matches(
 #[cfg(test)]
 mod transport_contract_tests {
     use super::*;
+
+    #[test]
+    fn beacon_client_builds_before_plugin_initialization_and_preserves_a_provider() {
+        const CHILD_MODE: &str = "RYTM_TEST_BEACON_CLIENT_STARTUP";
+        const TEST_NAME: &str = "update_transport::transport_contract_tests::beacon_client_builds_before_plugin_initialization_and_preserves_a_provider";
+
+        if let Some(mode) = std::env::var_os(CHILD_MODE) {
+            // A fresh test process prevents other tests or a plugin check from
+            // installing the default and concealing the startup-order defect.
+            assert!(rustls::crypto::CryptoProvider::get_default().is_none());
+            let existing = if mode == "installed" {
+                rustls::crypto::ring::default_provider()
+                    .install_default()
+                    .expect("fresh process can install its chosen provider");
+                Some(Arc::clone(
+                    rustls::crypto::CryptoProvider::get_default().unwrap(),
+                ))
+            } else {
+                assert_eq!(mode, "unset");
+                None
+            };
+            tauri::async_runtime::block_on(async {
+                let client = build_beacon_client(reqwest::redirect::Policy::none())
+                    .expect("beacon client initializes without a preceding plugin check");
+                client
+                    .get("https://github.com/beacon.txt")
+                    .build()
+                    .expect("constructing a beacon request performs no network I/O");
+                let installed = rustls::crypto::CryptoProvider::get_default().unwrap();
+                if let Some(existing) = existing {
+                    assert!(Arc::ptr_eq(&existing, installed));
+                }
+                let retained = Arc::clone(installed);
+                build_beacon_client(reqwest::redirect::Policy::none())
+                    .expect("a second beacon keeps the existing provider");
+                assert!(Arc::ptr_eq(
+                    &retained,
+                    rustls::crypto::CryptoProvider::get_default().unwrap()
+                ));
+            });
+            return;
+        }
+
+        for mode in ["unset", "installed"] {
+            let output = std::process::Command::new(std::env::current_exe().unwrap())
+                .args(["--exact", TEST_NAME, "--nocapture"])
+                .env(CHILD_MODE, mode)
+                .output()
+                .expect("launch isolated beacon client regression");
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            assert!(
+                output.status.success() && stdout.contains("1 passed"),
+                "beacon startup mode {mode} failed or did not run: {stdout}\n{stderr}"
+            );
+        }
+    }
 
     #[test]
     fn redirects_cannot_leave_the_artifact_allowlist_or_downgrade_https() {

@@ -50,6 +50,9 @@ semver = "1"
 # inherits whatever TLS backend tauri-plugin-updater already selected rather
 # than forcing a second one into the binary.
 reqwest = { version = "0.13", default-features = false }
+# The updater installs this already-linked provider lazily during its check.
+# The independent beacon must also initialize it before building a client.
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
 # CI pin: tauri-utils 2.9.2 conflicts with time 0.3.48 on Windows/Rust 1.88.
 time = "=0.3.47"
 # CI pin: 2026-06-14 brotli-decompressor/alloc-stdlib releases can resolve
