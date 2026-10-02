@@ -94,7 +94,10 @@ Sources: [replay playbook](2026-10-01-rytm-captured-machine-mapping_REPLAY_PLAYB
 
 ## 4. What mapping and hardware-authority limits remain?
 
-No aliases were added. Eleven families still need alias/semantic work:
+At this historical onboarding checkpoint, no aliases were added. Eleven
+families then needed alias/semantic work. The later scoped increment binds
+all 224 SRC rows; this exercise was not replayed and does not certify that
+increment. Historical answer:
 CY Classic, CB Classic, UT Noise, UT Impulse, CY Metallic, CB Metallic,
 HH Basic, CY Ride, SY Dual VCO, SY Chip and HH Lab. Concrete unresolved gates
 include CY Ride Hit/Type associations, CB pulse-width MIDI addresses, UT

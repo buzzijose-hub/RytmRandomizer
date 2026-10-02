@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-02T01:31:14Z",
+  "updated_at": "2026-10-02T02:09:20Z",
   "status": "in-flight",
-  "phase": "native-readiness-verified-remaining-alias-closure-in-isolated-leaf",
+  "phase": "final-alias-source-verified-normal-publication-pending-runtime-backport-isolated",
   "prototype_source": "8cfa6f7b6cf9469ffa134598182febb60ecdd1df",
   "prototype_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-tom-mapping/RytmRandomizer",
   "delivery_start_source": "941643c551abfa225f45c70a954b6671d1cbb5f4",
@@ -17,12 +17,12 @@
   "local_budget_deadline": "2026-10-02T02:43:47Z",
   "historical_elapsed_time_recorded": false,
   "work": {
-    "mapping_implementation": "mapping-published-followup-wire-and-native-source-integrated-at-0130f5c5-running-server-still2a19b094-standalone-helper76634665",
+    "mapping_implementation": "all224-SRC-descriptive-bindings-integrated-with-shared-conservative-policy-at-dbdfbf93-correction-through-data-facade-compatible-demo-and-integration-pads-at-e62bf18a-running-server-still2a19b094",
     "inventory": "direct-base-integrated-with-registry-equality-guard",
     "dimension_reviews": "eight-postpush-reviews-complete-at-2a3789-consolidated-comment5943575627-updated-With-fixes-Gate14-16-retained",
     "plan_records": "source-bound-learning-and-probe-records-published-seventh-native-readiness-scope-declared-before-isolated-implementation",
-    "delivery_integration": "native-readiness-published-at-2a3789-remaining-alias-phase-precode261301fd-in-isolated-rytm-alias-closure-leaf",
-    "final_delivery_checks": "2a3789-normal-prepush-lint-strict18-860-architecture697-notfast-pass-root-native-driver5-pass-both-hosted-runs-success-each191-Rust32-WebView2-Windows-handoffs-future-mapping-source-requires-new-checks",
+    "delivery_integration": "alias-and-integration-correction-integrated-and-sourceverified-at4bc21952-finaldocreceipt-ready-separate-runtime-scope-ed19dd04-beforecode",
+    "final_delivery_checks": "4bc21952-full9927pass5skip6warnings280.92s-combined99.66-purebranch99.37-canonical21touched100linesbranches-strict21-and-lint-vulture-versionpass-planchecks3pass-normalpublication-postpush-review-and-newheadhostedpending",
     "protected_review_and_merge": "pending",
     "post_merge_maintainability_audit": "pending"
   },
@@ -188,11 +188,52 @@
       "result": "Both runs completed success. Each passed191 Rust tests, rustfmt, Clippy,32 native WebView scenarios including backend_restart and two actual Windows installer handoff/restart tests. Python/browser lanes passed. This certifies2a3789 only, not later mapping source.",
       "passing_verdict": true,
       "hardware_observation": false
+    },
+    {
+      "scope": "alias-closure-leaf9603d20d-and-integration-dbdfbf93",
+      "result": "541 focused passes across9files; agent runner summary retained, not a full raw integration log. 224 descriptive SRC bindings and29 additional conservative primary-byte projections; no physical output or native association authority.",
+      "hardware_observation": false
+    },
+    {
+      "scope": "first-full-alias-composition-dbdfbf93",
+      "result": "29 failed,9885 passed,5 skipped,9 warnings in731.31 seconds. Import-direction violation and incompatible demo/test pad identities blocked positive protocol paths. Three blocked-path workers stopped and were automatically replaced; partial combined coverage is not a valid Gate1 receipt. No root interruption or passing verdict.",
+      "passing_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "predeclared-alias-integration-correction-fc1edb8e-9b12421b-66be7d46-root-e62bf18a",
+      "result": "272 focused tests passed across13files; strict pad-ID followup140passes. Raw logs copied to root. Independent scoped review has no remaining findings. Data facade derives compatible demo labels and refuses bool/float pad identities; protocol tests assert successful preparation/send before waiting. No catalog, safety guard, architecture allowlist or frozen fixture changed. Root strict typing on21 touched modules passes; new full composition/coverage remains running.",
+      "hardware_observation": false
+    },
+    {
+      "scope": "operator-CY-Ride-input-only-CC-address-observation-2026-10-01-New-York",
+      "result": "Pad11 isolated TYP C→D→C produced CC20 values3→2 on MIDI11; HIT48→49→50→49→48 produced CC19 values49→50→49→48. Initial ambiguous trial had zero observations. All receivers closed; operator manually reloaded savedKIT01 without saving and confirmed TYP C/HIT48. Raw logs plus structured private receipt retained. Both semantic rows stay blocked: no new native frame/offset association, output, NRPN, full domain or automatic recovery proof.",
+      "hardware_observation": true
+    },
+    {
+      "scope": "frontend-relevance-read-only-audit",
+      "result": "Appliance SRC rows already render backend labels/values/blockers and need repaired backend plus fresh capture. Studio fixed Synth pad-card definitions omit new namespaced keys; performance mini knobs do not display snapshot values. No frontend completion or runtime rollout claimed.",
+      "hardware_observation": false
+    },
+    {
+      "scope": "final-alias-composed-source-4bc21952",
+      "result": "9927 passed,5 skipped,6 existing warnings in280.92s. Canonical touched-coverage gate confirms all21 production files at100%lines/branches. Combined99.66%, purebranch99.37% above99floor. Strict21 and whole-tree lint/Vulture/version passed; unknownmachine API refusal10focusedpassed and finaldocsplanchecks3passed0.14s. Actual raw full/coverage/typing/lint receipts retained. No pins, frozen parity fixtures, configs or architecture/transmit allowlists changed. Normal publication/eight postpush confirmations/new-head hosted acceptance remain pending.",
+      "passing_verdict": true,
+      "touched_production_modules": 21,
+      "touched_line_branch_coverage": "100%",
+      "combined_coverage": "99.66%",
+      "pure_branch_coverage": "99.37%",
+      "hardware_observation": false
+    },
+    {
+      "scope": "isolated-local-appliance-alias-backport-scope-ed19dd04",
+      "result": "Scope/baseline committed before source in new studio-alias-runtime leaf from76634665. Preserve appliance depth/bounds API/arithmetic, A4/Pi exports and unchanged8cfrontend; capability rows must consume same blockers as planner. Source/focused tests/independent review/fullcoverage pending. No live runtime edit/restart, credentials, port, output or SAVE action.",
+      "hardware_observation": false
     }
   ],
   "remaining": [
-    "Complete isolated alias-closure phase; integrate reviewed source with composed capture/mutation/planning tests, full coverage, strict typing and lint",
-    "Publish final mapping source through normal hooks, perform eight targeted postpush reviews, update existing PR254 body/comment and verify new-head hosted checks",
+    "Publish final verified mapping source through normal hooks and confirm eight postpush review dimensions/new-head hosted checks",
+    "Complete isolated appliance backport and source-specific verification before local restart/fresh capture; preserve separate runtime evidence",
     "Protected new-head human review, hosted checks and merge",
     "Retrospective audit review and actual post-merge reassessment; Gate14 remains unchecked",
     "Preserve historical Gate16 isolation/timing limitation and outstanding prior minor follow-ups"
@@ -203,7 +244,7 @@
     "Historical A4 attempt failed with 0/1 messages; two later individually authorized fresh helpers each sent one CC74/channel0/value1 with operator-reported physical1 and manual reload0",
     "The running studio server process remains 2a19b094; runtime checkout/helper76634665 checks do not imply a server restart, frontend rebuild or rollout of the new native source",
     "No local Cargo execution; hosted native runs at2a3789 both passed191 Rust tests,32 WebView scenarios and2 Windows handoffs each. These certify only2a3789; future mapping source requires new-head verification. All504 locked package identities/versions/checksums unchanged",
-    "Unknown aliases, semantic discrepancies and unverified live precision remain explicit gaps",
+    "All224 SRC rows now have descriptive aliases; guarded semantic discrepancies, new pitch/selectors and unverified live precision remain blocked. Studio pad cards still omit namespaced controls; appliance runtime is not yet updated.",
     "No general A4/BOTH, paired/fractional, native-offset, automatic-restore, Pi or touring readiness promotion; bounded probes performed no hardware SAVE or new raw capture",
     "Baseline audit and execution records were recorded after implementation began",
     "Writing phases used disjoint scopes in one prototype checkout; separate per-phase worktrees were not retrospectively created"

@@ -220,7 +220,7 @@ has not been updated by these records.
   in ignored local output. Eight targeted post-push reviews completed and
   existing consolidated PR254 comment5943575627 was updated with the
   remaining Gate14/16 process exceptions. Both hosted runs36950161113
-  (PR) and36950157872 (push) completed successfully: each passed191 Rust
+  (PR) and36950157872 (push) completed successfully: each passed 191 Rust
   tests, rustfmt, Clippy,32 native WebView scenarios including backend
   restart, and two actual Windows installer handoff/restart tests.
 - The readiness predicate establishes listener/transport readiness. Its
@@ -234,3 +234,48 @@ has not been updated by these records.
   New mapping source needs its own composition, coverage and hosted checks;
   the passing2a3789 receipts do not certify future changes. Running studio
   server and hardware remain unchanged; no output or SAVE was performed.
+
+- **2026-10-02T01:59:07Z — alias composition corrected, verification running:**
+  integrated the descriptive alias increment as `dbdfbf93`. Its first actual
+  full composition failed:29 failures,9885 passes,5 skips in731.31 seconds.
+  An undeclared planner/data import and incompatible demo/test pad identities
+  blocked positive protocol paths. Three blocked-path workers stopped and were
+  replaced; their partial coverage cannot certify Gate1. The correction scope
+  was committed before code at `fc1edb8e`; source `9b12421b` and strict pad-ID
+  followup `66be7d46` are integrated through `e62bf18a`. The facade now derives
+  compatible demo labels and refuses bool/float pads. Tests assert successful
+  preparation/send before waiting for success events. Focused272 plus140 tests
+  pass, with actual raw logs copied to root; independent scoped review has no
+  remaining findings. Strict typing on 21 touched production modules passes.
+  Fresh full composition and coverage are running; no passing verdict yet.
+- Input-only operator observations support CY Ride TYP=CC20 and HIT=CC19 on
+  configured MIDI 11. The actual HIT movement was48→49→50→49→48. The initial
+  ambiguous trial observed nothing and is retained separately. All receivers
+  closed; operator manually reloaded saved KIT 01 without saving and confirmed
+  TYP C/HIT48. Both rows remain blocked because native association, legal-domain
+  and outbound semantics are unvalidated. Raw logs and private structured
+  receipt are retained; no output, SAVE or new native capture occurred.
+- Frontend source audit confirms the appliance already renders catalog SRC
+  labels/values/blockers dynamically, but needs the repaired backend and fresh
+  capture. Studio pad cards omit namespaced SRC keys and its decorative knobs
+  lack snapshot values; no musician-facing Studio display completion is claimed.
+  Running server remains `2a19b094`; these software commits do not imply rollout.
+
+- **2026-10-02T02:09:20Z — final alias composition verified:** the first
+  corrected source passed 9,926 tests but left two existing unknown-machine
+  error-path lines uncovered in the newly touched fact module. A meaningful
+  API-refusal regression at `4bc21952` passed 10 focused tests. Its final full
+  composition passed 9,927 tests, 5 skips, 6 existing warnings in 280.92s.
+  Canonical Gate1 confirms all 21 production modules at 100% lines/branches;
+  combined99.66%, purebranch99.37% exceed the99% floor. Strict typing on 21, lint trio,
+  Vulture and version consistency pass. Final plan/index checks pass3cases.
+  Failed composition and partial coverage remain failed receipts; no frozen
+  goldens, pins, configs or allowlists changed. Normal publication, eight
+  post-push confirmations and fresh exact-head hosted checks remain pending.
+- A separate local appliance backport scope/baseline was committed at
+  `ed19dd04` before code in `studio-alias-runtime`, starting from `76634665`.
+  Preserve Pi depth/bounds arithmetic, A4/Pi exports and the unchanged frontend;
+  capability eligibility must consume the same shared blockers as planning.
+  This isolated preparation does not edit/restart the running server or
+  authorize output/SAVE. Independent review and source-specific full checks
+  are required before local activation. Original dirty checkout is preserved.

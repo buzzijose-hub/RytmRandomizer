@@ -79,8 +79,10 @@ and private browser-factory import minors. A pre-existing architecture anchor
 was repaired in the documentation receipt update. Eddie's review was requested;
 protected approval and final documentation-head checks remain pending.
 
-The [inventory](../../RYTM_MAPPING_STATUS.md) retains eleven missing alias
-families, semantic discrepancies and precision gaps. The earlier October 1
+At the historical `2f0f5be0` checkpoint, the inventory retained eleven missing
+alias families. The later scoped closure binds all 224 SRC rows; semantic,
+precision and Studio display gaps remain explicit in the current
+[inventory](../../RYTM_MAPPING_STATUS.md). The earlier October 1
 Rytm trial checked four common controls and manual recovery; it did not audition
 this SRC repair. General A4/BOTH, automatic restore, Pi hardware and touring
 acceptance remain unvalidated. The later one-control A4 observations are scoped
@@ -116,8 +118,8 @@ the standalone helper is a fresh process using `76634665`. It did not require
 another server restart or private login.
 
 That helper accepted one authorized channel-1 CC74/value1 on the exact A4
-output, with an operator report of PWM Depth 1 and manual KIT01 reload to 0.
-The operator explicitly requested a repeat, reloaded saved KIT01 and confirmed
+output, with an operator report of PWM Depth 1 and manual KIT 01 reload to 0.
+The operator explicitly requested a repeat, reloaded saved KIT 01 and confirmed
 PWM Depth 0 before another separately requested one-message action. The
 repeat's physical value was checked at 1 before reload, then at 0 after
 manual NO + KIT. Thus two successful one-CC actions were observed; the original

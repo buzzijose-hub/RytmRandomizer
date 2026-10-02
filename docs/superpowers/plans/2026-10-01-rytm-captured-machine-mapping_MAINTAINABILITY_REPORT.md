@@ -60,7 +60,7 @@ remain source-specific. This published mapping receipt does not certify the
 subsequent wire/native source by itself.
 
 The fifth and sixth plan scopes were recorded before isolated implementation.
-The current Studio code HEAD is
+The historical wire/native Studio code checkpoint was
 `0130f5c5841f6e9fb830ee8e3d395fc5bb2c89af`, containing the wire repair at
 `648ae888`, native follow-up at `d698d62e`, and `0130f5c5` formatting. Its fresh
 full Studio run passed **9,836 tests, five skipped, six existing warnings in
@@ -94,7 +94,7 @@ frontend. Neither a native run nor a server restart is inferred.
 | Configuration vs convention | 3 → 3 | No production environment setting, port assumption or MIDI-channel choice was added by the correction. `RYTM_TEST_BEACON_CLIENT_STARTUP` is a new test-child switch; its Gate 13 documentation is recorded in CONTRIBUTING/LOCAL_DEV_TOOLING_NOTES. Canonical registry identity and explicit absence of evidence remain intact. |
 | Test maintainability | 2 → 3 | Retained frames exercise the real capture/anchor/bridge/planner seam with shared helpers. Earlier 23 capture/286 registry passes remain scoped evidence. Fresh full Studio composition has 9,836 passes and 18 touched modules at 100% lines/branches; the separate helper runtime has 10,691 passes and four touched modules at 100%. These do not substitute for missing native gates. |
 | Build / dev loop friction | 3 → 3 | Historical failed runs remain failed evidence. Fresh Studio full coverage passed in 270.32 seconds; separate runtime in 286.21 seconds. Local Cargo/rustfmt/native tests/Clippy are unavailable, and new-head hosted native verification remains pending. Clean-install performance and a baseline speed comparison remain unmeasured. |
-| Error messages / provenance | 2 → 3 | The fresh saved KIT01 projection logs 324 promoted parameters/10 omissions with no new raw-frame SHA or SRC send. The initial A4 helper's 0/1 wire failure remains failed evidence. Two later separately authorized fresh helpers each sent one CC74/channel0/value1, with user-reported physical1 and manual reload0. No hardware SAVE, native offset, automatic restoration or general A4/BOTH proof is inferred. |
+| Error messages / provenance | 2 → 3 | The fresh saved KIT 01 projection logs 324 promoted parameters/10 omissions with no new raw-frame SHA or SRC send. The initial A4 helper's 0/1 wire failure remains failed evidence. Two later separately authorized fresh helpers each sent one CC74/channel0/value1, with user-reported physical1 and manual reload0. No hardware SAVE, native offset, automatic restoration or general A4/BOTH proof is inferred. |
 | Versioning / release | 3 → 3 | Existing PR254 remains directly against `modularize-v1.34`, separate from Pi PR252. Mapping/learning is published at `2f0f5be0`; follow-up code HEAD `0130f5c5` has fresh source-specific checks but final receipt/publication/post-push confirmation and hosted/protected review remain pending. All 504 locked package versions/checksums and hardware pins remain unchanged; running server process is still `2a19b094`. No Pi or touring release is established. |
 | Future-proofing | 3 → 3 | A newly registered identity is listed without a new report dispatch arm or inherited evidence. Established families bind to existing evidence in one immutable data table. New parameter support still requires canonical evidence and tests; the correction adds no parallel registry or universal support promise. |
 
@@ -103,7 +103,7 @@ review. Native validation and final follow-up review remain explicit pending
 checks. Pending hosted verification and retrospective process timing remain
 explicit limitations, not positive scores to average away.
 
-The fresh saved KIT01 capture on runtime `2a19b094` has backend log timestamp
+The fresh saved KIT 01 capture on runtime `2a19b094` has backend log timestamp
 `2026-10-01 20:21:39,544` with no zone and fingerprint `5f75b9fb4856e8c7`.
 The UI displays XT Classic TUN/SWT/DEC values `42/99/39`, `58/66/0` and
 `60/83/10` on pads 6, 7 and 8 respectively. This is saved-state input/projection
@@ -143,5 +143,29 @@ has reviewer rubric scores **4/5/4/4/4** recorded in the run report; the earlier
 has not been extended retrospectively. Final receipt publication, post-push
 confirmation and protected plan termination remain pending. Gate 16's
 historical isolation/timing exception stays unchecked. The local budget
-deadline remains `2026-10-02T01:08:16Z`, without a claim about historical elapsed
-execution time.
+deadline ended at `2026-10-02T01:08:16Z` with a retained budget-exceeded receipt.
+The user resumed at `2026-10-02T01:13:47Z`; the current bounded interval ends
+`2026-10-02T02:43:47Z`. Historical elapsed execution time remains unmeasured.
+
+## Alias closure and integration-correction local assessment
+
+This inspection covers source `e62bf18a` and the unknown-machine refusal
+regression at `4bc21952`, against the two pre-code eighth-scope baselines.
+Scores are inspection judgments, not measured contributor performance. The
+first corrected full run passed 9,926 tests and exposed two uncovered existing
+error-path lines. The new regression passes10 focused cases; final source
+`4bc21952` passes9,927 tests with all 21 touched files at 100% lines/branches. This is a local assessment, not the required post-merge
+audit or maintainer acknowledgment of historical Gate14/16 deviations.
+
+| Required question | Before → local | Evidence and remaining work |
+| --- | --- | --- |
+| Onboarding curve | 3 → 3 | Inventory names alias, protected projection, display and physical-evidence boundaries; the historical exercise was not replayed. |
+| Naming hygiene | 2 → 3 | All224 SRC rows round-trip;68 missing keys derive canonical machine/slot identity with old-key precedence. |
+| Coupling / boundaries | 2 → 3 | Capture, mutation, planning and inventory consume one policy; planner uses the typed Cockpit data facade. |
+| Magic numbers / strings | 3 → 4 | Addresses and default pad labels derive from canonical catalog facts; no replacement domain/offset table. |
+| Configuration vs convention | 3 → 3 | No new production env, transport, MIDI channel or output-authority setting. |
+| Test maintainability | 2 → 3 | Compatible shared fixture, bool/float refusal and immediate PREPARE/SEND assertions replace invalid identities and stalled event waits. |
+| Build / dev loop friction | 2 → 3 | Failed29-case composition is retained; final full run completed in 280.92s with no worker loss; canonical touched coverage passes. |
+| Error messages / provenance | 2 → 3 | Missing bindings are separated from shared protection reasons; forged proposals refuse whole plans. Optional per-row debug detail remains a review suggestion. |
+| Versioning / release | 3 → 3 | Same direct-base PR254; pins/goldens unchanged. Historical2a hosted green does not certify this source or runtime deployment. |
+| Future-proofing | 3 → 3 | Reversible catalog fallback and canonical pad facade avoid new family-specific maps. New rows still need eligibility evidence; Studio display remains separate. |

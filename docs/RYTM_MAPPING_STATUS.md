@@ -43,6 +43,13 @@ the remaining families as software contracts only. These counts are software
 projection evidence, not outbound hardware, unsaved-state or touring acceptance.
 The pinned Pi counts and pre-patch tables below remain historical.
 
+These backend bindings do not complete every frontend. The Pi appliance's SRC
+protection screen already renders catalog labels, projected values and blockers;
+it needs the repaired backend and a fresh capture. Studio pad cards still use a
+fixed Synth definition list and omit the new namespaced keys. Its decorative
+performance knobs do not display snapshot values. That separate display gap
+must not be represented as completed musician-facing control coverage.
+
 The Studio [Device Support Inventory](DEVICE_SUPPORT_INVENTORY.md) reports
 **105 A4 MIDI rows**, including the manual CC catalog, and **91 synth-track
 MIDI controls**. The Pi matrix's **112 rows** include those 105 MIDI rows plus
@@ -63,21 +70,21 @@ same semantics or that a whole native word can be restored.
 Canonical sources:
 
 - [Machine identities and pad compatibility](../rytm_randomizer/data/rytm_machine_catalog.py),
-  `RYTM_MACHINE_PROFILES` at line 62: 33 identities; value 27 is the separate
+  `RYTM_MACHINE_PROFILES`: 33 identities; value 27 is the separate
   disabled synth state in `RytmMachine`, not a missing 34th sounding machine.
 - [Manual MIDI rows and legal domains](../rytm_randomizer/data/analog_rytm_midi.py),
-  machine rows at line 332, value metadata at line 198, catalog assembly at
-  line 683. The `validated_runtime` label denotes established software scope;
+  `ANALOG_RYTM_MACHINE_SRC_BY_MACHINE` and `ANALOG_RYTM_MANUAL_CC` provide the
+  rows and value metadata. The `validated_runtime` label denotes established software scope;
   it does not supply a physical receipt for every value on every machine.
 - [Saved-sound slot offsets](../rytm_randomizer/data/analog_rytm_kit_layout.py),
-  `RYTM_SOUND_FIELD_BY_NRPN_LSB` at line 46. SRC NRPN low byte 0..7 maps to
+  `RYTM_SOUND_FIELD_BY_NRPN_LSB`. SRC NRPN low byte 0..7 maps to
   sound offsets `0x1C, 0x1E, 0x20, 0x22, 0x24, 0x26, 0x28, 0x2A`.
 - [Exact typed saved-KIT fields](../rytm_randomizer/data/analog_rytm_kit_fields.py)
   and [codec accessors](../rytm_randomizer/devices/strategies/analog_rytm_kit_fields.py):
   native words and their low bytes remain in the original frame. The existing
   Cockpit projection uses their seven-bit primary byte.
 - [Cockpit compact aliases](../rytm_randomizer/cockpit/data/rytm_parameter_map.py),
-  machine aliases at line 288 and reversible lookup at line 407.
+  `cockpit_parameter_mapping()` and `cockpit_parameter_key()` provide reversible bindings.
 - [Pi descriptive capability matrix at the pinned source](https://github.com/buzzijose-hub/RytmRandomizer/blob/8cfa6f7b6cf9469ffa134598182febb60ecdd1df/rytm_randomizer/cockpit/capture/appliance_capabilities.py),
   Rytm row projection at line 222. This matrix is descriptive, not a readiness
   decision or physical validation ledger.
@@ -208,9 +215,9 @@ Subsequent entries advance together through the family’s listed range.
 The closure uses existing aliases first, then stable namespaced SRC
 slot keys derived from canonical `(machine, nrpn_lsb)` identity. Reverse lookup
 must revalidate the same parameter, CC and native slot. The generic
-[mutation engine](../rytm_randomizer/cockpit/engine/mutate.py), line 156, already
+[mutation engine](../rytm_randomizer/cockpit/engine/mutate.py), `mutate()`, already
 clamps mapped values to catalog bounds; the existing
-[send-plan builder](../rytm_randomizer/cockpit/engine/send_plan.py), line 90,
+[send-plan builder](../rytm_randomizer/cockpit/engine/send_plan.py), `prepare_send_plan()`,
 already selects target-minus-locks and exact catalog CCs. There is no need for
 a second randomizer, registry or renderer.
 
@@ -222,9 +229,10 @@ detune safety window. A mapped name alone must not bypass that window.
 
 ## Semantic discrepancies and facts already available elsewhere
 
-1. **CY Ride:** the manual catalog at `analog_rytm_midi.py:591` assigns Hit Decay
+1. **CY Ride:** the manual catalog's `cy_ride` row assigns Hit Decay
    to CC 19/NRPN 1:3 and Cymbal Type to CC 20/NRPN 1:4. The typed native recipe at
-   `analog_rytm_kit_fields.py:24` assigns slot 4 `TYP`, slot 5 `HIT`.
+   `RYTM_MACHINE_PARAMETER_NAMES` in `data/analog_rytm_kit_fields.py` assigns
+   slot 4 `TYP`, slot 5 `HIT`.
    [Elektron’s OS 1.72 manual](https://www.elektron.se/wp-content/uploads/2025/01/Analog-Rytm-MKII-User-Manual_ENG_OS1.72_250130.pdf)
    distinguishes the two controls, but its MIDI appendix does not independently
    establish saved-byte association. Do not swap CCs or saved offsets based on
@@ -232,7 +240,7 @@ detune safety window. A mapped name alone must not bypass that window.
    observation resolve this discrepancy without an initial outbound send.
    A subsequent [operator-present inbound check](hardware-validation/2026-10-01-cy-ride-inbound-address-check.md)
    supports TYP CC20 with displayed C/D observed as2/3, and HIT CC19 with
-   displayed48–50 observed directly. Manual KIT01 reload returned C/48.
+   displayed48–50 observed directly. Manual KIT 01 reload returned C/48.
    No output or SAVE occurred. This resolves the tested live address
    association only; native saved slots, complete selector domains and
    outbound behavior remain unvalidated, so both rows stay blocked.

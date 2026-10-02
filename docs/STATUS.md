@@ -5,46 +5,46 @@ Last updated: 2026-10-01. This file is a hand-authored snapshot and is meant to 
 ## Current Snapshot
 
 The [captured Rytm mapping correction](superpowers/plans/2026-10-01-rytm-captured-machine-mapping.md)
-is integrated into the existing Studio PR #254 delivery checkout. Its final
-combined Python software run passed 9,836 tests, with five skips and six existing
-warnings; all 18 touched production modules have 100% line/branch coverage.
-Pure branch coverage is 99.37%. The same update fixes Eddie's registry omission blocker:
-the passive inventory lists every registered device, including explicit
-`no_support_evidence` summaries, and tests registry-set equality. It also
-promotes exact fixture-proven XT Classic ID 8 on pads
-6–8 and retains existing machine SRC aliases through the canonical capture
-bridge. Unpromoted tom facts, including raw `0x88`, cannot acquire SRC mutation
-authority. Passive composed decoding of the retained studio KIT and two RIO
-fixtures produces 60 SRC plus 264 common keys without changing frame bytes.
-[The mapping audit](RYTM_MAPPING_STATUS.md) records eleven remaining alias
-families and unresolved semantic/precision work. The studio server now runs
-the mapping-only correction at `2a19b094`, separately verified with 10,678
-passing tests and three touched production modules at 100% lines/branches.
-Its unchanged frontend uses the hash-verified `8cfa6f7b` bundle. Outputs are
-disarmed. Fresh operator input-only KIT 01 capture matches fingerprint
-`5f75b9fb4856e8c7` and projects 324 parameters; XT Classic cards on pads 6–8
-now expose their captured controls. This is projection evidence, without a
-new SRC send or unsaved-RAM readback. The report/registry increment belongs
-to PR #254, rather than this local runtime checkout.
+is integrated into the existing direct-base Studio PR #254. All224 SRC catalog
+rows have descriptive bindings, closing 68 unnamed rows across 11 families.
+Existing compact aliases retain precedence; exact machine/NRPN-slot fallback
+keys reuse the canonical MIDI catalog. One conservative policy protects Level,
+new pitch/selectors and disputed semantic rows across capture, mutation,
+planning and inventory. Exact raw identity and physical pad compatibility are
+required; masked high-bit IDs and unverified tom facts gain no SRC authority.
+Retained init/RIO frames now project 64/65 SRC values plus 264 common values,
+328/329 total, without changing frame bytes. Synthetic families remain software
+contracts, not physical evidence. [Mapping boundaries](RYTM_MAPPING_STATUS.md)
+include the separate Studio pad-card display gap: fixed Synth definitions omit
+new namespaced keys. The appliance already renders catalog-driven SRC rows.
 
-The A4 helper's public-message/wire-wrapper mismatch was repaired at the same
-validated boundary. Its separate runtime source `76634665` passed 10,691 tests,
-with four touched modules at 100% lines/branches and 99.39% pure branch coverage.
-After the original zero-send failure, two authorized one-CC Track1 PWM Depth
-actions were reported successful. For the explicitly requested repeat, the
-operator checked 0 before send, 1 afterward, and 0 following manual KIT01 reload
-without saving. This is one integer-control/manual-recovery proof, not general
-A4/BOTH or automatic restore. The server process was not restarted for the
-standalone helper fix. An inherited native beacon TLS initialization race is
-also repaired in source; hosted Rust/native checks remain required because
-Cargo is unavailable locally. Locked package versions/checksums are unchanged.
+The final Python composition at `4bc21952` passed 9,927 tests, with five skips
+and six existing warnings in 280.92s. All 21 touched production modules have
+100% line/branch coverage; combined coverage is99.66%, pure branch99.37%.
+Strict typing and whole-tree lint/dead-code/version checks pass. The
+unknown-machine API refusal now has a regression. The earlier`2a3789` hosted
+PR/push runs both passed 191 Rust tests,32 native WebView scenarios and two
+Windows installer handoffs each. Those historical results certify2a3789 only;
+normal final publication, post-push review and new mapping CI remain pending.
+Cargo is unavailable locally; locked package identities/checksums are unchanged.
 
-The separate October 1 studio trial on `8cfa6f7b` completed one approved
-16-message Rytm RAM audition. The operator checked pad 2 Filter Frequency,
-Amp Decay, Overdrive and Reverb, with pad 1 Frequency unchanged. Manual KIT 01
-reload restored those values and sound; a fresh saved-KIT capture matched
-fingerprint `5f75b9fb4856e8c7`. This is scoped physical evidence, not a check of
-all 16 controls, SRC, automatic restore, A4/BOTH or Pi/touring acceptance.
+The running studio server remains `2a19b094`, with the unchanged hash-verified
+`8cfa6f7b` frontend and outputs disarmed. Its earlier fresh input-only KIT 01
+capture projected324 values and verified XT Classic on pads6–8. The alias
+increment has not been rolled into this runtime. The separate A4 helper source
+`76634665` passed 10,691 tests; two individually authorized CC74/channel 1 PWM
+Depth actions were observed at1, followed by manual KIT 01 reload to0 without
+saving. The original zero-send attempt remains failed evidence. No general
+A4/BOTH or automatic recovery authority is granted.
+
+The [CY Ride inbound check](hardware-validation/2026-10-01-cy-ride-inbound-address-check.md)
+observed isolated TYP C→D→C on CC20 and HIT48→49→50→49→48 on CC19, MIDI 11.
+The operator manually reloaded saved KIT 01 and confirmed TYP C/HIT48. No output,
+SAVE, native-frame capture or automatic recovery was performed; native
+association and full value domains remain unverified, so both rows stay blocked.
+The earlier approved16-message Rytm pad 2 audition checked four controls and
+manual recovery, with pad1 unchanged. Neither bounded observation establishes
+Pi/touchscreen/offline or touring readiness.
 
 The [studio evidence handoff](superpowers/plans/2026-10-01-studio-evidence-handoff.md)
 is implemented in [PR #254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254)

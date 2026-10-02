@@ -14,8 +14,10 @@ See the [plan](2026-10-01-rytm-captured-machine-mapping.md) for scope and the
 | Module | Before | After |
 | --- | --- | --- |
 | [Rytm snapshot decoder](../../../rytm_randomizer/devices/strategies/analog_rytm_snapshot_decoder.py) | Every machine fact on tom pads 6–8 stayed candidate-only, including fixture-proven XT Classic. | Exact raw XT ID `0x08`, obtained from the canonical machine catalog, is promoted on these pads. Raw `0x88` is not promoted merely because masking yields 8; other tom IDs remain pending. |
-| [Cockpit reverse parameter map](../../../rytm_randomizer/cockpit/data/rytm_parameter_map.py) | Existing machine aliases accepted section `SRC`, while the canonical shell emitted the owning machine key. | Both `SRC` and the exact owning machine section are accepted. Other machine sections are rejected; existing aliases and exact control matching remain unchanged. |
-| [Capture bridge](../../../rytm_randomizer/cockpit/capture/bridge.py) | Machine SRC events were dropped by the section mismatch. A shell fallback label alone could otherwise look like usable machine identity. | SRC projection requires a promoted machine fact whose decoded ID matches the event's canonical machine. Unverified, absent or mismatched facts are omitted; common fields and exact captured bytes remain available. |
+| [Cockpit reverse parameter map](../../../rytm_randomizer/cockpit/data/rytm_parameter_map.py) | Existing machine aliases accepted section `SRC`, while the canonical shell emitted the owning machine key;68 catalog rows lacked aliases. | Accept exact owning sections and retain compact keys first. Catalog-derived machine/NRPN-slot keys complete224 descriptive bindings; noncanonical spellings cannot create extra addresses. |
+| [Capture bridge](../../../rytm_randomizer/cockpit/capture/bridge.py) | Machine SRC events were dropped by the section mismatch. A shell fallback label alone could otherwise look like usable machine identity. | Require promoted facts, exact raw/decoded identity, canonical physical pad compatibility, exact CC matching and shared live eligibility. Unverified/protected rows are omitted; common fields and exact frame bytes remain available. |
+| [Shared projection policy](../../../rytm_randomizer/data/analog_rytm_midi.py) | Missing aliases and existing mutation assumptions could obscure protected controls. | Immutable semantic/pitch facts feed one mapping policy used by capture, mutation, planning and inventory. Level, new pitch/selectors and disputed rows remain protected; forged changed rows refuse the whole live plan. Frozen legacy offline arithmetic remains byte-identical. |
+| [Cockpit compatibility facade and demo](../../../rytm_randomizer/cockpit/data/rytm_parameter_map.py) | Demo/test assignments included incompatible machines; a new direct planner/data import violated its layer. | The typed facade derives compatibility/default labels from the canonical pad catalog; its compatibility predicate rejects bool/float pads. Demo labels use it; positive protocol tests assert preparation/send success before awaiting events. |
 | [Inventory data](../../../rytm_randomizer/data/device_support_inventory.py) | Report rows described known families, without a canonical registry-to-evidence summary. | An immutable registered-ID-to-evidence-family table supplies report identity only. Pi omission prose no longer embeds changeable PR status. |
 | [Data facade](../../../rytm_randomizer/data/__init__.py) | Exported evidence and omission facts. | Also exports the canonical registry/evidence binding; no duplicate registry is introduced. |
 | [Passive inventory report](../../../rytm_randomizer/reports/device_support_inventory.py) | Family rows did not expose registered devices with no matching evidence. One count key used mixed case. | Sorted `all_devices()` summaries expose every registered ID. Unknown evidence bindings report zero rows and `no_support_evidence`, without inheriting another family's support. The count key is `a4_synth_track_midi_controls`. |
@@ -43,11 +45,15 @@ adding attributes that mask the production mismatch. The native TLS repair
 uses the existing beacon transport and locked provider, without introducing
 another HTTP stack, retry or update policy.
 
-The composed retained original October 1 frame and RIO initialized/returned
-fixtures each project **324 keys, including 60 SRC keys**, with all three XT
-rows ready for the existing mutation scope. These are offline byte/projection
-receipts. Eleven missing alias families and uncertain native/live conversions
-remain separate work in the [mapping inventory](../../RYTM_MAPPING_STATUS.md).
+The original mapping checkpoint projected **324 keys, including 60 SRC keys**.
+The later descriptive closure adds 29 unambiguous, unprotected primary-byte
+projections across eleven families: retained init/RIO return now project
+**328/329 keys, including 64/65 SRC values**, with 264 common values each.
+All224 SRC rows have names; uncertain native/live semantics and protected
+controls remain separate validation work in the
+[mapping inventory](../../RYTM_MAPPING_STATUS.md). These are offline projection
+receipts; the appliance runtime and fixed Studio pad-card display are separate
+deployment/display boundaries.
 
 ## Boundaries retained
 
