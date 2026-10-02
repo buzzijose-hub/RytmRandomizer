@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-02T02:09:20Z",
+  "updated_at": "2026-10-02T02:27:09Z",
   "status": "in-flight",
-  "phase": "final-alias-source-verified-normal-publication-pending-runtime-backport-isolated",
+  "phase": "browser-fixture-correction-locally-passed-publication-and-hosted-acceptance-pending-isolated-runtime-verified-backups-blocked",
   "prototype_source": "8cfa6f7b6cf9469ffa134598182febb60ecdd1df",
   "prototype_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-tom-mapping/RytmRandomizer",
   "delivery_start_source": "941643c551abfa225f45c70a954b6671d1cbb5f4",
@@ -19,10 +19,10 @@
   "work": {
     "mapping_implementation": "all224-SRC-descriptive-bindings-integrated-with-shared-conservative-policy-at-dbdfbf93-correction-through-data-facade-compatible-demo-and-integration-pads-at-e62bf18a-running-server-still2a19b094",
     "inventory": "direct-base-integrated-with-registry-equality-guard",
-    "dimension_reviews": "eight-postpush-reviews-complete-at-2a3789-consolidated-comment5943575627-updated-With-fixes-Gate14-16-retained",
+    "dimension_reviews": "eight-postpush-reviews-complete-at-d6e8e164-no-new-production-Critical-or-Important-Gate14-16-retained-new-browser-fix-head-confirmation-pending",
     "plan_records": "source-bound-learning-and-probe-records-published-seventh-native-readiness-scope-declared-before-isolated-implementation",
-    "delivery_integration": "alias-and-integration-correction-integrated-and-sourceverified-at4bc21952-finaldocreceipt-ready-separate-runtime-scope-ed19dd04-beforecode",
-    "final_delivery_checks": "4bc21952-full9927pass5skip6warnings280.92s-combined99.66-purebranch99.37-canonical21touched100linesbranches-strict21-and-lint-vulture-versionpass-planchecks3pass-normalpublication-postpush-review-and-newheadhostedpending",
+    "delivery_integration": "4bc21952-verified-source-published-as-d6e8e164-separate-browser-scope47e43516-before-local-assertion-fix-isolated-runtime4b88-verified-not-activated",
+    "final_delivery_checks": "4bc21952-full9927pass5skip6warnings280.92s-canonical21touched100linesbranches-strict21-lint-vulture-versionpass-d6e8normalhook860architecture697notfastincl685pass-both-native-jobsSUCCESS-browser32pass2skip1fail-local-browser-fix3pass9.1s-ESLint-tsc-zero-new-publication-and-hosted-acceptance-pending",
     "protected_review_and_merge": "pending",
     "post_merge_maintainability_audit": "pending"
   },
@@ -229,11 +229,49 @@
       "scope": "isolated-local-appliance-alias-backport-scope-ed19dd04",
       "result": "Scope/baseline committed before source in new studio-alias-runtime leaf from76634665. Preserve appliance depth/bounds API/arithmetic, A4/Pi exports and unchanged8cfrontend; capability rows must consume same blockers as planner. Source/focused tests/independent review/fullcoverage pending. No live runtime edit/restart, credentials, port, output or SAVE action.",
       "hardware_observation": false
+    },
+    {
+      "scope": "published-d6e8e164dbafe7b7b37bc8edff7bc561d173d7bd-prepush-and-eight-postpush-reviews",
+      "result": "Normal publication through hooks passed lint, strict typing on21 modules,860 architecture and697 not-fast tests including685 frozen parity cases. All eight postpush dimensions completed with no new production Critical or Important findings. Historical Gate14/16 process exceptions remain; no protected approval or merge is inferred.",
+      "passing_verdict": true,
+      "hardware_observation": false
+    },
+    {
+      "scope": "hosted-exact-d6e8e164-native-success-browser-failed-checkpoint",
+      "result": "Both hosted PR/push desktop-shell native jobs completed SUCCESS. Their browser lanes each recorded32 passed,2 skipped,1 failure: the screen-reader boot assertion still expected incompatible BD Acoustic on pad12, while the corrected canonical demo supplies CB Classic. Failed hosted receipts remain failed; native success does not certify browser acceptance or any later fix head.",
+      "passing_verdict": false,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "browser-canonical-demo-assertion-fix-precode-scope47e435161bc36acf43db466840d2d44899d56d7b-local-working-tree",
+      "result": "The scope was committed before source. The local fix changes only the strict pad12 expected label to canonical CB Classic. The actual three-checkpoint screen-reader journey passed3 tests in9.1s with MIDI disabled; targeted ESLint and TypeScript report zero issues. No production UI, timeout, retry, skip, accessibility contract, pin or guard change. Fix publication and fresh exact-head hosted acceptance remain pending.",
+      "passing_verdict": true,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "isolated-appliance-runtime-source4b88-software-validation-not-activation",
+      "result": "Full runtime composition passed10793 tests,5 skips,6 existing warnings in319.58s. Combined coverage99.66%, purebranch99.39%;8 newly touched modules and10 union modules have100%lines/branches. Strict typing on8 modules and lint passed. The isolated checkout is clean and was not activated. The existing studio server remains loaded from2a19b094; no restart, capture, output or SAVE occurred.",
+      "passing_verdict": true,
+      "final_delivery_verdict": false,
+      "combined_coverage": "99.66%",
+      "pure_branch_coverage": "99.39%",
+      "touched_production_modules": 8,
+      "touched_line_branch_coverage": "100%",
+      "hardware_observation": false
+    },
+    {
+      "scope": "original-source-backup-readiness-stopped-both_original_captures_required",
+      "result": "Backup readiness stopped at both_original_captures_required. No backup command, fresh capture, MIDI send, hardware SAVE or server restart was performed. Both original captures remain required before dependent activation or physical work; elapsed time supplies no approval or evidence.",
+      "passing_verdict": false,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
     }
   ],
   "remaining": [
-    "Publish final verified mapping source through normal hooks and confirm eight postpush review dimensions/new-head hosted checks",
-    "Complete isolated appliance backport and source-specific verification before local restart/fresh capture; preserve separate runtime evidence",
+    "Publish the locally verified browser assertion fix through normal hooks, confirm affected postpush dimensions and require fresh exact-head hosted acceptance",
+    "Preserve the verified isolated runtime4b88 checkout without activation; resolve both_original_captures_required before dependent restart/fresh capture or physical work",
     "Protected new-head human review, hosted checks and merge",
     "Retrospective audit review and actual post-merge reassessment; Gate14 remains unchecked",
     "Preserve historical Gate16 isolation/timing limitation and outstanding prior minor follow-ups"
@@ -243,9 +281,10 @@
     "New capture has no retained raw-frame SHA and proves saved-state projection only, not SRC send, unsaved-RAM synchronization or recovery",
     "Historical A4 attempt failed with 0/1 messages; two later individually authorized fresh helpers each sent one CC74/channel0/value1 with operator-reported physical1 and manual reload0",
     "The running studio server process remains 2a19b094; runtime checkout/helper76634665 checks do not imply a server restart, frontend rebuild or rollout of the new native source",
-    "No local Cargo execution; hosted native runs at2a3789 both passed191 Rust tests,32 WebView scenarios and2 Windows handoffs each. These certify only2a3789; future mapping source requires new-head verification. All504 locked package identities/versions/checksums unchanged",
+    "No local Cargo execution; historical2a3789 native runs passed191 Rust tests,32 WebView scenarios and2 Windows handoffs each. Both d6e8 desktop-shell jobs completed SUCCESS, while browser lanes failed the stale pad12 label assertion. Later browser fix source still needs exact-head hosted acceptance. All504 locked package identities/versions/checksums unchanged",
     "All224 SRC rows now have descriptive aliases; guarded semantic discrepancies, new pitch/selectors and unverified live precision remain blocked. Studio pad cards still omit namespaced controls; appliance runtime is not yet updated.",
     "No general A4/BOTH, paired/fractional, native-offset, automatic-restore, Pi or touring readiness promotion; bounded probes performed no hardware SAVE or new raw capture",
+    "Isolated runtime4b88 has source-specific passing software receipts and remains unactivated; both_original_captures_required stops dependent hardware/activation work, with no new command, capture, send, SAVE or restart",
     "Baseline audit and execution records were recorded after implementation began",
     "Writing phases used disjoint scopes in one prototype checkout; separate per-phase worktrees were not retrospectively created"
   ],

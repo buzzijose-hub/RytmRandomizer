@@ -169,3 +169,38 @@ audit or maintainer acknowledgment of historical Gate14/16 deviations.
 | Error messages / provenance | 2 → 3 | Missing bindings are separated from shared protection reasons; forged proposals refuse whole plans. Optional per-row debug detail remains a review suggestion. |
 | Versioning / release | 3 → 3 | Same direct-base PR254; pins/goldens unchanged. Historical2a hosted green does not certify this source or runtime deployment. |
 | Future-proofing | 3 → 3 | Reversible catalog fallback and canonical pad facade avoid new family-specific maps. New rows still need eligibility evidence; Studio display remains separate. |
+
+## Latest publication and isolated runtime checkpoint
+
+At **2026-10-02T02:27:09Z**, source `d6e8e164` is published through normal
+hooks, with lint, strict typing on 21 modules, 860 architecture and 697 not-fast
+tests, including 685 frozen parity cases, passing. Eight targeted post-push
+reviews found no new production Critical or Important issue. Historical Gate
+14/16 process exceptions and the required actual post-merge assessment remain.
+These receipts update delivery provenance; they do not raise the inspection
+scores or imply human approval.
+
+Both exact-`d6e8e164` hosted desktop-shell jobs completed SUCCESS. Each browser
+lane recorded 32 passes, two skips and one stale screen-reader assertion: pad
+12 still expected physically incompatible BD Acoustic instead of the corrected
+canonical CB Classic. The pre-code scope is committed at `47e43516`. Its local
+one-label assertion correction retains the strict accessible-name check; the
+actual three-checkpoint journey passed three tests in 9.1 seconds with MIDI
+disabled. Targeted ESLint and TypeScript report zero issues. No production UI,
+timeout, retry, skip or safety guard changed. This small regression correction
+supports the existing test-maintainability assessment. Publication and fresh
+exact-head hosted acceptance of that fix remain pending; native success is
+not complete browser acceptance.
+
+The separate clean runtime checkout at source `4b88` passed 10,793 tests,
+five skips and six existing warnings in 319.58 seconds. Combined coverage is
+99.66%; pure branch coverage is 99.39%. Eight newly touched modules and ten
+union modules have 100% line/branch coverage; strict typing on eight modules
+and lint passed. This verifies the isolated software composition, not runtime
+activation or a touring release. The existing server still runs `2a19b094`.
+
+Backup readiness stopped at `both_original_captures_required`. No backup
+command, fresh capture, MIDI send, hardware SAVE or server restart occurred.
+Both original captures remain required before dependent activation or physical
+work. Hardware recovery and road acceptance remain unvalidated. The resumed
+deadline remains `2026-10-02T02:43:47Z`; no automatic merge or scheduler exists.

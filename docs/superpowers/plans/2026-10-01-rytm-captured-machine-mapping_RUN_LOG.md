@@ -291,3 +291,33 @@ has not been updated by these records.
   Retain the failed hosted logs; historical/full Python results do not certify
   browser acceptance. This follows the existing compatible-demo correction
   scope, rather than bypassing it or weakening the assertion.
+
+- **2026-10-02T02:27:09Z — browser correction locally verified, publication pending:**
+  published `d6e8e164dbafe7b7b37bc8edff7bc561d173d7bd` through normal hooks.
+  Lint, strict typing on 21 modules, 860 architecture tests and 697 not-fast
+  tests, including all 685 frozen parity cases, passed. Eight targeted
+  post-push reviews completed with no new production Critical or Important
+  finding; historical Gate 14/16 process exceptions remain. Both exact-head
+  hosted desktop-shell jobs completed SUCCESS. Each browser lane recorded
+  32 passes, two skips and one stale pad-12 label failure; this remains failed
+  acceptance evidence despite native success.
+- The browser scope was committed before source at
+  `47e435161bc36acf43db466840d2d44899d56d7b`. The local assertion now expects
+  canonical CB Classic on pad 12, retaining the strict accessible-name check.
+  The actual three-checkpoint screen-reader journey passed three tests in
+  9.1 seconds with MIDI disabled. Targeted ESLint and TypeScript report zero
+  issues. No production UI, accessibility contract, timeout, retry, skip,
+  hardware pin or guard changed. Fix publication and fresh exact-head hosted
+  acceptance remain pending; no newer CI success is claimed.
+- Isolated appliance runtime source `4b88` passed its full software composition:
+  10,793 passes, five skips and six existing warnings in 319.58 seconds.
+  Combined coverage is 99.66%; pure branch coverage is 99.39%. All eight newly
+  touched modules and ten union modules have 100% lines/branches; strict typing
+  on eight modules and lint passed. The isolated checkout is clean and was
+  not activated. Running studio server source remains `2a19b094`.
+- Original-source backup readiness stopped at `both_original_captures_required`.
+  No backup command, fresh capture, MIDI send, hardware SAVE or server restart
+  was performed. Both original captures remain required before dependent
+  activation or physical work. Protected approval, merge, actual post-merge
+  assessment and physical acceptance remain pending. The resumed deadline
+  remains `2026-10-02T02:43:47Z`; no scheduler or automatic merge was introduced.
