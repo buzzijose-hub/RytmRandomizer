@@ -309,3 +309,31 @@ The [eighth-scope baseline](2026-10-01-rytm-captured-machine-mapping_MAINTAINABI
 was recorded before this increment. It does not repair historical Gate 14/16
 timing exceptions or constitute the required post-merge reassessment. The
 resumed deadline remains `2026-10-02T02:43:47Z`.
+
+### Eighth-scope integration correction: fixture/demo truth and import boundary
+
+Recorded before correction code at leaf source `9603d20d`. The coordinator's
+integrated checkpoint reported 29 failed, 9,885 passed and five skipped in
+731.31 seconds. Three stalled workers did not return complete coverage, so the
+partial coverage percentage is not a valid final measurement. Reported failures
+identify a new engine-to-canonical-data import and a shared integration snapshot
+that places several machines on incompatible pads. The production demo factory
+repeats those assignments and needs the same truthful correction.
+
+The leaf implementer owns a bounded correction: reuse the Cockpit data facade
+for pad eligibility, correct production demo/shared fixture identities and
+parameters using catalog-compatible unprotected controls, and make successful
+send helpers fail promptly if preparation is blocked. Survey and reuse existing
+public snapshot/facts helpers before adding any helper. An independent reviewer
+checks composition read-only. The coordinator owns integration, state/run-log,
+coverage, strict typing, final review and publication. No architecture allowlist,
+frozen fixture, hardware authority or eligibility rule may be weakened.
+
+Verification covers every reported integration file, import-direction matrix,
+parameter-map and protected capture/planner regressions, plus production demo
+behavior. Actual runner output is retained. Existing mutation/history/lock/send
+assertions remain meaningful. Rollback reverts only this correction's commits.
+Done requires focused checks/review plus the coordinator's full composed gate.
+Historical Gate 14/16 exceptions and post-merge requirements remain pending;
+this pre-code amendment does not retroactively satisfy them. The resumed
+deadline remains `2026-10-02T02:43:47Z`.

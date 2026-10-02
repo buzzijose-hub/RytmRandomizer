@@ -46,3 +46,22 @@ is assumed. Historical Gate 14/16 exceptions remain unchanged.
 | Error messages / provenance | 2: missing aliases and unsafe semantics can look alike. | Separate descriptive bindings, protected projection and physical evidence. |
 | Versioning / release | 3: direct-base PR254 and exact-source receipts exist. | One integrated PR; no package/pin/config, installed-runtime or touring claim. |
 | Future-proofing | 3: canonical catalog is complete but compact maps are hand maintained. | Reversible catalog fallback with unknown refusal; future rows need their own eligibility evidence. |
+
+## Eighth-scope integration-correction pre-code baseline
+
+Recorded at leaf `9603d20d` before correction code, from the coordinator's
+actual failed composed checkpoint. This is an inspection baseline; historical
+Gate 14/16 limitations and actual post-merge assessment remain separate.
+
+| Required question | Baseline | Required correction outcome |
+| --- | --- | --- |
+| Onboarding curve | 3: failure log names exact shared fixture and import edge. | Keep correction in established data/engine/test seams. |
+| Naming hygiene | 2: demo and fixture labels imply invalid pad ownership. | Use compatible identities and accurate fixture documentation. |
+| Coupling / boundaries | 2: planner imports canonical data outside its matrix row. | Route typed eligibility through existing Cockpit data facade; reuse snapshot/facts helpers. |
+| Magic numbers / strings | 3: demo controls are fixed synthetic examples. | Validate against canonical mappings without duplicating production facts. |
+| Configuration vs convention | 4: no runtime/config change is needed. | Keep pins, allowlists and production authority unchanged. |
+| Test maintainability | 2: invalid shared snapshot blocks many successful-send flows. | One valid shared fixture and immediate blocked-preparation failures. |
+| Build / dev loop friction | 2: stalled workers lost coverage and delayed diagnosis. | Run bounded focused files with actual retained output before composition. |
+| Error messages / provenance | 3: local helpers can wait for absent success events. | Fail at blocked acknowledgement with its actual reason. |
+| Versioning / release | 3: correction stays in the same direct-base PR increment. | No release/runtime/calibration or full-pass claim without its receipt. |
+| Future-proofing | 3: pad policy exists, but demo/shared fixtures did not enforce it. | Test mapping/eligibility invariants and retain refusal regressions. |
