@@ -886,7 +886,10 @@ mod transport_contract_tests {
     #[test]
     fn beacon_client_builds_before_plugin_initialization_and_preserves_a_provider() {
         const CHILD_MODE: &str = "RYTM_TEST_BEACON_CLIENT_STARTUP";
-        const TEST_NAME: &str = "update_transport::transport_contract_tests::beacon_client_builds_before_plugin_initialization_and_preserves_a_provider";
+        const TEST_NAME: &str = concat!(
+            "update_transport::transport_contract_tests::",
+            "beacon_client_builds_before_plugin_initialization_and_preserves_a_provider"
+        );
 
         if let Some(mode) = std::env::var_os(CHILD_MODE) {
             // A fresh test process prevents other tests or a plugin check from
