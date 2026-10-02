@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import Final, Literal, TypedDict
 
 from ..cli_registry import CliCommand, make_passive_report_command, register
-from ..cockpit.data.rytm_parameter_map import cockpit_parameter_key
+from ..cockpit.data.rytm_parameter_map import cockpit_parameter_key, cockpit_parameter_live_blockers
 from ..cockpit.data.stage import A4_MAPPING_BLOCK_REASON
 from ..data.analog_four_display import ANALOG_FOUR_PARAMETER_DISPLAY
 from ..data.analog_four_kit_fields import (
@@ -477,6 +477,8 @@ def _midi_rows() -> tuple[DeviceSupportRow, ...]:
         blockers: list[str] = []
         if key is None:
             blockers.append("no_cockpit_compact_key_binding")
+        else:
+            blockers.extend(cockpit_parameter_live_blockers(mapping.machine_key or "unknown", key))
         if mapping.cc_lsb is not None:
             blockers.append("paired_control_precision_unverified")
         send = "conditional_guarded_cc7" if not blockers else "blocked"

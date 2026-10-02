@@ -8,6 +8,41 @@ links point to the same revision. This document separates existing facts from
 promotions still to implement or validate; it is not an output grant. The
 accompanying captured-machine repair must record its own completed checks.
 
+## Studio alias closure: descriptive coverage and protected projection
+
+The eighth Studio mapping increment completes compact bindings for the eleven
+historically missing families below: **all 224 SRC catalog rows now round-trip
+descriptively**, including the 68 previously unnamed rows. Existing keys keep
+precedence; fallback keys have the exact form `src_<canonical-machine>_<NRPN-low-byte>`.
+SY Dual VCO's label resolves to canonical `dual_vco`. No CC address, native
+offset, ordinal domain or physical validation was invented.
+
+One shared conservative policy governs captured projection, canonical-device
+mutation, prepared live plans and the passive inventory. Level and SY Raw Noise
+Level remain excluded; the six disputed/guarded rows below remain blocked.
+Newly exposed pitch controls, including Chip Offset 2–4 and HH Lab Tune 1–6,
+and selector controls stay protected. These refusals retain their descriptive
+names and addresses. They are omitted from captured mutation parameters, and a
+constructed changed protected proposal blocks the whole plan through the
+existing `candidate_high_risk` reason. Locked or untargeted rows do not block
+supported effective-scope changes. Paired LFO Depth keeps its separate refusal.
+
+SRC projection additionally checks exact raw machine identity and canonical pad
+compatibility; masked high-bit IDs and unverified tom identities gain no SRC
+authority. The saved frame is retained byte-for-byte. The legacy offline engine
+corpus uses device spelling `rytm_mk2` and includes arithmetic on `lev`; that
+frozen arithmetic is preserved. Canonical captured-device mutation freezes it,
+and every live plan refuses changed Level regardless of device/alias spelling.
+
+The eleven families supply **29 additional unambiguous, unprotected primary-byte
+SRC projections**, before unit-specific capture/authority checks. Unmodified
+retained init and RIO return frames project respectively **64/65 SRC values plus
+264 common values (328/329 total)**. Their four newly covered families are CY
+Classic, CB Classic, CY Ride and CB Metallic. Altered codec fixtures exercise
+the remaining families as software contracts only. These counts are software
+projection evidence, not outbound hardware, unsaved-state or touring acceptance.
+The pinned Pi counts and pre-patch tables below remain historical.
+
 The Studio [Device Support Inventory](DEVICE_SUPPORT_INVENTORY.md) reports
 **105 A4 MIDI rows**, including the manual CC catalog, and **91 synth-track
 MIDI controls**. The Pi matrix's **112 rows** include those 105 MIDI rows plus
@@ -150,9 +185,9 @@ physical receipt.
 | SY Raw (32) | 8/8/8/7 | N but keep Noise Level omitted and invalid waveform anchors preserved. Actual shell exposure is at most six SRC rows, not matrix E=7. |
 | HH Lab (33) | 8/8/0/0 | G; historical Tune 1–6 observations exist; keep all tuning controls protected by default. |
 
-## Eleven missing alias families: exact current catalog contents
+## Eleven historically missing alias families: unchanged catalog contents
 
-These 68 rows have saved-slot bindings but no compact aliases. Parameters are
+These 68 rows now have descriptive compact bindings in Studio. Parameters are
 shown in CC order; each first entry is CC 16 and corresponding NRPN is `1:0`.
 Subsequent entries advance together through the family’s listed range.
 
@@ -170,7 +205,7 @@ Subsequent entries advance together through the family’s listed range.
 | SY Chip | 16–23 | Level, Tune, Decay, Waveform, Speed, Offset 2, Offset 3, Offset 4 |
 | HH Lab | 16–23 | Level, Tune 1, Decay Time, Tune 2, Tune 3, Tune 4, Tune 5, Tune 6 |
 
-The smallest closure uses existing aliases first, then stable namespaced SRC
+The closure uses existing aliases first, then stable namespaced SRC
 slot keys derived from canonical `(machine, nrpn_lsb)` identity. Reverse lookup
 must revalidate the same parameter, CC and native slot. The generic
 [mutation engine](../rytm_randomizer/cockpit/engine/mutate.py), line 156, already
@@ -303,7 +338,7 @@ validation. Saved native mappings alone cannot unlock it.
 
 ## Verification required for the follow-on closure
 
-This inventory task ran no tests or hardware actions. Counts were obtained
+The original inventory task ran no tests or hardware actions. Counts were obtained
 with the existing inert capability APIs and read-only decoding of already
 retained frames. The mapping implementation should extend these existing tests:
 

@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 
+from ...data.rytm_machine_catalog import is_machine_allowed_on_pad
 from ...observability.logging import get_logger
 from ...snapshot.mutation_scope import MutationScope
 from ..data import (
@@ -21,7 +22,11 @@ from ..data import (
     SendPlanPacket,
     Snapshot,
 )
-from ..data.rytm_parameter_map import cockpit_pad_channel, cockpit_parameter_mapping
+from ..data.rytm_parameter_map import (
+    cockpit_pad_channel,
+    cockpit_parameter_live_blockers,
+    cockpit_parameter_mapping,
+)
 from ..mutation_targets import MutationTargets
 
 _logger = get_logger(__name__)
@@ -44,9 +49,11 @@ def prepare_send_plan(
         return None
 
     scope = MutationTargets(rytm_pad_targets=pad_targets).rytm_scope(pad_locks)
-    packets, paired_control_unverified = _candidate_packets(snapshot, candidate, scope)
+    packets, paired_control_unverified, protected_control_changed = _candidate_packets(
+        snapshot, candidate, scope
+    )
     blocked_reasons = _blocked_reasons(
-        snapshot, profile, candidate, packets, paired_control_unverified
+        snapshot, profile, candidate, packets, paired_control_unverified, protected_control_changed
     )
     ready = not blocked_reasons
     readiness_reason: ReadinessReason = "ready" if ready else blocked_reasons[0]
@@ -83,11 +90,12 @@ def _candidate_packets(
     snapshot: Snapshot,
     candidate: MutationCandidate,
     scope: MutationScope,
-) -> tuple[tuple[SendPlanPacket, ...], bool]:
+) -> tuple[tuple[SendPlanPacket, ...], bool, bool]:
     machines_by_pad = {pad.pad_id: pad.machine for pad in snapshot.pads}
     sendable_pad_ids = scope.effective_ids(machines_by_pad)
     packets: list[SendPlanPacket] = []
     paired_control_unverified = False
+    protected_control_changed = False
     for delta in sorted(candidate.pad_deltas, key=lambda item: item.pad_id):
         if delta.pad_id not in sendable_pad_ids:
             continue
@@ -95,6 +103,12 @@ def _candidate_packets(
         for parameter in sorted(delta.changed_keys):
             mapping = cockpit_parameter_mapping(machine, parameter)
             if mapping is None:
+                continue
+            if cockpit_parameter_live_blockers(machine, parameter) or (
+                mapping.machine_key is not None
+                and not is_machine_allowed_on_pad(delta.pad_id, mapping.machine_key)
+            ):
+                protected_control_changed = True
                 continue
             if mapping.cc_lsb is not None:
                 # A seven-bit projection cannot prove the paired value or its
@@ -110,7 +124,7 @@ def _candidate_packets(
                     value=int(delta.proposed_params[parameter]),
                 )
             )
-    return tuple(packets), paired_control_unverified
+    return tuple(packets), paired_control_unverified, protected_control_changed
 
 
 def _blocked_reasons(
@@ -119,13 +133,14 @@ def _blocked_reasons(
     candidate: MutationCandidate,
     packets: tuple[SendPlanPacket, ...],
     paired_control_unverified: bool,
+    protected_control_changed: bool,
 ) -> tuple[ReadinessReason, ...]:
     reasons: list[ReadinessReason] = []
     if candidate.profile_id != profile.profile_id:
         reasons.append("profile_mismatch")
     if candidate.source_snapshot_id != snapshot.snapshot_id:
         reasons.append("source_snapshot_mismatch")
-    if candidate.safety_status == "high_risk":
+    if candidate.safety_status == "high_risk" or protected_control_changed:
         reasons.append("candidate_high_risk")
     if paired_control_unverified:
         reasons.append("paired_control_precision_unverified")

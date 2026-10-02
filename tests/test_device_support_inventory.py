@@ -11,6 +11,10 @@ from pathlib import Path
 import pytest
 
 from rytm_randomizer.cli import main
+from rytm_randomizer.cockpit.data.rytm_parameter_map import (
+    cockpit_parameter_key,
+    cockpit_parameter_live_blockers,
+)
 from rytm_randomizer.data.analog_four_kit_fields import A4_TRACK_OFFSETS
 from rytm_randomizer.data.analog_four_midi import (
     ANALOG_FOUR_MANUAL_CC,
@@ -40,6 +44,26 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def _rows(payload: DeviceSupportInventory) -> list[DeviceSupportParameter]:
     return payload["parameters"]
+
+
+def test_inventory_uses_the_same_live_blockers_as_capture_and_planning() -> None:
+    rows = _rows(build_device_support_inventory())
+    for mapping in ANALOG_RYTM_MANUAL_CC.values():
+        if mapping.machine_key is None:
+            continue
+        key = cockpit_parameter_key(mapping.machine_key, "SRC", mapping.parameter)
+        assert key is not None
+        expected = cockpit_parameter_live_blockers(mapping.machine_key, key)
+        row = next(
+            row
+            for row in rows
+            if row["device"] == "rytm"
+            and row["surface"] == "midi_catalog"
+            and row["machine"] == mapping.machine_key
+            and row["field"] == mapping.parameter
+        )
+        assert row["blockers"] == expected
+        assert row["live_send"] == ("blocked" if expected else "conditional_guarded_cc7")
 
 
 def _native(field: str) -> DeviceSupportParameter:

@@ -3323,11 +3323,13 @@ flowchart LR
     Decode --> Anchor["Canonical snapshot-shell anchor"]
     Anchor --> Source["Machine SRC rows"]
     Source --> Owner["SRC or exact owning machine section"]
-    Owner --> Proof["Matching promoted machine fact"]
+    Owner --> Proof["Matching promoted machine fact<br/>exact raw ID + compatible pad"]
     Facts --> Proof
     Proof --> CC["Exact canonical CC reverse match"]
     Anchor -->|"common-page values"| CC
-    CC --> Snapshot["Cockpit semantic snapshot"]
+    CC --> Eligible["Shared conservative SRC blockers<br/>descriptive names retain refused rows"]
+    Eligible --> Snapshot["Cockpit semantic snapshot<br/>protected rows omitted"]
+    Eligible -. "same policy" .-> Inventory["Passive support inventory"]
     Snapshot --> Plan["Existing target-minus-locks + paired-control refusal"]
     Plan --> Armed["Existing exact-plan confirmation + ArmedApply"]
 ```

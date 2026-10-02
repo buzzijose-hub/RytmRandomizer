@@ -9,6 +9,7 @@ from rytm_randomizer.cockpit.data.rytm_parameter_map import (
     cockpit_pad_channel,
     cockpit_parameter_control,
     cockpit_parameter_key,
+    cockpit_parameter_live_blockers,
     cockpit_parameter_mapping,
 )
 from rytm_randomizer.data.analog_rytm_midi import (
@@ -91,7 +92,7 @@ def test_cockpit_parameter_key_projects_and_rejects_machine_specific_rows() -> N
         ("XT Classic", "AMP", "Tune", None),
         ("XT Classic", "xt_classic", "unknown future parameter", None),
         ("unknown future machine", "SRC", "Tune", None),
-        ("CY Ride", "cy_ride", "Tune", None),
+        ("CY Ride", "cy_ride", "Tune", "src_cy_ride_1"),
     ),
 )
 def test_cockpit_parameter_key_accepts_only_the_owning_machine_src_section(
@@ -161,3 +162,68 @@ def _machine_cc(machine_key: str, parameter: str) -> int:
 
 def _general_cc(section: str, parameter: str) -> int:
     return ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER[(section, parameter)].cc_msb
+
+
+def test_every_canonical_src_row_round_trips_without_inventing_addresses() -> None:
+    count = 0
+    fallback_count = 0
+    for machine_key, rows in ANALOG_RYTM_MACHINE_SRC_BY_MACHINE.items():
+        for row in rows:
+            key = cockpit_parameter_key(machine_key, row.section, row.parameter)
+            assert key is not None
+            assert cockpit_parameter_mapping(machine_key, key) is row
+            assert cockpit_parameter_key(machine_key, "SRC", row.parameter) == key
+            assert cockpit_parameter_control(machine_key, key) == row.cc_msb
+            count += 1
+            fallback_count += key.startswith("src_")
+    assert count == 224
+    assert fallback_count == 68
+    assert cockpit_parameter_key("SY Dual VCO", "dual_vco", "Osc 1 Decay") == "src_dual_vco_2"
+    assert cockpit_parameter_mapping("SY Dual VCO", "src_dual_vco_2") is (
+        ANALOG_RYTM_MACHINE_SRC_BY_MACHINE["dual_vco"][2]
+    )
+
+
+@pytest.mark.parametrize(
+    "key",
+    (
+        "src_hh_lab_01",
+        "src_hh_lab_8",
+        "src_hh_lab_-1",
+        "src_HH_LAB_1",
+        "src_hh_lab_1_extra",
+        "src_sy_chip_1",
+        "src_bd_hard_1",
+        "src_future_1",
+    ),
+)
+def test_catalog_fallback_keys_require_exact_canonical_ownership(key: str) -> None:
+    assert cockpit_parameter_mapping("HH Lab", key) is None
+    assert cockpit_parameter_mapping("unknown future machine", key) is None
+    assert cockpit_parameter_mapping("BD Hard", "src_bd_hard_1") is None
+
+
+@pytest.mark.parametrize(
+    ("machine", "key", "blocker"),
+    (
+        ("UT Impulse", "src_ut_impulse_3", "src_selector_encoding_unverified"),
+        ("CY Ride", "src_cy_ride_3", "src_native_slot_semantics_unverified"),
+        ("CY Ride", "src_cy_ride_4", "src_native_slot_semantics_unverified"),
+        ("SY Chip", "src_sy_chip_3", "src_selector_encoding_unverified"),
+        ("SY Chip", "src_sy_chip_4", "src_mode_encoding_unverified"),
+        ("SY Dual VCO", "src_dual_vco_4", "src_requires_guarded_detune_window"),
+        ("SY Chip", "src_sy_chip_5", "src_pitch_protected"),
+        ("HH Lab", "src_hh_lab_7", "src_pitch_protected"),
+        ("HH Basic", "src_hh_basic_5", "src_selector_protected"),
+        ("CY Classic", "src_cy_classic_0", "src_level_protected"),
+        ("BD Hard", "lev", "src_level_protected"),
+        ("SY Raw", "noise_level", "src_snapshot_projection_omitted"),
+    ),
+)
+def test_live_blockers_do_not_erase_descriptive_bindings(
+    machine: str, key: str, blocker: str
+) -> None:
+    assert cockpit_parameter_mapping(machine, key) is not None
+    assert cockpit_parameter_live_blockers(machine, key) == (blocker,)
+    assert cockpit_parameter_live_blockers(machine, "flt") == ()
+    assert cockpit_parameter_live_blockers(machine, "unknown") == ()

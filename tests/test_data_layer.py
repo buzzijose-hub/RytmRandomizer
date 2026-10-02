@@ -72,6 +72,16 @@ def test_machine_cc_is_15_everywhere():
     assert pkg_constants.MACHINE_CC == 15
 
 
+def test_conservative_cockpit_src_policy_does_not_claim_calibration() -> None:
+    assert len(data.RYTM_COCKPIT_PENDING_SRC_PARAMETERS) == 7
+    assert data.RYTM_COCKPIT_PENDING_SRC_PARAMETERS[("cy_ride", "Hit Decay")] == (
+        "src_native_slot_semantics_unverified"
+    )
+    assert {"Offset 2", "Offset 3", "Offset 4", "Tune 6", "Bend"}.issubset(
+        data.RYTM_COCKPIT_ADDITIONAL_SRC_PITCH_PARAMETERS
+    )
+
+
 def test_device_support_facts_keep_evidence_and_omissions_separate() -> None:
     assert dict(data.DEVICE_SUPPORT_EVIDENCE_FAMILIES) == {
         "analog_four_mk2": "a4",

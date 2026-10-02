@@ -693,10 +693,16 @@ Rytm input-only capture projects an immutable canonical KIT through the register
 snapshot strategy and existing snapshot-shell anchor. Machine SRC rows may carry
 their owning machine key as the section; the Cockpit reverse lookup accepts that
 exact owner or `SRC`, then rechecks the catalog CC. The capture bridge additionally
-requires a promoted matching machine fact before exposing SRC mutation values.
+requires a promoted matching machine fact, exact raw identity and catalog pad
+compatibility before exposing SRC mutation values. Existing aliases take
+precedence over reversible catalog-derived keys for the remaining SRC names.
+A shared conservative policy omits protected/disputed values from capture,
+freezes them in canonical-device mutation, refuses changed protected proposals
+at planning and reports the same blockers in the passive inventory. Historical
+offline `lev` arithmetic remains byte-frozen but cannot grant live output.
 Common-page projection keeps its existing rules. Exact XT Classic ID 8 on pads
 6–8 has retained initialized and returned KIT evidence; other tom facts remain
-pending. Missing aliases and semantic/precision blockers are listed in
+pending. Descriptive alias closure and remaining semantic/precision blockers are listed in
 [RYTM_MAPPING_STATUS.md](RYTM_MAPPING_STATUS.md). This projection grants no new
 transport or restore authority.
 

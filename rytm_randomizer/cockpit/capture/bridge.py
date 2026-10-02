@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 from ...data import RYTM_MACHINE_PROFILES, RYTM_MACHINE_PROFILES_BY_KEY
+from ...data.rytm_machine_catalog import is_machine_allowed_on_pad
 from ...devices import RytmKitSnapshot
 from ...engines.analog_rytm_snapshot_shell import build_snapshot_shell_anchor
 from ...observability.logging import get_logger
 from ..data import PadState, Snapshot, new_ulid
-from ..data.rytm_parameter_map import cockpit_parameter_control, cockpit_parameter_key
+from ..data.rytm_parameter_map import (
+    cockpit_parameter_control,
+    cockpit_parameter_key,
+    cockpit_parameter_live_blockers,
+)
 from ..stage.policy import ANALOG_RYTM_DEVICE_ID, RYTM_LANE_POLICY
 from .service import KitCaptureResult
 
@@ -23,7 +28,9 @@ def _has_promoted_machine_fact(snapshot: RytmKitSnapshot, pad_id: int, machine_k
         fact is not None
         and fact.promoted
         and profile is not None
+        and fact.raw_machine_value == profile.machine_value
         and fact.decoded_machine_value == profile.machine_value
+        and is_machine_allowed_on_pad(pad_id, machine_key)
     )
 
 
@@ -31,7 +38,8 @@ def cockpit_snapshot_from_rytm_capture(result: KitCaptureResult) -> Snapshot:
     """Promote a verified Rytm saved-kit capture to the Cockpit anchor shape.
 
     Only rows already promoted by the canonical snapshot-shell mapping and
-    reversible through the Cockpit's manual-backed compact-key table are kept.
+    reversible through existing aliases or exact canonical SRC slot keys and
+    permitted by the shared conservative eligibility policy are kept.
     Unknown fields stay in the exact captured payload owned by ``result``; they
     are never guessed into sendable Cockpit parameters.
     """
@@ -87,6 +95,9 @@ def cockpit_snapshot_from_rytm_capture(result: KitCaptureResult) -> Snapshot:
                 omitted_parameter_count += 1
                 continue
             if cockpit_parameter_control(event.machine_key, compact_key) != event.cc_msb:
+                omitted_parameter_count += 1
+                continue
+            if cockpit_parameter_live_blockers(event.machine_key, compact_key):
                 omitted_parameter_count += 1
                 continue
             params[compact_key] = event.value

@@ -38,7 +38,8 @@ from ..data import (
     Status,
     new_ulid,
 )
-from ..data.rytm_parameter_map import cockpit_parameter_mapping
+from ..data.rytm_parameter_map import cockpit_parameter_live_blockers, cockpit_parameter_mapping
+from ..data.stage import ANALOG_RYTM_DEVICE_ID
 from ..mutation_targets import MutationTargets
 from .prng import xorshift32
 
@@ -247,6 +248,13 @@ def mutate(
                 machine=pad.machine,
                 parameter=key,
             )
+            # Frozen legacy offline conformance includes arithmetic on ``lev``.
+            # Captures omit Level and every live plan refuses a changed Level;
+            # preserve that historical offline result without granting output.
+            if (key != "lev" or snapshot.device == ANALOG_RYTM_DEVICE_ID) and (
+                cockpit_parameter_live_blockers(pad.machine, key)
+            ):
+                new_value = value
             proposed[key] = new_value
             if new_value != value:
                 changed.add(key)
