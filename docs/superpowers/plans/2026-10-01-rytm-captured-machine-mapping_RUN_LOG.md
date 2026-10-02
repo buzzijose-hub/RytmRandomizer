@@ -201,3 +201,13 @@ has not been updated by these records.
   timestamp/no-scheduler assertions passed. No dependency installation, MIDI
   action, scheduler or automatic merge was introduced. Studio runtime remains
   running, and all physical controls were manually restored as observed.
+
+- **2026-10-02T01:13:47Z — user resumed:** the request for the next best move
+  resumes eligible software work. Clean local `7040b6c5` is two commits ahead of
+  unchanged published `1d59b0dc`; PR254 stays open on `modularize-v1.34` with
+  native restart acceptance red and protected review pending. Publish the
+  tested readiness fix through normal hooks, perform eight targeted post-push
+  confirmations and verify exact-head native CI. In parallel, a read-only audit
+  prepares the11 alias families for a separately declared safe mapping scope.
+  The prior budget-exceeded record remains historical. New90-minute checkpoint
+  ends `2026-10-02T02:43:47Z`. No additional MIDI action is authorized.

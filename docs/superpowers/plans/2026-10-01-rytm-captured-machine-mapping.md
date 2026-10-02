@@ -258,3 +258,13 @@ Studio receipt (9,836 tests); hosted Rust/native and post-merge evidence remain 
 - [ ] **Gate 16** — Pending: local parallel roles, disjoint ownership, state/log and recovery are recorded; original per-phase worktree and retrospective timing limitations are disclosed. One existing direct-base PR is updated; protected merge cannot be automated.
 - [x] **Gate 17** — Scoped abstraction review confirms canonical codec/catalog/Device/registry/Cockpit reuse.
 - [x] **Gate 18** — Architecture and diagram describe the exact guarded SRC and registry-report boundaries; counts source-bound.
+
+### Resumed execution checkpoint
+
+The user resumed eligible software work at **2026-10-02T01:13:47Z**. The prior
+90-minute window and `BUDGET_EXCEEDED` receipt remain historical. This resumed
+90-minute window ends **2026-10-02T02:43:47Z**. First publish the preserved
+native readiness fixture fix and verify its exact-head review/hosted gates; a
+parallel read-only mapping audit prepares any next bounded implementation
+scope. Protected approval, post-merge assessment and additional hardware
+authority are not inferred.
