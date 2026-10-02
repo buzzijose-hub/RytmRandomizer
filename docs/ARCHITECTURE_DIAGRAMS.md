@@ -2315,7 +2315,7 @@ flowchart TB
     subgraph ArmedSeam["ArmedApply seam (the cockpit's only output path)"]
         ArmedApply["senders/armed_apply.py<br/>· ArmedApplySession<br/>· arm(token) + confirm(action) + apply()<br/>· refuses persistent kit writes"]
         ExactOpener["senders/hardware.py<br/>ExactOutputOpener<br/>· fail-closed exact-name match"]
-        MidoProvider["mido_provider.py<br/>· lazy mido import<br/>· real MIDI port lifecycle"]
+        MidoProvider["mido_provider.py<br/>· lazy mido import<br/>· real MIDI port lifecycle<br/>· validate CC fields and reconstruct<br/>  neutral or legacy public-type messages"]
     end
 
     Rytm["Elektron Analog Rytm MK2<br/>(USB MIDI)"]
@@ -3371,7 +3371,8 @@ flowchart LR
     Doctor["Connection Doctor export<br/>bounded update_journal or unavailable"] --> Bridge
     Effects --> Exit["shared backend teardown"]
     Exit --> Install["consented verified-byte install<br/>key + platform evidence required"]
-    Transport -. "optional separate request" .-> Counters["GitHub counters -> fleet snapshot -> dashboard"]
+    Transport -. "optional separate request" .-> Beacon["Independent beacon<br/>ensure process crypto provider<br/>then build client"]
+    Beacon --> Counters["GitHub counters -> fleet snapshot -> dashboard"]
     Fixture["debug native-test recorder<br/>real verifier; 32 recorded terminal cases"] -. "acceptance boundary" .-> Transport
     Handoff["native-install-e2e<br/>2 actual signed Windows PE handoffs<br/>temporary fixture copy only"] -. "plugin install boundary" .-> Install
 ```
@@ -3379,7 +3380,9 @@ flowchart LR
 No key means metadata discovery with an explicit unavailable-download message,
 not staged bytes or install consent. Channel/freeze are native launch settings.
 Consent and skips are process-local. The activity tail is diagnostic; asynchronous
-beacon completion records a closed outcome without gating updates. Fleet estimates
+beacon completion records a closed outcome without gating updates. The beacon preserves an installed crypto
+provider or initializes the already locked ring provider before client construction;
+an asynchronous updater check is not an initialization guarantee. Fleet estimates
 cannot grant installation authority. No part of this graph authorizes MIDI
 output, hardware saving or physical validation.
 

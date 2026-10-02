@@ -1,7 +1,8 @@
 # Captured Rytm mapping current maintainability reassessment
 
 > Status: in-flight — prototype and composed-increment assessments recorded;
-> local software verified; protected review and actual post-merge reassessment pending.
+> mapping published; wire/native follow-up source checked and two bounded A4
+> probes observed; final publication, protected review and post-merge assessment pending.
 
 Per [PLAN_REQUIREMENTS.md](../../PLAN_REQUIREMENTS.md), Gate14. Compare the
 [retrospective baseline](2026-10-01-rytm-captured-machine-mapping_MAINTAINABILITY_AUDIT.md).
@@ -40,28 +41,92 @@ The coordinator supplied these scoped receipts: **23 passed** for capture API
 compatibility, **286 passed** for the registry-focused checks, **567 passed**
 for the selected architecture checks, one report golden check passed and
 strict typing passed on the three report/data modules. These are software
-checks, not physical captures. The coordinator's final full coverage run
+checks, not physical captures. The coordinator's prior full coverage run
 (`51572`) subsequently passed 9,823 tests, with five skips and six existing
 warnings in 269.56 seconds. All 18 touched production modules have 100% lines
 and branches; pure branch coverage is 99.37%. Strict typing passed on all 18
 modules; lint and Vulture passed. These results do not establish physical readiness.
 
+The mapping/learning increment is now published in existing PR #254 at
+`2f0f5be021079bfb78922a6d20b66d0bb5b44825`. Actual pre-push checks passed
+860 architecture and 697 not-fast cases, including all 685 frozen parity cases;
+canonical touched coverage confirms the 18-module receipt. Eight targeted
+post-push reviewers found no new production Critical or Important issue at
+that SHA. The new retrospective Gate 14 acknowledgment and historical Gate 16
+isolation/timing remain Important process exceptions. Prior off-reader exception
+timing and private browser-factory import remain minor follow-ups. Final
+changed-head checks, review, publication receipt and consolidated PR comment
+remain source-specific. This published mapping receipt does not certify the
+subsequent wire/native source by itself.
+
+The fifth and sixth plan scopes were recorded before isolated implementation.
+The current Studio code HEAD is
+`0130f5c5841f6e9fb830ee8e3d395fc5bb2c89af`, containing the wire repair at
+`648ae888`, native follow-up at `d698d62e`, and `0130f5c5` formatting. Its fresh
+full Studio run passed **9,836 tests, five skipped, six existing warnings in
+270.32 seconds**. Pure branch coverage is **99.3669858789% (99.37% rounded)**;
+combined coverage is **99.65%**. Canonical touched coverage confirms all 18
+production modules at 100% lines and branches. Strict typing on all 18 reports
+zero errors/warnings; whole-tree Ruff, Black py311, isort and Vulture pass.
+Frozen parity fixtures and production dependency pins remain unchanged. Six
+source review dimensions are clean with the prior observability minor retained;
+Docs/Maintainability confirmation, final receipt/push, post-push confirmation
+and consolidated comment are pending at this metadata checkpoint.
+
+Native validation has a separate boundary: Cargo is absent locally, so no
+rustfmt, native tests, Clippy or native executable run is claimed. All 504
+locked package versions and checksums remain unchanged. Historical CI at
+`2f0f5be0` had one passing and one failing result, with the failure reporting a
+missing TLS provider. New-head hosted native gates remain pending. The separate
+runtime checkout `76634665a719eed661724dfa31cca004a5cbe75a` passed **10,691 tests,
+five skipped, six existing warnings in 286.21 seconds**, with four touched
+production modules at 100% lines/branches, 99.39% pure branch, 99.66% combined
+coverage and passing strict typing/lint. The fresh standalone helper uses that
+source; the running server process remains `2a19b094`, with unchanged `8cfa6f7b`
+frontend. Neither a native run nor a server restart is inferred.
+
 | Required question | Baseline → composed increment | Evidence and remaining work |
 | --- | --- | --- |
 | Onboarding curve | 3 → 3 | The plan now names the registry writer's actual isolated checkout, eight owned files and integration dependency. Inventory and architecture links explain identities versus evidence. The contributor timing target remains unmeasured. |
 | Naming hygiene | 3 → 3 | Exact owning machine sections retain the established compact keys. `registered_devices`, `evidence_family`, `evidence_row_count` and `no_support_evidence` describe report coverage without granting device readiness; the normalized count key uses lowercase casing. |
-| Coupling / boundaries | 2 → 3 | The bridge consumes canonical promoted facts and exact CC matching. The report consumes public `all_devices()` plus immutable data bindings and retains existing family rows; it introduces no competing registry. The 9,823-pass final suite includes architecture checks. |
+| Coupling / boundaries | 2 → 3 | The bridge consumes canonical promoted facts and exact CC matching. The report consumes public `all_devices()` plus immutable data bindings and introduces no competing registry. The wire follow-up uses the existing provider boundary. The fresh 9,836-pass Studio suite covers Python architecture; native gates remain separate and unavailable locally. |
 | Magic numbers / strings | 4 → 4 | XT identity derives from its canonical catalog through `Final`; source dispatch uses the established typed vocabulary. Registered identity-to-evidence bindings live in the data layer, with no duplicated MIDI addresses or guessed mappings. Strict typing passed on the three report/data modules. |
-| Configuration vs convention | 3 → 3 | No environment reads, runtime settings, port assumptions or MIDI-channel choices were added. Existing registry registration remains the source of device identity; unknown report evidence is an explicit absence. |
-| Test maintainability | 2 → 3 | Retained frames exercise the real capture/anchor/bridge/planner seam with shared helpers. Capture API compatibility has 23 passes; registry-focused checks have 286 passes and exercise public registration of an unsupported future identity. The report golden and final 9,823-test composition pass. |
-| Build / dev loop friction | 3 → 3 | The original failed prototype run remains failed historical evidence. Final full coverage passed in 269.56 seconds with two workers; clean-install performance and a baseline speed comparison remain unmeasured. |
-| Error messages / provenance | 2 → 3 | Unpromoted facts cannot expose machine SRC values; known common rows remain available. Every registered identity appears in report summaries, and absent family evidence stays `no_support_evidence` with zero rows. Mapping and precision gaps remain explicit. The mapping-only studio backend is separately installed at `2a19b094`; the registry increment remains PR254 work and fresh physical capture is pending. |
-| Versioning / release | 3 → 3 | The delivery remains existing PR254 directly against `modularize-v1.34`, separate from Pi PR252. No version or hardware dependency pin changes. Local source-specific receipts passed; publication, hosted checks and protected review remain required. The separately tested local mapping runtime does not establish a Pi or touring release. |
+| Configuration vs convention | 3 → 3 | No production environment setting, port assumption or MIDI-channel choice was added by the correction. `RYTM_TEST_BEACON_CLIENT_STARTUP` is a new test-child switch; its Gate 13 documentation is recorded in CONTRIBUTING/LOCAL_DEV_TOOLING_NOTES. Canonical registry identity and explicit absence of evidence remain intact. |
+| Test maintainability | 2 → 3 | Retained frames exercise the real capture/anchor/bridge/planner seam with shared helpers. Earlier 23 capture/286 registry passes remain scoped evidence. Fresh full Studio composition has 9,836 passes and 18 touched modules at 100% lines/branches; the separate helper runtime has 10,691 passes and four touched modules at 100%. These do not substitute for missing native gates. |
+| Build / dev loop friction | 3 → 3 | Historical failed runs remain failed evidence. Fresh Studio full coverage passed in 270.32 seconds; separate runtime in 286.21 seconds. Local Cargo/rustfmt/native tests/Clippy are unavailable, and new-head hosted native verification remains pending. Clean-install performance and a baseline speed comparison remain unmeasured. |
+| Error messages / provenance | 2 → 3 | The fresh saved KIT01 projection logs 324 promoted parameters/10 omissions with no new raw-frame SHA or SRC send. The initial A4 helper's 0/1 wire failure remains failed evidence. Two later separately authorized fresh helpers each sent one CC74/channel0/value1, with user-reported physical1 and manual reload0. No hardware SAVE, native offset, automatic restoration or general A4/BOTH proof is inferred. |
+| Versioning / release | 3 → 3 | Existing PR254 remains directly against `modularize-v1.34`, separate from Pi PR252. Mapping/learning is published at `2f0f5be0`; follow-up code HEAD `0130f5c5` has fresh source-specific checks but final receipt/publication/post-push confirmation and hosted/protected review remain pending. All 504 locked package versions/checksums and hardware pins remain unchanged; running server process is still `2a19b094`. No Pi or touring release is established. |
 | Future-proofing | 3 → 3 | A newly registered identity is listed without a new report dispatch arm or inherited evidence. Established families bind to existing evidence in one immutable data table. New parameter support still requires canonical evidence and tests; the correction adds no parallel registry or universal support promise. |
 
-No code-maintainability regression was found in this scoped final-increment
-review. Pending hosted verification and retrospective process timing remain
+No code-maintainability regression was found in the scoped mapping-increment
+review. Native validation and final follow-up review remain explicit pending
+checks. Pending hosted verification and retrospective process timing remain
 explicit limitations, not positive scores to average away.
+
+The fresh saved KIT01 capture on runtime `2a19b094` has backend log timestamp
+`2026-10-01 20:21:39,544` with no zone and fingerprint `5f75b9fb4856e8c7`.
+The UI displays XT Classic TUN/SWT/DEC values `42/99/39`, `58/66/0` and
+`60/83/10` on pads 6, 7 and 8 respectively. This is saved-state input/projection
+evidence, not physical SRC control validation or automatic recovery. It does
+not raise the maintainability scores or supply a missing raw-frame comparison.
+
+The initial separately approved A4 channel 1 CC 74 OSC1 PWM Depth `0` to `1` attempt
+selected A4 MKII 4 output but failed with
+`midi_wire_unsupported_message: Message`; the helper reported **0/1 messages
+sent**, and the operator observed the control still at `0`. The wire repair is
+now source-checked. On **2026-10-02 at 00:40:09 UTC**, a fresh helper from
+`76634665` sent exactly one CC74/channel0/value1, exited 0, and the user
+reported physical `1` followed by manual source reload returning `0`.
+
+The user explicitly requested a repeat. After fresh **NO+KIT** reload showed
+`0`, another fresh helper sent the same one message at **00:42:47 UTC** and
+exited 0. The user then separately confirmed physical `1` and manual **NO+KIT**
+reload of saved KIT 01 showing `0`. The private JSON probe receipt is retained
+locally. No hardware SAVE or new raw capture occurred during either probe.
+These two authorized one-message actions support only the named non-paired
+integer control and observed manual recovery in that setup. They establish no
+general A4/BOTH, paired/fractional conversion, native-offset, automatic-restore
+or Pi/touring authority. New source changes still need their own checks/review.
 
 Eddie's [October 1 review](https://github.com/buzzijose-hub/RytmRandomizer/pull/254#pullrequestreview-5379158634)
 acknowledges the prior Studio handoff's timing deviation only. It does not
@@ -71,5 +136,12 @@ update all ten rows against the merged source and its receipts; any
 net-negative delta requires corrective work before declaring the plan complete.
 Gate15 learning artifacts now include the five-question repository-only
 onboarding exercise and its evidence-based rubric assessment, alongside the
-rule/guidance, reports, architecture comparison, replay and schema. Committed
-delivery is required; protected plan termination remains pending.
+rule/guidance, reports, architecture comparison, replay and schema. Those
+learning artifacts are committed and published at `2f0f5be0`. New lesson #19
+has reviewer rubric scores **4/5/4/4/4** recorded in the run report; the earlier
+13-document, five-question simulation evaluated only the capture lesson and
+has not been extended retrospectively. Final receipt publication, post-push
+confirmation and protected plan termination remain pending. Gate 16's
+historical isolation/timing exception stays unchecked. The local budget
+deadline remains `2026-10-02T01:08:16Z`, without a claim about historical elapsed
+execution time.

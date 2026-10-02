@@ -99,6 +99,11 @@ kit adoption, or a send plan that could reach an Elektron device.
     completed offset/stride matrix or generalize a pass to fractional MIDI.
     Local candidate/bank save is not hardware save or reload. Passive support
     inventory reports describe canonical evidence, never unlock authority.
+19. Compose legacy hardware helpers through the actual lazy output provider in
+    fake-backend tests. A raw fake port or a fake message with extra attributes
+    can hide incompatibility with the neutral wire wrapper. Recognize public
+    CC representations, validate their fields and reconstruct at that boundary;
+    never bypass the wrapper or forward an unchecked backend message.
 
 ## Verification
 

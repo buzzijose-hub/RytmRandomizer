@@ -558,6 +558,11 @@ test. When unset, that integration test skips with a precise reason. Never
 commit the referenced dump; the variable is test-only and does not enumerate,
 open, or write a MIDI port.
 
+`RYTM_TEST_BEACON_CLIENT_STARTUP` is owned by the Rust beacon regression's
+child-process harness. Unset runs the parent test; the harness selects `unset`
+or `installed` for fresh-provider and preinstalled-provider child cases. It is
+test-only, is not a runtime setting, and constructs requests without sending.
+
 ## Plan requirements — the 18 gates every PR must satisfy
 
 [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md) is the contract

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-02T00:13:00Z",
+  "updated_at": "2026-10-02T00:46:41Z",
   "status": "in-flight",
-  "phase": "software-verified-local-mapping-runtime-installed-publication-pending",
+  "phase": "followup-source-0130f5c5-software-verified-two-bounded-A4-probes-observed-final-publication-pending",
   "prototype_source": "8cfa6f7b6cf9469ffa134598182febb60ecdd1df",
   "prototype_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-tom-mapping/RytmRandomizer",
   "delivery_start_source": "941643c551abfa225f45c70a954b6671d1cbb5f4",
@@ -17,12 +17,12 @@
   "local_budget_deadline": "2026-10-02T01:08:16Z",
   "historical_elapsed_time_recorded": false,
   "work": {
-    "mapping_implementation": "final-composed-software-verified-and-mapping-only-local-runtime-installed",
+    "mapping_implementation": "mapping-published-followup-wire-and-native-source-integrated-at-0130f5c5-running-server-still2a19b094-standalone-helper76634665",
     "inventory": "direct-base-integrated-with-registry-equality-guard",
-    "dimension_reviews": "eight-scoped-prepublication-reviews-complete-postpush-confirmation-pending",
-    "plan_records": "retrospective-audit-and-learning-artifacts-included-five-question-doc-simulation-complete",
+    "dimension_reviews": "eight-postpush-reviews-complete-at-2f0f5be0-six-followup-code-dimensions-clean-prior-observability-minor-retained-final-docs-maintainability-and-postpush-confirmation-pending",
+    "plan_records": "mapping-learning-published-five-question-capture-lesson-doc-simulation-complete-new-lesson19-reviewer-rubric4-5-4-4-4-final-receipt-publication-pending",
     "delivery_integration": "integrated",
-    "final_delivery_checks": "9823-passed-5-skipped-18-production-modules-100pct-lines-branches",
+    "final_delivery_checks": "local0130f5c5-9836-passed5-skipped18-production-modules100pct-strict18-and-lint-pass-native-local-validation-unavailable-final-push-and-hosted-checks-pending",
     "protected_review_and_merge": "pending",
     "post_merge_maintainability_audit": "pending"
   },
@@ -57,7 +57,7 @@
       "result": "8 passed"
     },
     {
-      "scope": "final-combined-Studio-full-suite",
+      "scope": "prior-combined-Studio-full-suite-published-source-2f0f5be0",
       "result": "9823 passed, 5 skipped, 6 warnings in 269.56 seconds",
       "combined_coverage": "99.65%",
       "pure_branch_coverage": "99.37%",
@@ -76,21 +76,97 @@
     },
     {
       "scope": "Gate15-repository-only-document-snapshot-onboarding",
-      "result": "Five questions answered; exact copied in-repo inputs and citation paths verified; skill addition scored4/5 on all five documented dimensions; no installation/test/hardware/schema-validation job performed",
+      "result": "Five questions answered; exact copied in-repo inputs and citation paths verified; skill addition scored 4/5 on all five documented dimensions; learning artifacts published at 2f0f5be0; no installation/test/hardware/schema-validation job performed",
+      "hardware_observation": false
+    },
+    {
+      "scope": "PR254-publication-2f0f5be021079bfb78922a6d20b66d0bb5b44825",
+      "result": "Mapping and learning increment published in existing direct-base PR254; actual pre-push lint, strict typing, 860 architecture and 697 not-fast checks passed, including 685 frozen parity cases; canonical touched coverage confirms 18 production modules at 100% lines and branches. These historical receipts certify 2f0f5be0, not the later wire/native fix or final documentation head.",
+      "passing_verdict": true,
+      "touched_production_modules": 18,
+      "touched_line_branch_coverage": "100%",
+      "hardware_observation": false
+    },
+    {
+      "scope": "eight-targeted-postpush-reviews-2f0f5be021079bfb78922a6d20b66d0bb5b44825",
+      "result": "All eight dimensions completed; no new production Critical or Important findings. Important process exceptions remain: new retrospective Gate14 acknowledgment and historical Gate16 isolation/timing. Prior off-reader exception timing and private browser-factory import remain minor follow-ups. Consolidated PR comment and final-head checks/review/publication remain pending.",
+      "hardware_observation": false
+    },
+    {
+      "scope": "local-runtime-2a19b094-operator-input-only-saved-KIT01-capture",
+      "result": "Fresh operator login and saved KIT01 input capture observed. Backend log timestamp 2026-10-01 20:21:39,544 has no zone; fingerprint 5f75b9fb4856e8c7, 324 promoted parameters across 12 pads, 10 omitted. UI XT Classic TUN/SWT/DEC: pad6 42/99/39, pad7 58/66/0, pad8 60/83/10. No new raw-frame SHA retained; saved-state projection only, no SRC transmit or unsaved-RAM proof.",
+      "hardware_observation": true
+    },
+    {
+      "scope": "separately-approved-A4-single-CC74-channel1-OSC1-PWM-Depth-0-to-1-attempt",
+      "result": "Historical pre-repair app-helper attempt on 2a19b094 selected A4 MKII 4 output but failed at wire boundary: midi_wire_unsupported_message: Message; 0/1 messages sent. Operator observed the physical value still at 0. Later repaired-helper checks and separately authorized probe results are recorded in their own receipts; this failed attempt remains failed evidence.",
+      "passing_verdict": false,
+      "hardware_observation": true
+    },
+    {
+      "scope": "local-Studio-full-suite-0130f5c5841f6e9fb830ee8e3d395fc5bb2c89af",
+      "result": "9836 passed, 5 skipped, 6 existing warnings in 270.32 seconds; canonical touched check confirms all 18 production modules at 100% lines and branches. Pure branch is 99.3669858789%, rounded to 99.37%; strict typing on all 18 modules reports zero errors/warnings. Whole-tree Ruff, Black py311, isort and Vulture pass. Software source includes wire repair 648ae888 and native changes d698d62e plus 0130f5c5 formatting; final documentation receipt/push/postpush confirmation and new-head hosted checks remain pending. No hardware dependency pins or frozen parity fixtures changed.",
+      "passing_verdict": true,
+      "combined_coverage": "99.65%",
+      "pure_branch_coverage": "99.37%",
+      "touched_production_modules": 18,
+      "touched_line_branch_coverage": "100%",
+      "hardware_observation": false
+    },
+    {
+      "scope": "separate-local-runtime-76634665a719eed661724dfa31cca004a5cbe75a",
+      "result": "10691 passed, 5 skipped, 6 existing warnings in 286.21 seconds; four touched production modules at 100% lines and branches, strict typing on all four and lint pass. Fresh standalone legacy helpers use this source. Running studio server process remains on 2a19b094 with the unchanged 8cfa6f7b frontend; no server restart or frontend rebuild is claimed.",
+      "passing_verdict": true,
+      "combined_coverage": "99.66%",
+      "pure_branch_coverage": "99.39%",
+      "touched_production_modules": 4,
+      "touched_line_branch_coverage": "100%",
+      "hardware_observation": false
+    },
+    {
+      "scope": "first-authorized-repaired-A4-helper-probe-2026-10-02T00:40:09Z",
+      "result": "Fresh helper from 76634665 sent exactly one CC74, zero-based channel0 (configured MIDI channel1), value1 and exited 0. User separately reported physical OSC1 PWM Depth at1, then manual source reload restored0. No hardware SAVE or new raw capture/frame SHA was performed; observation applies only to this bounded non-paired control in this setup.",
+      "passing_verdict": true,
+      "hardware_observation": true
+    },
+    {
+      "scope": "user-requested-repeat-repaired-A4-helper-probe-2026-10-02T00:42:47Z",
+      "result": "User explicitly requested a repeat; fresh NO+KIT manual reload read0 beforehand. Fresh helper sent exactly one CC74, zero-based channel0, value1 and exited0. In separate answers, user confirmed physical1 and then manual NO+KIT reload of saved KIT01 read0. This is a second authorized one-message action with observed manual recovery, not an automatic retry or general A4/BOTH authority. Private probe JSON receipt is retained locally; no hardware SAVE or new raw frame.",
+      "passing_verdict": true,
+      "hardware_observation": true
+    },
+    {
+      "scope": "native-source-validation-boundary-0130f5c5",
+      "result": "Cargo is absent locally: no rustfmt, native test, Clippy or native executable run is claimed. All 504 locked package versions and checksums remain unchanged. Historical CI at 2f0f5be0 had one passing and one failing result, the failure reporting a missing TLS provider. New-head hosted native checks remain pending. RYTM_TEST_BEACON_CLIENT_STARTUP is a new test-child environment switch, not a production setting; coordinator recorded Gate13 documentation in CONTRIBUTING and LOCAL_DEV_TOOLING_NOTES.",
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "followup-review-and-learning-at-0130f5c5",
+      "result": "Six source review dimensions are clean with the prior observability minor retained; final Docs and Maintainability confirmation await receipt metadata. Lesson19 received reviewer rubric scores 4/5/4/4/4 in the run report. The earlier five-question exercise copied 13 documents and evaluated only the capture lesson; it was not replayed for these follow-ups. Gate14/16 Important process exceptions remain unchecked pending human acknowledgment and actual post-merge assessment. Final publication/postpush confirmation and consolidated PR comment remain pending.",
+      "hardware_observation": false
+    },
+    {
+      "scope": "coordinator-documentation-lifecycle-and-leaf-cleanup-checkpoint",
+      "result": "Coordinator reports eight plan/index checks passed in 0.20 seconds after documentation updates; both new implementation leaf worktrees are app-confirmed archived with recoverable snapshots. Final delivery and runtime checkouts remain active. Final receipt commit/publication and postpush confirmation are still pending.",
       "hardware_observation": false
     }
   ],
   "remaining": [
-    "Finish post-push mechanical and eight-dimension review; update existing PR254",
-    "Fresh private studio login and operator-sent saved KIT01 capture; no output authorized",
-    "Protected new-head review and hosted checks",
+    "Finish final receipt documentation, Docs/Maintainability confirmation, publication, postpush review confirmation and consolidated PR254 comment for the checked 0130f5c5 source plus receipt commit",
+    "Obtain new-head hosted checks including native formatting/tests/Clippy; no local native execution was available",
+    "Protected new-head human review, hosted checks and merge",
     "Retrospective audit review and actual post-merge reassessment; Gate14 remains unchecked",
-    "Commit learning outputs and preserve historical Gate16 isolation/timing limitation"
+    "Preserve historical Gate16 isolation/timing limitation and outstanding prior minor follow-ups"
   ],
   "limits": [
-    "Mapping-only local studio backend runs 2a19b094 with unchanged hash-verified 8cfa6f7b frontend; fresh login/capture pending; report registry increment remains PR254 work",
+    "Mapping-only local studio backend runs 2a19b094 with unchanged hash-verified 8cfa6f7b frontend; fresh saved KIT01 input/projection observed; report registry increment remains PR254 work",
+    "New capture has no retained raw-frame SHA and proves saved-state projection only, not SRC send, unsaved-RAM synchronization or recovery",
+    "Historical A4 attempt failed with 0/1 messages; two later individually authorized fresh helpers each sent one CC74/channel0/value1 with operator-reported physical1 and manual reload0",
+    "The running studio server process remains 2a19b094; runtime checkout/helper76634665 checks do not imply a server restart, frontend rebuild or rollout of the new native source",
+    "No local Cargo, rustfmt, native tests, Clippy or native run; 504 locked package versions/checksums unchanged and new-head hosted verification pending",
     "Unknown aliases, semantic discrepancies and unverified live precision remain explicit gaps",
-    "No A4, BOTH, Pi or touring readiness promotion",
+    "No general A4/BOTH, paired/fractional, native-offset, automatic-restore, Pi or touring readiness promotion; bounded probes performed no hardware SAVE or new raw capture",
     "Baseline audit and execution records were recorded after implementation began",
     "Writing phases used disjoint scopes in one prototype checkout; separate per-phase worktrees were not retrospectively created"
   ],
@@ -100,7 +176,7 @@
     "Match runner summaries to source checkpoint and rerun affected checks after changes",
     "Preserve original dirty user checkout, running studio checkout and concurrent work"
   ],
-  "local_termination": "Correction published in PR254 with final source-specific checks and review findings recorded",
+  "local_termination": "Checked mapping/wire/native follow-up source and final receipt published in existing PR254 with source-specific verification boundaries and postpush findings recorded",
   "plan_termination": "Protected merge and actual post-merge maintainability reassessment recorded",
   "budget_exhaustion_status": "BUDGET_EXCEEDED",
   "user_stop_status": "INTERRUPTED"

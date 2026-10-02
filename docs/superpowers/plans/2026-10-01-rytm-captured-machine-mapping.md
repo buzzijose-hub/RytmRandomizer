@@ -1,7 +1,7 @@
 # Captured Rytm machine mapping correction
 
 > Status: in-flight — combined Studio software verification passed;
-> local mapping runtime installed; publication and protected review remain pending.
+> software published and local capture verified; protected review and post-merge assessment remain pending.
 
 The retained OS 1.72 RIO target-return KIT contains XT Classic on pads 6–8.
 Its machine IDs and seven non-level SRC values already round-trip through the
@@ -27,6 +27,39 @@ only `SRC`; this drops already mapped machine parameters from every capture.
    in the passive support report, preserve family-specific evidence and show
    unknown registry IDs explicitly with zero evidence. Test JSON/text registry
    equality and a newly registered unsupported device; retain existing counts.
+5. Repair the existing A4 one-CC helper's output-wrapper composition defect,
+   found during the operator-approved PWM Depth probe. `midi_io.send_cc` builds
+   a message with public `type='control_change'`; the neutral wire wrapper only
+   recognizes `message_type`. Accept the public CC shape at that existing
+   boundary, validate all fields and reconstruct the backend message there.
+   Unsupported kinds and invalid fields must still fail before backend send.
+   Exercise the actual public app, MIDI helper and provider composition against
+   a fake backend whose message exposes only the real public `type` spelling.
+6. Resolve the inherited native updater/beacon TLS initialization race exposed
+   by hosted checks at this exact head. The plugin initializes its ring provider
+   asynchronously while the independent beacon may construct a client first.
+   Declare the already locked rustls provider as a direct dependency and ensure
+   a process provider before beacon-client construction. Preserve an existing
+   provider, tolerate a concurrent installation winner, and change no package
+   versions, TLS checks, timeout, retry or update policy. Add a cold client-build
+   regression and require the hosted native acceptance job to verify it.
+
+The fifth workstream was added before its implementation, after the first
+approved A4 attempt failed with `midi_wire_unsupported_message: Message` and
+reported 0/1 messages sent. The operator confirmed PWM Depth remained 0.
+It uses the isolated `a4-wire-compat` worktree at `2f0f5be0`; one implementer
+owns only `mido_provider.py` and its two affected test files. The coordinator
+integrates it into this same PR and verifies each runtime before retrying the
+same approved integer CC. No A4 candidate SEND or paired conversion is unlocked.
+
+The sixth workstream was added before its implementation, after inspection of
+both same-head hosted runs: one passed all 32 native scenarios, while the other
+failed `journal_ui` with a missing TLS provider panic and 31 passes. Source
+inspection identifies scheduling-dependent initialization, rather than package
+resolution drift. One implementer owns `desktop/shell/Cargo.toml`, its existing
+lockfile and `src/update_transport.rs` in the isolated `studio-tls-init` checkout
+at `2f0f5be0`. The local machine has no Cargo toolchain; source/lock inspection
+and hosted Rust/native checks must remain distinct from local Python validation.
 
 This fourth workstream was identified from Eddie's October 1 review while
 preparing delivery. It uses a separate `studio-inventory-registry` worktree at
@@ -42,7 +75,7 @@ acknowledges the prior handoff's retrospective Gate 14 timing receipt. This
 mapping audit is also retrospective; new-head review and the actual post-merge
 ten-question reassessment remain pending. Gate 14 stays unchecked.
 
-No offsets, CCs, transport behavior, legacy V1.34 support statuses, frozen parity
+No offsets, CC addresses, legacy V1.34 support statuses, frozen parity
 fixtures or hardware saves change. Missing aliases, omitted fields and physical
 calibration beyond the retained fixture remain explicit gaps. A saved KIT fixture
 proves captured encoding; it does not prove every live control on this unit.
@@ -62,6 +95,8 @@ PR252's Pi implementation is not a PR base or a dependency to publish.
 | --- | --- | --- | --- |
 | Mapping correction | Capture implementer: decoder, capture bridge, reverse map and their tests; shared frame helpers in `tests/conftest.py`. Prototype checkout. | Existing retained frames and canonical catalogs. | Read-only inventory and hardware configuration intake. |
 | Registry evidence summaries | Maintainability agent acting as report/data implementer: the eight files listed below, in the isolated `studio-inventory-registry` checkout at detached `941643c5`. | Existing canonical registry and family-specific report rows. | Mapping correction and read-only dimension reviews. |
+| A4 CC wrapper compatibility | Boundary implementer: `rytm_randomizer/mido_provider.py`, `tests/test_mido_provider.py`, `tests/test_app_validate_one_cc.py`, isolated `a4-wire-compat` checkout at `2f0f5be0`. | Operator-reported zero-send failure and existing public CC helper/provider. | Disjoint documentation receipt updates. |
+| Native TLS initialization | Native implementer: `desktop/shell/Cargo.toml`, `Cargo.lock`, `src/update_transport.rs`, isolated `studio-tls-init` checkout at `2f0f5be0`. | Same-head hosted failure and checked-in updater/beacon initialization flow. | A4 compatibility tests and documentation. |
 | Inventory and review | Inventory agent and one reviewer per dimension; read-only source inspection. Coordinator owns indexes, status and architecture documentation, and coordinates `docs/RYTM_MAPPING_STATUS.md` with a scoped final Studio adaptation delegated to the capabilities agent. | Inventory can start from the unchanged baseline; final review needs the composed patch. | Implementation and independent review dimensions. |
 | Plan records | Maintainability reviewer: this plan and its `_STATE.json`, `_RUN_LOG.md`, `_MAINTAINABILITY_AUDIT.md` and `_MAINTAINABILITY_REPORT.md` companions only. Prototype checkout. | Observed implementation and runner results. | Coordinator's disjoint documentation corrections. |
 | Delivery and verification | Coordinator: transplant into the delivery checkout, adapt Pi-only documentation, run composed checks, update PR254 and request review. | Mapping correction, registry evidence summaries, inventory, records and scoped reviews. | Independent static checks; resource-heavy runs are scheduled by the coordinator. |
@@ -102,6 +137,12 @@ owns state, run log, conformance and verification receipts.
   implementer and reviewers open no real providers, ports or sends.
 - Re-run the composed correction on the direct-base delivery checkout. Prototype
   results do not certify its final source or hosted checks.
+- For A4 wrapper compatibility, prove one backend CC and deterministic close
+  through the public armed helper with fake discovery/backend, preserving
+  rejection of unsupported explicit primary kinds despite a supported fallback
+  spelling, noninteger fields
+  and out-of-range channel/control/value. Run focused tests and touched-module
+  coverage, then composed verification before an approved physical retry.
 
 The following paragraph is historical prototype evidence. Final Studio and
 separate installed-runtime checks are recorded in the
@@ -182,20 +223,22 @@ interrupts local work and records `INTERRUPTED`; resuming requires the user's
 continuation. Rollback reverts only the correction's committed files and keeps
 retained frames and hardware saves unchanged. The coordinator separately verified
 and installed the mapping-only local runtime at `2a19b094`; its unchanged frontend
-uses the hash-verified `8cfa6f7b` bundle. Outputs remain disarmed and a fresh
-operator capture is pending. This runtime does not include the registry increment.
+uses the hash-verified `8cfa6f7b` bundle. Outputs remain disarmed. A fresh
+operator KIT 01 capture now projects 324 parameters and exposes XT Classic
+controls; it does not prove live SRC conversion or unsaved RAM. This runtime
+does not include the registry increment.
 
 ## Conformance
 
 The change stays within existing strategy and Cockpit seams, uses canonical data,
-adds no public top-level modules or dependencies, and retains typed immutable
+adds no public top-level modules, resolved packages or version changes, and retains typed immutable
 snapshot facts. Regressions cover new branches and safety refusals; shared fixture
 loading belongs in `tests/conftest.py` if reused across test modules. The final PR
 will carry the repository's full 18-gate and strict-rule checklist.
 
 Per `docs/PLAN_REQUIREMENTS.md`, this is an **expected/pending checklist**, not
 a declaration that all gates passed. Checked rows below reflect the final local
-Studio receipt (9,823 tests); hosted and post-merge evidence remain separate.
+Studio receipt (9,836 tests); hosted Rust/native and post-merge evidence remain separate.
 
 - [x] **Gate 1** — 18 touched production modules at 100% lines/branches; pure branch 99.37%.
 - [x] **Gate 2** — Frozen fixtures unchanged; full suite includes all V1.34 parity cases.
@@ -209,9 +252,9 @@ Studio receipt (9,823 tests); hosted and post-merge evidence remain separate.
 - [x] **Gate 10** — Established source vocabulary and canonical machine keys; no new identity dispatch.
 - [x] **Gate 11** — Shared frame helpers remain in tests/conftest.py.
 - [x] **Gate 12** — Canonical machine constant and immutable evidence mapping use Final.
-- [x] **Gate 13** — N/A: correction introduces no environment reads.
+- [x] **Gate 13** — New test-only Rust child marker documented in CONTRIBUTING and local tooling notes; no new runtime environment knob.
 - [ ] **Gate 14** — Pending: retrospective ten-question baseline/current assessment recorded; timely pre-plan audit was missed, maintainer acknowledgment and actual post-merge reassessment required.
-- [x] **Gate 15** — Learning capture: existing skill/rule/guidance, report/log, architecture comparison, replay/schema and five-question repository-only onboarding exercise are included in this delivery. The documented rubric scores are 4/5; protected plan termination remains pending. No separate learning PR or scheduler framework is introduced.
+- [x] **Gate 15** — Learning capture: existing skill/rule/guidance, report/log, architecture comparison, replay/schema and five-question repository-only onboarding exercise are included. The earlier capture lesson scored 4/5; the new wire-boundary lesson scored 4/5/4/4/4 on the same five dimensions, recorded separately in the run report. Protected plan termination remains pending. No separate learning PR or scheduler framework is introduced.
 - [ ] **Gate 16** — Pending: local parallel roles, disjoint ownership, state/log and recovery are recorded; original per-phase worktree and retrospective timing limitations are disclosed. One existing direct-base PR is updated; protected merge cannot be automated.
 - [x] **Gate 17** — Scoped abstraction review confirms canonical codec/catalog/Device/registry/Cockpit reuse.
 - [x] **Gate 18** — Architecture and diagram describe the exact guarded SRC and registry-report boundaries; counts source-bound.

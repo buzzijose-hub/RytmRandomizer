@@ -140,7 +140,7 @@ on one line for an existing module, you probably need a new module instead.
 | `behavior/scope.py`          | Passive scoped-randomization masks + intensity scoping anchored on the current kit. Pure + deterministic. |
 | `mock_midi.py`               | In-memory `MockMidiSender` and `MidiMessage` for tests + passive paths.     |
 | `real_midi_adapter.py`       | Protocol boundary: `RealMidiPortProvider`, neutral armed-output `RealMidiOutputProvider`, and `RealMidiSender`. NO `mido`. |
-| `mido_provider.py`           | Concrete `mido`-backed input/output provider. `mido` imported lazily INSIDE methods. |
+| `mido_provider.py`           | Concrete `mido`-backed input/output provider. `mido` imported lazily INSIDE methods. `WireOutputPort` validates neutral triples, inert CC messages and the legacy helper's public `type='control_change'` shape, then reconstructs a backend CC; unsupported kinds and invalid fields never reach backend send. |
 | `engines/pad1..4.py`         | Per-pad interactive engines. Dependencies injected, no module globals.      |
 | `engines/analog_rytm_12_pad_shell.py` | All-12-pad style/mutation shell. Consumes rendered style events; sends only through injected sender. |
 | `engines/analog_rytm_snapshot_shell.py` | All-12-pad current-kit snapshot shell. Extracts live-safe CC events from a decoded Rytm kit snapshot; sends only through injected sender. |
@@ -462,7 +462,7 @@ boundary. Every Elektron device family - Rytm and Analog Four today -
 exposes exactly one registered `Device` instance and routes its behavior
 through three Strategy sub-Protocols.
 
-**Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md) has six mermaid diagrams that illustrate this section in detail — [§3 Device + Strategy Capability Stack](ARCHITECTURE_DIAGRAMS.md#3-device--strategy-capability-stack-ws-s5--strategy) (class diagram), [§4 Snapshot → Plan → Render Lifecycle](ARCHITECTURE_DIAGRAMS.md#4-snapshot--plan--render-lifecycle-one-rytm-cc) (sequence), [§5 Composition vs Stub](ARCHITECTURE_DIAGRAMS.md#5-device--strategy-composition-vs-old-stub-shape) (before/after), [§9 Snapshot Subpackage](ARCHITECTURE_DIAGRAMS.md#9-snapshot-subpackage-ws-s6-envelope--protocols) (WS-S6 helpers), [§18 Future Codex PR Shape](ARCHITECTURE_DIAGRAMS.md#18-future-codex-pr-shape-post-pr-43-dual-machine-redo) (where the next dual-machine work plugs in), and [§19 Registry Fan-Out](ARCHITECTURE_DIAGRAMS.md#19-registry-fan-out-dual-machine-orchestration-via-mappingstr-device).
+**Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md) has six mermaid diagrams that illustrate this section in detail — [§3 Device + Strategy Capability Stack](ARCHITECTURE_DIAGRAMS.md#3-device--strategy-capability-stack-ws-s5--strategy) (class diagram), [§4 Snapshot → Plan → Render Lifecycle](ARCHITECTURE_DIAGRAMS.md#4-snapshot--plan--render-lifecycle-one-rytm-cc) (sequence), [§5 Composition vs Stub](ARCHITECTURE_DIAGRAMS.md#5-device--strategy-composition-vs-old-stub-shape) (before/after), [§9 Snapshot Subpackage](ARCHITECTURE_DIAGRAMS.md#9-snapshot-subpackage-ws-s6-envelope--protocols) (WS-S6 helpers), [§18 Landed Dual-Machine Shape](ARCHITECTURE_DIAGRAMS.md#18-dual-machine-shape-the-pr-36-redo-as-landed) (the integrated dual-machine boundary), and [§19 Registry Fan-Out](ARCHITECTURE_DIAGRAMS.md#19-registry-fan-out-dual-machine-orchestration-via-mappingstr-device).
 
 **Protocol shape:**
 
@@ -1583,6 +1583,12 @@ SemVer precedence. The transport retains the checked artifact's version, URL
 and signature, then retains the verified bytes through a consented install.
 Installation follows confirmed backend exit. Consent and skipped-version
 state are process-local; the diagnostic journal does not restore them.
+
+The optional beacon builds its client independently of updater checks.
+`build_beacon_client` preserves an installed process crypto provider; otherwise
+it attempts installation of the already locked rustls ring provider and tolerates
+a concurrent installation winner. TLS verification, redirect policy and the
+ten-second timeout remain unchanged.
 
 React subscribes before requesting `update_snapshot`, then refreshes after
 state events. The snapshot contains native channel/freeze posture and at most

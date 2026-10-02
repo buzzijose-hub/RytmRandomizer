@@ -6,7 +6,7 @@ Last updated: 2026-10-01. This file is a hand-authored snapshot and is meant to 
 
 The [captured Rytm mapping correction](superpowers/plans/2026-10-01-rytm-captured-machine-mapping.md)
 is integrated into the existing Studio PR #254 delivery checkout. Its final
-combined software run passed 9,823 tests, with five skips and six existing
+combined Python software run passed 9,836 tests, with five skips and six existing
 warnings; all 18 touched production modules have 100% line/branch coverage.
 Pure branch coverage is 99.37%. The same update fixes Eddie's registry omission blocker:
 the passive inventory lists every registered device, including explicit
@@ -21,8 +21,23 @@ families and unresolved semantic/precision work. The studio server now runs
 the mapping-only correction at `2a19b094`, separately verified with 10,678
 passing tests and three touched production modules at 100% lines/branches.
 Its unchanged frontend uses the hash-verified `8cfa6f7b` bundle. Outputs are
-disarmed; fresh login and operator capture are pending. The report/registry
-increment belongs to PR #254, rather than this local runtime checkout.
+disarmed. Fresh operator input-only KIT 01 capture matches fingerprint
+`5f75b9fb4856e8c7` and projects 324 parameters; XT Classic cards on pads 6–8
+now expose their captured controls. This is projection evidence, without a
+new SRC send or unsaved-RAM readback. The report/registry increment belongs
+to PR #254, rather than this local runtime checkout.
+
+The A4 helper's public-message/wire-wrapper mismatch was repaired at the same
+validated boundary. Its separate runtime source `76634665` passed 10,691 tests,
+with four touched modules at 100% lines/branches and 99.39% pure branch coverage.
+After the original zero-send failure, two authorized one-CC Track1 PWM Depth
+actions were reported successful. For the explicitly requested repeat, the
+operator checked 0 before send, 1 afterward, and 0 following manual KIT01 reload
+without saving. This is one integer-control/manual-recovery proof, not general
+A4/BOTH or automatic restore. The server process was not restarted for the
+standalone helper fix. An inherited native beacon TLS initialization race is
+also repaired in source; hosted Rust/native checks remain required because
+Cargo is unavailable locally. Locked package versions/checksums are unchanged.
 
 The separate October 1 studio trial on `8cfa6f7b` completed one approved
 16-message Rytm RAM audition. The operator checked pad 2 Filter Frequency,
@@ -165,10 +180,12 @@ support in this updater checkpoint.
 - 2026-10-01: Integrated the [captured Rytm mapping correction](superpowers/plans/2026-10-01-rytm-captured-machine-mapping.md)
   into PR #254 delivery: exact XT Classic tom identity and existing machine SRC
   projection, composed real-frame regressions and an explicit remaining-gap
-  inventory. Final local software gates passed; publication and protected review
-  remain pending. The mapping-only local studio runtime is installed at
-  `2a19b094`, with fresh capture still pending; general A4/Pi/touring readiness
-  is unvalidated.
+  inventory. Published the software increment at `2f0f5be0`; actual pre-push
+  lint/typing, 860 architecture and 697 not-fast tests passed. Eight scoped
+  reviews found no new production blocker; retrospective process exceptions
+  need maintainer acceptance. The mapping-only local runtime at `2a19b094`
+  passed fresh input-only capture/UI verification. General A4/Pi/touring
+  readiness is unvalidated; protected new-head checks/review remain required.
 
 - 2026-10-01: Delivered [PR #254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254)
   as a direct-base Studio evidence handoff, separate from Pi groundwork #252.

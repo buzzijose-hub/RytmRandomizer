@@ -65,3 +65,105 @@ has not been updated by these records.
 - Prototype and registry worktrees are confirmed archived by the app with recoverable snapshots. Needed ignored verification receipts were preserved in the active delivery checkout. The delivery and running mapping-runtime checkouts remain active; original dirty user checkout and prior Pi checkout are preserved.
 
 - Mapping and learning increment committed locally at `b66008f4`. The final onboarding companion exposed one additional plan-index failure (seven checks passed): its new suffix requires an index row. The local commit was not pushed; the row is added before publication and the focused lifecycle/index gate will be rerun. Production/test source remains exactly the9823-pass candidate.
+
+- **2026-10-02 00:28:19 UTC checkpoint:** the coordinator supplied the following
+  publication, review and studio receipts. This checkpoint does not assign an
+  invented event time to publication or to the zone-less capture log.
+- Mapping and learning content is published in existing direct-base PR #254 at
+  `2f0f5be021079bfb78922a6d20b66d0bb5b44825`. The actual pre-push gate passed
+  lint, strict typing, **860 architecture and 697 not-fast checks**, including
+  all **685 frozen V1.34 parity cases**. Canonical touched coverage confirms
+  all **18 production modules at 100% lines and branches**. The prior combined
+  9,823-pass receipt applies to this published source; it cannot certify the
+  newly pending A4 software fix or a later documentation/source head.
+- Eight separate targeted post-push reviews completed at that exact SHA with
+  no new production Critical or Important findings. Important process
+  exceptions remain for the new retrospective Gate 14 acknowledgment and
+  historical Gate 16 isolation/timing. Prior off-reader task-error timing and
+  private browser-factory import remain minor follow-ups. The consolidated
+  PR comment, final changed-head checks/review/publication receipt, hosted
+  checks and protected human review remain pending. Earlier pending learning
+  commit and post-push review tasks are now completed, not future work.
+- The operator reconnected to mapping-only runtime `2a19b094` and sent saved
+  KIT 01 through input-only capture. The backend log records
+  `2026-10-01 20:21:39,544` without a time zone, fingerprint
+  `5f75b9fb4856e8c7`, **324 promoted parameters across 12 pads and 10 omitted**.
+  UI XT Classic TUN/SWT/DEC values were pad 6 `42/99/39`, pad 7 `58/66/0`, and
+  pad 8 `60/83/10`. Fresh login and input capture are completed. No new raw-frame
+  SHA was retained; this proves saved-state projection, not a new exact-byte
+  comparison, SRC transmission, unsaved-RAM synchronization or restoration.
+- Separately, the user approved one A4 MIDI channel 1, CC 74 OSC1 PWM Depth
+  change from `0` to `1`. The existing app helper selected A4 MKII 4 output,
+  then failed at the wire boundary with
+  `midi_wire_unsupported_message: Message`: **0/1 messages sent**. The operator
+  observed the physical value still at `0`. No successful send or recovery is
+  inferred. The coordinator is diagnosing the software failure offline before
+  the same approved bounded retry; the repair's checks and retry result remain
+  pending. General A4/BOTH, paired/fractional transport and Pi/touring
+  readiness remain unpromoted.
+- The recorded local deadline remains `2026-10-02T01:08:16Z`. Preserve prior
+  source-specific receipts and rerun affected gates after any software fix;
+  keep final publication/review and protected merge/post-merge assessment
+  separate from the operator's bounded probe. No new scheduler or auto-merge
+  was introduced.
+
+- **2026-10-02 00:46:41 UTC checkpoint:** the coordinator supplied new
+  source-specific software and bounded physical receipts. The publication at
+  `2f0f5be0` and its review/gate counts above remain historical; the new source
+  and final receipt have not yet been pushed in this checkpoint.
+- Final Studio code HEAD is
+  `0130f5c5841f6e9fb830ee8e3d395fc5bb2c89af`: wire repair `648ae888`, native
+  follow-up `d698d62e` and `0130f5c5` formatting. The fifth and sixth plan scopes
+  were recorded before isolated implementation. Full Studio verification:
+  **9,836 passed, five skipped, six existing warnings in 270.32 seconds**;
+  combined coverage **99.65%**, pure branch **99.3669858789% (99.37% rounded)**.
+  Canonical touched coverage confirms all **18 production modules at 100%
+  lines and branches**; strict typing on all 18 reports zero errors/warnings.
+  Whole-tree Ruff, Black with py311 target, isort and Vulture pass. Frozen
+  parity fixtures and production dependency pins remain unchanged.
+- Separate runtime source
+  `76634665a719eed661724dfa31cca004a5cbe75a` passed **10,691 tests, five skipped,
+  six existing warnings in 286.21 seconds**; four touched production modules
+  have 100% lines/branches, pure branch **99.39%**, combined coverage **99.66%**,
+  with strict typing on all four and lint passing. Fresh standalone legacy
+  helpers use this source. The running studio server process still uses
+  `2a19b094` with the unchanged `8cfa6f7b` frontend: no server restart or
+  frontend/native application rebuild/run is inferred from the checkout.
+- **2026-10-02 00:40:09 UTC:** the repaired fresh helper performed the same
+  approved bounded A4 OSC1 PWM Depth probe: exactly one CC 74, zero-based
+  channel 0 (configured MIDI channel 1), value 1, exit code 0. The user reported
+  the physical control at `1`, then manual source reload returning it to `0`.
+  This is separate from the earlier failed 0/1 attempt, which stays failed.
+- **2026-10-02 00:42:47 UTC:** the user explicitly requested a repeat. Fresh
+  manual **NO+KIT** reload showed `0` first. A fresh helper sent exactly one
+  CC 74/channel 0/value 1 and exited 0. In separate answers, the user confirmed
+  physical `1`, then manual **NO+KIT** reload of saved KIT 01 showing `0`.
+  Both successful actions were individually authorized; neither was an
+  automatic retry. The private A4 probe JSON receipt is preserved locally.
+  No hardware SAVE or new raw capture/frame SHA occurred during these probes.
+  The result applies only to this one non-paired integer control in this setup;
+  general A4/BOTH, paired/fractional conversion, native offsets, automatic
+  restore and Pi/touring readiness remain unpromoted.
+- Native local validation is unavailable because Cargo is absent: no
+  rustfmt, native tests, Clippy or native executable run is claimed. All
+  **504 locked package versions and checksums remain unchanged**. Historical
+  CI at `2f0f5be0` had one passing and one failing result; the failure reported
+  a missing TLS provider. New-head hosted checks remain pending. The new
+  `RYTM_TEST_BEACON_CLIENT_STARTUP` variable is confined to a Rust test child,
+  not a production configuration knob; the coordinator recorded its Gate 13
+  notes in CONTRIBUTING and LOCAL_DEV_TOOLING_NOTES.
+- Six follow-up code review dimensions are clean, retaining the prior
+  observability minor; final Docs and Maintainability confirmation awaits this
+  receipt metadata. Lesson #19 was independently scored **4/5/4/4/4** against
+  the in-repo rubric in the run report. The old five-question simulation used
+  13 copied documents and evaluated only the capture lesson; it has not been
+  retrospectively extended to these follow-ups. Gate 14/16 Important process
+  exceptions remain unchecked for human acknowledgment and post-merge work.
+  Final documentation/code-head publication, post-push confirmation,
+  consolidated PR comment, hosted checks and protected review remain pending;
+  the deadline is still `2026-10-02T01:08:16Z`.
+- Coordinator's final documentation update has **eight plan/index checks
+  passing in 0.20 seconds**. Both new implementation leaf worktrees are
+  confirmed archived by the app with recoverable snapshots; final delivery
+  and runtime checkouts remain active. Final receipt commit/push and post-push
+  confirmation still follow this checkpoint.
