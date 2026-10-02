@@ -26,3 +26,23 @@ PR254 already records the formal-audit timing deviation. Gate14 remains
 unchecked; maintainer acknowledgment is not inferred from this reconstructed
 baseline. The [current report](2026-10-01-rytm-captured-machine-mapping_MAINTAINABILITY_REPORT.md)
 is a local reassessment; the actual post-merge ten-row audit is still required.
+
+## Eighth-scope pre-code baseline
+
+Recorded at `2a3789c6faae4f393f1aeb2ae5d7d046b9f20878` before alias-closure
+implementation in the isolated `rytm-alias-closure` checkout. Scores use the
+existing inspection rubric; no timing, hosted, hardware or post-merge outcome
+is assumed. Historical Gate 14/16 exceptions remain unchanged.
+
+| Required question | Baseline | Required increment outcome |
+| --- | --- | --- |
+| Onboarding curve | 3: existing inventory identifies all eleven families and evidence seams. | Name exact alias/projection/policy responsibilities; no measured onboarding claim. |
+| Naming hygiene | 2: 68 canonical rows have no compact key; SY Dual VCO label misses its canonical key. | Stable catalog-derived keys, existing-key precedence and canonical label resolution. |
+| Coupling / boundaries | 2: alias binding could advertise eligibility while bridge/planner/report disagree. | One shared policy consumed by actual mutation, capture, planning and inventory. |
+| Magic numbers / strings | 4: all CC/NRPN/slot facts already canonical. | Derive new keys from those rows; no copied addresses or fabricated domains. |
+| Configuration vs convention | 3: existing runtime/port authority is explicit. | No new mode, environment, transport or runtime knob. |
+| Test maintainability | 3: retained-frame composition and shared codec helpers exist. | Reuse helpers, label synthetic evidence and exercise actual producer/consumer seams. |
+| Build / dev loop friction | 3: trusted venv and focused commands available. | Record real focused summaries; coordinator owns one integrated full checkpoint. |
+| Error messages / provenance | 2: missing aliases and unsafe semantics can look alike. | Separate descriptive bindings, protected projection and physical evidence. |
+| Versioning / release | 3: direct-base PR254 and exact-source receipts exist. | One integrated PR; no package/pin/config, installed-runtime or touring claim. |
+| Future-proofing | 3: canonical catalog is complete but compact maps are hand maintained. | Reversible catalog fallback with unknown refusal; future rows need their own eligibility evidence. |

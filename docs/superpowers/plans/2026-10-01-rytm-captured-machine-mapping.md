@@ -268,3 +268,44 @@ native readiness fixture fix and verify its exact-head review/hosted gates; a
 parallel read-only mapping audit prepares any next bounded implementation
 scope. Protected approval, post-merge assessment and additional hardware
 authority are not inferred.
+
+### Eighth scope: remaining SRC aliases and conservative projection
+
+Recorded before code at source `2a3789c6faae4f393f1aeb2ae5d7d046b9f20878`.
+The user requested completion of the remaining mappings. This offline increment
+completes descriptive bindings for the eleven missing families (68 rows), using
+the existing 224-row SRC catalog and saved-slot bindings. Existing compact keys
+keep precedence; canonical profile labels resolve SY Dual VCO correctly.
+Descriptive completeness is separate from mutation or physical evidence.
+
+One implementer owns the isolated managed `rytm-alias-closure` checkout:
+existing canonical MIDI facts/re-exports, Cockpit parameter map, capture bridge,
+mutation/planner consumers, passive inventory and their tests/documentation.
+An independent reviewer inspects that composition read-only. The coordinator
+owns integration, full-suite coverage, final documentation and PR publication;
+the active delivery checkout and running studio server are not edited here.
+
+One shared conservative eligibility policy omits disputed/guarded SRC values
+from captured mutation parameters, freezes protected values in generic mutation
+and refuses a manually constructed changed protected row at plan preparation.
+This includes the six audited semantic/guarded exclusions, Level, SY Raw Noise
+Level and newly exposed pitch/categorical controls. Exact raw canonical machine
+identity and existing pad compatibility/tom gates remain required. The changed
+paired-LFO whole-plan refusal remains unchanged. Original saved bytes remain
+immutable; synthetic fixtures establish software contracts only.
+
+Focused tests must exercise retained init/return frames and explicitly synthetic
+remaining-family frames through capture, anchor, bridge, mutation and planning;
+also test all 224 descriptive row round trips, unknown/high-bit identity refusal,
+target-minus-locks, protected mixed proposals and inventory-policy agreement.
+The implementer records actual runner summaries; the coordinator verifies the
+integrated source with full coverage, typing, lint and unchanged frozen parity.
+No dependency/config/allowlist changes, MIDI action or calibration promotion is
+authorized. Rollback reverts only this increment's commits. Done means alias
+bindings and fail-closed composition are reviewed and verified, with remaining
+native/live calibration and hardware acceptance explicitly pending.
+
+The [eighth-scope baseline](2026-10-01-rytm-captured-machine-mapping_MAINTAINABILITY_AUDIT.md#eighth-scope-pre-code-baseline)
+was recorded before this increment. It does not repair historical Gate 14/16
+timing exceptions or constitute the required post-merge reassessment. The
+resumed deadline remains `2026-10-02T02:43:47Z`.
