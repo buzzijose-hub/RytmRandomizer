@@ -6,6 +6,8 @@ import pytest
 
 from rytm_randomizer.cockpit.data import rytm_parameter_map as mapmod
 from rytm_randomizer.cockpit.data.rytm_parameter_map import (
+    cockpit_default_machine_label,
+    cockpit_machine_is_allowed_on_pad,
     cockpit_pad_channel,
     cockpit_parameter_control,
     cockpit_parameter_key,
@@ -18,6 +20,33 @@ from rytm_randomizer.data.analog_rytm_midi import (
 )
 
 pytestmark = pytest.mark.fast
+
+
+@pytest.mark.parametrize(
+    ("machine", "pad_id", "allowed"),
+    (
+        ("CH Closed", 9, True),
+        ("CH Closed", 3, False),
+        ("SY Dual VCO", 4, True),
+        ("XT Classic", 6, True),
+        ("CY Classic", 11, True),
+        ("unknown future machine", 1, False),
+        ("BD Hard", 0, False),
+        ("BD Hard", 13, False),
+    ),
+)
+def test_cockpit_pad_compatibility_uses_canonical_facts(
+    machine: str, pad_id: int, allowed: bool
+) -> None:
+    assert cockpit_machine_is_allowed_on_pad(machine, pad_id) is allowed
+
+
+def test_cockpit_mock_default_labels_use_each_pads_canonical_primary_family() -> None:
+    for pad_id in range(1, 13):
+        assert cockpit_machine_is_allowed_on_pad(cockpit_default_machine_label(pad_id), pad_id)
+    assert cockpit_default_machine_label(11) == "CY Classic"
+    with pytest.raises(KeyError, match="Unknown Rytm pad"):
+        cockpit_default_machine_label(13)
 
 
 def test_cockpit_pad_channel_maps_12_tracks_to_zero_based_mido_channels() -> None:

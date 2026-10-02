@@ -40,6 +40,11 @@ from fastapi.testclient import TestClient
 
 from conftest import elektron_syx_message, rytm_real_layout_kit_payload
 from rytm_randomizer.cockpit.capture import KitCaptureService
+from rytm_randomizer.cockpit.data.rytm_parameter_map import (
+    cockpit_machine_is_allowed_on_pad,
+    cockpit_parameter_live_blockers,
+    cockpit_parameter_mapping,
+)
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
@@ -65,6 +70,19 @@ pytestmark = pytest.mark.fast
 _ARM_TOKEN = "acceptance-rehearsal-arm-token"
 _INPUT_PORT = "Elektron Analog Rytm MK2 In"
 _OUTPUT_PORT = "Elektron Analog Rytm MK2 Out"
+
+
+def test_shared_reference_snapshot_uses_compatible_unprotected_cc_controls() -> None:
+    """Successful-send fixtures must satisfy the actual live planner policy."""
+
+    for pad in _make_default_snapshot().pads:
+        assert cockpit_machine_is_allowed_on_pad(pad.machine, pad.pad_id)
+        assert len(pad.params) == 3
+        for parameter in pad.params:
+            mapping = cockpit_parameter_mapping(pad.machine, parameter)
+            assert mapping is not None
+            assert mapping.cc_lsb is None
+            assert cockpit_parameter_live_blockers(pad.machine, parameter) == ()
 
 
 @dataclass
@@ -194,16 +212,16 @@ def test_initial_snapshot_event_carries_reference_pads(cockpit_client: TestClien
     assert machines == [
         "BD Hard",
         "SD Classic",
-        "CH Closed",
-        "OH Open",
+        "RS Hard",
+        "CP Classic",
         "BT Rim",
         "LT Low",
         "MT Mid",
         "HT High",
-        "CP Clap",
-        "RS Riser",
-        "SY Raw",
-        "BD Acoustic",
+        "CH Closed",
+        "OH Open",
+        "CY Classic",
+        "CB Classic",
     ]
     assert snapshot["device"] == "analog_rytm_mk2"
 

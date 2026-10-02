@@ -20,6 +20,10 @@ from ...data.analog_rytm_midi import (
     RYTM_COCKPIT_PENDING_SRC_PARAMETERS,
     AnalogRytmCcMapping,
 )
+from ...data.rytm_machine_catalog import (
+    allowed_machine_profiles_for_pad,
+    is_machine_allowed_on_pad,
+)
 
 _PAD_ID_MIN: Final[int] = 1
 _PAD_ID_MAX: Final[int] = 12
@@ -368,6 +372,23 @@ def cockpit_pad_channel(pad_id: int) -> int:
     return pad_id - 1
 
 
+def cockpit_machine_is_allowed_on_pad(machine: str, pad_id: int) -> bool:
+    """Resolve a Cockpit label/key against canonical physical pad ownership."""
+
+    machine_key = _machine_key(machine)
+    return (
+        _PAD_ID_MIN <= pad_id <= _PAD_ID_MAX
+        and machine_key in ANALOG_RYTM_MACHINE_SRC_BY_MACHINE
+        and is_machine_allowed_on_pad(pad_id, machine_key)
+    )
+
+
+def cockpit_default_machine_label(pad_id: int) -> str:
+    """Derive the mock starter identity from the pad's canonical primary family."""
+
+    return allowed_machine_profiles_for_pad(pad_id)[0].label
+
+
 def cockpit_parameter_control(machine: str, parameter: str) -> int | None:
     """Return the real Rytm CC for ``parameter`` on ``machine``.
 
@@ -484,6 +505,8 @@ def _normalize_label(label: str) -> str:
 
 
 __all__ = [
+    "cockpit_default_machine_label",
+    "cockpit_machine_is_allowed_on_pad",
     "cockpit_machine_is_known",
     "cockpit_pad_channel",
     "cockpit_parameter_control",
