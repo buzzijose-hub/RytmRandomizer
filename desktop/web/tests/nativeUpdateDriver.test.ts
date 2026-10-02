@@ -1,6 +1,33 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { until } from '../e2e/fixtures/native_update_driver';
+const restartFixture = vi.hoisted(() => ({
+  connectionStatus: 'connected',
+  invoke: vi.fn(),
+  snapshot: {
+    state: { state: 'staged', version: '1.35.1', hardware_revalidation: false },
+    journal: [{ event: 'download_ok' }],
+  },
+}));
+
+vi.mock('@tauri-apps/api/core', () => ({ invoke: restartFixture.invoke }));
+vi.mock('../src/state', () => ({
+  useCockpitStore: { getState: () => ({
+    connectionStatus: restartFixture.connectionStatus,
+    sessionStatus: { armed: false },
+  }) },
+}));
+vi.mock('../src/updateProtocol', () => ({
+  parseUpdateSnapshot: (value: unknown) => value,
+  requestUpdateCheck: vi.fn().mockResolvedValue(true),
+  confirmUpdateChoiceOnShell: vi.fn(),
+  subscribeUpdateState: (event: () => void, hydrate: (value: unknown) => void) => {
+    hydrate(restartFixture.snapshot);
+    event();
+    return () => {};
+  },
+}));
+
+import { run, until } from '../e2e/fixtures/native_update_driver';
 
 describe('native acceptance polling deadline', () => {
   afterEach(() => vi.useRealTimers());
@@ -48,5 +75,58 @@ describe('native acceptance polling deadline', () => {
 
     await expect(until('snapshot', () => Promise.reject(failure))).rejects.toBe(failure);
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('waits for authenticated reconnect when rotated credentials precede the listener', async () => {
+    vi.useFakeTimers();
+    document.body.innerHTML = '<div data-testid="cockpit-root"></div><div data-testid="update-chip">1.35.1</div>';
+    window.__RYTM_RAND_WS_TOKEN__ = 'old-token';
+    window.__RYTM_RAND_ARM_SECRET__ = 'old-secret';
+    window.localStorage.setItem('rytm-rand-ws-port', '4317');
+    restartFixture.connectionStatus = 'connected';
+    restartFixture.invoke.mockImplementation(async (command: string, args?: { action?: string }) => {
+      if (command === 'update_snapshot') return restartFixture.snapshot;
+      if (args?.action === 'restart_backend') {
+        restartFixture.connectionStatus = 'connecting';
+        window.__RYTM_RAND_WS_TOKEN__ = 'new-token';
+        window.__RYTM_RAND_ARM_SECRET__ = 'new-secret';
+      }
+      return { terminal: [] };
+    });
+    const probes: string[] = [];
+    class ProbeSocket {
+      onopen: (() => void) | null = null;
+      onmessage: ((event: { data: string }) => void) | null = null;
+      onclose: ((event: { code: number }) => void) | null = null;
+      constructor() {
+        probes.push(restartFixture.connectionStatus);
+        queueMicrotask(() => this.onopen?.());
+      }
+      send(message: string) {
+        expect(JSON.parse(message)).toEqual({ type: 'hello', token: 'old-token' });
+        queueMicrotask(() => this.onmessage?.({ data: '{"code":"auth_failed"}' }));
+      }
+      close() {}
+    }
+    vi.stubGlobal('WebSocket', ProbeSocket);
+    try {
+      const pending = run('backend_restart', 'http://fixture.invalid');
+      await vi.advanceTimersByTimeAsync(75);
+      expect(window.__RYTM_RAND_WS_TOKEN__).toBe('new-token');
+      expect(probes).toEqual([]);
+
+      restartFixture.connectionStatus = 'connected';
+      await vi.advanceTimersByTimeAsync(75);
+      await pending;
+      expect(probes).toEqual(['connected']);
+      expect(restartFixture.invoke).toHaveBeenCalledWith('report', {
+        passed: true, detail: expect.stringContaining('native/DOM assertions'),
+      });
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.unstubAllGlobals();
+      document.body.innerHTML = '';
+      window.localStorage.clear();
+    }
   });
 });
