@@ -33,6 +33,8 @@ pytestmark = pytest.mark.fast
         ("unknown future machine", 1, False),
         ("BD Hard", 0, False),
         ("BD Hard", 13, False),
+        ("BD Hard", True, False),
+        ("BD Hard", 1.0, False),
     ),
 )
 def test_cockpit_pad_compatibility_uses_canonical_facts(

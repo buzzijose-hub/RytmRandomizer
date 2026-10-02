@@ -377,7 +377,8 @@ def cockpit_machine_is_allowed_on_pad(machine: str, pad_id: int) -> bool:
 
     machine_key = _machine_key(machine)
     return (
-        _PAD_ID_MIN <= pad_id <= _PAD_ID_MAX
+        type(pad_id) is int
+        and _PAD_ID_MIN <= pad_id <= _PAD_ID_MAX
         and machine_key in ANALOG_RYTM_MACHINE_SRC_BY_MACHINE
         and is_machine_allowed_on_pad(pad_id, machine_key)
     )
