@@ -211,3 +211,26 @@ has not been updated by these records.
   prepares the11 alias families for a separately declared safe mapping scope.
   The prior budget-exceeded record remains historical. New90-minute checkpoint
   ends `2026-10-02T02:43:47Z`. No additional MIDI action is authorized.
+
+- **2026-10-02T01:31:14Z — published native readiness verified:** normal
+  non-force publication reached `2a3789c6`. The actual hook passed lint,
+  strict typing on18 modules,860 architecture tests and697 not-fast tests
+  including685 frozen parity cases. Root independently reran all five
+  focused native-driver Vitest tests at this head; the raw log is retained
+  in ignored local output. Eight targeted post-push reviews completed and
+  existing consolidated PR254 comment5943575627 was updated with the
+  remaining Gate14/16 process exceptions. Both hosted runs36950161113
+  (PR) and36950157872 (push) completed successfully: each passed191 Rust
+  tests, rustfmt, Clippy,32 native WebView scenarios including backend
+  restart, and two actual Windows installer handoff/restart tests.
+- The readiness predicate establishes listener/transport readiness. Its
+  retained session projection does not independently prove a fresh
+  authenticated generation; the fixture comment was clarified accordingly.
+  Strict old-token refusal still requires `auth_failed` or close1008.
+- A separate alias-closure phase committed its scope and baseline at
+  `261301fd` before implementation in the isolated `rytm-alias-closure`
+  checkout. It closes names/address bindings while preserving frozen legacy
+  arithmetic and refusing protected live changes through a shared policy.
+  New mapping source needs its own composition, coverage and hosted checks;
+  the passing2a3789 receipts do not certify future changes. Running studio
+  server and hardware remain unchanged; no output or SAVE was performed.

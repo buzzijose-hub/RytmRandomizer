@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-02T01:13:47Z",
+  "updated_at": "2026-10-02T01:31:14Z",
   "status": "in-flight",
-  "phase": "user-resumed-publish-native-readiness-fix-then-mapping-closure-audit",
+  "phase": "native-readiness-verified-remaining-alias-closure-in-isolated-leaf",
   "prototype_source": "8cfa6f7b6cf9469ffa134598182febb60ecdd1df",
   "prototype_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-tom-mapping/RytmRandomizer",
   "delivery_start_source": "941643c551abfa225f45c70a954b6671d1cbb5f4",
@@ -19,10 +19,10 @@
   "work": {
     "mapping_implementation": "mapping-published-followup-wire-and-native-source-integrated-at-0130f5c5-running-server-still2a19b094-standalone-helper76634665",
     "inventory": "direct-base-integrated-with-registry-equality-guard",
-    "dimension_reviews": "eight-postpush-reviews-complete-at-1d59-consolidated-comment5943575627-updated-Not-ready-after-native-PR-acceptance-failure",
+    "dimension_reviews": "eight-postpush-reviews-complete-at-2a3789-consolidated-comment5943575627-updated-With-fixes-Gate14-16-retained",
     "plan_records": "source-bound-learning-and-probe-records-published-seventh-native-readiness-scope-declared-before-isolated-implementation",
-    "delivery_integration": "seventh-scope-fix0db50bac-and-checkpoint7040b6c5-integrated-local-publication-next",
-    "final_delivery_checks": "1d59-prepush860-architecture697-notfast-pass-all-hosted-Python-browser-pass-native-push32of32-and2handoffs-pass-native-PR31of32-failed-backend_restart-local-native-driver-regression5-pass-old-order-negative-control-failed-web-and-native-TS-and-targeted-eslint-pass-new-push-hook-review-and-hosted-acceptance-pending",
+    "delivery_integration": "native-readiness-published-at-2a3789-remaining-alias-phase-precode261301fd-in-isolated-rytm-alias-closure-leaf",
+    "final_delivery_checks": "2a3789-normal-prepush-lint-strict18-860-architecture697-notfast-pass-root-native-driver5-pass-both-hosted-runs-success-each191-Rust32-WebView2-Windows-handoffs-future-mapping-source-requires-new-checks",
     "protected_review_and_merge": "pending",
     "post_merge_maintainability_audit": "pending"
   },
@@ -176,12 +176,23 @@
       "scope": "user-resumed-next-best-move-2026-10-02T01:13:47Z",
       "result": "Refreshed clean local7040b6c5, unchanged remote1d59, directbase modularize-v1.34 and native PR red. Resume normal prepush/publication then eight postpush confirmations and exact-head CI; remaining mapping audit runs read-only in parallel. Prior90-minute BUDGET_EXCEEDED is retained; new90-minute checkpoint ends02:43:47Z. No new hardware output authorization.",
       "final_delivery_verdict": false
+    },
+    {
+      "scope": "published-2a3789-native-readiness-prepush-and-postpush-review",
+      "result": "Normal non-force push passed lint, strict typing on18 modules,860 architecture and697 not-fast checks including685 frozen parity cases. Root independently reran five native-driver Vitest tests at2a3789. Eight targeted postpush dimensions completed; existing comment5943575627 updated With fixes retaining Gate14/16.",
+      "passing_verdict": true,
+      "hardware_observation": false
+    },
+    {
+      "scope": "hosted-exact2a3789-PR36950161113-and-push36950157872",
+      "result": "Both runs completed success. Each passed191 Rust tests, rustfmt, Clippy,32 native WebView scenarios including backend_restart and two actual Windows installer handoff/restart tests. Python/browser lanes passed. This certifies2a3789 only, not later mapping source.",
+      "passing_verdict": true,
+      "hardware_observation": false
     }
   ],
   "remaining": [
-    "Publish local0db50bac native driver fix only after normal prepush gates; perform eight targeted postpush confirmations and revalidate exact hosted native head",
-    "Finish final receipt documentation, Docs/Maintainability confirmation, publication, postpush review confirmation and consolidated PR254 comment for the checked 0130f5c5 source plus receipt commit",
-    "Obtain new-head hosted checks including native formatting/tests/Clippy; no local native execution was available",
+    "Complete isolated alias-closure phase; integrate reviewed source with composed capture/mutation/planning tests, full coverage, strict typing and lint",
+    "Publish final mapping source through normal hooks, perform eight targeted postpush reviews, update existing PR254 body/comment and verify new-head hosted checks",
     "Protected new-head human review, hosted checks and merge",
     "Retrospective audit review and actual post-merge reassessment; Gate14 remains unchecked",
     "Preserve historical Gate16 isolation/timing limitation and outstanding prior minor follow-ups"
@@ -191,7 +202,7 @@
     "New capture has no retained raw-frame SHA and proves saved-state projection only, not SRC send, unsaved-RAM synchronization or recovery",
     "Historical A4 attempt failed with 0/1 messages; two later individually authorized fresh helpers each sent one CC74/channel0/value1 with operator-reported physical1 and manual reload0",
     "The running studio server process remains 2a19b094; runtime checkout/helper76634665 checks do not imply a server restart, frontend rebuild or rollout of the new native source",
-    "No local Cargo, rustfmt, native tests, Clippy or native run; 504 locked package versions/checksums unchanged and new-head hosted verification pending",
+    "No local Cargo execution; hosted native runs at2a3789 both passed191 Rust tests,32 WebView scenarios and2 Windows handoffs each. These certify only2a3789; future mapping source requires new-head verification. All504 locked package identities/versions/checksums unchanged",
     "Unknown aliases, semantic discrepancies and unverified live precision remain explicit gaps",
     "No general A4/BOTH, paired/fractional, native-offset, automatic-restore, Pi or touring readiness promotion; bounded probes performed no hardware SAVE or new raw capture",
     "Baseline audit and execution records were recorded after implementation began",

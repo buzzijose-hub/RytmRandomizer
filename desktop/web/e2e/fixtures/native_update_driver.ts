@@ -237,7 +237,7 @@ export async function run(scenario: string, origin: string): Promise<void> {
           Boolean(window.__RYTM_RAND_WS_TOKEN__ && window.__RYTM_RAND_WS_TOKEN__ !== oldToken &&
             window.__RYTM_RAND_ARM_SECRET__ && window.__RYTM_RAND_ARM_SECRET__ !== oldSecret));
         // Credentials are published before the replacement listener starts.
-        // Prove its authenticated session before testing stale-token refusal.
+        // Wait for the reconnected listener before testing stale-token refusal.
         await connected();
         check(await staleHandshakeRejected(oldToken), 'old token rejected by restarted backend');
         check(await requestUpdateCheck(), 'same page still invokes native after backend restart');
