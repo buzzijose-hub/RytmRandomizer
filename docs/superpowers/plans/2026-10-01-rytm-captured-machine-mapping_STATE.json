@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-02T00:46:41Z",
-  "status": "in-flight",
-  "phase": "followup-source-0130f5c5-software-verified-two-bounded-A4-probes-observed-final-publication-pending",
+  "updated_at": "2026-10-02T01:08:46Z",
+  "status": "BUDGET_EXCEEDED",
+  "phase": "local-0db50bac-readiness-fix-preserved-unpublished-PR1d59-native-check-red",
   "prototype_source": "8cfa6f7b6cf9469ffa134598182febb60ecdd1df",
   "prototype_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-tom-mapping/RytmRandomizer",
   "delivery_start_source": "941643c551abfa225f45c70a954b6671d1cbb5f4",
@@ -19,10 +19,10 @@
   "work": {
     "mapping_implementation": "mapping-published-followup-wire-and-native-source-integrated-at-0130f5c5-running-server-still2a19b094-standalone-helper76634665",
     "inventory": "direct-base-integrated-with-registry-equality-guard",
-    "dimension_reviews": "eight-postpush-reviews-complete-at-2f0f5be0-six-followup-code-dimensions-clean-prior-observability-minor-retained-final-docs-maintainability-and-postpush-confirmation-pending",
-    "plan_records": "mapping-learning-published-five-question-capture-lesson-doc-simulation-complete-new-lesson19-reviewer-rubric4-5-4-4-4-final-receipt-publication-pending",
-    "delivery_integration": "integrated",
-    "final_delivery_checks": "local0130f5c5-9836-passed5-skipped18-production-modules100pct-strict18-and-lint-pass-native-local-validation-unavailable-final-push-and-hosted-checks-pending",
+    "dimension_reviews": "eight-postpush-reviews-complete-at-1d59-consolidated-comment5943575627-updated-Not-ready-after-native-PR-acceptance-failure",
+    "plan_records": "source-bound-learning-and-probe-records-published-seventh-native-readiness-scope-declared-before-isolated-implementation",
+    "delivery_integration": "seventh-scope-leaf07c261a6-cherry-picked-locally-as0db50bac-not-published",
+    "final_delivery_checks": "1d59-prepush860-architecture697-notfast-pass-all-hosted-Python-browser-pass-native-push32of32-and2handoffs-pass-native-PR31of32-failed-backend_restart-local-native-driver-regression5-pass-old-order-negative-control-failed-web-and-native-TS-and-targeted-eslint-pass-new-push-hook-review-and-hosted-acceptance-pending",
     "protected_review_and_merge": "pending",
     "post_merge_maintainability_audit": "pending"
   },
@@ -150,9 +150,31 @@
       "scope": "coordinator-documentation-lifecycle-and-leaf-cleanup-checkpoint",
       "result": "Coordinator reports eight plan/index checks passed in 0.20 seconds after documentation updates; both new implementation leaf worktrees are app-confirmed archived with recoverable snapshots. Final delivery and runtime checkouts remain active. Final receipt commit/publication and postpush confirmation are still pending.",
       "hardware_observation": false
+    },
+    {
+      "scope": "final-published-1d59-prepush-and-postpush-review",
+      "result": "860 architecture and 697 not-fast tests passed including685 parity; eight dimensions synthesized in comment5943575627; Gate14/16 retained",
+      "passing_verdict": true
+    },
+    {
+      "scope": "hosted-1d59-native-push36948067512",
+      "result": "191 Rust tests, rustfmt, Clippy,32 WebView scenarios and2 Windows installer handoffs passed; all Python/browser lanes passed",
+      "passing_verdict": true
+    },
+    {
+      "scope": "hosted-1d59-native-PR36948073016",
+      "result": "31of32 WebView scenarios; backend_restart old-token assertion failed before listener-readiness; close code not retained; installer handoffs skipped; readiness diagnosis is inference",
+      "passing_verdict": false
+    },
+    {
+      "scope": "isolated-native-restart-readiness-leaf07c261a6-local-integration0db50bac",
+      "result": "Five focused Vitest tests pass; old-order negative control fails expected early-probe assertion; web/native TS and targeted ESLint pass. No real native run, install, hardware or push. Local deadline reached before publication/review/hosted revalidation.",
+      "passing_verdict": true,
+      "final_delivery_verdict": false
     }
   ],
   "remaining": [
+    "Publish local0db50bac native driver fix only after normal prepush gates; perform eight targeted postpush confirmations and revalidate exact hosted native head",
     "Finish final receipt documentation, Docs/Maintainability confirmation, publication, postpush review confirmation and consolidated PR254 comment for the checked 0130f5c5 source plus receipt commit",
     "Obtain new-head hosted checks including native formatting/tests/Clippy; no local native execution was available",
     "Protected new-head human review, hosted checks and merge",

@@ -167,3 +167,37 @@ has not been updated by these records.
   confirmed archived by the app with recoverable snapshots; final delivery
   and runtime checkouts remain active. Final receipt commit/push and post-push
   confirmation still follow this checkpoint.
+
+- **2026-10-02 01:04 UTC:** final head `1d59b0dc` was published without
+  bypassing hooks; pre-push passed 860 architecture and 697 not-fast tests
+  (including all 685 parity cases). Eight post-push dimensions were synthesized
+  into PR254 comment `5943575627`; Gate14/16 process exceptions remain.
+  Hosted Python/architecture/browser checks passed. Native push run36948067512
+  passed 191 Rust tests, Clippy, 32 WebView scenarios and two actual Windows
+  installer handoffs. Native PR run36948073016 passed 31/32 scenarios but failed
+  `backend_restart`; its installer handoffs were skipped. This is not all-green.
+- **Seventh bounded scope declared before implementation:** repair only the
+  native acceptance driver's backend-restart readiness ordering and add a
+  meaningful behavior regression. Credentials are written before Uvicorn
+  listens; the failed log contains rotation before listener startup and no
+  restarted WebSocket acceptance. The close code was not retained, so the
+  readiness-race diagnosis is an inference, not proof of an authentication
+  bypass. Wait for a real authenticated restarted session before the old-token
+  probe, preserving strict `auth_failed`/1008 acceptance. Use an isolated leaf;
+  no production auth change, hardware action, test relaxation or blind rerun.
+  Hosted revalidation and exact-head review remain required. The local deadline
+  remains `2026-10-02T01:08:16Z`; preserve incomplete work if it is reached.
+
+- **2026-10-02T01:08:46Z — BUDGET_EXCEEDED:** the90-minute local execution deadline
+  was reached. Preserve tested seventh-scope leaf `07c261a6`, integrated locally
+  as `0db50bac`; no publication or hosted acceptance of that fix is claimed.
+  Five focused Vitest tests pass, the old-order negative control fails the
+  early-probe assertion, and web/native-driver TypeScript plus targeted ESLint
+  pass. Exact published PR head remains `1d59b0dc` with its native PR check red.
+  Normal pre-push gates, final publication, eight post-push confirmations and
+  real native CI revalidation remain pending, along with protected merge and
+  actual post-merge assessment. JSON Schema validation could not run because
+  `jsonschema` is absent; standard-library parsing/required-key/receipt-key/
+  timestamp/no-scheduler assertions passed. No dependency installation, MIDI
+  action, scheduler or automatic merge was introduced. Studio runtime remains
+  running, and all physical controls were manually restored as observed.
