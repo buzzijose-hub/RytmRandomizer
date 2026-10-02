@@ -230,6 +230,12 @@ detune safety window. A mapped name alone must not bypass that window.
    establish saved-byte association. Do not swap CCs or saved offsets based on
    the returned recipe alone. Isolated saved changes plus incoming encoder MIDI
    observation resolve this discrepancy without an initial outbound send.
+   A subsequent [operator-present inbound check](hardware-validation/2026-10-01-cy-ride-inbound-address-check.md)
+   supports TYP CC20 with displayed C/D observed as2/3, and HIT CC19 with
+   displayed48–50 observed directly. Manual KIT01 reload returned C/48.
+   No output or SAVE occurred. This resolves the tested live address
+   association only; native saved slots, complete selector domains and
+   outbound behavior remain unvalidated, so both rows stay blocked.
 2. **CB Classic/Metallic:** the same official manual describes two pulse-width
    controls, while its MIDI appendix/current catalog contains only four rows.
    The typed CB Metallic saved recipe includes `PW1/PW2`. Add a saved-only
