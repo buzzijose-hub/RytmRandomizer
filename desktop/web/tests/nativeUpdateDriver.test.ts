@@ -77,7 +77,7 @@ describe('native acceptance polling deadline', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it('waits for authenticated reconnect when rotated credentials precede the listener', async () => {
+  it('waits for reconnection when rotated credentials precede the listener', async () => {
     vi.useFakeTimers();
     document.body.innerHTML = '<div data-testid="cockpit-root"></div><div data-testid="update-chip">1.35.1</div>';
     window.__RYTM_RAND_WS_TOKEN__ = 'old-token';

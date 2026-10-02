@@ -50,7 +50,7 @@ const nativeControl = (action: string): Promise<Stats> => invoke('control', { ac
 const element = (id: string): HTMLElement | null => document.querySelector(`[data-testid="${id}"]`);
 
 async function connected(): Promise<void> {
-  await until('actual sidecar authenticated session', () =>
+  await until('sidecar connection and session projection', () =>
     useCockpitStore.getState().connectionStatus === 'connected' && useCockpitStore.getState().sessionStatus !== null);
   check(useCockpitStore.getState().sessionStatus?.armed === false, 'passive sidecar stays disarmed');
 }
