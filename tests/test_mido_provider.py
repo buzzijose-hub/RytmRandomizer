@@ -628,6 +628,178 @@ def test_wire_adapter_converts_the_inert_mock_midi_message_dataclass() -> None:
     assert (wire.type, wire.channel, wire.control, wire.value) == ("control_change", 9, 74, 100)
 
 
+def test_wire_adapter_reconstructs_a_mido_shaped_control_change() -> None:
+    """Legacy MIDI I/O's type-only message is validated and rebuilt."""
+
+    from rytm_randomizer.mido_provider import WireOutputPort
+
+    backend_port = _StrictMidoPort()
+    fake_mido = _install_fake_mido()
+    port = WireOutputPort(backend_port, fake_mido)  # type: ignore[arg-type]
+    original = _FakeMidoMessage("control_change", channel=15, control=127, value=127)
+
+    port.send(original)
+
+    assert len(backend_port.sent) == 1
+    wire = backend_port.sent[0]
+    assert wire is not original
+    assert (wire.type, wire.channel, wire.control, wire.value) == (
+        "control_change",
+        15,
+        127,
+        127,
+    )
+
+
+@pytest.mark.parametrize(
+    ("message", "match"),
+    [
+        (
+            types.SimpleNamespace(type="note_on", channel=0, control=74, value=1),
+            "midi_wire_unsupported_message_type",
+        ),
+        (
+            types.SimpleNamespace(type="sysex", channel=0, control=74, value=1),
+            "midi_wire_unsupported_message_type",
+        ),
+        (
+            types.SimpleNamespace(type="control_change", channel=True, control=74, value=1),
+            "midi_wire_field_not_int: channel",
+        ),
+        (
+            types.SimpleNamespace(type="control_change", channel=16, control=74, value=1),
+            "midi_wire_field_out_of_range: channel",
+        ),
+        (
+            types.SimpleNamespace(type="control_change", channel=0, control=True, value=1),
+            "midi_wire_field_not_int: control",
+        ),
+        (
+            types.SimpleNamespace(type="control_change", channel=0, control=128, value=1),
+            "midi_wire_field_out_of_range: control",
+        ),
+        (
+            types.SimpleNamespace(type="control_change", channel=0, control=74, value=True),
+            "midi_wire_field_not_int: value",
+        ),
+        (
+            types.SimpleNamespace(type="control_change", channel=0, control=74, value=-1),
+            "midi_wire_field_out_of_range: value",
+        ),
+        (
+            types.SimpleNamespace(
+                message_type="note_on", type="control_change", channel=0, control=74, value=1
+            ),
+            "midi_wire_unsupported_message_type",
+        ),
+        (
+            types.SimpleNamespace(
+                message_type="", type="control_change", channel=0, control=74, value=1
+            ),
+            "midi_wire_unsupported_message_type",
+        ),
+    ],
+)
+def test_wire_adapter_refuses_invalid_mido_shaped_control_changes(
+    message: object, match: str
+) -> None:
+    """The type spelling grants no pass-through or field-validation bypass."""
+
+    from rytm_randomizer.mido_provider import WireOutputPort
+    from rytm_randomizer.real_midi_adapter import RealMidiSendError
+
+    backend_port = _StrictMidoPort()
+    fake_mido = _install_fake_mido()
+    port = WireOutputPort(backend_port, fake_mido)  # type: ignore[arg-type]
+
+    with pytest.raises(RealMidiSendError, match=match):
+        port.send(message)
+    assert backend_port.sent == []
+
+
+def test_app_a4_one_cc_composes_the_real_provider_and_wire_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    isolated_observability: None,
+) -> None:
+    """The public A4 helper crosses the real wrapper using a fake backend."""
+
+    from rytm_randomizer import app
+    from rytm_randomizer.observability.metrics import get_metrics
+
+    backend_port = _StrictMidoPort("Fake A4 Out")
+    opened: list[str] = []
+
+    def open_backend(port_name: str) -> _StrictMidoPort:
+        opened.append(port_name)
+        return backend_port
+
+    _install_fake_mido(output_names=("Fake A4 Out",), open_factory=open_backend)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-send-param",
+            "--parameter",
+            "OSC1 PWM Depth",
+            "--channel",
+            "0",
+            "--value",
+            "1",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert opened == ["Fake A4 Out"]
+    assert [(wire.type, wire.channel, wire.control, wire.value) for wire in backend_port.sent] == [
+        ("control_change", 0, 74, 1)
+    ]
+    assert backend_port.closed is True
+    assert "Sent exactly one A4 parameter CC message." in captured.out
+    assert captured.err == ""
+    assert get_metrics().cc_sent_by_channel[0] == 1
+
+
+def test_app_a4_nrpn_composes_the_real_provider_and_wire_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    isolated_observability: None,
+) -> None:
+    """All three paced NRPN CCs use the same validated wire conversion."""
+
+    from rytm_randomizer import app
+
+    backend_port = _StrictMidoPort("Fake A4 Out")
+    _install_fake_mido(output_names=("Fake A4 Out",), open_factory=lambda _name: backend_port)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-send-nrpn-param",
+            "--parameter",
+            "Sync Mode",
+            "--channel",
+            "0",
+            "--value",
+            "2",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert [(wire.type, wire.channel, wire.control, wire.value) for wire in backend_port.sent] == [
+        ("control_change", 0, 99, 1),
+        ("control_change", 0, 98, 31),
+        ("control_change", 0, 6, 2),
+    ]
+    assert backend_port.closed is True
+    assert "Sent exactly one A4 parameter NRPN sequence." in captured.out
+    assert captured.err == ""
+
+
 def test_wire_adapter_without_a_named_backend_port_reports_no_name() -> None:
     """``name`` is ``None`` when the backend port exposes none."""
 

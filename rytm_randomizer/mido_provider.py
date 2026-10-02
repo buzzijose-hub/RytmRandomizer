@@ -245,10 +245,9 @@ def _require_channel(value: object) -> int:
 
 
 def neutral_cc_fields(message: object) -> tuple[int, int, int]:
-    """Normalise one neutral CC message to ``(channel, control, value)``.
+    """Normalise one CC message to validated ``(channel, control, value)``.
 
-    The armed path carries device-neutral messages in exactly two shapes,
-    and **neither is acceptable to a real ``mido`` output port**:
+    The armed path carries device-neutral messages in two shapes:
 
     * a ``(channel, control, value)`` triple — what
       :meth:`rytm_randomizer.devices.Device.to_cc_messages` renders, and
@@ -256,9 +255,11 @@ def neutral_cc_fields(message: object) -> tuple[int, int, int]:
     * a :class:`~rytm_randomizer.mock_midi.MidiMessage` — the inert
       dataclass the cockpit adapters build via ``build_cc_message``.
 
-    Both are normalised here, at the lazy real-MIDI boundary, so the
-    conversion to :class:`mido.Message` happens in exactly one place
-    (:class:`WireOutputPort`). Anything else fails closed with
+    Legacy :func:`rytm_randomizer.midi_io.send_cc` also supplies an already
+    rendered ``mido.Message``, whose kind is exposed as ``type`` rather than
+    ``message_type``. All three shapes are validated and reconstructed here
+    by :class:`WireOutputPort`; none passes straight through to the backend.
+    Unsupported kinds or invalid fields fail closed with
     :exc:`~rytm_randomizer.real_midi_adapter.RealMidiSendError`.
     """
 
@@ -274,6 +275,8 @@ def neutral_cc_fields(message: object) -> tuple[int, int, int]:
 
     message_type = getattr(message, "message_type", None)
     if message_type is None:
+        message_type = getattr(message, "type", None)
+    if message_type is None:
         raise RealMidiSendError(f"midi_wire_unsupported_message: {type(message).__name__}")
     if message_type not in ("cc", "control_change"):
         raise RealMidiSendError(f"midi_wire_unsupported_message_type: {message_type!s}")
@@ -285,15 +288,15 @@ def neutral_cc_fields(message: object) -> tuple[int, int, int]:
 
 
 class WireOutputPort:
-    """The one place a neutral message becomes a real ``mido.Message``.
+    """Validate and reconstruct every CC as a real ``mido.Message``.
 
     A real ``mido`` output port rejects anything that is not a
     :class:`mido.Message`; the armed path upstream deliberately speaks in
     device-neutral triples / inert :class:`~rytm_randomizer.mock_midi.MidiMessage`
     dataclasses so no engine, runner, or cockpit adapter has to know about
-    ``mido``. This wrapper closes that gap at the lazy real-MIDI boundary —
-    the same shape :func:`rytm_randomizer.midi_io.send_cc` already uses for
-    its real branch (build ``mido.Message`` immediately before ``send``).
+    ``mido``. This wrapper closes that gap at the lazy real-MIDI boundary and
+    also validates the messages that legacy
+    :func:`rytm_randomizer.midi_io.send_cc` already renders.
 
     Wrapping (rather than converting at each call site) means the armed
     seam holds a port that *is* the conversion, so a future message kind
@@ -386,11 +389,10 @@ class MidoMidiPortProvider:
         """Open a hardware MIDI output port by name (lazy ``mido``).
 
         The returned port is a :class:`WireOutputPort` wrapper, not the raw
-        backend port: every armed caller upstream speaks in device-neutral
-        triples / inert ``MidiMessage`` dataclasses, and a real ``mido`` port
-        accepts only :class:`mido.Message`. The wrapper performs that
-        conversion here, at the single lazy real-MIDI boundary, so no caller
-        can hand a real port an object it rejects.
+        backend port: armed callers supply device-neutral triples, inert
+        ``MidiMessage`` dataclasses or legacy ``mido.Message`` objects. The
+        wrapper validates all three and reconstructs the backend message
+        here, at the lazy real-MIDI boundary, so no caller bypasses validation.
 
         Wrapped in an :func:`~rytm_randomizer.observability.tracing.operation`
         span so a ``--debug`` log records when the backend opened the selected
