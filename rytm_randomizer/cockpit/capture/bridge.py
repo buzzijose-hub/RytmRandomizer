@@ -14,6 +14,19 @@ from .service import KitCaptureResult
 _logger = get_logger(__name__)
 
 
+def _has_promoted_machine_fact(snapshot: RytmKitSnapshot, pad_id: int, machine_key: str) -> bool:
+    """Require verified identity before projecting a machine-specific SRC row."""
+
+    fact = snapshot.machine_facts.facts_by_pad.get(pad_id)
+    profile = RYTM_MACHINE_PROFILES_BY_KEY.get(machine_key)
+    return (
+        fact is not None
+        and fact.promoted
+        and profile is not None
+        and fact.decoded_machine_value == profile.machine_value
+    )
+
+
 def cockpit_snapshot_from_rytm_capture(result: KitCaptureResult) -> Snapshot:
     """Promote a verified Rytm saved-kit capture to the Cockpit anchor shape.
 
@@ -60,6 +73,11 @@ def cockpit_snapshot_from_rytm_capture(result: KitCaptureResult) -> Snapshot:
 
         params: dict[str, int] = {}
         for event in events:
+            if event.source == "machine_src" and not _has_promoted_machine_fact(
+                result.snapshot, pad_id, event.machine_key
+            ):
+                omitted_parameter_count += 1
+                continue
             compact_key = cockpit_parameter_key(
                 event.machine_key,
                 event.section,

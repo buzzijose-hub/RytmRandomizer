@@ -251,7 +251,7 @@ def test_initial_performance_console_event_is_passive(cockpit_client: TestClient
 
 @pytest.mark.parametrize(
     "seed,paired_changed",
-    [(7, False), (1, True)],
+    [(1, False), (7, True)],
     ids=["supported-send-local-recovery", "paired-control-refusal"],
 )
 def test_verified_capture_to_targeted_send_and_snapshot_recovery(
@@ -336,8 +336,10 @@ def test_verified_capture_to_targeted_send_and_snapshot_recovery(
     assert {delta.pad_id for delta in session.current_candidate.pad_deltas} == {1}
     assert session.current_candidate.seed == seed
     delta = session.current_candidate.pad_deltas[0]
-    # The fixture retains LFO Depth. A fixed public session seed selects a
-    # genuine generated candidate with this paired field unchanged or changed.
+    # The capture retains SRC and LFO Depth. These seeds select genuine
+    # candidates with the paired field unchanged or changed across that scope.
+    assert "tun" in captured_snapshot.pads[0].params
+    assert delta.changed_keys & {"tun", "dec", "noise_decay"}
     assert captured_snapshot.pads[0].params["lfo_depth"] == 0
     assert ("lfo_depth" in delta.changed_keys) is paired_changed
     assert (delta.proposed_params["lfo_depth"] != 0) is paired_changed

@@ -21,7 +21,12 @@ from rytm_randomizer.data.analog_four_sysex_calibration import (
     ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS,
 )
 from rytm_randomizer.data.analog_rytm_midi import ANALOG_RYTM_MANUAL_CC
-from rytm_randomizer.data.device_support_inventory import DEVICE_SUPPORT_EVIDENCE
+from rytm_randomizer.data.device_support_inventory import (
+    DEVICE_SUPPORT_EVIDENCE,
+    DEVICE_SUPPORT_EVIDENCE_FAMILIES,
+)
+from rytm_randomizer.devices import all_devices, register_device
+from rytm_randomizer.devices.analog_rytm import AnalogRytmDevice
 from rytm_randomizer.reports.device_support_inventory import (
     DeviceSupportInventory,
     DeviceSupportParameter,
@@ -68,6 +73,61 @@ def test_inventory_is_reproducible_and_complete_against_catalogs() -> None:
     assert first["hardware_validation_granted"] is False
     for paths in DEVICE_SUPPORT_EVIDENCE.values():
         assert all((ROOT / path).is_file() for path in paths)
+
+
+def test_inventory_device_set_equals_canonical_registry() -> None:
+    payload = build_device_support_inventory()
+    summaries = payload["registered_devices"]
+    assert set(summaries) == set(all_devices())
+    assert tuple(summaries) == tuple(sorted(all_devices()))
+    for device_id, device in all_devices().items():
+        summary = summaries[device_id]
+        family = DEVICE_SUPPORT_EVIDENCE_FAMILIES.get(device_id)
+        assert summary["display_name"] == device.display_name
+        assert summary["track_count"] == device.track_count
+        assert summary["evidence_family"] == family
+        assert summary["evidence_row_count"] == sum(
+            row["device"] == family for row in payload["parameters"]
+        )
+        assert device_id in "\n".join(format_device_support_inventory())
+
+
+def test_future_registered_device_is_explicitly_without_support_evidence(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import rytm_randomizer.devices.registry as registry
+
+    # Isolate the canonical backing store, then use its actual registration API.
+    monkeypatch.setattr(registry, "_DEVICES", dict(all_devices()))
+    baseline_counts = build_device_support_inventory()["counts"]
+    future = AnalogRytmDevice()
+    future.device_id = "future_registered_device"
+    future.display_name = "Registered device without inventory evidence"
+    register_device(future)
+
+    payload = build_device_support_inventory()
+    assert set(payload["registered_devices"]) == set(all_devices())
+    assert payload["registered_devices"][future.device_id] == {
+        "display_name": future.display_name,
+        "track_count": future.track_count,
+        "evidence_family": None,
+        "evidence_row_count": 0,
+        "evidence_status": "no_support_evidence",
+    }
+    assert payload["counts"] == baseline_counts
+    assert payload["hardware_access"] is False
+    assert payload["hardware_validation_granted"] is False
+    assert all(row["device"] != future.device_id for row in payload["parameters"])
+    assert any(
+        future.device_id in line and "no_support_evidence; 0 evidence rows" in line
+        for line in format_device_support_inventory()
+    )
+    assert main(["device-support-inventory-report", "--json"]) == 0
+    cli_payload = json.loads(capsys.readouterr().out)
+    assert set(cli_payload["registered_devices"]) == set(all_devices())
+    assert cli_payload["registered_devices"][future.device_id]["evidence_status"] == (
+        "no_support_evidence"
+    )
 
 
 def test_exact_native_fractional_domains_do_not_grant_midi_conversion() -> None:

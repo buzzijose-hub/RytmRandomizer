@@ -4,6 +4,33 @@ Last updated: 2026-10-01. This file is a hand-authored snapshot and is meant to 
 
 ## Current Snapshot
 
+The [captured Rytm mapping correction](superpowers/plans/2026-10-01-rytm-captured-machine-mapping.md)
+is integrated into the existing Studio PR #254 delivery checkout. Its final
+combined software run passed 9,823 tests, with five skips and six existing
+warnings; all 18 touched production modules have 100% line/branch coverage.
+Pure branch coverage is 99.37%. The same update fixes Eddie's registry omission blocker:
+the passive inventory lists every registered device, including explicit
+`no_support_evidence` summaries, and tests registry-set equality. It also
+promotes exact fixture-proven XT Classic ID 8 on pads
+6–8 and retains existing machine SRC aliases through the canonical capture
+bridge. Unpromoted tom facts, including raw `0x88`, cannot acquire SRC mutation
+authority. Passive composed decoding of the retained studio KIT and two RIO
+fixtures produces 60 SRC plus 264 common keys without changing frame bytes.
+[The mapping audit](RYTM_MAPPING_STATUS.md) records eleven remaining alias
+families and unresolved semantic/precision work. The studio server now runs
+the mapping-only correction at `2a19b094`, separately verified with 10,678
+passing tests and three touched production modules at 100% lines/branches.
+Its unchanged frontend uses the hash-verified `8cfa6f7b` bundle. Outputs are
+disarmed; fresh login and operator capture are pending. The report/registry
+increment belongs to PR #254, rather than this local runtime checkout.
+
+The separate October 1 studio trial on `8cfa6f7b` completed one approved
+16-message Rytm RAM audition. The operator checked pad 2 Filter Frequency,
+Amp Decay, Overdrive and Reverb, with pad 1 Frequency unchanged. Manual KIT 01
+reload restored those values and sound; a fresh saved-KIT capture matched
+fingerprint `5f75b9fb4856e8c7`. This is scoped physical evidence, not a check of
+all 16 controls, SRC, automatic restore, A4/BOTH or Pi/touring acceptance.
+
 The [studio evidence handoff](superpowers/plans/2026-10-01-studio-evidence-handoff.md)
 is implemented in [PR #254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254)
 on `codex/studio-evidence-handoff`, directly based on
@@ -12,8 +39,9 @@ cancellable capture and stale-result refusal, passive preview retention,
 side-effect-free rejected DISARM, duplicate exact input-name refusal, and
 whole-plan refusal for unverified paired controls. The passive
 [device support inventory](DEVICE_SUPPORT_INVENTORY.md) separates catalog,
-native-file, live-send and physical-evidence coverage. No MIDI/USB access or
-hardware writes are performed in this software session. PR #252 is now titled
+native-file, live-send and physical-evidence coverage. The software handoff
+verification opened no MIDI ports; the separate studio observation above has
+its own limited scope. PR #252 is now titled
 touchscreen UI and Pi packaging groundwork; non-simulation appliance APPLY and
 deployment remain held for their own evidence. PR #248 is merged in current
 integration head `892aaffc`; older results below are historical receipts, not
@@ -26,7 +54,8 @@ passed at 100% measured coverage; browser: 33 passed, two skipped with disabled
 MIDI. Lint, strict touched-module typing, dead-code checks and the production
 web build passed. New-head CI and maintainer review remain required. The local
 cache uses Python 3.12.14, Pyright 1.1.407 and Vite 8.0.14; clean CI must verify
-the pinned toolchain. Physical observations remain blank.
+the pinned toolchain. The handoff revision's general physical acceptance remains
+pending; its earlier software receipts do not cover this new mapping correction.
 
 Review followup strengthens typed inventory schemas, reuses canonical A4
 converters, and clarifies manual hardware recovery. Cancelled capture records
@@ -37,9 +66,11 @@ malformed-import timeout is addressed by splitting independent test cases,
 without increasing timeouts, retries or skips.
 
 The scoped ten-question maintainability audit is now recorded in the plan.
-Its formal receipt was added after PR open, so the Gate 14 timing deviation
-requires maintainer acknowledgment; it is not represented as a pre-plan audit
-or an approved exception. The post-merge reassessment remains outstanding.
+Its formal receipt was added after PR open. Eddie acknowledged that handoff
+timing deviation in his [October 1 review](https://github.com/buzzijose-hub/RytmRandomizer/pull/254#pullrequestreview-5379158634).
+It is not represented as a timely pre-plan audit. The additional mapping
+assessment is also retrospective, and the post-merge reassessment and review
+of the new revision remain outstanding; Gate 14 stays unchecked.
 
 Show Kit Forge merged through PR #238 on September 8 as one
 versioned, paired Analog Rytm/Analog Four preparation workflow. It keeps
@@ -73,8 +104,9 @@ port nor attests that the source was restored in working RAM.
 
 The Rytm audition route reuses Cockpit's existing PREPARE plus exact
 plan-id/port confirmation and `ArmedApply` RAM-only SEND. The software route
-exists, but the operator-present one-pad send, untouched-pad check, and restore
-rehearsal have not yet been performed for this bundle. Cockpit never saves a
+exists. The October 1 observation above records a limited one-pad trial on the
+running Pi integration source; it does not validate every control in this bundle.
+Cockpit never saves a
 KIT persistently: after choosing a favorite, the operator must save on each
 instrument and make fresh input-only captures. Candidate verification compares
 the promoted semantic projection; a separate show-time preflight compares the
@@ -129,6 +161,14 @@ Digitakt #240 remains a separate passive device PR; it is not included as merged
 support in this updater checkpoint.
 
 ## Recent Cleanup
+
+- 2026-10-01: Integrated the [captured Rytm mapping correction](superpowers/plans/2026-10-01-rytm-captured-machine-mapping.md)
+  into PR #254 delivery: exact XT Classic tom identity and existing machine SRC
+  projection, composed real-frame regressions and an explicit remaining-gap
+  inventory. Final local software gates passed; publication and protected review
+  remain pending. The mapping-only local studio runtime is installed at
+  `2a19b094`, with fresh capture still pending; general A4/Pi/touring readiness
+  is unvalidated.
 
 - 2026-10-01: Delivered [PR #254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254)
   as a direct-base Studio evidence handoff, separate from Pi groundwork #252.

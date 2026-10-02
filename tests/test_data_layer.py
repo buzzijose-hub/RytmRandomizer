@@ -73,6 +73,10 @@ def test_machine_cc_is_15_everywhere():
 
 
 def test_device_support_facts_keep_evidence_and_omissions_separate() -> None:
+    assert dict(data.DEVICE_SUPPORT_EVIDENCE_FAMILIES) == {
+        "analog_four_mk2": "a4",
+        "analog_rytm_mk2": "rytm",
+    }
     assert set(data.DEVICE_SUPPORT_EVIDENCE) == {
         "a4_native",
         "rytm_native",

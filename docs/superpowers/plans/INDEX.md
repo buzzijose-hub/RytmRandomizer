@@ -15,6 +15,7 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 
 | Date | Plan | Status | PR |
 |---|---|---|---|
+| 2026-10-01 | [rytm-captured-machine-mapping](2026-10-01-rytm-captured-machine-mapping.md) | in-flight; local software verified, mapping runtime installed; publication and protected review pending | [#254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254) |
 | 2026-10-01 | [studio-evidence-handoff](2026-10-01-studio-evidence-handoff.md) | in-flight; locally verified, review/CI and physical acceptance pending | [#254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254) |
 | 2026-09-08 | [release-closeout](2026-09-08-release-closeout.md) | in-flight — local and hosted verification passed; protected review required | #238–243; #245; replacement #248 |
 | 2026-09-08 | [release-closeout learning and replay](2026-09-08-release-closeout_LEARNING_REPORT.md) | in-flight — lessons and verified replay retained; review required | #238–243; #245; #248 |

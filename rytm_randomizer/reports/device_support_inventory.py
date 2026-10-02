@@ -6,6 +6,7 @@ are not evidence for native-to-MIDI conversion or physical acceptance.
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from typing import Final, Literal, TypedDict
 
@@ -41,8 +42,13 @@ from ..data.analog_rytm_kit_fields import (
 )
 from ..data.analog_rytm_kit_layout import RYTM_SOUND_FIELD_BY_NRPN_LSB
 from ..data.analog_rytm_midi import ANALOG_RYTM_MANUAL_CC, AnalogRytmCcMapping
-from ..data.device_support_inventory import DEVICE_SUPPORT_EVIDENCE, DEVICE_SUPPORT_OMISSIONS
+from ..data.device_support_inventory import (
+    DEVICE_SUPPORT_EVIDENCE,
+    DEVICE_SUPPORT_EVIDENCE_FAMILIES,
+    DEVICE_SUPPORT_OMISSIONS,
+)
 from ..data.rytm_machine_catalog import RYTM_MACHINE_PROFILES_BY_KEY, RYTM_PAD_CAPABILITIES
+from ..devices import all_devices
 from ..devices.strategies.analog_four_kit_fields import (
     A4_FINE_DISPLAY_MAX,
     A4_FINE_DISPLAY_MIN,
@@ -85,7 +91,7 @@ class DeviceSupportParameter(TypedDict):
 class DeviceSupportCounts(TypedDict):
     a4_native_locations_per_track: int
     a4_named_semantic_fields_per_track: int
-    a4_synth_track_MIDI_controls: int
+    a4_synth_track_midi_controls: int
     a4_midi_catalog_rows: int
     rytm_midi_catalog_rows: int
     rytm_typed_native_machine_layouts: int
@@ -173,6 +179,16 @@ class UnsupportedCategory(TypedDict):
     blocker: str
 
 
+class RegisteredDeviceSupport(TypedDict):
+    """Registry identity and report coverage, never a capability or send grant."""
+
+    display_name: str
+    track_count: int
+    evidence_family: str | None
+    evidence_row_count: int
+    evidence_status: Literal["evidence_rows_available", "no_support_evidence"]
+
+
 class DeviceSupportInventory(TypedDict):
     """Fixed report contract; descriptive evidence cannot grant authority."""
 
@@ -180,6 +196,7 @@ class DeviceSupportInventory(TypedDict):
     hardware_access: Literal[False]
     hardware_validation_granted: Literal[False]
     interpretation: str
+    registered_devices: dict[str, RegisteredDeviceSupport]
     counts: DeviceSupportCounts
     midi_addresses: DeviceMidiAddresses
     rytm_machine_compatibility: list[RytmPadCompatibility]
@@ -544,6 +561,26 @@ def _a4_midi_catalog() -> tuple[AnalogFourCcMapping, ...]:
     return tuple({**ANALOG_FOUR_MANUAL_CC, **ANALOG_FOUR_SYNTH_TRACK_NRPN}.values())
 
 
+def _registered_device_support(
+    rows: tuple[DeviceSupportRow, ...],
+) -> dict[str, RegisteredDeviceSupport]:
+    """Include every registered device, preserving absence of report evidence."""
+
+    row_counts = Counter(row.device for row in rows)
+    result: dict[str, RegisteredDeviceSupport] = {}
+    for device_id, device in sorted(all_devices().items()):
+        family = DEVICE_SUPPORT_EVIDENCE_FAMILIES.get(device_id)
+        row_count = row_counts.get(family, 0) if family is not None else 0
+        result[device_id] = {
+            "display_name": device.display_name,
+            "track_count": device.track_count,
+            "evidence_family": family,
+            "evidence_row_count": row_count,
+            "evidence_status": "evidence_rows_available" if row_count else "no_support_evidence",
+        }
+    return result
+
+
 def build_device_support_inventory() -> DeviceSupportInventory:
     """Build canonical, deterministic evidence without file/device access."""
 
@@ -554,6 +591,7 @@ def build_device_support_inventory() -> DeviceSupportInventory:
         "hardware_access": False,
         "hardware_validation_granted": False,
         "interpretation": "Catalog rows, native locations and software tests do not grant physical readiness. Domains are labelled by authority; native/MIDI tables are not conversion tables.",
+        "registered_devices": _registered_device_support(rows),
         "counts": inventory_counts(),
         "midi_addresses": {
             "a4": [_a4_address_payload(mapping) for mapping in _a4_midi_catalog()],
@@ -611,6 +649,12 @@ def format_device_support_inventory() -> list[str]:
     return passive_report_lines(
         _HEADER,
         [
+            "Registered devices (report evidence only, not support or hardware readiness):",
+            *[
+                f"- {device_id} / {device['display_name']}: {device['evidence_status']}; "
+                f"{device['evidence_row_count']} evidence rows"
+                for device_id, device in inventory["registered_devices"].items()
+            ],
             "Coverage counts (locations/catalog rows, not physical acceptance):",
             *[f"- {key}: {value}" for key, value in inventory_counts().items()],
             "Native field domains, MIDI addresses, machine compatibility and exact blockers: use --json.",
@@ -636,7 +680,7 @@ def inventory_counts() -> DeviceSupportCounts:
     return {
         "a4_native_locations_per_track": len(A4_TRACK_OFFSETS),
         "a4_named_semantic_fields_per_track": len(A4_TRACK_OFFSETS) - len(A4_MOD_DEPTH_FIELDS),
-        "a4_synth_track_MIDI_controls": len(ANALOG_FOUR_SYNTH_TRACK_NRPN),
+        "a4_synth_track_midi_controls": len(ANALOG_FOUR_SYNTH_TRACK_NRPN),
         "a4_midi_catalog_rows": len(_a4_midi_catalog()),
         "rytm_midi_catalog_rows": len(ANALOG_RYTM_MANUAL_CC),
         "rytm_typed_native_machine_layouts": len(RYTM_MACHINE_PARAMETER_NAMES),

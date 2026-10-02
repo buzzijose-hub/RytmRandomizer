@@ -63,6 +63,6 @@
     "both",
     "pi_standalone_appliance",
     "physical_validation_pending",
-    "PR #252 is touchscreen/packaging groundwork; native Pi boot, deployment and physical operation remain unproven."
+    "Native Pi boot, deployment and physical operation require separate acceptance evidence."
   ]
 ]

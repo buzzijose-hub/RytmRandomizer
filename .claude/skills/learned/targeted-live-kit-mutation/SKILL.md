@@ -28,6 +28,10 @@ kit adoption, or a send plan that could reach an Elektron device.
 5. Promote a captured kit only after the canonical codec proves exact
    decode/re-encode round-trip stability. Project only fields already backed by
    the semantic map; retain but never guess unknown fields.
+   Exercise retained hardware-return fixtures through the actual anchor consumer,
+   not only the decoder. Catalog SRC sections may use canonical machine keys;
+   normalize only the exact owning section and retain exact reverse CC matching.
+   Require promoted machine facts before exposing machine SRC mutation values.
 6. If saved-kit offsets, typed encodings, track stride, and fixture evidence are
    incomplete, return a blocked zero-event plan. A manual-backed live CC map is
    not evidence for saved-kit byte offsets.

@@ -3309,6 +3309,33 @@ touch UI/packaging groundwork: non-simulation APPLY is refused and deployment
 is on hold pending focused work. Touch/display behavior and packaging have no
 validated acceptance edge here.
 
+## Captured Rytm machine projection
+
+The support inventory's registered-device summary separately follows
+`devices.all_devices()` through a canonical evidence-family data mapping.
+Missing family evidence yields a visible zero-row `no_support_evidence` entry;
+it grants no mutation or transport authority.
+
+```mermaid
+flowchart LR
+    Frame["Input-only immutable KIT frame"] --> Decode["Registered Rytm strategy + native round-trip"]
+    Decode --> Facts["Promoted machine facts<br/>exact XT ID 8 on pads 6–8"]
+    Decode --> Anchor["Canonical snapshot-shell anchor"]
+    Anchor --> Source["Machine SRC rows"]
+    Source --> Owner["SRC or exact owning machine section"]
+    Owner --> Proof["Matching promoted machine fact"]
+    Facts --> Proof
+    Proof --> CC["Exact canonical CC reverse match"]
+    Anchor -->|"common-page values"| CC
+    CC --> Snapshot["Cockpit semantic snapshot"]
+    Snapshot --> Plan["Existing target-minus-locks + paired-control refusal"]
+    Plan --> Armed["Existing exact-plan confirmation + ArmedApply"]
+```
+
+Unknown aliases and unpromoted tom SRC rows are omitted while the original
+frame remains intact. This projection changes no MIDI boundary or restore
+authority. See [the source-bound mapping audit](RYTM_MAPPING_STATUS.md).
+
 <a id="38-auto-update-flow-designed--spec-complete-implementation-pending"></a>
 <a id="37-auto-update-flow-designed--spec-complete-implementation-pending"></a>
 <a id="desktop-update-components"></a>

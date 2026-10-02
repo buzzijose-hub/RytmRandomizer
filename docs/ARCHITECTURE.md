@@ -689,6 +689,23 @@ as a snapshot mutation, move it through the `Device` strategies instead.
 
 ## 6.2 Cockpit & Profile-Model layer (Phase 1)
 
+Rytm input-only capture projects an immutable canonical KIT through the registered
+snapshot strategy and existing snapshot-shell anchor. Machine SRC rows may carry
+their owning machine key as the section; the Cockpit reverse lookup accepts that
+exact owner or `SRC`, then rechecks the catalog CC. The capture bridge additionally
+requires a promoted matching machine fact before exposing SRC mutation values.
+Common-page projection keeps its existing rules. Exact XT Classic ID 8 on pads
+6–8 has retained initialized and returned KIT evidence; other tom facts remain
+pending. Missing aliases and semantic/precision blockers are listed in
+[RYTM_MAPPING_STATUS.md](RYTM_MAPPING_STATUS.md). This projection grants no new
+transport or restore authority.
+
+The passive support report enumerates `devices.all_devices()` for its
+`registered_devices` summary. A canonical data mapping associates known registry
+IDs with existing family evidence rows. Unmapped IDs remain visible with zero
+rows and `no_support_evidence`; no registration implies parameter or transport
+support. JSON/text registry-set regressions cover future registrations.
+
 The `rytm_randomizer.cockpit` subpackage is the live-performance GUI surface
 and the home of the portable mutation engine. It hosts the actual
 WebSocket Protocol the desktop shell drives. (The live `live_gui_*_model`

@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-10-02T00:13:00Z",
+  "status": "in-flight",
+  "phase": "software-verified-local-mapping-runtime-installed-publication-pending",
+  "prototype_source": "8cfa6f7b6cf9469ffa134598182febb60ecdd1df",
+  "prototype_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-tom-mapping/RytmRandomizer",
+  "delivery_start_source": "941643c551abfa225f45c70a954b6671d1cbb5f4",
+  "delivery_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-studio-mapping/RytmRandomizer",
+  "delivery_pr": 254,
+  "delivery_branch": "codex/studio-evidence-handoff",
+  "delivery_base": "modularize-v1.34",
+  "auto_merge": false,
+  "scheduled_jobs": [],
+  "local_budget_minutes": 90,
+  "local_budget_checkpoint": "2026-10-01T23:38:16Z",
+  "local_budget_deadline": "2026-10-02T01:08:16Z",
+  "historical_elapsed_time_recorded": false,
+  "work": {
+    "mapping_implementation": "final-composed-software-verified-and-mapping-only-local-runtime-installed",
+    "inventory": "direct-base-integrated-with-registry-equality-guard",
+    "dimension_reviews": "eight-scoped-prepublication-reviews-complete-postpush-confirmation-pending",
+    "plan_records": "retrospective-audit-and-learning-artifacts-included-five-question-doc-simulation-complete",
+    "delivery_integration": "integrated",
+    "final_delivery_checks": "9823-passed-5-skipped-18-production-modules-100pct-lines-branches",
+    "protected_review_and_merge": "pending",
+    "post_merge_maintainability_audit": "pending"
+  },
+  "receipts": [
+    {
+      "scope": "first-prototype-full-suite",
+      "result": "5 failed, 10670 passed, 5 skipped in 204.98 seconds",
+      "passing_verdict": false
+    },
+    {
+      "scope": "three-seed-assumption-repairs-focused-recheck",
+      "result": "22 passed",
+      "final_delivery_verdict": false
+    },
+    {
+      "scope": "mapping-focused-prototype",
+      "result": "306 passed",
+      "final_delivery_verdict": false
+    },
+    {
+      "scope": "retained-original-Oct1-source-and-RIO-return-and-init-public-decode-bridge",
+      "result": "Each: 324 keys, 60 SRC keys, XT Classic ready; no MIDI opened",
+      "hardware_observation": false
+    },
+    {
+      "scope": "first-composed-Studio-full-suite",
+      "result": "1 failed, 9819 passed, 5 skipped in 286.42 seconds; plan marker corrected",
+      "passing_verdict": false
+    },
+    {
+      "scope": "plan-lifecycle-index-recheck",
+      "result": "8 passed"
+    },
+    {
+      "scope": "final-combined-Studio-full-suite",
+      "result": "9823 passed, 5 skipped, 6 warnings in 269.56 seconds",
+      "combined_coverage": "99.65%",
+      "pure_branch_coverage": "99.37%",
+      "touched_production_modules": 18,
+      "touched_line_branch_coverage": "100%",
+      "hardware_observation": false
+    },
+    {
+      "scope": "local-mapping-runtime-2a19b0941d9810a67d262a0a21a8d7ca6469b40a-versus-8cfa6f7b",
+      "result": "10678 passed, 5 skipped, 6 warnings in 305.83 seconds; strict typing and lint passed; backend started healthy with unchanged hash-verified 8c frontend, outputs disarmed, no capture started",
+      "combined_coverage": "99.66%",
+      "pure_branch_coverage": "99.39%",
+      "touched_production_modules": 3,
+      "touched_line_branch_coverage": "100%",
+      "hardware_observation": false
+    },
+    {
+      "scope": "Gate15-repository-only-document-snapshot-onboarding",
+      "result": "Five questions answered; exact copied in-repo inputs and citation paths verified; skill addition scored4/5 on all five documented dimensions; no installation/test/hardware/schema-validation job performed",
+      "hardware_observation": false
+    }
+  ],
+  "remaining": [
+    "Finish post-push mechanical and eight-dimension review; update existing PR254",
+    "Fresh private studio login and operator-sent saved KIT01 capture; no output authorized",
+    "Protected new-head review and hosted checks",
+    "Retrospective audit review and actual post-merge reassessment; Gate14 remains unchecked",
+    "Commit learning outputs and preserve historical Gate16 isolation/timing limitation"
+  ],
+  "limits": [
+    "Mapping-only local studio backend runs 2a19b094 with unchanged hash-verified 8cfa6f7b frontend; fresh login/capture pending; report registry increment remains PR254 work",
+    "Unknown aliases, semantic discrepancies and unverified live precision remain explicit gaps",
+    "No A4, BOTH, Pi or touring readiness promotion",
+    "Baseline audit and execution records were recorded after implementation began",
+    "Writing phases used disjoint scopes in one prototype checkout; separate per-phase worktrees were not retrospectively created"
+  ],
+  "recovery": [
+    "Read state, RUN_LOG and plan; inspect actual delivery/runtime checkout statuses and attached archived prototype metadata; restore only if prototype evidence is needed",
+    "Refresh PR254 head, base, checks and review state without assuming protected approval",
+    "Match runner summaries to source checkpoint and rerun affected checks after changes",
+    "Preserve original dirty user checkout, running studio checkout and concurrent work"
+  ],
+  "local_termination": "Correction published in PR254 with final source-specific checks and review findings recorded",
+  "plan_termination": "Protected merge and actual post-merge maintainability reassessment recorded",
+  "budget_exhaustion_status": "BUDGET_EXCEEDED",
+  "user_stop_status": "INTERRUPTED"
+}

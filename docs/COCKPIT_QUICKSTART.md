@@ -878,7 +878,10 @@ and [the pending scratch manifest](../tests/fixtures/analog_four_saved_kit/filte
 stop the sidecar and manually reload the protected sources. On a transport
 failure, assume partial delivery, preserve the blocker/log and never retry the
 old plan. Disconnect the selected MIDI path only after disarming if transport
-is wedged. Reconnect never re-arms. A cancelled/timed-out/disconnected capture
+is wedged. Reconnect never re-arms. Providers that cannot cancel may keep the
+capture input reservation for up to 120 seconds after disconnect; wait for
+release before another capture or mutation. The production mido provider
+supports cooperative cancellation. A cancelled/timed-out/disconnected capture
 must not later replace the prior source; a passive browser disconnect or
 rejected DISARM must not erase offline candidate/plan/source identity within
 the same running sidecar session. Explicit local retention/bank save is needed

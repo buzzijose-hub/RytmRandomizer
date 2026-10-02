@@ -416,8 +416,11 @@ def cockpit_parameter_key(machine: str, section: str, parameter: str) -> str | N
     for compact_key, common_pair in _COMMON_ALIASES.items():
         if common_pair == catalog_pair:
             return compact_key
-    aliases = _MACHINE_PARAMETER_ALIASES.get(_machine_key(machine))
-    if aliases is None or section != "SRC":
+    machine_key = _machine_key(machine)
+    aliases = _MACHINE_PARAMETER_ALIASES.get(machine_key)
+    # Canonical machine rows use their owning machine key as the section;
+    # manually requested SRC rows use the generic page name.
+    if aliases is None or section not in ("SRC", machine_key):
         return None
     for compact_key, catalog_parameter in aliases.items():
         if catalog_parameter == parameter:

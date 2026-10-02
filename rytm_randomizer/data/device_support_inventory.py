@@ -9,6 +9,14 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import Final
 
+DEVICE_SUPPORT_EVIDENCE_FAMILIES: Final[MappingProxyType[str, str]] = MappingProxyType(
+    {
+        "analog_four_mk2": "a4",
+        "analog_rytm_mk2": "rytm",
+    }
+)
+"""Bind registered identities to existing report evidence, never to readiness."""
+
 DEVICE_SUPPORT_EVIDENCE: Final[MappingProxyType[str, tuple[str, ...]]] = MappingProxyType(
     {
         "a4_native": (
@@ -103,8 +111,12 @@ DEVICE_SUPPORT_OMISSIONS: Final[tuple[tuple[str, str, str, str], ...]] = (
         "both",
         "pi_standalone_appliance",
         "physical_validation_pending",
-        "PR #252 is touchscreen/packaging groundwork; native Pi boot, deployment and physical operation remain unproven.",
+        "Native Pi boot, deployment and physical operation require separate acceptance evidence.",
     ),
 )
 
-__all__ = ["DEVICE_SUPPORT_EVIDENCE", "DEVICE_SUPPORT_OMISSIONS"]
+__all__ = [
+    "DEVICE_SUPPORT_EVIDENCE",
+    "DEVICE_SUPPORT_EVIDENCE_FAMILIES",
+    "DEVICE_SUPPORT_OMISSIONS",
+]

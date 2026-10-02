@@ -81,6 +81,26 @@ def test_cockpit_parameter_key_projects_and_rejects_machine_specific_rows() -> N
 
 
 @pytest.mark.parametrize(
+    ("machine", "section", "parameter", "expected"),
+    (
+        ("XT Classic", "xt_classic", "Tune", "tun"),
+        ("BD Sharp", "bd_sharp", "Hold Time", "hold"),
+        ("SD Hard", "sd_hard", "Noise Decay", "noise_decay"),
+        ("XT Classic", "bd_hard", "Tune", None),
+        ("BD Hard", "xt_classic", "Tune", None),
+        ("XT Classic", "AMP", "Tune", None),
+        ("XT Classic", "xt_classic", "unknown future parameter", None),
+        ("unknown future machine", "SRC", "Tune", None),
+        ("CY Ride", "cy_ride", "Tune", None),
+    ),
+)
+def test_cockpit_parameter_key_accepts_only_the_owning_machine_src_section(
+    machine: str, section: str, parameter: str, expected: str | None
+) -> None:
+    assert cockpit_parameter_key(machine, section, parameter) == expected
+
+
+@pytest.mark.parametrize(
     ("machine", "compact_key", "catalog_machine", "catalog_parameter"),
     (
         ("BD FM", "dec", "bd_fm", "Decay"),

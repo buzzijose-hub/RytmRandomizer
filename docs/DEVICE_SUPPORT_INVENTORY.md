@@ -1,6 +1,7 @@
 # Device Support Inventory
 
-The passive inventory is generated from the current canonical catalogs, typed
+The passive inventory enumerates `devices.all_devices()` and is generated from
+the current canonical catalogs, typed
 kit codecs, recipe validators, calibration records and Cockpit policy. It is
 not a replacement wire map and never grants hardware readiness.
 
@@ -18,6 +19,14 @@ numeric bounds or selector choices, precision, offline support, conditional live
 support, recovery, protection, blockers and repository-relative evidence paths.
 Native locations are relative to a track sound unless labelled kit-absolute.
 Paired MIDI addresses do not establish a native-to-MIDI conversion.
+
+`registered_devices` contains every canonical registry ID, its display name,
+track count and evidence-row count. Devices with no report evidence are shown
+as `no_support_evidence` in JSON and text; they never inherit another family's
+support. Family-specific parameter rows remain descriptive Rytm/A4 facts.
+Registration and parameter evidence answer different questions. A future
+registry inventory surface can cross-link this report without replacing it.
+The count key `a4_synth_track_midi_controls` uses lowercase casing.
 
 Current dimensions are 323 Rytm MIDI rows, 10 typed Rytm source-machine layouts,
 106 A4 native locations per track (98 semantic field names plus eight fraction
@@ -71,6 +80,13 @@ For a missing machine/note pair, require approved machine-specific tuning
 evidence or an explicitly verified raw value. Do not interpolate a Tune value.
 
 ## Studio Handoff
+
+The [captured Rytm mapping audit](RYTM_MAPPING_STATUS.md) records a separate
+source-bound audit of all 33 machine families. The accompanying correction
+retains existing SRC aliases through capture and promotes fixture-proven XT
+Classic identity on pads 6–8. Eleven families still need alias and semantic
+work. Its Pi matrix counts describe the pinned PR #252 source, while this
+report's 105 A4 MIDI rows use the grouping described above.
 
 Use [Quickstart section 6a](COCKPIT_QUICKSTART.md#6a-remaining-operator-present-studio-rehearsal),
 the [ordered physical checklist](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md),
