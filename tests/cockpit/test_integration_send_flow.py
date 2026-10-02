@@ -46,6 +46,7 @@ def test_send_emits_snapshot_and_history_and_clears_preview(cockpit_ws: object) 
     prepare_send_plan(cockpit_ws)
 
     ack = send_cmd(cockpit_ws, "send")
+    assert ack["ok"] is True, ack
     events = drain_events(cockpit_ws, 5)
     types = [e["type"] for e in events]
 
@@ -88,7 +89,8 @@ def test_send_bumps_unsaved_sends_in_session_status(cockpit_ws: object) -> None:
 
     _arm_candidate(cockpit_ws)
     prepare_send_plan(cockpit_ws)
-    send_cmd(cockpit_ws, "send")
+    send_ack = send_cmd(cockpit_ws, "send")
+    assert send_ack["ok"] is True, send_ack
     events = drain_events(cockpit_ws, 5)
 
     status_event = next(e for e in events if e["type"] == EVENT_SESSION_STATUS)
@@ -100,7 +102,8 @@ def test_send_emits_events_in_documented_order(cockpit_ws: object) -> None:
 
     _arm_candidate(cockpit_ws)
     prepare_send_plan(cockpit_ws)
-    send_cmd(cockpit_ws, "send")
+    send_ack = send_cmd(cockpit_ws, "send")
+    assert send_ack["ok"] is True, send_ack
     events = drain_events(cockpit_ws, 5)
 
     types_in_order = [e["type"] for e in events]
@@ -118,13 +121,15 @@ def test_send_history_grows_one_entry_per_send(cockpit_ws: object) -> None:
 
     _arm_candidate(cockpit_ws)
     prepare_send_plan(cockpit_ws)
-    send_cmd(cockpit_ws, "send", request_id="req-send-1")
+    send_ack = send_cmd(cockpit_ws, "send", request_id="req-send-1")
+    assert send_ack["ok"] is True, send_ack
     events1 = drain_events(cockpit_ws, 5)
     hist1 = next(e for e in events1 if e["type"] == EVENT_HISTORY_UPDATED)["history"]
 
     send_cmd(cockpit_ws, "set_depth", request_id="req-depth-2", depth=0.6)  # re-arm
     prepare_send_plan(cockpit_ws)
-    send_cmd(cockpit_ws, "send", request_id="req-send-2")
+    send_ack = send_cmd(cockpit_ws, "send", request_id="req-send-2")
+    assert send_ack["ok"] is True, send_ack
     events2 = drain_events(cockpit_ws, 5)
     hist2 = next(e for e in events2 if e["type"] == EVENT_HISTORY_UPDATED)["history"]
 
@@ -140,6 +145,7 @@ def test_send_new_snapshot_id_matches_history_current_id(cockpit_ws: object) -> 
     _arm_candidate(cockpit_ws)
     prepare_send_plan(cockpit_ws)
     ack = send_cmd(cockpit_ws, "send")
+    assert ack["ok"] is True, ack
     events = drain_events(cockpit_ws, 5)
 
     history = next(e for e in events if e["type"] == EVENT_HISTORY_UPDATED)["history"]

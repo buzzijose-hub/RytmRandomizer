@@ -26,7 +26,13 @@ Spec reference: see ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-mode
 from __future__ import annotations
 
 import pytest
-from cockpit.conftest import collect_initial_events, complete_handshake, drain_events, send_cmd
+from cockpit.conftest import (
+    collect_initial_events,
+    complete_handshake,
+    drain_events,
+    prepare_send_plan,
+    send_cmd,
+)
 from fastapi.testclient import TestClient
 
 from rytm_randomizer.cockpit.ws.protocol import (
@@ -216,9 +222,9 @@ def test_send_roundtrips_with_new_snapshot_id_field(cockpit_ws: object) -> None:
     send_cmd(cockpit_ws, COMMAND_SELECT_PROFILE, profile_id="scene-industrial")
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, COMMAND_SET_DEPTH, depth=0.5)
-    send_cmd(cockpit_ws, COMMAND_PREPARE_SEND_PLAN)
-    drain_events(cockpit_ws, 1)
+    prepare_send_plan(cockpit_ws)
     ack = send_cmd(cockpit_ws, COMMAND_SEND, request_id="rt-send")
+    assert ack["ok"] is True, ack
     drain_events(cockpit_ws, 5)
 
     assert ack["request_id"] == "rt-send"
@@ -250,9 +256,9 @@ def test_load_snapshot_roundtrips_with_snapshot_id_field(cockpit_ws: object) -> 
     send_cmd(cockpit_ws, COMMAND_SELECT_PROFILE, profile_id="scene-industrial")
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, COMMAND_SET_DEPTH, depth=0.5)
-    send_cmd(cockpit_ws, COMMAND_PREPARE_SEND_PLAN)
-    drain_events(cockpit_ws, 1)
-    send_cmd(cockpit_ws, COMMAND_SEND)
+    prepare_send_plan(cockpit_ws)
+    send_ack = send_cmd(cockpit_ws, COMMAND_SEND)
+    assert send_ack["ok"] is True, send_ack
     drain_events(cockpit_ws, 5)
 
     ack = send_cmd(
@@ -274,9 +280,9 @@ def test_undo_roundtrips_with_snapshot_id_field(cockpit_ws: object) -> None:
     send_cmd(cockpit_ws, COMMAND_SELECT_PROFILE, profile_id="scene-industrial")
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, COMMAND_SET_DEPTH, depth=0.55)
-    send_cmd(cockpit_ws, COMMAND_PREPARE_SEND_PLAN)
-    drain_events(cockpit_ws, 1)
-    send_cmd(cockpit_ws, COMMAND_SEND)
+    prepare_send_plan(cockpit_ws)
+    send_ack = send_cmd(cockpit_ws, COMMAND_SEND)
+    assert send_ack["ok"] is True, send_ack
     drain_events(cockpit_ws, 5)
 
     ack = send_cmd(cockpit_ws, COMMAND_UNDO, request_id="rt-undo")

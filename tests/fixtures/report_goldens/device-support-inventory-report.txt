@@ -1,0 +1,33 @@
+RytmRandomizer passive device support inventory
+Registered devices (report evidence only, not support or hardware readiness):
+- analog_four_mk2 / Elektron Analog Four MKII: evidence_rows_available; 211 evidence rows
+- analog_rytm_mk2 / Elektron Analog Rytm MKII: evidence_rows_available; 460 evidence rows
+Coverage counts (locations/catalog rows, not physical acceptance):
+- a4_native_locations_per_track: 106
+- a4_named_semantic_fields_per_track: 98
+- a4_synth_track_midi_controls: 91
+- a4_midi_catalog_rows: 105
+- rytm_midi_catalog_rows: 323
+- rytm_typed_native_machine_layouts: 10
+Native field domains, MIDI addresses, machine compatibility and exact blockers: use --json.
+Rytm: targeted guarded CC7 only when scope, locks, source and complete plan pass.
+A4: typed offline recipes; Cockpit live audition and BOTH output remain blocked.
+Recovery: manual saved-KIT reload and fresh capture; local UNDO does not restore hardware.
+Unsupported/protected categories:
+- both/unknown_reserved_bytes: intentional_protection; Preserved byte-for-byte; no semantic mutation authority.
+- both/patterns_songs_chains_projects: outside_kit_workflow; Kit capture/mutation is not pattern or project editing.
+- both/unsaved_front_panel_state: hardware_evidence_missing; A saved-KIT dump cannot certify unsaved working-state synchronization.
+- both/hardware_save_reload_restore: intentional_protection; Local favorite persistence is not hardware saving; source reload and fresh capture are manual.
+- both/general_dual_machine_send: hardware_evidence_missing; BOTH is not an output grant; A4 remains blocked by stage policy.
+- a4/fx_cv_polyphony_performance_routing: missing_semantic_mapping; Saved-object bytes are preserved; track-field coverage does not cover these sections.
+- a4/paired_cc_nrpn_native_precision: hardware_evidence_missing; Native fixed-point evidence cannot establish live MIDI conversion or restoration.
+- rytm/samples_upload_scenes_performances_retrig_choke_routing: intentional_protection; Outside the targeted sound workflow; preserve existing state and sample identity.
+- rytm/machine_specific_note_tuning: hardware_evidence_missing; A raw Tune value is not a universal note lookup; require machine-specific approved evidence.
+- rytm/paired_control_live_send: hardware_evidence_missing; Any changed in-scope paired control blocks the whole Cockpit plan, including supported packets.
+- both/pi_standalone_appliance: physical_validation_pending; Native Pi boot, deployment and physical operation require separate acceptance evidence.
+Safety:
+- no MIDI/USB access, enumeration, port opening, arming or sending
+- local candidates/favorites are not hardware saves or show-readiness grants
+- physical validation granted: False
+Source: rytm_randomizer.reports.device_support_inventory
+In-memory only: True

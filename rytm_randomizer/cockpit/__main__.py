@@ -72,6 +72,7 @@ from fastapi import FastAPI
 from ..observability.logging import get_logger
 from .capture import KitCaptureService
 from .data import PadState, Snapshot, new_ulid
+from .data.rytm_parameter_map import cockpit_default_machine_label
 from .device import DeviceAdapter, MockDeviceAdapter
 from .device.connection import (
     DEFAULT_FAKE_PORT_NAMES,
@@ -198,9 +199,8 @@ def _default_initial_snapshot() -> Snapshot:
     """Build a clean, deterministic 12-pad starting snapshot for the mock adapter.
 
     The exact parameter values don't matter for protocol correctness —
-    they're a benign placeholder so the cockpit has *something* to render
-    when the user opens the window for the first time. A real session
-    overwrites them on the first SEND.
+    they're a synthetic placeholder so the cockpit can render a mock session.
+    Physical machine identity comes from a subsequent saved-KIT capture.
     """
 
     default_params = {
@@ -250,23 +250,10 @@ def _default_initial_snapshot() -> Snapshot:
     pads = tuple(
         PadState(
             pad_id=pad_id,
-            machine=machine,
+            machine=cockpit_default_machine_label(pad_id),
             params=default_params,
         )
-        for pad_id, machine in (
-            (1, "BD Hard"),
-            (2, "SD Classic"),
-            (3, "CH Closed"),
-            (4, "OH Open"),
-            (5, "BT Rim"),
-            (6, "LT Low"),
-            (7, "MT Mid"),
-            (8, "HT High"),
-            (9, "CP Clap"),
-            (10, "RS Riser"),
-            (11, "SY Raw"),
-            (12, "BD Acoustic"),
-        )
+        for pad_id in range(1, 13)
     )
     return Snapshot(
         snapshot_id=new_ulid(),

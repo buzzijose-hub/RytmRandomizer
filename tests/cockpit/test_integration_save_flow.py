@@ -71,7 +71,8 @@ def test_save_does_not_promote_the_current_history_entry(cockpit_ws: object) -> 
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, "set_depth", depth=0.45)
     prepare_send_plan(cockpit_ws)
-    send_cmd(cockpit_ws, "send", request_id="req-send")
+    send_ack = send_cmd(cockpit_ws, "send", request_id="req-send")
+    assert send_ack["ok"] is True, send_ack
     events = drain_events(cockpit_ws, 5)
 
     history = next(e for e in events if e["type"] == "history_updated")["history"]
@@ -90,7 +91,8 @@ def test_save_does_not_reset_the_unsaved_send_counter(cockpit_ws: object) -> Non
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, "set_depth", depth=0.45)
     prepare_send_plan(cockpit_ws)
-    send_cmd(cockpit_ws, "send", request_id="req-send")
+    send_ack = send_cmd(cockpit_ws, "send", request_id="req-send")
+    assert send_ack["ok"] is True, send_ack
     events = drain_events(cockpit_ws, 5)
     before = next(e for e in events if e["type"] == EVENT_SESSION_STATUS)["unsaved_sends"]
     assert before == 1
@@ -102,7 +104,8 @@ def test_save_does_not_reset_the_unsaved_send_counter(cockpit_ws: object) -> Non
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, "set_depth", depth=0.5)
     prepare_send_plan(cockpit_ws)
-    send_cmd(cockpit_ws, "send", request_id="req-send-2")
+    send_ack = send_cmd(cockpit_ws, "send", request_id="req-send-2")
+    assert send_ack["ok"] is True, send_ack
     events = drain_events(cockpit_ws, 5)
 
     after = next(e for e in events if e["type"] == EVENT_SESSION_STATUS)["unsaved_sends"]

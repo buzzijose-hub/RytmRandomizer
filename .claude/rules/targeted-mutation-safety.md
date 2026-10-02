@@ -21,6 +21,11 @@ planner scope, and hardware send plans.
 5. Captured Rytm state may become an anchor only after exact codec round-trip
    validation and projection through promoted semantic mappings. Adoption is
    in-memory and performs no MIDI I/O.
+   Machine SRC projection additionally requires a promoted matching identity,
+   the exact owning section (or SRC) and the catalog CC. A masked raw ID or
+   decoder-only test cannot establish this consumer contract; exercise retained
+   frames through the anchor, bridge and planner. See the October 1 mapping
+   run report and `test_ws_kit_capture_handlers.py` regressions.
 6. An A4 field may produce offline captured-kit candidate bytes only after its
    exact offsets, encoding, per-track stride, fixture-backed byte isolation,
    checksum, and re-decode evidence are promoted. Promotion is field-specific:

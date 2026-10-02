@@ -25,6 +25,7 @@ from typing import Any
 import pytest
 
 from rytm_randomizer.cockpit import __main__ as cockpit_main
+from rytm_randomizer.cockpit.data.rytm_parameter_map import cockpit_machine_is_allowed_on_pad
 from rytm_randomizer.cockpit.device.connection import (
     DEFAULT_FAKE_PORT_NAMES,
     ConnectionManager,
@@ -76,20 +77,21 @@ def test_default_initial_snapshot_has_twelve_rytm_pads_with_known_machines() -> 
     assert set(pads_by_id) == set(range(1, 13))
     assert [pad.machine for pad in snapshot.pads] == [
         "BD Hard",
-        "SD Classic",
-        "CH Closed",
-        "OH Open",
-        "BT Rim",
-        "LT Low",
-        "MT Mid",
-        "HT High",
-        "CP Clap",
-        "RS Riser",
-        "SY Raw",
-        "BD Acoustic",
+        "SD Hard",
+        "RS Hard",
+        "CP Classic",
+        "BT Classic",
+        "XT Classic",
+        "XT Classic",
+        "XT Classic",
+        "CH Classic",
+        "OH Classic",
+        "CY Classic",
+        "CB Classic",
     ]
     # All pads share the operator-facing starter control surface used by the cockpit.
     for pad in snapshot.pads:
+        assert cockpit_machine_is_allowed_on_pad(pad.machine, pad.pad_id)
         assert {
             "tun",
             "dec",

@@ -36,6 +36,10 @@ lives under `docs/archive/` and is historical — safe to skip on first pass.
 - **[LOCAL_DEV_TOOLING_NOTES.md](LOCAL_DEV_TOOLING_NOTES.md)** — env-var documentation home per `PLAN_REQUIREMENTS.md` Gate 13.
 
 ### Orchestrator state and current live-KIT evidence (runtime/reference; exempt)
+- **[DEVICE_SUPPORT_INVENTORY.md](DEVICE_SUPPORT_INVENTORY.md)** — reproducible native/MIDI/precision/evidence inventory; protection, missing implementation and hardware blockers kept separate.
+- **[RYTM_MAPPING_STATUS.md](RYTM_MAPPING_STATUS.md)** — source-bound audit of all 33 Rytm machines, completed descriptive bindings and remaining semantic, display and precision/recovery gaps.
+- **[Captured Rytm mapping plan](superpowers/plans/2026-10-01-rytm-captured-machine-mapping.md)** — XT Classic and machine SRC projection correction, tests and delivery records.
+- **[Captured Rytm software report](superpowers/plans/2026-10-01-rytm-captured-machine-mapping_RUN_REPORT.md)** — source-specific checks, historical failures, remaining mapping and physical boundaries.
 - **[Release closeout plan](superpowers/plans/2026-09-08-release-closeout.md)** — current Forge/updater/Digitakt coordination, bounded verification and protected review.
 - **[Release closeout report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md)** — exact software receipts, studio artifact and remaining physical/platform limits.
 - **[Release closeout state](superpowers/plans/2026-09-08-release-closeout_STATE.json)** — resumable checkpoint with [schema](superpowers/plans/2026-09-08-release-closeout_STATE.schema.json) and [run log](superpowers/plans/2026-09-08-release-closeout_RUN_LOG.md).

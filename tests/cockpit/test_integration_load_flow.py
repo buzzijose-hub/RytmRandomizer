@@ -33,6 +33,7 @@ def _send_chain(ws: object, *depths: float) -> list[str]:
         send_cmd(ws, "set_depth", request_id=f"req-depth-{i}", depth=depth)
         prepare_send_plan(ws, request_id=f"req-prepare-{i}")
         ack = send_cmd(ws, "send", request_id=f"req-send-{i}")
+        assert ack["ok"] is True, ack
         drain_events(ws, 5)
         new_ids.append(ack["new_snapshot_id"])
     return new_ids

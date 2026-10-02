@@ -40,6 +40,11 @@ from fastapi.testclient import TestClient
 
 from conftest import elektron_syx_message, rytm_real_layout_kit_payload
 from rytm_randomizer.cockpit.capture import KitCaptureService
+from rytm_randomizer.cockpit.data.rytm_parameter_map import (
+    cockpit_machine_is_allowed_on_pad,
+    cockpit_parameter_live_blockers,
+    cockpit_parameter_mapping,
+)
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
@@ -65,6 +70,19 @@ pytestmark = pytest.mark.fast
 _ARM_TOKEN = "acceptance-rehearsal-arm-token"
 _INPUT_PORT = "Elektron Analog Rytm MK2 In"
 _OUTPUT_PORT = "Elektron Analog Rytm MK2 Out"
+
+
+def test_shared_reference_snapshot_uses_compatible_unprotected_cc_controls() -> None:
+    """Successful-send fixtures must satisfy the actual live planner policy."""
+
+    for pad in _make_default_snapshot().pads:
+        assert cockpit_machine_is_allowed_on_pad(pad.machine, pad.pad_id)
+        assert len(pad.params) == 3
+        for parameter in pad.params:
+            mapping = cockpit_parameter_mapping(pad.machine, parameter)
+            assert mapping is not None
+            assert mapping.cc_lsb is None
+            assert cockpit_parameter_live_blockers(pad.machine, parameter) == ()
 
 
 @dataclass
@@ -194,16 +212,16 @@ def test_initial_snapshot_event_carries_reference_pads(cockpit_client: TestClien
     assert machines == [
         "BD Hard",
         "SD Classic",
-        "CH Closed",
-        "OH Open",
+        "RS Hard",
+        "CP Classic",
         "BT Rim",
         "LT Low",
         "MT Mid",
         "HT High",
-        "CP Clap",
-        "RS Riser",
-        "SY Raw",
-        "BD Acoustic",
+        "CH Closed",
+        "OH Open",
+        "CY Classic",
+        "CB Classic",
     ]
     assert snapshot["device"] == "analog_rytm_mk2"
 
@@ -249,8 +267,15 @@ def test_initial_performance_console_event_is_passive(cockpit_client: TestClient
     assert "open_midi_port_without_arm" in model["blocked_actions"]
 
 
-def test_verified_capture_to_targeted_send_and_snapshot_recovery(tmp_path: Path) -> None:
-    """Rehearse one complete live set with verified input and fake output only."""
+@pytest.mark.parametrize(
+    "seed,paired_changed",
+    [(1, False), (7, True)],
+    ids=["supported-send-local-recovery", "paired-control-refusal"],
+)
+def test_verified_capture_to_targeted_send_and_snapshot_recovery(
+    tmp_path: Path, seed: int, paired_changed: bool
+) -> None:
+    """Rehearse captured-KIT software state with fake output, not physical recovery."""
 
     authority = _RehearsalMidiAuthority(
         elektron_syx_message(rytm_real_layout_kit_payload(b"ACCEPT LIVE KIT"))
@@ -265,6 +290,7 @@ def test_verified_capture_to_targeted_send_and_snapshot_recovery(tmp_path: Path)
         device=device,
         kit_capture_service=KitCaptureService(authority),
         arm_secret=_ARM_TOKEN,
+        seed=seed,
     )
     session.arm_port_provider = authority
 
@@ -326,6 +352,15 @@ def test_verified_capture_to_targeted_send_and_snapshot_recovery(tmp_path: Path)
     assert session.current_candidate is not None
     # Preview and final SEND share the canonical targets-minus-locks scope.
     assert {delta.pad_id for delta in session.current_candidate.pad_deltas} == {1}
+    assert session.current_candidate.seed == seed
+    delta = session.current_candidate.pad_deltas[0]
+    # The capture retains SRC and LFO Depth. These seeds select genuine
+    # candidates with the paired field unchanged or changed across that scope.
+    assert "tun" in captured_snapshot.pads[0].params
+    assert delta.changed_keys & {"tun", "dec", "noise_decay"}
+    assert captured_snapshot.pads[0].params["lfo_depth"] == 0
+    assert ("lfo_depth" in delta.changed_keys) is paired_changed
+    assert (delta.proposed_params["lfo_depth"] != 0) is paired_changed
 
     prepare_ack = _dispatch(session, {"type": "prepare_send_plan"})
     assert prepare_ack["ok"] is True
@@ -342,6 +377,22 @@ def test_verified_capture_to_targeted_send_and_snapshot_recovery(tmp_path: Path)
     assert len(plan_payload["packets"]) == expected_message_count
     assert expected_message_count > 0
     assert {packet.pad_id for packet in plan.packets} == {1}
+    assert all(packet.parameter != "lfo_depth" for packet in plan.packets)
+    if paired_changed:
+        assert plan.ready is False
+        assert plan_payload["blocked_reasons"] == ["paired_control_precision_unverified"]
+        assert session.stage_coordinator.state.rytm.plan_state == "blocked"
+        refused = _dispatch(
+            session,
+            {"type": "send", "confirm": True, "send_plan_id": plan.plan_id},
+        )
+        assert refused["ok"] is False
+        assert authority.output.sent == []
+        assert authority.open_output_calls == []
+        assert device.capture_snapshot() == captured_snapshot
+        assert history.current.current_id == captured_snapshot_id
+        return
+    assert plan.ready is True
     assert session.stage_coordinator.state.rytm.plan_state == "ready"
 
     arm_ack = _dispatch(
@@ -396,6 +447,9 @@ def test_verified_capture_to_targeted_send_and_snapshot_recovery(tmp_path: Path)
     assert history.current.current_id == captured_snapshot_id
     device.adopt_snapshot(captured_snapshot)
     assert device.capture_snapshot() == captured_snapshot
+
+    # History traversal and model adoption have transmitted no restore bytes.
+    assert len(authority.output.sent) == expected_message_count
 
     sent_snapshot_id = after_send.snapshot_id
     assert (

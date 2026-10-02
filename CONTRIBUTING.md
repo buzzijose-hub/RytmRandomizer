@@ -146,6 +146,7 @@ cargo clippy --all-targets -- -D warnings  # required for CI
 - **The sidecar port is configurable.** `RYTM_RAND_WS_PORT=4318 python -m rytm_randomizer.cockpit` overrides the default `4317`. The web frontend reads the port from the same env var (mirrored by the Tauri shell when it spawns the sidecar). Default is safe on every OS this project supports.
 - **Mock-first; armed on purpose.** The cockpit defaults to `MockDeviceAdapter` (no MIDI port opened). The real-MIDI path constructs `RealMidiDeviceAdapter`, which wraps the existing `mido_provider` and only opens a port behind an explicit arm step. This matches the rest of the project's passive-default discipline (Strict rule 8) — running the cockpit never touches your Rytm until you ask it to.
 - **Wrapped passive report JSON is an allowed read-only input pattern.** A passive report that composes another passive report may accept the wrapped upstream JSON object and peel out its inner payload, but it must cover both raw-input and wrapped-report paths in focused tests.
+- **Support inventories are evidence, not authority.** `device-support-inventory-report --json` separates canonical catalogs, native codec domains, recipe bindings, guarded live support and physical blockers. New mappings must retain those distinctions; a storage accessor or software fixture cannot grant mutation, MIDI conversion or hardware readiness. See [`docs/DEVICE_SUPPORT_INVENTORY.md`](docs/DEVICE_SUPPORT_INVENTORY.md).
 - **Run the conformance fixtures when touching the engine.** Changes to `cockpit/engine/mutate.py` or `cockpit/engine/prng.py` must keep `tests/cockpit/fixtures/engine_conformance/*.json` byte-identical. Those fixtures lock the algorithm so the future C-portable implementation produces matching output.
 - **Web frontend tests are fast.** `cd desktop/web && npm test -- --run` runs the full Vitest suite in under 2s on a modern laptop. The Vitest watch mode (`npm test`) is good for tight iteration.
 - **Rust build is the slowest piece; cache it.** First `cargo build` is multi-minute on a cold cache; subsequent rebuilds are seconds. Keep `desktop/shell/target/` between runs (it's already in `.gitignore`).
@@ -556,6 +557,11 @@ initialized Analog Rytm saved-kit SysEx dump for the opt-in codec integration
 test. When unset, that integration test skips with a precise reason. Never
 commit the referenced dump; the variable is test-only and does not enumerate,
 open, or write a MIDI port.
+
+`RYTM_TEST_BEACON_CLIENT_STARTUP` is owned by the Rust beacon regression's
+child-process harness. Unset runs the parent test; the harness selects `unset`
+or `installed` for fresh-provider and preinstalled-provider child cases. It is
+test-only, is not a runtime setting, and constructs requests without sending.
 
 ## Plan requirements — the 18 gates every PR must satisfy
 

@@ -50,7 +50,7 @@ const nativeControl = (action: string): Promise<Stats> => invoke('control', { ac
 const element = (id: string): HTMLElement | null => document.querySelector(`[data-testid="${id}"]`);
 
 async function connected(): Promise<void> {
-  await until('actual sidecar authenticated session', () =>
+  await until('sidecar connection and session projection', () =>
     useCockpitStore.getState().connectionStatus === 'connected' && useCockpitStore.getState().sessionStatus !== null);
   check(useCockpitStore.getState().sessionStatus?.armed === false, 'passive sidecar stays disarmed');
 }
@@ -236,8 +236,10 @@ export async function run(scenario: string, origin: string): Promise<void> {
         await until('native bridge rotates both credentials', () =>
           Boolean(window.__RYTM_RAND_WS_TOKEN__ && window.__RYTM_RAND_WS_TOKEN__ !== oldToken &&
             window.__RYTM_RAND_ARM_SECRET__ && window.__RYTM_RAND_ARM_SECRET__ !== oldSecret));
-        check(await staleHandshakeRejected(oldToken), 'old token rejected by restarted backend');
+        // Credentials are published before the replacement listener starts.
+        // Wait for the reconnected listener before testing stale-token refusal.
         await connected();
+        check(await staleHandshakeRejected(oldToken), 'old token rejected by restarted backend');
         check(await requestUpdateCheck(), 'same page still invokes native after backend restart');
       }
       if (!['consent_quit', 'consent_now', 'install_failure'].includes(scenario)) {
