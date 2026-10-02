@@ -279,3 +279,15 @@ has not been updated by these records.
   This isolated preparation does not edit/restart the running server or
   authorize output/SAVE. Independent review and source-specific full checks
   are required before local activation. Original dirty checkout is preserved.
+
+- **Browser fixture correction scope, declared before source:** exact published
+  `d6e8e164` hosted PR/push browser lanes each pass32 tests and skip2, but fail
+  the screen-reader boot checkpoint: it still expects physically incompatible
+  BD Acoustic on pad12 after the canonical demo correction now supplies CB
+  Classic. Keep the strict per-pad accessible-name assertion and update its
+  expected canonical label. No production UI, accessibility contract, timeout,
+  retry, hardware, pin or guard change. Run the actual three-checkpoint journey
+  locally with MIDI disabled, targeted TS/lint, normal hooks and fresh CI.
+  Retain the failed hosted logs; historical/full Python results do not certify
+  browser acceptance. This follows the existing compatible-demo correction
+  scope, rather than bypassing it or weakening the assertion.
