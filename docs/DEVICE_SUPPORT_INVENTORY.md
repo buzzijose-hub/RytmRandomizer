@@ -83,9 +83,12 @@ evidence or an explicitly verified raw value. Do not interpolate a Tune value.
 
 The [captured Rytm mapping audit](RYTM_MAPPING_STATUS.md) records a separate
 source-bound audit of all 33 machine families. The accompanying correction
-retains existing SRC aliases through capture and promotes fixture-proven XT
-Classic identity on pads 6–8. Eleven families still need alias and semantic
-work. Its Pi matrix counts describe the pinned PR #252 source, while this
+retains SRC aliases through capture and promotes fixture-proven XT Classic
+identity on pads 6–8. All224 SRC rows now have reversible descriptive bindings,
+including68 formerly unnamed rows across eleven families. A shared conservative
+policy blocks protected or disputed controls in capture, mutation and planning;
+native/live semantic and precision evidence remains incomplete. Its Pi matrix
+counts describe the pinned PR #252 source, while this
 report's 105 A4 MIDI rows use the grouping described above.
 
 Use [Quickstart section 6a](COCKPIT_QUICKSTART.md#6a-remaining-operator-present-studio-rehearsal),
