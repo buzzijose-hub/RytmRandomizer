@@ -386,3 +386,93 @@ Done requires focused checks/review plus the coordinator's full composed gate.
 Historical Gate 14/16 exceptions and post-merge requirements remain pending;
 this pre-code amendment does not retroactively satisfy them. The resumed
 deadline remains `2026-10-02T02:43:47Z`.
+# October 5 Continuation: Parameter Scopes And Local Favorites
+
+Baseline is PR #254 at `b0f01dbed579f8b7cbdefcb91747192a544ad7bd`, with portable
+production `fa43f863`. This phase adds one coherent supported Studio workflow,
+not another hardware mapping program. The previous portable folder is immutable.
+The current head's hosted checks completed successfully; Eddie's October 3
+requested-changes review still controls merge approval.
+
+## Pre-Code Scope And Maintainability Assessment
+
+| Dimension | Baseline / planned response |
+| --- | --- |
+| Onboarding | Existing Cockpit scope, library and protocol owners are discoverable; document the per-cell flow alongside them. |
+| Naming | Use parameter cell identities (device/item/canonical key), not labels or raw CC numbers as mutation authority. |
+| Coupling | Extend the existing engine and session; no appliance runtime activation, parallel sender or persistence framework. |
+| Constants | Preset identities resolve through the canonical catalog; frozen records and typed event DTOs. |
+| Configuration | Existing ports, config paths and build workflow unchanged; MIDI remains off for this session. |
+| Tests | Existing shared snapshots, fake ports and native harness; one composition checkpoint and one heavy process at a time. |
+| Build loop | Baseline architecture gate is running with two workers; previous source full suite took 324.94 seconds. New actual durations will be recorded. |
+| Errors | Categorical scope/persistence refusal, exact plan rows, no silent reset or removal of blocked packets. |
+| Versioning | Preserve 1.34.0 product version and pins; version the changed library record through the canonical persisted-state migration registry. |
+| Extension | Adding another supported field consumes canonical metadata; field eligibility and physical proof remain separate. |
+
+The earlier Gate 14/16 historical exceptions remain disclosed. This pre-code
+continuation assessment does not cure them or claim the outstanding post-merge audit.
+
+## Workstreams And Ownership
+
+| Stream | Worktree / branch | Files owned | Dependencies |
+| --- | --- | --- | --- |
+| Scope authority (orchestrator) | existing `rytm-studio-mapping` / `codex/studio-rytm-mapping` | Python scope DTO/catalog, engine, session/handlers/protocol, integration tests, docs | immediate critical path |
+| Studio UI | isolated `studio-parameter-ui` / `codex/studio-parameter-ui` | frontend protocol/store, scope and local-favorite UI, frontend tests and browser journey | frozen wire contract below |
+| Local persistence | isolated `studio-local-favorites` / `codex/studio-local-favorites` | existing library store, persisted-state migration, typed local favorite record, focused tests | shared immutable scope DTO |
+
+Two implementation workers maximum; neither starts a heavy test/build without
+coordination. Integrate the disjoint branches into this existing PR with normal
+merges. No competing PR or stacked PR. Required dimensional reviewers run in
+batches of at most two after composition. Routine repairs continue autonomously.
+
+## Contract And Invariants
+
+- `ParameterSelection`: `cells=None` preserves the legacy all-control default;
+  `cells=()` explicitly selects no controls. A cell is `{item_id, parameter_key}`.
+  IDs, duplicates, canonical ownership and mutable source availability are
+  validated on the server before session changes.
+- `mutation_parameters_changed`: `rytm_parameters`, `a4_parameters` are null or
+  cell arrays; `controls` contains canonical item/page/name/key/value/domain,
+  evidence, native-precision, protection and blocker metadata. No label or
+  imported display metadata is authority.
+- `set_mutation_parameters`: `device_id`, `parameter_cells` (null or cell array).
+  `set_rehearsal_preset`: applies only the conservative Rytm Pad 2 common-control
+  preset, locks other pads/all A4, and labels the new-build physical gate pending.
+- Scope is resolved before PRNG proposals; excluded cells retain exact original
+  values, including out-of-CC/native fractional encodings. Locks/protection win.
+  Preserve draw ordering, legacy conformance and full-plan paired refusal.
+- Scope changes revoke candidates/plans/confirmation contexts. SEND independently
+  rejects out-of-scope proposed changes; never trim an already blocked plan.
+- A4 selection exposes only supported saved-KIT offline fields. General A4/BOTH
+  transmission, CY Ride SRC, paired precision and automatic restore remain held.
+- Local favorite retention reuses `LibraryStore` atomic writes with a versioned
+  immutable rehearsal record: source/profile/candidate, target/parameter scopes,
+  locks, seed/depth and a checked identity. Recall restores exact offline values,
+  revokes output/plan authority and requires new preparation. Hardware uses fresh
+  capture and manual reload, never persisted favorite authority.
+
+## Execution, Verification And Delivery
+
+Software execution budget: four hours before reassessing remaining work, not a
+promise to stop unfinished verification. State/recovery use this existing plan,
+STATE and RUN_REPORT plus ignored raw receipts. After interruption inspect HEAD,
+dirty files, worker branches and runner summaries; resume the next incomplete
+step without repeating hardware work. STOP pauses owned jobs and records state.
+No hardware/USB/MIDI access, pin changes, parity regeneration, force-push,
+approval bypass or external worktree deletion is permitted.
+
+Verify zero depth, per-cell isolation, lock/protection precedence, native source
+preservation, malformed/forged scope, stale preparation, local retention/recall,
+restart/disarmed behavior, write/load failure and migration/downgrade refusal.
+Run full Python coverage, architecture/frozen parity, strict typing, lint/dead
+code, frontend coverage/build and the actual browser journey. Build Windows on
+the existing hosted installer lane; smoke the exact downloaded executable with
+MIDI off, record source and both binary hashes, preserve the previous delivery.
+
+Rollback is reverting this phase on the PR branch and launching the unchanged
+old portable copy; newer favorite records must refuse downgrade rather than be
+silently rewritten. Existing older records migrate only through explicit policy.
+Done means scoped candidate and favorite survive the actual offline UI/restart
+journey, all required software gates pass, a reviewed source-bound portable copy
+is delivered and one focused physical audition/manual-reload test is documented.
+No software result labels this build show-ready.
