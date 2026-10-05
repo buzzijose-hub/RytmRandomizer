@@ -826,12 +826,32 @@ UI drives the engine with **typed commands** that ack synchronously.
 | `performance_console_changed` | `{ performance_console: LiveGuiPerformanceConsoleModel \| null }` | On connect, when the passive performance-console packet refreshes |
 | `session_status` | `{ armed, midi_port, mode, unsaved_sends, connection_phase, capture_enabled }` | On connect and authority/connection changes; `capture_enabled` reflects the injected input-only capture service |
 
-After authentication, bootstrap emits exactly these eleven events in order:
+After authentication, bootstrap emits exactly these twelve events in order:
 `session_status`, `snapshot_changed`, `profile_changed`,
 `profile_catalog_changed`, `history_updated`, `patch_genome_changed`,
 `kit_captures_changed`, `mutation_targets_changed`, `mutation_locks_changed`,
-`dual_machine_stage_changed`, and `performance_console_changed`. When a
-connection manager is injected, `connection_changed` may follow as event 12.
+`mutation_parameters_changed`, `dual_machine_stage_changed`, and
+`performance_console_changed`. When a connection manager is injected,
+`connection_changed` may follow as event 13.
+
+Studio parameter scopes reuse the appliance engine's per-cell effective-depth
+seam. `cockpit/data/parameter_scope.py` owns immutable include cells;
+`cockpit/parameter_scope.py` resolves canonical controls and validates them
+against current source values. Null keeps the legacy all-control scope; an
+empty array selects no fields. Page selection is a UI grouping of those cells,
+not another parameter catalog. Source precision and unknown values are preserved
+before proposals, and locks/mandatory protection win. SEND independently checks
+the proposed values against the current selection and revalidates the exact
+plan. Unsupported or paired changes refuse the whole plan, never a trimmed subset.
+
+Local rehearsal favorites extend `LibraryStore`, not hardware SAVE. The library
+uses its registered schema 2 with an explicit 1-to-2 migration; strict records
+retain source, profile, candidate, seed/depth, target/parameter scopes and locks.
+Recall verifies identity and deterministic values, then uses the existing
+output-revocation boundary. It leaves output disarmed and the plan empty; no
+persisted artifact grants hardware authority. Show-bank scope records carry the
+same selections under `show-bank-v2`; the existing strict domain loader accepts
+legacy v1 only as a declared legacy-all scope, without rewriting on read.
 
 | Command (UI → engine) | Returns | Notes |
 |---|---|---|
@@ -840,6 +860,9 @@ connection manager is injected, `connection_changed` may follow as event 12.
 | `set_pad_lock` | `{ ok }` | Locked pads are skipped on SEND |
 | `set_a4_track_lock` | `{ ok }` | Updates the A4 deny-list; grants no A4 output authority |
 | `set_mutation_targets` / `clear_mutation_targets` | `{ ok }` | Replaces one device include-list; empty means all, then locks are subtracted |
+| `get_mutation_parameters` / `set_mutation_parameters` | `{ ok }` plus whole-state scope event | Canonical controls and null/all or explicit item/key cells. Invalid or protected cells refuse before state changes. Scope changes invalidate candidate/plan/confirmation contexts. |
+| `set_rehearsal_preset` | `{ ok, depth, physical_validation_required }` | Four canonical Pad 2 common fields only; other pads and A4 locked. Physical validation of this build remains pending. |
+| `retain_rehearsal_favorite` / `recall_rehearsal_favorite` | `{ ok, ... }` | Existing local library persistence. Recall disarms and requires fresh preparation; it is neither a hardware save nor a hardware reload. |
 | `list_capture_inputs` / `capture_current_kit` | `{ ok, ... }` | Available only in the explicitly armed input composition; never transmits |
 | `toggle_preview` | `{ ok, candidate? }` | Ghost overlay on/off |
 | `regen` | `{ ok, candidate }` | New seed, same depth |

@@ -27,6 +27,8 @@ See :doc:`spec.md <./spec>` for the normative algorithm. Hard rules:
 
 from __future__ import annotations
 
+import math
+from collections.abc import Mapping
 from typing import Final
 
 from ...observability.logging import get_logger
@@ -170,6 +172,9 @@ def mutate(
     seed: int,
     target_pad_ids: frozenset[int] = frozenset(),
     locked_pad_ids: frozenset[int] = frozenset(),
+    *,
+    parameter_depths: Mapping[tuple[int, str], float] | None = None,
+    parameter_bounds: Mapping[tuple[int, str], tuple[int, int]] | None = None,
 ) -> MutationCandidate:
     """Generate a ``MutationCandidate`` from a snapshot, profile, depth, seed.
 
@@ -206,6 +211,25 @@ def mutate(
         ``estimated_midi_msgs`` is the total ``changed_keys`` count.
     """
 
+    available_cells = {(pad.pad_id, key) for pad in snapshot.pads for key in pad.params}
+    if parameter_depths is not None:
+        for cell, value in parameter_depths.items():
+            if (
+                cell not in available_cells
+                or isinstance(value, bool)
+                or not math.isfinite(value)
+                or not 0 <= value <= 1
+            ):
+                raise ValueError("parameter depths require known cells and finite 0..1 values")
+    if parameter_bounds is not None:
+        for cell, (minimum, maximum) in parameter_bounds.items():
+            if (
+                cell not in available_cells
+                or type(minimum) is not int
+                or type(maximum) is not int
+                or minimum > maximum
+            ):
+                raise ValueError("parameter bounds require known cells and ordered integer limits")
     scope = MutationTargets(rytm_pad_targets=target_pad_ids).rytm_scope(locked_pad_ids)
     effective_pad_ids = scope.effective_ids(pad.pad_id for pad in snapshot.pads)
     state = _PRNG_SEED_FOR_ZERO if seed == 0 else (seed & 0xFFFFFFFF)
@@ -237,22 +261,47 @@ def mutate(
             raw, state = xorshift32(state)
             # raw is a 32-bit unsigned int; r is in [0.0, 1.0).
             r = raw / _PRNG_NORMALIZER
-            delta = (r - 0.5) * 2.0 * scale
+            bounds = None if parameter_bounds is None else parameter_bounds.get((pad.pad_id, key))
+            effective_depth = (
+                depth if parameter_depths is None else parameter_depths.get((pad.pad_id, key), 0.0)
+            )
+            span = _CC_RANGE if bounds is None else bounds[1] - bounds[0]
+            effective_scale = (
+                scale
+                if parameter_depths is None and bounds is None
+                else (effective_depth * span * (_BIAS_FLOOR + bias))
+            )
+            delta = (r - 0.5) * 2.0 * effective_scale
             # round-half-away-from-zero is the spec'd rounding; Python's
             # built-in round() does banker's rounding, which is locale-
             # independent but disagrees with C's round() on half-values.
             # The spec docs the choice; C-port authors implement
             # round-half-away-from-zero explicitly.
-            new_value = _clamp_parameter(
-                value + _round_half_away_from_zero(delta),
-                machine=pad.machine,
-                parameter=key,
-            )
+            if effective_depth == 0:
+                # Excluded/native cells remain exact; do not clamp their source.
+                new_value = value
+            elif bounds is None:
+                new_value = _clamp_parameter(
+                    value + _round_half_away_from_zero(delta),
+                    machine=pad.machine,
+                    parameter=key,
+                )
+            else:
+                new_value = min(
+                    bounds[1], max(bounds[0], value + _round_half_away_from_zero(delta))
+                )
             # Frozen legacy offline conformance includes arithmetic on ``lev``.
             # Captures omit Level and every live plan refuses a changed Level;
             # preserve that historical offline result without granting output.
             if (key != "lev" or snapshot.device == ANALOG_RYTM_DEVICE_ID) and (
                 cockpit_parameter_live_blockers(pad.machine, key)
+            ):
+                new_value = value
+            mapping = cockpit_parameter_mapping(pad.machine, key)
+            if (
+                parameter_depths is not None
+                and mapping is not None
+                and mapping.mutation_status in ("locked_default", "forbidden")
             ):
                 new_value = value
             proposed[key] = new_value

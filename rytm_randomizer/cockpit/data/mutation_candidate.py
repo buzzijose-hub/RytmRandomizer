@@ -8,7 +8,7 @@ dataclass enforces structurally:
 1. Every changed key in a ``PadDelta`` must also appear in the proposed
    parameter set — a delta whose ``changed_keys`` references a missing
    key is malformed.
-2. ``depth`` lives in the closed interval [0.10, 0.90] per spec; the
+2. ``depth`` lives in the closed interval [0.00, 0.90] per spec; the
    UI's slider snaps to that range, and out-of-range candidates are
    refused at construction time.
 
@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final, Self, TypedDict
+from typing import Final, Self, TypedDict, cast
 
 from .types import STATUS_VALUES, Status, narrow_status
 
@@ -53,7 +53,7 @@ class MutationCandidateDict(TypedDict):
 
 _PAD_ID_MIN: Final[int] = 1
 _PAD_ID_MAX: Final[int] = 12
-_DEPTH_MIN: Final[float] = 0.10
+_DEPTH_MIN: Final[float] = 0.0
 _DEPTH_MAX: Final[float] = 0.90
 
 
@@ -93,9 +93,9 @@ class PadDelta:
     def from_dict(cls, data: PadDeltaDict) -> Self:
         proposed_obj = data["proposed_params"]
         changed_obj = data["changed_keys"]
-        if not isinstance(proposed_obj, Mapping):
+        if not isinstance(cast(object, proposed_obj), Mapping):
             raise TypeError(f"proposed_params must be a Mapping; got {type(proposed_obj).__name__}")
-        if not isinstance(changed_obj, (list, tuple, frozenset, set)):
+        if not isinstance(cast(object, changed_obj), (list, tuple, frozenset, set)):
             raise TypeError(f"changed_keys must be an iterable; got {type(changed_obj).__name__}")
         return cls(
             pad_id=data["pad_id"],
@@ -153,7 +153,7 @@ class MutationCandidate:
     @classmethod
     def from_dict(cls, data: MutationCandidateDict) -> Self:
         deltas_obj = data["pad_deltas"]
-        if not isinstance(deltas_obj, (list, tuple)):
+        if not isinstance(cast(object, deltas_obj), (list, tuple)):
             raise TypeError(f"pad_deltas must be a list/tuple; got {type(deltas_obj).__name__}")
         return cls(
             candidate_id=data["candidate_id"],

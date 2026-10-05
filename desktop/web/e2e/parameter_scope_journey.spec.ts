@@ -92,6 +92,8 @@ test('Pad 2 parameter scope, exact local favorite recall and restart remain disa
   await expect(page.getByTestId('action-send')).toBeEnabled();
   await page.setViewportSize({ width: 600, height: 900 });
   await scope.scrollIntoViewIfNeeded();
+  const overflow = await page.evaluate(() => [...document.querySelectorAll('body *')].filter((element) => element.getBoundingClientRect().right > window.innerWidth + 1).slice(0, 12).map((element) => ({ tag: element.tagName, className: element.className, testId: element.getAttribute('data-testid'), width: element.getBoundingClientRect().width })));
+  expect(overflow).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect(commands.some((command) => ['arm', 'send', 'save', 'capture_current_kit', 'list_capture_inputs'].includes(command.type))).toBe(false);
   consoleGuard.assertClean();

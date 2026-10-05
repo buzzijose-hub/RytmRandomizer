@@ -53,7 +53,7 @@ from ..data.rehearsal_favorite import LocalRehearsalFavorite
 from ..data.stage import ANALOG_RYTM_DEVICE_ID
 from ..engine import mutate
 from ..export.writer import atomic_write
-from ..parameter_scope import rytm_parameter_depths
+from ..engine.parameter_scope import rytm_parameter_depths
 from ..profiles.paths import default_profiles_dir
 
 __all__ = [

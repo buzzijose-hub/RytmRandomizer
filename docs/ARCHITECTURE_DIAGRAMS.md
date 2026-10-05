@@ -3183,6 +3183,12 @@ flowchart LR
 
     Scope["effective scope<br/>(targets or complete domain)<br/>minus locks"] --> RytmLane
     Scope --> A4Lane
+    ParameterScope["canonical page / item / parameter selection<br/>null = legacy all; empty = none<br/>validate before proposals; locks/protection win"] --> RytmLane
+    ParameterScope --> A4Offline
+    ParameterScope --> Prepare
+    LocalFavorites["LibraryStore schema 2<br/>source + profile + exact candidate<br/>scope / locks / seed / depth"] --> LocalRecall["verify deterministic values<br/>disarm; invalidate plan<br/>fresh preparation required"]
+    RytmLane --> LocalFavorites
+    LocalRecall --> RytmLane
     Coordinator["DualMachineStageCoordinator<br/>whole-state revision"] --> RytmLane
     Coordinator --> A4Lane
 
@@ -3226,7 +3232,11 @@ source. Armed disconnect revokes output evidence; passive browser disconnect
 and rejected DISARM do not erase offline work within the same running sidecar
 session. This is not durable local retention or a hardware save. A plan
 containing an unverified paired row remains blocked as a whole, even if
-single-CC packets also exist.
+single-CC packets also exist. Parameter selection happens before generation;
+the exact SEND boundary independently rejects out-of-scope proposed values.
+Durable local favorite recall restores reviewed values and scope, not a hardware
+KIT or live output grant. A4 parameter selection remains within its promoted
+saved-KIT offline field only.
 
 ## 37. Show Kit Forge Evidence and Show-Time Readiness
 

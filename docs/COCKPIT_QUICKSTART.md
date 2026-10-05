@@ -836,13 +836,27 @@ Run the isolated stages in this order, stopping after each restored baseline:
 
 **First physical test: one Rytm candidate, one confirmation, then stop.**
 The first present action is input-only source capture and exact-plan inspection.
-This UI selects whole pads/tracks, not individual control subsets. A full-pad
-candidate is not guaranteed to be SEND-ready; changed paired Rytm LFO Depth
-blocks it as a whole. Rytm Filter Frequency is the single CC74 control, distinct
+Studio now has canonical page/parameter selection. Choose **Pad 2 rehearsal**
+to include only Filter Frequency, AMP Decay, Overdrive and Reverb Send, with
+other pads and all A4 tracks locked. Its physical validation on the new build
+is pending. An empty parameter selection means no mutations; unselected values
+remain exact before generation. A full-pad candidate is still not guaranteed
+to be SEND-ready; changed paired Rytm LFO Depth blocks it as a whole.
+Rytm Filter Frequency is the single CC74 control, distinct
 from the blocked A4 Filter 1 Frequency live boundary. The safety rail displays
 each current plan refusal, including high-risk/protected changes, mismatched
 profile/source and an empty supported plan. Do not trim a blocked plan into a
 subset or assume lowering depth removes every blocker.
+
+For offline rehearsal, retain the current scoped candidate as a **local
+rehearsal favorite** in the existing library. Reopen it after restarting and
+compare the source identity, selected cells, locks, seed/depth and exact values.
+Recall leaves output disarmed and clears prepared plans/confirmations. Prepare
+again; a fresh source capture is required before any later hardware audition.
+Local retention is not the refused hardware SAVE command, exported show-bank
+files or a manual instrument KIT save/reload. Corrupt/newer records refuse
+without resetting the prior files. A4 selection remains offline-only and does
+not unlock general A4/BOTH output.
 
 Adopt retained paired sources, set the scope in Stage 2, generate a candidate
 and record its id. Manually reload the immutable Rytm source KIT, then take a

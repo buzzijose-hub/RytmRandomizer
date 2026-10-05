@@ -23,7 +23,7 @@ from dataclasses import replace as dataclass_replace
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from types import MappingProxyType
-from typing import Final, Literal, Self, TypedDict, cast
+from typing import Final, Literal, NotRequired, Self, TypedDict, cast
 
 from ...data.analog_four_sysex_calibration import (
     A4_FILTER1_FREQUENCY_PARAMETER,
@@ -43,12 +43,14 @@ from ...guardrails.input_validation import (
 )
 from ...snapshot.mutation_scope import MutationScope, registered_mutation_ids
 from .mutation_candidate import MutationCandidate, MutationCandidateDict, PadDelta
+from .parameter_scope import DEFAULT_PARAMETER_SELECTION, ParameterCellDict, ParameterSelection
 from .stage import ANALOG_FOUR_DEVICE_ID as A4_SHOW_KIT_DEVICE_ID
 from .stage import ANALOG_RYTM_DEVICE_ID as RYTM_SHOW_KIT_DEVICE_ID
 from .stage import STAGE_DEVICE_IDS, StageDeviceId
 from .types import narrow_status, safe_repr
 
-SHOW_BANK_SCHEMA_VERSION: Final[str] = "show-bank-v1"
+SHOW_BANK_SCHEMA_VERSION: Final[str] = "show-bank-v2"
+LEGACY_SHOW_BANK_SCHEMA_VERSION: Final[str] = "show-bank-v1"
 SHOW_BANK_REVISION_MAX: Final[int] = 99_999_999
 SHOW_BANK_ID_MAX_LENGTH: Final[int] = 64
 SHOW_PACK_ID_MAX_LENGTH: Final[int] = 96
@@ -559,6 +561,7 @@ class ShowKitScopeDict(TypedDict):
     device_id: str
     target_ids: list[int]
     locked_ids: list[int]
+    parameter_cells: NotRequired[list[ParameterCellDict] | None]
 
 
 @dataclass(frozen=True)
@@ -568,11 +571,18 @@ class ShowKitScope:
     device_id: ShowKitDeviceId
     target_ids: tuple[int, ...] = ()
     locked_ids: tuple[int, ...] = ()
+    parameters: ParameterSelection = DEFAULT_PARAMETER_SELECTION
 
     def __post_init__(self) -> None:
         if self.device_id not in SHOW_KIT_DEVICE_ID_VALUES:
             raise ValueError("unsupported show-kit scope device")
         available = registered_mutation_ids(self.device_id)
+        if not isinstance(cast(object, self.parameters), ParameterSelection):
+            raise TypeError("scope parameters must be a ParameterSelection")
+        if self.parameters.cells is not None and any(
+            cell.item_id not in available for cell in self.parameters.cells
+        ):
+            raise ValueError("scope parameter item is unavailable")
         scope = MutationScope(
             target_ids=frozenset(self.target_ids),
             locked_ids=frozenset(self.locked_ids),
@@ -598,24 +608,29 @@ class ShowKitScope:
         )
 
     def to_dict(self) -> ShowKitScopeDict:
-        return {
+        result: ShowKitScopeDict = {
             "device_id": self.device_id,
             "target_ids": list(self.target_ids),
             "locked_ids": list(self.locked_ids),
         }
+        if self.parameters.cells is not None:
+            result["parameter_cells"] = self.parameters.to_list()
+        return result
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
         data = require_object(raw, "scope")
         require_exact_keys(
             data,
-            frozenset({"device_id", "target_ids", "locked_ids"}),
+            frozenset({"device_id", "target_ids", "locked_ids"})
+            | (frozenset({"parameter_cells"}) if "parameter_cells" in data else frozenset[str]()),
             "scope",
         )
         return cls(
             device_id=narrow_show_kit_device_id(require_text_field(data, "device_id", "scope")),
             target_ids=require_integer_tuple(data["target_ids"], "scope.target_ids"),
             locked_ids=require_integer_tuple(data["locked_ids"], "scope.locked_ids"),
+            parameters=ParameterSelection.parse(data.get("parameter_cells")),
         )
 
 
@@ -2116,7 +2131,11 @@ class ShowBank:
         data = require_object(raw, "show bank")
         require_exact_keys(data, frozenset(ShowBankDict.__required_keys__), "show bank")
         bank = cls(
-            schema_version=require_text_field(data, "schema_version", "show bank"),
+            schema_version=(
+                SHOW_BANK_SCHEMA_VERSION
+                if data["schema_version"] == LEGACY_SHOW_BANK_SCHEMA_VERSION
+                else require_text_field(data, "schema_version", "show bank")
+            ),
             bank_id=require_text_field(data, "bank_id", "show bank"),
             name=require_text_field(data, "name", "show bank"),
             description=require_text_field(data, "description", "show bank"),

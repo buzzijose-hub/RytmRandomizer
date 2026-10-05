@@ -163,6 +163,15 @@ cargo clippy --all-targets -- -D warnings  # required for CI
 
 ## Patterns introduced by the CODE_REVIEW.md sweep (2026-05-25)
 
+Studio field scopes compose `cockpit/data/parameter_scope.py`, the pure engine
+cell validator, canonical parameter catalogs and the existing session/plan
+boundary. Keep scope validation server-side and before proposals; never trim
+a blocked send plan. Local rehearsal favorites reuse the versioned library's
+atomic storage and deterministic verification. Recall revokes output grants
+and clears preparation, while physical saved-KIT reload remains manual. Test
+the scoped favorite across a real app restart, with MIDI disabled, before
+calling the portable copy usable for offline rehearsal.
+
 The 12-PR sweep against the staff-engineer review introduced four reusable patterns that future cockpit / wire-boundary code is expected to follow. Each pattern is mechanically enforced by an architecture test under `tests/architecture/` so the smell cannot reappear silently. The complete table of prevention tests is in [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md#code_reviewmd-prevention-test-family-strengthens-existing-gates-no-new-gate-count) and [`docs/CODE_REVIEW_HOOK_SETUP.md`](docs/CODE_REVIEW_HOOK_SETUP.md).
 
 ### `narrow_*` Literal-narrowing helpers (wire-boundary)

@@ -51,6 +51,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_HISTORY_UPDATED,
     EVENT_KIT_CAPTURES_CHANGED,
     EVENT_MUTATION_LOCKS_CHANGED,
+    EVENT_MUTATION_PARAMETERS_CHANGED,
     EVENT_MUTATION_PREVIEWED,
     EVENT_MUTATION_TARGETS_CHANGED,
     EVENT_PATCH_GENOME_CHANGED,
@@ -2716,7 +2717,7 @@ def test_analyze_patch_genome_requires_both_fields(tmp_path: Path) -> None:
     assert recorder.events == []
 
 
-def test_emit_initial_events_sends_eleven_events_in_order(tmp_path: Path) -> None:
+def test_emit_initial_events_sends_twelve_events_in_order(tmp_path: Path) -> None:
     session = _make_session(tmp_path)
     recorder = _Recorder()
 
@@ -2733,6 +2734,7 @@ def test_emit_initial_events_sends_eleven_events_in_order(tmp_path: Path) -> Non
         EVENT_KIT_CAPTURES_CHANGED,
         EVENT_MUTATION_TARGETS_CHANGED,
         EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_MUTATION_PARAMETERS_CHANGED,
         EVENT_DUAL_MACHINE_STAGE_CHANGED,
         _PERFORMANCE_CONSOLE_CHANGED,
     ]
@@ -2988,7 +2990,7 @@ def test_build_connection_changed_carries_whole_state_dict() -> None:
 def test_emit_initial_events_appends_connection_changed_when_manager_active(
     tmp_path: Path,
 ) -> None:
-    """Wired boot path: the 11-event bootstrap gains a final connection frame."""
+    """Wired boot path: the 12-event bootstrap gains a final connection frame."""
 
     session = _make_session(tmp_path)
     recorder = _Recorder()
@@ -3008,6 +3010,7 @@ def test_emit_initial_events_appends_connection_changed_when_manager_active(
         EVENT_KIT_CAPTURES_CHANGED,
         EVENT_MUTATION_TARGETS_CHANGED,
         EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_MUTATION_PARAMETERS_CHANGED,
         EVENT_DUAL_MACHINE_STAGE_CHANGED,
         _PERFORMANCE_CONSOLE_CHANGED,
         "connection_changed",
@@ -3017,8 +3020,8 @@ def test_emit_initial_events_appends_connection_changed_when_manager_active(
     assert recorder.events[0]["connection_phase"] == "listening"
 
 
-def test_emit_initial_events_stays_eleven_events_when_unwired(tmp_path: Path) -> None:
-    """Unwired sessions emit the authoritative 11-event bootstrap exactly."""
+def test_emit_initial_events_stays_twelve_events_when_unwired(tmp_path: Path) -> None:
+    """Unwired sessions emit the authoritative 12-event bootstrap exactly."""
 
     connection.set_active_connection_manager(None)
     session = _make_session(tmp_path)
@@ -3036,6 +3039,7 @@ def test_emit_initial_events_stays_eleven_events_when_unwired(tmp_path: Path) ->
         EVENT_KIT_CAPTURES_CHANGED,
         EVENT_MUTATION_TARGETS_CHANGED,
         EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_MUTATION_PARAMETERS_CHANGED,
         EVENT_DUAL_MACHINE_STAGE_CHANGED,
         _PERFORMANCE_CONSOLE_CHANGED,
     ]

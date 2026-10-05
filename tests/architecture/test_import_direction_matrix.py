@@ -164,6 +164,10 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     ),
     "cockpit.library": frozenset(
         {
+            # Scoped local recall verifies immutable DTOs through the pure
+            # engine; this grants no session, capture or output dependency.
+            "cockpit.data",
+            "cockpit.engine",
             "cockpit.export",
             "cockpit.profiles",
             # Auto-update spec §11 Contract A: the store declares its

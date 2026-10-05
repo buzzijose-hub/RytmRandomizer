@@ -76,6 +76,7 @@ export function MutationParametersPanel(): JSX.Element {
       if (!ack.ok) throw new Error(ack.message ?? ack.error ?? 'Preset refused.');
       setDeviceId(RYTM_DEVICE_ID);
       setItem(2);
+      setPage('FILTER');
       setPage('');
     } catch (error) {
       setPresetError(error instanceof Error ? error.message : String(error));

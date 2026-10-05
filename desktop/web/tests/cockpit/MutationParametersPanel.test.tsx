@@ -28,6 +28,12 @@ beforeEach(() => useCockpitStore.getState().reset());
 afterEach(() => useCockpitStore.getState().reset());
 
 describe('Studio canonical parameter scope', () => {
+  it('does not invent a source identity from display controls', () => {
+    ready();
+    useCockpitStore.setState({ snapshot: null });
+    mount();
+    expect(screen.getByText(/Source/)).toHaveTextContent('not available');
+  });
   it('fails closed without fresh canonical controls', () => {
     const { fake } = mount();
     expect(screen.getByText(/Canonical parameter scope unavailable/)).toBeVisible();

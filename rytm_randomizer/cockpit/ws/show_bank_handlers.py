@@ -217,6 +217,12 @@ def _sync_selected_candidate(
     session.pad_locks = set(selected.recipe.rytm_scope.locked_ids)
     session.a4_track_targets = set(selected.recipe.analog_four_scope.target_ids)
     session.a4_track_locks = set(selected.recipe.analog_four_scope.locked_ids)
+    session.rytm_parameters = selected.recipe.rytm_scope.parameters
+    session.a4_parameters = selected.recipe.analog_four_scope.parameters
+    # Recall is local preparation, never an output grant or hardware restore.
+    from .handlers import build_mutation_parameters_changed, revoke_session_output
+
+    passive_status = revoke_session_output(session, preserve_source_capture=True)
     session.current_candidate = selected.rytm_candidate
     session.current_send_plan = None
     session.preview_on = True
@@ -239,6 +245,7 @@ def _sync_selected_candidate(
         blocked_reason=A4_HARDWARE_BLOCK_REASON,
     )
     return [
+        passive_status,
         {"type": EVENT_SNAPSHOT_CHANGED, "snapshot": source.to_dict()},
         {"type": EVENT_HISTORY_UPDATED, "history": session.history_store.current.to_dict()},
         {"type": EVENT_PROFILE_CHANGED, "profile": profile.to_dict()},
@@ -252,6 +259,7 @@ def _sync_selected_candidate(
             "rytm_pad_locks": sorted(session.pad_locks),
             "a4_track_locks": sorted(session.a4_track_locks),
         },
+        build_mutation_parameters_changed(session),
         {
             "type": EVENT_MUTATION_PREVIEWED,
             "candidate": selected.rytm_candidate.to_dict(),
@@ -367,6 +375,8 @@ async def _handle_generate(cmd: dict[str, object], session: CockpitSession) -> H
         rytm_locks=_integer_list(cmd, "rytm_locks"),
         analog_four_targets=_integer_list(cmd, "a4_targets"),
         analog_four_locks=_integer_list(cmd, "a4_locks"),
+        rytm_parameters=session.rytm_parameters,
+        analog_four_parameters=session.a4_parameters,
     )
     events = _sync_selected_candidate(session, workspace, bank_id, entry_id)
     events.append(build_show_bank_changed(session))

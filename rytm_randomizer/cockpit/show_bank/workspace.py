@@ -26,6 +26,7 @@ from ..capture import (
 )
 from ..data import MutationCandidate, ProfileModel, Snapshot, new_ulid
 from ..data.a4_preparation import A4PreparationReport
+from ..data.parameter_scope import DEFAULT_PARAMETER_SELECTION, ParameterSelection
 from ..data.show_bank import (
     A4_SHOW_KIT_DEVICE_ID,
     RYTM_SHOW_KIT_DEVICE_ID,
@@ -788,6 +789,8 @@ class ShowKitForgeWorkspace:
         rytm_locks: Sequence[int],
         analog_four_targets: Sequence[int],
         analog_four_locks: Sequence[int],
+        rytm_parameters: ParameterSelection = DEFAULT_PARAMETER_SELECTION,
+        analog_four_parameters: ParameterSelection = DEFAULT_PARAMETER_SELECTION,
     ) -> tuple[ShowKitCandidate, ...]:
         if (
             isinstance(candidate_count, bool)
@@ -812,11 +815,13 @@ class ShowKitForgeWorkspace:
                     device_id=RYTM_SHOW_KIT_DEVICE_ID,
                     target_ids=tuple(rytm_targets),
                     locked_ids=tuple(rytm_locks),
+                    parameters=rytm_parameters,
                 ),
                 analog_four_scope=ShowKitScope(
                     device_id=A4_SHOW_KIT_DEVICE_ID,
                     target_ids=tuple(analog_four_targets),
                     locked_ids=tuple(analog_four_locks),
+                    parameters=analog_four_parameters,
                 ),
             )
             forged = forge_candidate_pair(

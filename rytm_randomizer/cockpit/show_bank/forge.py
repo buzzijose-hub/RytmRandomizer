@@ -45,6 +45,7 @@ from ..data.show_bank import (
 )
 from ..engine.mutate import mutate
 from ..engine.prng import xorshift32
+from ..parameter_scope import rytm_parameter_depths
 
 _UINT32_MAX: Final[int] = (1 << 32) - 1
 _UINT32_MIDPOINT: Final[int] = 1 << 31
@@ -283,6 +284,11 @@ def _a4_mutation_values(
 ) -> tuple[AnalogFourFilter1FrequencyCandidateMutation, ...]:
     unpacked = _a4_source_unpacked(source_frame)
     effective_tracks = recipe.analog_four_scope.effective_ids
+    selection = recipe.analog_four_scope.parameters
+    if selection.cells is not None and any(
+        cell.parameter_key != A4_FILTER1_FREQUENCY_PARAMETER for cell in selection.cells
+    ):
+        raise ValueError("A4 parameter scope contains an unsupported saved-KIT field")
     state = ((recipe.seed & _UINT32_MAX) ^ _A4_PRNG_XOR) or _A4_PRNG_XOR
     for _ in range(_A4_PRNG_WARMUP):
         _, state = xorshift32(state)
@@ -290,6 +296,8 @@ def _a4_mutation_values(
     mutations: list[AnalogFourFilter1FrequencyCandidateMutation] = []
     for track in effective_tracks:
         raw, state = xorshift32(state)
+        if not selection.includes(track, A4_FILTER1_FREQUENCY_PARAMETER):
+            continue
         calibration = analog_four_sysex_calibration_for(A4_FILTER1_FREQUENCY_PARAMETER)
         offset = calibration.native_offset_for_track(track)
         source_raw = int.from_bytes(unpacked[offset : offset + calibration.native_width], "big")
@@ -337,6 +345,9 @@ def forge_candidate_pair(  # noqa: PLR0913 - explicit immutable sources, recipe,
         recipe.seed,
         target_pad_ids=frozenset(recipe.rytm_scope.target_ids),
         locked_pad_ids=frozenset(recipe.rytm_scope.locked_ids),
+        parameter_depths=rytm_parameter_depths(
+            rytm_source_snapshot, recipe.rytm_scope.parameters, recipe.depth
+        ),
     )
     filter1_capability = get_analog_four_filter1_frequency_candidate_capability()
     rendered_a4 = filter1_capability.render_filter1_frequency_candidate(

@@ -31,6 +31,17 @@
 .rehearsal-favorite-controls label { flex-wrap: wrap; min-width: 0; }
 .rehearsal-favorite-controls input, .rehearsal-favorite-controls select { min-height: 32px; max-width: 100%; min-width: 0; }
 .rehearsal-favorite-controls button { min-height: 32px; }
+[data-testid="library-panel"] .cockpit-panel-inline-form {
+  max-width: 100%; min-width: 0; flex-wrap: wrap;
+}
+[data-testid="library-panel"] .cockpit-panel-inline-form label {
+  min-width: 0; max-width: 100%; flex-wrap: wrap;
+}
+[data-testid="library-panel"] select { min-width: 0; max-width: 100%; }
+[data-testid="library-panel"] .cockpit-panel-table { table-layout: fixed; }
+[data-testid="library-panel"] .cockpit-panel-table :is(th, td) {
+  overflow-wrap: anywhere; white-space: normal;
+}
 @media (max-width: 760px) {
   .parameter-scope-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .parameter-scope-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }

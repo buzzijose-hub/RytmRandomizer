@@ -9,6 +9,13 @@ from ...guardrails.input_validation import require_int, require_text
 
 _MAX_PARAMETER_KEY: Final[int] = 128
 _MAX_PARAMETER_CELLS: Final[int] = 2048
+RYTM_PAD2_REHEARSAL_PRESET_ID: Final[str] = "rytm_pad2_common"
+RYTM_PAD2_REHEARSAL_PARAMETERS: Final[tuple[tuple[str, str], ...]] = (
+    ("FILTER", "Filter Frequency"),
+    ("AMP", "Amp Decay Time"),
+    ("AMP", "Amp Overdrive"),
+    ("AMP", "Amp Reverb Send"),
+)
 
 
 class ParameterCellDict(TypedDict):
@@ -41,8 +48,8 @@ class ParameterSelection:
     def __post_init__(self) -> None:
         if self.cells is None:
             return
-        if not isinstance(self.cells, tuple) or any(
-            not isinstance(cell, ParameterCell) for cell in self.cells
+        if not isinstance(cast(object, self.cells), tuple) or any(
+            not isinstance(cell, ParameterCell) for cell in cast(tuple[object, ...], self.cells)
         ):
             raise TypeError("parameter cells must be an immutable typed tuple")
         if len(self.cells) > _MAX_PARAMETER_CELLS or len(set(self.cells)) != len(self.cells):
@@ -59,11 +66,16 @@ class ParameterSelection:
     def parse(cls, value: object) -> ParameterSelection:
         if value is None:
             return cls()
-        if not isinstance(value, list) or len(value) > _MAX_PARAMETER_CELLS:
+        if not isinstance(value, list):
+            raise ValueError("parameter_cells must be null or a bounded array")
+        if len(cast(list[object], value)) > _MAX_PARAMETER_CELLS:
             raise ValueError("parameter_cells must be null or a bounded array")
         cells: list[ParameterCell] = []
         for raw in cast(list[object], value):
-            if not isinstance(raw, dict) or set(raw) != {"item_id", "parameter_key"}:
+            if not isinstance(raw, dict) or set(cast(dict[str, object], raw)) != {
+                "item_id",
+                "parameter_key",
+            }:
                 raise ValueError("parameter cell requires exactly item_id and parameter_key")
             cell = cast(dict[str, object], raw)
             cells.append(
@@ -94,9 +106,15 @@ class PerformanceParameterControl(TypedDict):
     evidence_level: str
 
 
+DEFAULT_PARAMETER_SELECTION: Final[ParameterSelection] = ParameterSelection()
+
+
 __all__ = [
+    "DEFAULT_PARAMETER_SELECTION",
     "ParameterCell",
     "ParameterCellDict",
     "ParameterSelection",
     "PerformanceParameterControl",
+    "RYTM_PAD2_REHEARSAL_PARAMETERS",
+    "RYTM_PAD2_REHEARSAL_PRESET_ID",
 ]

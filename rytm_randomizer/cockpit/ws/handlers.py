@@ -67,9 +67,10 @@ import time
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable, Mapping
 from threading import Event
-from typing import Final, Protocol, SupportsFloat, SupportsInt, cast, runtime_checkable
+from typing import Final, Protocol, SupportsInt, cast, runtime_checkable
 
 from ...devices import get_device
+from ...guardrails.input_validation import canonical_json_bytes, require_float, require_text
 from ...observability.errors import RytmRandomizerError
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
@@ -91,6 +92,8 @@ from ..data import (
     StageDeviceId,
 )
 from ..data.rytm_parameter_map import cockpit_parameter_live_blockers
+from ..data.parameter_scope import ParameterSelection, RYTM_PAD2_REHEARSAL_PRESET_ID
+from ..data.rehearsal_favorite import LocalRehearsalFavorite
 from ..device.connection import ConnectionState, active_connection_manager
 from ..diagnostics import build_diagnostics_payload
 from ..engine import mutate, prepare_send_plan
@@ -102,6 +105,12 @@ from ..mutation_targets import (
     RYTM_PAD_TARGET_MAX,
     RYTM_PAD_TARGET_MIN,
     MutationTargets,
+)
+from ..parameter_scope import (
+    pad2_rehearsal_selection,
+    performance_parameter_controls,
+    rytm_parameter_depths,
+    validate_parameter_selection,
 )
 from .app_version import resolve_app_version
 from .protocol import (
@@ -132,6 +141,11 @@ from .protocol import (
     COMMAND_SET_A4_TRACK_LOCK,
     COMMAND_SET_DEPTH,
     COMMAND_SET_MUTATION_TARGETS,
+    COMMAND_SET_MUTATION_PARAMETERS,
+    COMMAND_GET_MUTATION_PARAMETERS,
+    COMMAND_SET_REHEARSAL_PRESET,
+    COMMAND_RETAIN_REHEARSAL_FAVORITE,
+    COMMAND_RECALL_REHEARSAL_FAVORITE,
     COMMAND_SET_PAD_LOCK,
     COMMAND_TOGGLE_PREVIEW,
     COMMAND_UNDO,
@@ -145,6 +159,7 @@ from .protocol import (
     EVENT_KIT_CAPTURES_CHANGED,
     EVENT_LIBRARY_CHANGED,
     EVENT_MUTATION_LOCKS_CHANGED,
+    EVENT_MUTATION_PARAMETERS_CHANGED,
     EVENT_MUTATION_PREVIEWED,
     EVENT_MUTATION_TARGETS_CHANGED,
     EVENT_PATCH_GENOME_CHANGED,
@@ -417,6 +432,17 @@ def _build_mutation_locks_changed(session: CockpitSession) -> dict[str, object]:
     }
 
 
+def build_mutation_parameters_changed(session: CockpitSession) -> dict[str, object]:
+    return {
+        "type": EVENT_MUTATION_PARAMETERS_CHANGED,
+        "rytm_parameters": session.rytm_parameters.to_list(),
+        "a4_parameters": session.a4_parameters.to_list(),
+        "controls": performance_parameter_controls(
+            session.device.capture_snapshot(), session.kit_captures.get(ANALOG_FOUR_DEVICE_ID)
+        ),
+    }
+
+
 def _build_dual_machine_stage_changed(session: CockpitSession) -> dict[str, object]:
     """Build the authoritative coordinated stage at its current revision."""
 
@@ -478,7 +504,7 @@ def _build_performance_console_changed() -> dict[str, object]:
 
 
 async def emit_initial_events(emitter: EventEmitter, session: CockpitSession) -> None:
-    """Send the 11 bootstrap events a freshly-connected client expects.
+    """Send the 12 bootstrap events a freshly-connected client expects.
 
     Order matters for the UI: a client renders the session status pill
     first (so the user sees "armed" or "mock"), then the snapshot (so
@@ -505,6 +531,7 @@ async def emit_initial_events(emitter: EventEmitter, session: CockpitSession) ->
     await emitter.send_event(_build_kit_captures_changed(session))
     await emitter.send_event(_build_mutation_targets_changed(session))
     await emitter.send_event(_build_mutation_locks_changed(session))
+    await emitter.send_event(build_mutation_parameters_changed(session))
     await emitter.send_event(_build_dual_machine_stage_changed(session))
     await emitter.send_event(_build_performance_console_changed())
     # Wave 3: when the launch brain is wired (the ``__main__`` boot path),
@@ -552,7 +579,7 @@ async def emit_initial_events(emitter: EventEmitter, session: CockpitSession) ->
 # mockups.
 _RECOMPUTE_CACHE_MAXSIZE: Final[int] = 16
 _recompute_cache: OrderedDict[
-    tuple[str, str, float, int, tuple[int, ...], tuple[int, ...]],
+    tuple[str, str, str, float, int, tuple[int, ...], tuple[int, ...], ParameterSelection],
     MutationCandidate,
 ] = OrderedDict()
 
@@ -583,14 +610,23 @@ def _recompute_candidate(
         session.current_candidate = None
         return None
     snapshot = session.device.capture_snapshot()
+    try:
+        depths = rytm_parameter_depths(snapshot, session.rytm_parameters, session.depth)
+    except ValueError:
+        # A new machine/source may revoke cells. Reset to none, never to all.
+        session.rytm_parameters = ParameterSelection(())
+        depths = {}
+        _logger.info("parameter_scope_source_changed", extra={"outcome": "selection_cleared"})
     target_pad_ids = frozenset(session.rytm_pad_targets)
     key = (
         snapshot.snapshot_id,
-        session.active_profile.profile_id,
+        hashlib.sha256(canonical_json_bytes(snapshot.to_dict())).hexdigest(),
+        hashlib.sha256(canonical_json_bytes(session.active_profile.to_dict())).hexdigest(),
         session.depth,
         session.seed,
         tuple(sorted(target_pad_ids)),
         tuple(sorted(session.pad_locks)),
+        session.rytm_parameters,
     )
     cached = None if force_fresh else _recompute_cache.get(key)
     if cached is not None:
@@ -605,6 +641,7 @@ def _recompute_candidate(
         session.seed,
         target_pad_ids=target_pad_ids,
         locked_pad_ids=frozenset(session.pad_locks),
+        parameter_depths=depths,
     )
     effective_ids = {delta.pad_id for delta in candidate.pad_deltas}
     for pad in snapshot.pads:
@@ -973,6 +1010,7 @@ async def _handle_capture_current_kit(
                 session.history_store.initial(snapshot)
             session.current_candidate = None
             candidate = _recompute_candidate(session, force_fresh=True)
+            session.recalled_offline_favorite = False
             _record_stage_scope(session, ANALOG_RYTM_DEVICE_ID)
             _record_rytm_candidate(session, candidate)
             events.extend(
@@ -1018,7 +1056,9 @@ async def _handle_select_profile(cmd: dict[str, object], session: CockpitSession
 async def _handle_set_depth(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     # ``cast`` mirrors the historical ``float(<wire value>)`` coercion
     # exactly: a non-numeric wire value still raises through ``float``.
-    depth = float(cast(SupportsFloat, cmd["depth"]))
+    depth = require_float(cmd["depth"], "depth")
+    if not 0 <= depth <= 0.90:
+        raise ValueError("depth must be in 0..0.90")
     events = _clear_send_plan_if_needed(session)
     session.depth = depth
     candidate = _recompute_candidate(session)
@@ -1182,6 +1222,97 @@ async def _handle_clear_mutation_targets(
     return HandlerResult(ack={"ok": True}, events=events)
 
 
+def _parameter_scope_transition(session: CockpitSession) -> list[dict[str, object]]:
+    session.current_candidate = None
+    session.current_send_plan = None
+    _record_stage_scope(session, ANALOG_RYTM_DEVICE_ID)
+    _record_stage_scope(session, ANALOG_FOUR_DEVICE_ID)
+    session.stage_coordinator.record_candidate(ANALOG_FOUR_DEVICE_ID, ready=None)
+    candidate = _recompute_candidate(session, force_fresh=True)
+    _record_rytm_candidate(session, candidate)
+    return [
+        build_mutation_parameters_changed(session),
+        _build_mutation_previewed(candidate if session.preview_on else None),
+        _build_send_plan_changed(None),
+        _build_dual_machine_stage_changed(session),
+    ]
+
+
+async def _handle_set_mutation_parameters(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    device_id = narrow_kit_capture_device_id(cmd["device_id"])
+    selection = ParameterSelection.parse(cmd["parameter_cells"])
+    controls = performance_parameter_controls(
+        session.device.capture_snapshot(), session.kit_captures.get(ANALOG_FOUR_DEVICE_ID)
+    )
+    try:
+        validate_parameter_selection(selection, controls, device_id)
+    except ValueError:
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "select only canonical captured mutable controls; protected or unavailable fields cannot be selected",
+            )
+        )
+    if device_id == ANALOG_RYTM_DEVICE_ID:
+        session.rytm_parameters = selection
+    else:
+        session.a4_parameters = selection
+    events = _parameter_scope_transition(session)
+    _logger.info(
+        "mutation_parameters_changed",
+        extra={
+            "device_id": device_id,
+            "outcome": "validated",
+            "explicit_scope": selection.cells is not None,
+        },
+    )
+    return HandlerResult(ack={"ok": True}, events=events)
+
+
+async def _handle_get_mutation_parameters(
+    _cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    return HandlerResult(ack={"ok": True}, events=[build_mutation_parameters_changed(session)])
+
+
+async def _handle_set_rehearsal_preset(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    if cmd["preset_id"] != RYTM_PAD2_REHEARSAL_PRESET_ID:
+        raise ValueError("unsupported rehearsal preset")
+    try:
+        selection = pad2_rehearsal_selection(session.device.capture_snapshot())
+    except ValueError:
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "Pad 2 rehearsal requires captured Filter Frequency, AMP Decay, Overdrive and Reverb Send values",
+            )
+        )
+    session.rytm_parameters = selection
+    session.a4_parameters = ParameterSelection(())
+    session.rytm_pad_targets = {2}
+    session.pad_locks = set(range(RYTM_PAD_TARGET_MIN, RYTM_PAD_TARGET_MAX + 1)) - {2}
+    session.a4_track_targets.clear()
+    session.a4_track_locks = set(range(A4_TRACK_TARGET_MIN, A4_TRACK_TARGET_MAX + 1))
+    session.depth = 0.10
+    session.preview_on = True
+    events = _parameter_scope_transition(session)
+    events.extend(
+        [_build_mutation_targets_changed(session), _build_mutation_locks_changed(session)]
+    )
+    _logger.info(
+        "rehearsal_preset_selected",
+        extra={"preset_id": RYTM_PAD2_REHEARSAL_PRESET_ID, "physical_validation": "pending"},
+    )
+    return HandlerResult(
+        ack={"ok": True, "physical_validation_required": True, "depth": session.depth},
+        events=events,
+    )
+
+
 async def _handle_toggle_preview(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     on = bool(cmd["on"])
     events = _clear_send_plan_if_needed(session)
@@ -1245,6 +1376,7 @@ async def _handle_prepare_send_plan(
         session.current_candidate,
         frozenset(session.pad_locks),
         pad_targets=frozenset(session.rytm_pad_targets),
+        parameter_selection=session.rytm_parameters,
     )
     if plan is None:
         session.stage_coordinator.record_plan(ANALOG_RYTM_DEVICE_ID, ready=False)
@@ -1303,6 +1435,27 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
             )
         )
     live_hardware_audition = session.armed_apply is not None or session.device.is_armed
+    checked = prepare_send_plan(
+        session.device.capture_snapshot(),
+        session.active_profile,
+        session.current_candidate,
+        frozenset(session.pad_locks),
+        frozenset(session.rytm_pad_targets),
+        parameter_selection=session.rytm_parameters,
+    )
+    if checked is None or not checked.ready or checked.to_dict() != sent_plan.to_dict():
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION, "send plan is stale; prepare the current exact scope again"
+            )
+        )
+    if live_hardware_audition and session.recalled_offline_favorite:
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "local favorite recall requires a fresh saved-source capture before hardware audition",
+            )
+        )
     hardware_evidence_events: list[dict[str, object]] = []
     if live_hardware_audition and session.show_kit_forge is not None:
         try:
@@ -2394,6 +2547,21 @@ def _teardown_armed_state(session: CockpitSession) -> None:
     )
 
 
+def revoke_session_output(
+    session: CockpitSession, *, preserve_source_capture: bool = False
+) -> dict[str, object]:
+    """Revoke volatile output grants for local recall, never restore hardware."""
+    if preserve_source_capture and session.armed_apply is None and not session.device.is_armed:
+        # Inert Show Forge reselection must not revoke the fresh reload dump
+        # it is explicitly required to follow. Real output loss still revokes.
+        cancel_pending_capture(session)
+        session.current_send_plan = None
+    else:
+        _teardown_armed_state(session)
+    session.hardware_intent = False
+    return _build_session_status(session)
+
+
 def disarm_session_on_teardown(session: CockpitSession) -> None:
     """Public teardown hook: drop a session to passive and close its port.
 
@@ -2831,6 +2999,105 @@ async def _handle_library_import_captures(
     )
 
 
+async def _handle_retain_rehearsal_favorite(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    store = session.library_store
+    if store is None:
+        return _library_unconfigured_ack()
+    if session.active_profile is None or session.current_candidate is None:
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION, "preview a scoped candidate before retaining a local favorite"
+            )
+        )
+    favorite = LocalRehearsalFavorite(
+        source_snapshot=session.device.capture_snapshot(),
+        profile=session.active_profile,
+        candidate=session.current_candidate,
+        rytm_pad_targets=frozenset(session.rytm_pad_targets),
+        a4_track_targets=frozenset(session.a4_track_targets),
+        locked_pad_ids=frozenset(session.pad_locks),
+        locked_a4_track_ids=frozenset(session.a4_track_locks),
+        rytm_parameter_selection=session.rytm_parameters,
+        a4_parameter_selection=session.a4_parameters,
+    )
+    record = store.retain_rehearsal(favorite, require_text(cmd["name"], "name"))
+    return HandlerResult(
+        ack={"ok": True, "library_record": record.to_dict()}, events=[_build_library_changed(store)]
+    )
+
+
+async def _handle_recall_rehearsal_favorite(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    store = session.library_store
+    if store is None:
+        return _library_unconfigured_ack()
+    record = store.get(require_text(cmd["record_id"], "record_id"))
+    if record is None or record.rehearsal is None:
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "local rehearsal favorite is unavailable or invalid; stored files were not reset",
+            )
+        )
+    favorite = record.rehearsal
+    # Verify everything before revoking or replacing any current review state.
+    store.verify_rehearsal(favorite)
+    passive = revoke_session_output(session)
+    source = favorite.source_snapshot
+    session.device.adopt_snapshot(source)
+    history = session.history_store.current
+    if any(entry.snapshot.snapshot_id == source.snapshot_id for entry in history.entries):
+        session.history_store.load(source.snapshot_id)
+    elif session.history_store.has_entries:
+        session.history_store.append_post_send(source, via="load")
+    else:
+        session.history_store.initial(source)
+    session.active_profile = favorite.profile
+    session.depth = favorite.candidate.depth
+    session.seed = favorite.candidate.seed
+    session.rytm_pad_targets = set(favorite.rytm_pad_targets)
+    session.a4_track_targets = set(favorite.a4_track_targets)
+    session.pad_locks = set(favorite.locked_pad_ids)
+    session.a4_track_locks = set(favorite.locked_a4_track_ids)
+    session.rytm_parameters = favorite.rytm_parameter_selection
+    session.a4_parameters = favorite.a4_parameter_selection
+    session.current_candidate = favorite.candidate
+    session.current_send_plan = None
+    session.recalled_offline_favorite = True
+    session.preview_on = True
+    _record_stage_scope(session, ANALOG_RYTM_DEVICE_ID)
+    _record_stage_scope(session, ANALOG_FOUR_DEVICE_ID)
+    _record_rytm_candidate(session, session.current_candidate)
+    session.stage_coordinator.record_candidate(ANALOG_FOUR_DEVICE_ID, ready=None)
+    _logger.info(
+        "local_rehearsal_recalled",
+        extra={"outcome": "verified_disarmed", "hardware_authority": False},
+    )
+    return HandlerResult(
+        ack={
+            "ok": True,
+            "library_record_id": record.record_id,
+            "depth": session.depth,
+            "armed": False,
+        },
+        events=[
+            passive,
+            _build_snapshot_changed(source),
+            _build_profile_changed(session.active_profile),
+            _build_history_updated(session.history_store.current),
+            _build_mutation_targets_changed(session),
+            _build_mutation_locks_changed(session),
+            build_mutation_parameters_changed(session),
+            _build_mutation_previewed(session.current_candidate),
+            _build_send_plan_changed(None),
+            _build_dual_machine_stage_changed(session),
+        ],
+    )
+
+
 HandlerFn = Callable[[dict[str, object], CockpitSession], Awaitable[HandlerResult]]
 
 _CORE_HANDLERS: dict[str, HandlerFn] = {
@@ -2842,6 +3109,11 @@ _CORE_HANDLERS: dict[str, HandlerFn] = {
     COMMAND_SET_DEPTH: _handle_set_depth,
     COMMAND_SET_A4_TRACK_LOCK: _handle_set_a4_track_lock,
     COMMAND_SET_MUTATION_TARGETS: _handle_set_mutation_targets,
+    COMMAND_SET_MUTATION_PARAMETERS: _handle_set_mutation_parameters,
+    COMMAND_GET_MUTATION_PARAMETERS: _handle_get_mutation_parameters,
+    COMMAND_SET_REHEARSAL_PRESET: _handle_set_rehearsal_preset,
+    COMMAND_RETAIN_REHEARSAL_FAVORITE: _handle_retain_rehearsal_favorite,
+    COMMAND_RECALL_REHEARSAL_FAVORITE: _handle_recall_rehearsal_favorite,
     COMMAND_SET_PAD_LOCK: _handle_set_pad_lock,
     COMMAND_TOGGLE_PREVIEW: _handle_toggle_preview,
     COMMAND_REGEN: _handle_regen,
@@ -3168,10 +3440,12 @@ __all__ = [
     "WS_ERROR_CODES",
     "build_armed_watchdog",
     "build_connection_changed",
+    "build_mutation_parameters_changed",
     "cancel_pending_capture",
     "dispatcher_failure_ack",
     "drain_pending_events",
     "emit_initial_events",
     "handle_command",
     "resolve_connection_phase",
+    "revoke_session_output",
 ]

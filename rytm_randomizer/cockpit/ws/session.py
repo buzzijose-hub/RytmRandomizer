@@ -47,6 +47,7 @@ from ...senders.armed_apply import ArmedApplySession
 from ...senders.hardware import OutputOpeningProvider
 from ..capture import KitCaptureDeviceId, KitCaptureResult, KitCaptureService
 from ..data import CockpitSendPlan, MutationCandidate, ProfileModel
+from ..data.parameter_scope import ParameterSelection
 from ..device import DeviceAdapter
 from ..diagnostics import ErrorJournal
 from ..history import HistoryStore
@@ -118,6 +119,10 @@ class CockpitSession:
     rytm_pad_targets: set[int] = field(default_factory=set[int])
     a4_track_targets: set[int] = field(default_factory=set[int])
     a4_track_locks: set[int] = field(default_factory=set[int])
+    rytm_parameters: ParameterSelection = field(default_factory=ParameterSelection)
+    a4_parameters: ParameterSelection = field(default_factory=ParameterSelection)
+    recalled_offline_favorite: bool = False
+    """Retained local state never substitutes for a fresh hardware source capture."""
     stage_coordinator: DualMachineStageCoordinator = field(
         default_factory=DualMachineStageCoordinator
     )

@@ -27,6 +27,7 @@ from ..data.rytm_parameter_map import (
     cockpit_parameter_live_blockers,
     cockpit_parameter_mapping,
 )
+from ..data.parameter_scope import DEFAULT_PARAMETER_SELECTION, ParameterSelection
 from ..mutation_targets import MutationTargets
 
 _logger = get_logger(__name__)
@@ -42,6 +43,8 @@ def prepare_send_plan(
     candidate: MutationCandidate | None,
     pad_locks: frozenset[int],
     pad_targets: frozenset[int] = frozenset(),
+    *,
+    parameter_selection: ParameterSelection = DEFAULT_PARAMETER_SELECTION,
 ) -> CockpitSendPlan | None:
     """Build a deterministic inert send plan, or ``None`` when not stageable."""
 
@@ -49,17 +52,23 @@ def prepare_send_plan(
         return None
 
     scope = MutationTargets(rytm_pad_targets=pad_targets).rytm_scope(pad_locks)
-    packets, paired_control_unverified, protected_control_changed = _candidate_packets(
+    packets, paired_control_unverified, protected_control_changed, unsupported = _candidate_packets(
         snapshot, candidate, scope
     )
     blocked_reasons = _blocked_reasons(
         snapshot, profile, candidate, packets, paired_control_unverified, protected_control_changed
     )
+    if unsupported:
+        blocked_reasons += ("unsupported_control_changed",)
+    if not candidate_within_parameter_scope(snapshot, candidate, parameter_selection):
+        blocked_reasons += ("parameter_scope_mismatch",)
     ready = not blocked_reasons
     readiness_reason: ReadinessReason = "ready" if ready else blocked_reasons[0]
 
     plan = CockpitSendPlan(
-        plan_id=_plan_id(candidate, pad_locks, pad_targets, blocked_reasons, packets),
+        plan_id=_plan_id(
+            candidate, pad_locks, pad_targets, blocked_reasons, packets, parameter_selection
+        ),
         candidate_id=candidate.candidate_id,
         source_snapshot_id=candidate.source_snapshot_id,
         profile_id=candidate.profile_id,
@@ -90,12 +99,13 @@ def _candidate_packets(
     snapshot: Snapshot,
     candidate: MutationCandidate,
     scope: MutationScope,
-) -> tuple[tuple[SendPlanPacket, ...], bool, bool]:
+) -> tuple[tuple[SendPlanPacket, ...], bool, bool, bool]:
     machines_by_pad = {pad.pad_id: pad.machine for pad in snapshot.pads}
     sendable_pad_ids = scope.effective_ids(machines_by_pad)
     packets: list[SendPlanPacket] = []
     paired_control_unverified = False
     protected_control_changed = False
+    unsupported_control_changed = False
     for delta in sorted(candidate.pad_deltas, key=lambda item: item.pad_id):
         if delta.pad_id not in sendable_pad_ids:
             continue
@@ -103,10 +113,15 @@ def _candidate_packets(
         for parameter in sorted(delta.changed_keys):
             mapping = cockpit_parameter_mapping(machine, parameter)
             if mapping is None:
+                unsupported_control_changed = True
                 continue
-            if cockpit_parameter_live_blockers(machine, parameter) or (
-                mapping.machine_key is not None
-                and not cockpit_machine_is_allowed_on_pad(machine, delta.pad_id)
+            if (
+                mapping.mutation_status in ("locked_default", "forbidden")
+                or cockpit_parameter_live_blockers(machine, parameter)
+                or (
+                    mapping.machine_key is not None
+                    and not cockpit_machine_is_allowed_on_pad(machine, delta.pad_id)
+                )
             ):
                 protected_control_changed = True
                 continue
@@ -124,7 +139,35 @@ def _candidate_packets(
                     value=int(delta.proposed_params[parameter]),
                 )
             )
-    return tuple(packets), paired_control_unverified, protected_control_changed
+    return (
+        tuple(packets),
+        paired_control_unverified,
+        protected_control_changed,
+        unsupported_control_changed,
+    )
+
+
+def candidate_within_parameter_scope(
+    snapshot: Snapshot, candidate: MutationCandidate, selection: ParameterSelection
+) -> bool:
+    """Check actual values, not a client's asserted changed-key list."""
+    pads = {pad.pad_id: pad for pad in snapshot.pads}
+    for delta in candidate.pad_deltas:
+        source = pads.get(delta.pad_id)
+        if source is None:
+            return False
+        if selection.cells is not None and set(delta.proposed_params) != set(source.params):
+            return False
+        actual_changes = frozenset(
+            key
+            for key, value in delta.proposed_params.items()
+            if key not in source.params or value != source.params[key]
+        )
+        if actual_changes != delta.changed_keys:
+            return False
+        if any(not selection.includes(delta.pad_id, key) for key in actual_changes):
+            return False
+    return True
 
 
 def _blocked_reasons(
@@ -155,6 +198,7 @@ def _plan_id(
     pad_targets: frozenset[int],
     blocked_reasons: tuple[ReadinessReason, ...],
     packets: tuple[SendPlanPacket, ...],
+    selection: ParameterSelection,
 ) -> str:
     payload = {
         "blocked_reasons": list(blocked_reasons),
@@ -165,9 +209,10 @@ def _plan_id(
         "profile_id": candidate.profile_id,
         "safety_status": candidate.safety_status,
         "source_snapshot_id": candidate.source_snapshot_id,
+        "parameter_cells": selection.to_list(),
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return f"sendplan-{hashlib.sha256(encoded).hexdigest()[:16]}"
 
 
-__all__ = ["prepare_send_plan"]
+__all__ = ["candidate_within_parameter_scope", "prepare_send_plan"]

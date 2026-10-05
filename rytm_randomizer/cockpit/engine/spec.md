@@ -11,6 +11,15 @@ A C99 or Rust port that satisfies the entire conformance corpus (`tests/cockpit/
 
 ## 1. Inputs and types
 
+The optional appliance/Studio extension accepts `parameter_depths` and
+`parameter_bounds` keyed by `(item_id, canonical_parameter_key)`. Missing
+per-cell depths are zero and preserve exact source integers before clamping;
+zero global depth also preserves identity. Draw ordering does not change.
+Validated native bounds scale a selected draw by their span. Pad locks and
+mandatory parameter protection win. Omitting these optional inputs preserves
+the byte-frozen legacy arithmetic. Studio resolves canonical supported cells
+before calling this seam and SEND separately checks actual changed values.
+
 The mutation engine is a pure function:
 
 ```text
@@ -21,7 +30,7 @@ mutate : (Snapshot, ProfileModel, depth: float, seed: uint32, target_pad_ids: Se
 | --- | --- | --- |
 | `snapshot` | `Snapshot` | `pads` sorted ascending by `pad_id`; no duplicates. |
 | `profile` | `ProfileModel` | Every `pad_mappings[i].trait` must exist in `traits`. |
-| `depth` | IEEE-754 double | `0.10 ≤ depth ≤ 0.90` (UI-snapped range). |
+| `depth` | IEEE-754 double | `0.00 ≤ depth ≤ 0.90`; zero is exact identity. Existing frozen nonzero cases are unchanged. |
 | `seed` | uint32 | Any 32-bit unsigned value. `0` is a documented special case (see §3). |
 | `target_pad_ids` | set of uint8 | Optional explicit include-list in `1..12`. Empty means all snapshot pads, preserving the original behavior. |
 | `locked_pad_ids` | set of uint8 | Optional deny-list in `1..12`, applied after targets. Empty means no locks. |
