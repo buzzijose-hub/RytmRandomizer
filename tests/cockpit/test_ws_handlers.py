@@ -125,14 +125,19 @@ def test_recompute_candidate_uses_lru_cache_hit(tmp_path: Path) -> None:
     ("depth", "targets", "locks", "expected_count"),
     [(0.2, {11}, set(), 1), (0.2, {2}, set(), 0), (0.2, {11}, {11}, 0)],
 )
+@pytest.mark.parametrize("package_propagates", [False, True])
 def test_recompute_candidate_logs_bounded_guard_outcome_only_for_effective_pads(
     tmp_path: Path,
-    caplog: pytest.LogCaptureFixture,
+    ws_handler_caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
+    package_propagates: bool,
     depth: float,
     targets: set[int],
     locks: set[int],
     expected_count: int,
 ) -> None:
+    caplog = ws_handler_caplog
+    monkeypatch.setattr(logging.getLogger("rytm_randomizer"), "propagate", package_propagates)
     source = Snapshot(
         snapshot_id="guarded-source",
         device="analog_rytm_mk2",
@@ -154,7 +159,6 @@ def test_recompute_candidate_logs_bounded_guard_outcome_only_for_effective_pads(
     session.pad_locks = frozenset(locks)
     handlers._recompute_cache.clear()
     logger = logging.getLogger("rytm_randomizer.cockpit.ws.handlers")
-    logger.addHandler(caplog.handler)
     try:
         with caplog.at_level(logging.INFO, logger=logger.name):
             candidate = handlers._recompute_candidate(session)
@@ -171,7 +175,6 @@ def test_recompute_candidate_logs_bounded_guard_outcome_only_for_effective_pads(
             assert candidate is not None and candidate.pad_deltas[0].changed_keys == frozenset()
         assert "guarded-source" not in caplog.text
     finally:
-        logger.removeHandler(caplog.handler)
         handlers._recompute_cache.clear()
 
 

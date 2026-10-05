@@ -61,6 +61,16 @@ seconds. A delivery-branch-only installer dispatch was cancelled before using
 it as evidence; the final portable build follows the actual PR head. No new
 PR, merge, auto-merge or protection bypass is introduced.
 
+Hosted Python 3.11 checks at `4b29c971` exposed three log-count assertions that
+attached the same capture handler both locally and through logger propagation.
+The test-only repair isolates the module handler and explicitly covers package
+propagation both enabled and disabled; the focused recheck passed 165 cases.
+The clean full rerun passed **10,048 tests, five skips and six warnings in
+324.94 seconds**. No production source changed from the identified binary's
+`4b29c971` source. The execution checkpoint's two new descriptive properties are
+now declared in its closed schema, and Draft 2020-12 validation passes. Historical
+Gate 14/16 timing exceptions remain disclosed, not retroactively satisfied.
+
 ## Historical receipts through October 2
 
 Delivery starts at Studio PR #254 head `941643c5`, directly based on

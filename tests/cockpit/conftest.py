@@ -126,10 +126,12 @@ def capture_fixed_frame(
 @pytest.fixture
 def ws_handler_caplog(
     caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[pytest.LogCaptureFixture]:
     """Capture handler records despite package-level propagation being disabled."""
 
     logger = logging.getLogger("rytm_randomizer.cockpit.ws.handlers")
+    monkeypatch.setattr(logger, "propagate", False)
     logger.addHandler(caplog.handler)
     try:
         yield caplog

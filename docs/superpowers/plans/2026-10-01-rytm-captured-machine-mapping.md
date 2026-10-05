@@ -14,8 +14,9 @@ only `SRC`; this drops already mapped machine parameters from every capture.
 
 ### October 5 review repair and Studio candidate
 
-Per docs/PLAN_REQUIREMENTS.md, this continuation remains in PR #254 on
-`codex/studio-rytm-mapping`, starting at `0138d00b`. Before implementation,
+Per docs/PLAN_REQUIREMENTS.md, this continuation remains in PR #254 on remote
+`codex/studio-evidence-handoff`, assembled in `codex/studio-rytm-mapping`,
+starting at `0138d00b`. Before implementation,
 Eddie's October 3 review and the clean delivery checkout were inspected.
 The original checkout is dirty and is not an editing or launch destination.
 

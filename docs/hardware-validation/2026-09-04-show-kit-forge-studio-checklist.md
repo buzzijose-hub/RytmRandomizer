@@ -22,8 +22,9 @@ source/favorite slots in the table below. Do not overwrite a show KIT.
    their identities. Cancel an input capture once and confirm the source is
    unchanged. No output authority is needed for these steps.
 2. Target only Rytm Pad 2, protect Pad 1, and lock all A4 tracks. Start at 10%
-   using the previously observed common controls (filter frequency, amp decay,
-   overdrive and reverb send). Inspect the exact plan before arming. New SRC
+   using previously observed non-paired common controls (amp decay, overdrive
+   and reverb send). Filter frequency remains held by the paired-precision gate
+   despite its earlier bounded observation. Inspect the exact plan before arming. New SRC
    eligibility is documented-only, not permission to skip its own rehearsal.
 3. Follow Section 2 for one exact-plan audition and manual saved-KIT reload.
    Confirm listening/front-panel recovery, unaffected pads and a matching fresh

@@ -140,6 +140,7 @@ def test_detached_capture_failure_is_retrieved_before_replacement(
         metrics = Mock()
         monkeypatch.setattr(server, "get_metrics", lambda: metrics)
         logger = logging.getLogger("rytm_randomizer.cockpit.ws.server")
+        monkeypatch.setattr(logger, "propagate", False)
         logger.addHandler(caplog.handler)
         reader = asyncio.create_task(
             server._reader_loop(
@@ -193,9 +194,14 @@ def test_detached_capture_failure_is_retrieved_before_replacement(
     asyncio.run(exercise())
 
 
+@pytest.mark.parametrize("package_propagates", [False, True])
 def test_capture_completion_observer_logs_unexpected_post_ack_failure(
     caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
+    package_propagates: bool,
 ) -> None:
+    monkeypatch.setattr(logging.getLogger("rytm_randomizer"), "propagate", package_propagates)
+
     async def exercise() -> None:
         async def fail() -> None:
             raise RuntimeError("private post-ack diagnostic")
@@ -203,6 +209,7 @@ def test_capture_completion_observer_logs_unexpected_post_ack_failure(
         task = asyncio.create_task(fail())
         await asyncio.gather(task, return_exceptions=True)
         logger = logging.getLogger("rytm_randomizer.cockpit.ws.server")
+        monkeypatch.setattr(logger, "propagate", False)
         logger.addHandler(caplog.handler)
         queue, acknowledged = server.ConnectionQueue(), asyncio.Event()
         acknowledged.set()
@@ -244,6 +251,7 @@ def test_reader_post_ack_capture_failure_is_redacted_and_does_not_escape_disconn
         monkeypatch.setattr(server, "drain_pending_events", fail_drain)
         monkeypatch.setattr(server, "get_metrics", lambda: metrics)
         logger = logging.getLogger("rytm_randomizer.cockpit.ws.server")
+        monkeypatch.setattr(logger, "propagate", False)
         logger.addHandler(caplog.handler)
         reader = asyncio.create_task(
             server._reader_loop(

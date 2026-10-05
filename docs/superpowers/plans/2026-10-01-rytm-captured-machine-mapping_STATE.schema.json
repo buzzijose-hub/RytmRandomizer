@@ -30,6 +30,7 @@
     "delivery_worktree": { "$ref": "#/$defs/nonemptyString" },
     "delivery_pr": { "const": 254 },
     "delivery_branch": { "const": "codex/studio-evidence-handoff" },
+    "delivery_assembly_branch": { "const": "codex/studio-rytm-mapping" },
     "delivery_base": { "const": "modularize-v1.34" },
     "auto_merge": { "const": false },
     "scheduled_jobs": {
@@ -40,6 +41,7 @@
     "local_budget_minutes": { "type": "integer", "minimum": 1 },
     "local_budget_checkpoint": { "$ref": "#/$defs/timestamp" },
     "local_budget_deadline": { "$ref": "#/$defs/timestamp" },
+    "local_budget_scope": { "const": "historical-Oct02-only-not-the-current-Oct05-session" },
     "historical_elapsed_time_recorded": { "type": "boolean" },
     "work": {
       "type": "object",
