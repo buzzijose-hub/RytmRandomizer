@@ -580,7 +580,8 @@ and still required review. See the [dated run report](superpowers/plans/2026-09-
 Physical observations remain blank and A4 SEND remains blocked. This package
 contains no claimed production updater installation or OS-signing evidence.
 
-The October 5 Studio continuation is PR #254, `codex/studio-rytm-mapping`.
+The October 5 Studio continuation is PR #254, remote
+`codex/studio-evidence-handoff`, assembled locally on `codex/studio-rytm-mapping`.
 Its portable build and actual-binary smoke must be identified in the
 [mapping run report](superpowers/plans/2026-10-01-rytm-captured-machine-mapping_RUN_REPORT.md)
 before launch; the older binary above does not include those repairs.

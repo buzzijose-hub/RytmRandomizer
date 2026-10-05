@@ -871,6 +871,12 @@ ambiguous, not permission to use the first match. Pending capture work carries
 cancellation and session-generation guards; teardown cancels input polling,
 and a late result from a disconnected/cancelled capture cannot adopt a source.
 Invalid, cancelled or stale capture leaves the prior verified source intact.
+The optional `CancellableSysexCaptureProvider` extends `SysexCaptureProvider`
+with cooperative polling cancellation. Providers without that capability keep
+the existing bounded receive method; cancellation still rejects their late
+results. The capture reservation remains held through decode and source
+adoption, not merely until the input reader returns. This prevents replacement
+capture from interrupting the accepted adoption transaction.
 
 The seven-bit Cockpit planner refuses the **whole** candidate if any effective
 row requires unverified paired-control precision

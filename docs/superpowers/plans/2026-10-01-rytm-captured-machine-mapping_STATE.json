@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-05T15:54:00Z",
+  "updated_at": "2026-10-05T16:25:00Z",
   "status": "in-flight",
   "phase": "oct05-review-repairs-integrated-composed-verification-and-studio-build-pending-hardware-held",
   "prototype_source": "8cfa6f7b6cf9469ffa134598182febb60ecdd1df",
@@ -19,12 +19,12 @@
   "local_budget_scope": "historical-Oct02-only-not-the-current-Oct05-session",
   "historical_elapsed_time_recorded": false,
   "work": {
-    "mapping_implementation": "Oct05-all8-CY-Ride-SRC-blocked-25of29-new-fallback-rows-documented-only-guardedCC7-eligible-224-descriptive-bindings-retained-Studio-SRC-metadata-integrated-not-published",
+    "mapping_implementation": "Oct05-all8-CY-Ride-SRC-blocked-25of29-new-fallback-rows-documented-only-guardedCC7-eligible-224-descriptive-bindings-retained-Studio-SRC-metadata-published3461f42e",
     "inventory": "registry-driven-29row-canonical-evidence-audit-25eligible-4CYremoved-init328-RIOreturn325-projections",
-    "dimension_reviews": "Oct05-targeted-dimensions-in-progress-observability-finding-repaired-final-head-postpush-confirmation-pending-Gate14-16-retained",
+    "dimension_reviews": "Oct05-eight-postpush-dimensions-complete-CI-log-count-repair-published2feffe74-schema-valid-doc-findings-being-reconciled-final-head-confirmation-pending-Gate14-16-retained",
     "plan_records": "source-bound-learning-and-probe-records-published-seventh-native-readiness-scope-declared-before-isolated-implementation",
     "delivery_integration": "4bc21952-verified-source-published-as-d6e8e164-separate-browser-scope47e43516-before-local-assertion-fix-isolated-runtime4b88-verified-not-activated",
-    "final_delivery_checks": "Oct05-source-frozen-full10044pass5skip6warnings338.60s-combined99.6557048-purebranch99.3693402-union22touched100linesbranches-web1070pass100coverage-strict22clean-lint-vulture-versionclean-browser33pass2skip-identified-binary-acceptance-pending",
+    "final_delivery_checks": "Oct05-full10048pass5skip6warnings324.94s-union22touched100linesbranches-web1070pass100coverage-strict22clean-lint-vulture-versionclean-browser33pass2skip-4b29hosted-Windows-build-hashes-match-native-WebView-startup-passed-final-refusal-explanations-and-binary-acceptance-pending",
     "protected_review_and_merge": "pending",
     "post_merge_maintainability_audit": "pending"
   },
@@ -282,19 +282,19 @@
     }
   ],
   "remaining": [
-    "Publish the locally verified browser assertion fix through normal hooks, confirm affected postpush dimensions and require fresh exact-head hosted acceptance",
-    "Preserve the verified isolated runtime4b88 checkout without activation; resolve both_original_captures_required before dependent restart/fresh capture or physical work",
+    "Complete packaged offline workflow smoke and publish its identified build receipt, final postpush dimensions and exact-head hosted acceptance",
+    "Operator-present fresh backed-up source capture and exact-plan inspection are required before any physical audition; current UI does not select individual parameter subsets",
     "Protected new-head human review, hosted checks and merge",
     "Retrospective audit review and actual post-merge reassessment; Gate14 remains unchecked",
     "Preserve historical Gate16 isolation/timing limitation and outstanding prior minor follow-ups"
   ],
   "limits": [
-    "Mapping-only local studio backend runs 2a19b094 with unchanged hash-verified 8cfa6f7b frontend; fresh saved KIT01 input/projection observed; report registry increment remains PR254 work",
+    "Historical October1 mapping-only local studio backend ran2a19b094 with hash-verified8cfa6f7b frontend; this is not the October5 identified portable build",
     "New capture has no retained raw-frame SHA and proves saved-state projection only, not SRC send, unsaved-RAM synchronization or recovery",
     "Historical A4 attempt failed with 0/1 messages; two later individually authorized fresh helpers each sent one CC74/channel0/value1 with operator-reported physical1 and manual reload0",
-    "The running studio server process remains 2a19b094; runtime checkout/helper76634665 checks do not imply a server restart, frontend rebuild or rollout of the new native source",
+    "Historical runtime checkout/helper76634665 checks did not imply activation; October5 packaged acceptance uses an isolated MIDI-off state and no hardware observation",
     "No local Cargo execution; historical2a3789 native runs passed191 Rust tests,32 WebView scenarios and2 Windows handoffs each. Both d6e8 desktop-shell jobs completed SUCCESS, while browser lanes failed the stale pad12 label assertion. Later browser fix source still needs exact-head hosted acceptance. All504 locked package identities/versions/checksums unchanged",
-    "All224 SRC rows now have descriptive aliases; guarded semantic discrepancies, new pitch/selectors and unverified live precision remain blocked. Studio pad cards still omit namespaced controls; appliance runtime is not yet updated.",
+    "All224 SRC rows retain descriptive aliases and Studio pad cards now expose canonical namespaced SRC metadata. All8CYRideSRC, guarded semantic discrepancies, new pitch/selectors and unverified live precision remain blocked; appliance runtime is separate.",
     "No general A4/BOTH, paired/fractional, native-offset, automatic-restore, Pi or touring readiness promotion; bounded probes performed no hardware SAVE or new raw capture",
     "Isolated runtime4b88 has source-specific passing software receipts and remains unactivated; both_original_captures_required stops dependent hardware/activation work, with no new command, capture, send, SAVE or restart",
     "Baseline audit and execution records were recorded after implementation began",

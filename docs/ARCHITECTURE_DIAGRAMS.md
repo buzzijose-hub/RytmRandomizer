@@ -3169,7 +3169,9 @@ flowchart LR
     Operator["Operator"] --> CaptureUI["Capture Current Kit<br/>exact input selection"]
     CaptureUI --> InputBoundary["app --arm<br/>--cockpit-kit-capture-sidecar<br/>INPUT ONLY"]
     InputBoundary --> UniqueInput["fresh input listing at open<br/>exactly one matching name<br/>ambiguity refuses before open"]
-    UniqueInput --> Codecs["Rytm/A4 saved-KIT codecs<br/>family + checksum + length<br/>exact decode/re-encode"]
+    UniqueInput --> CaptureProvider["SysexCaptureProvider<br/>optional CancellableSysexCaptureProvider<br/>legacy bounded receive fallback"]
+    CaptureProvider --> Reservation["capture reservation held<br/>through decode + source adoption"]
+    Reservation --> Codecs["Rytm/A4 saved-KIT codecs<br/>family + checksum + length<br/>exact decode/re-encode"]
     CaptureTeardown["cancel / disconnect / context invalidated"] --> CancelCapture["cancel input polling<br/>reject stale-generation result<br/>retain previous verified source"]
     CancelCapture --> CaptureBlocked["no new source adoption"]
 

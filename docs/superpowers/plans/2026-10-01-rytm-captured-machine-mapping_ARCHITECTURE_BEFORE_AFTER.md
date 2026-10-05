@@ -26,8 +26,13 @@ See the [plan](2026-10-01-rytm-captured-machine-mapping.md) for scope and the
 
 ## Shape and reuse
 
-No production module, Protocol, device family, codec, sender or transport was
-added, deleted or renamed. The new `RegisteredDeviceSupport` TypedDict describes
+No production module, device family, codec, sender or transport was
+added, deleted or renamed. The optional `CancellableSysexCaptureProvider`
+Protocol extends the existing input provider with cooperative cancellation;
+legacy providers retain bounded capture and stale-result rejection. The
+capture reservation lasts through decode and source adoption, so a replacement
+cannot supersede an accepted result mid-transaction. The new
+`RegisteredDeviceSupport` TypedDict describes
 report identity and evidence counts. Two small helpers compose existing seams:
 `_has_promoted_machine_fact()` checks capture identity, and
 `_registered_device_support()` joins the canonical registry to existing report

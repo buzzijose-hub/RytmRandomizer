@@ -22,10 +22,15 @@ source/favorite slots in the table below. Do not overwrite a show KIT.
    their identities. Cancel an input capture once and confirm the source is
    unchanged. No output authority is needed for these steps.
 2. Target only Rytm Pad 2, protect Pad 1, and lock all A4 tracks. Start at 10%
-   using previously observed non-paired common controls (amp decay, overdrive
-   and reverb send). Filter frequency remains held by the paired-precision gate
-   despite its earlier bounded observation. Inspect the exact plan before arming. New SRC
+   and inspect every row of the exact plan before arming. The current UI scopes
+   whole pads/tracks, not a common-controls-only parameter subset. The intended
+   isolated-common-control rehearsal is not an implemented selection mode.
+   Rytm filter frequency (single CC74), amp decay, overdrive and reverb send have
+   earlier bounded observations; other eligible rows have not inherited them.
+   Rytm LFO Depth is paired and blocks the entire plan if changed. New SRC
    eligibility is documented-only, not permission to skip its own rehearsal.
+   If PREPARE blocks this full-pad candidate, stop and retain its reasons. Do
+   not remove rows after PREPARE, silently send a subset or use a legacy bypass.
 3. Follow Section 2 for one exact-plan audition and manual saved-KIT reload.
    Confirm listening/front-panel recovery, unaffected pads and a matching fresh
    saved-KIT capture. Local UNDO/reset is not hardware recovery.

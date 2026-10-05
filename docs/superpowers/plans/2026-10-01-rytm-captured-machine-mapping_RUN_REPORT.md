@@ -71,6 +71,24 @@ The clean full rerun passed **10,048 tests, five skips and six warnings in
 now declared in its closed schema, and Draft 2020-12 validation passes. Historical
 Gate 14/16 timing exceptions remain disclosed, not retroactively satisfied.
 
+The packaged `4b29c971` executable starts disarmed with its bundled sidecar
+and MIDI disabled. A fresh isolated WebView profile permits native CDP testing;
+no registry, security policy or runtime installation was changed. The first
+exercise correctly refused a 90% candidate with `candidate_high_risk`, but the
+UI showed only "Blocked" for that reason. The bounded SafetyRail repair now
+renders every existing closed readiness reason without changing any planner,
+arming or output rule. Frontend verification passes **1,075 tests in 42.20
+seconds**, with 100% statements, branches, functions and lines; typecheck,
+ESLint and production build pass. The final identified package must include
+this presentation repair, so the earlier binary is not the final handoff.
+
+Final docs review also corrected stale checkpoint publication/Studio-label
+claims and documented the optional cancellation Protocol, legacy fallback and
+reservation lifetime. Operator instructions now acknowledge that scope selects
+whole pads/tracks, not a common-controls-only subset; a full-capture candidate
+may be blocked by changed paired LFO Depth. Rytm Filter Frequency is single CC74,
+not the paired A4 Filter 1 Frequency boundary. No paired conversion was unlocked.
+
 ## Historical receipts through October 2
 
 Delivery starts at Studio PR #254 head `941643c5`, directly based on

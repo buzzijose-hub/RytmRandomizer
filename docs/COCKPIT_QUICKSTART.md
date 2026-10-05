@@ -835,6 +835,15 @@ Run the isolated stages in this order, stopping after each restored baseline:
 | 5. Favorite/show acceptance, only after isolated gates pass | Favorite -> manual saves -> fresh semantic recaptures -> another fresh exact whole-payload preflight | Local selection, candidate retention or bank save never saves/reloads hardware. Protect source slots; keep both devices' save/recapture evidence. Either preflight mismatch blocks the pair. |
 
 **First physical test: one Rytm candidate, one confirmation, then stop.**
+The first present action is input-only source capture and exact-plan inspection.
+This UI selects whole pads/tracks, not individual control subsets. A full-pad
+candidate is not guaranteed to be SEND-ready; changed paired Rytm LFO Depth
+blocks it as a whole. Rytm Filter Frequency is the single CC74 control, distinct
+from the blocked A4 Filter 1 Frequency live boundary. The safety rail displays
+each current plan refusal, including high-risk/protected changes, mismatched
+profile/source and an empty supported plan. Do not trim a blocked plan into a
+subset or assume lowering depth removes every blocker.
+
 Adopt retained paired sources, set the scope in Stage 2, generate a candidate
 and record its id. Manually reload the immutable Rytm source KIT, then take a
 fresh matching source capture through the device rail. Capture clears the
