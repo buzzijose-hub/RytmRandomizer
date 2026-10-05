@@ -120,7 +120,7 @@ describe('A4 preparation review', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('show bank changed; refresh before retrying');
   });
 
-  it.each(['capture', 'scope', 'session', 'candidate_reset', 'candidate_replaced', 'connection', 'capture_failed'] as const)('invalidates displayed evidence after a %s change', async (change) => {
+  it.each(['capture', 'scope', 'parameter_scope', 'session', 'candidate_reset', 'candidate_replaced', 'connection', 'capture_failed'] as const)('invalidates displayed evidence after a %s change', async (change) => {
     const fake = new FakeCockpitClient();
     fake.ackQueue.push({ request_id: 'review', ok: true, a4_preparation: report });
     mount(fake);
@@ -129,6 +129,7 @@ describe('A4 preparation review', () => {
     act(() => {
       if (change === 'capture') useCockpitStore.setState({ kitCaptures: forgeCaptures });
       if (change === 'scope') useCockpitStore.setState({ a4TrackLocks: [1] });
+      if (change === 'parameter_scope') useCockpitStore.getState().replaceMutationParameters(null, []);
       if (change === 'session') useCockpitStore.setState({ sessionGeneration: 2 });
       if (change === 'candidate_reset') useCockpitStore.getState().setPreviewCandidate(null);
       if (change === 'candidate_replaced') useCockpitStore.getState().setPreviewCandidate({ ...candidate, candidate_id: 'other' });
@@ -141,7 +142,7 @@ describe('A4 preparation review', () => {
   });
 
   it.each([
-    ['scope', false], ['candidate', false], ['connection', false], ['stage', false], ['candidate', true],
+    ['scope', false], ['parameter_scope', false], ['candidate', false], ['connection', false], ['stage', false], ['candidate', true],
   ] as const)('discards a stale in-flight response after %s changes (reject=%s)', async (change, reject) => {
     const fake = new FakeCockpitClient();
     let resolve!: (ack: CommandAck) => void;
@@ -152,6 +153,7 @@ describe('A4 preparation review', () => {
     expect(screen.getByRole('button', { name: 'Reviewing A4 candidate…' })).toBeDisabled();
     act(() => {
       if (change === 'scope') useCockpitStore.setState({ a4TrackTargets: [2] });
+      if (change === 'parameter_scope') useCockpitStore.getState().replaceMutationParameters(null, []);
       if (change === 'candidate') useCockpitStore.getState().setPreviewCandidate(null);
       if (change === 'connection') useCockpitStore.getState().setConnection(connectionFault);
       if (change === 'stage') useCockpitStore.setState({ dualMachineStage: null });

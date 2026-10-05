@@ -34,13 +34,14 @@ export function A4PreparationPanel(props: Props): JSX.Element {
   const targets = useCockpitStore((state) => state.a4TrackTargets);
   const locks = useCockpitStore((state) => state.a4TrackLocks);
   const generation = useCockpitStore((state) => state.sessionGeneration);
+  const mutationRevision = useCockpitStore((state) => state.mutationContextRevision);
   const currentCandidate = useCockpitStore((state) => state.previewCandidate);
   const connection = useCockpitStore((state) => state.connection);
   const stage = useCockpitStore((state) => state.dualMachineStage);
   const key = JSON.stringify([
     props.bank.bank_id, props.bank.revision, props.entry.entry_id,
     props.entry.selected_candidate_id, props.disabled, captures, targets, locks, generation,
-    currentCandidate?.candidate_id, connection, stage,
+    currentCandidate?.candidate_id, connection, stage, mutationRevision,
   ]);
   return <PreparationRequest key={key} {...props} />;
 }

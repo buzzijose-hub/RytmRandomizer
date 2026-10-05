@@ -99,6 +99,10 @@ export function bindClientToStore(
         `Mutation targets updated, ${ev.rytm_pad_targets.length || 12} Rytm pads and ${ev.a4_track_targets.length || 4} Analog Four tracks in scope`,
       );
     }),
+    client.on('mutation_parameters_changed', (ev) => {
+      store.getState().setMutationParameters(ev);
+      announce('Parameter scope updated. Prepare a new candidate before auditioning.');
+    }),
     client.on('mutation_locks_changed', (ev) => {
       store.getState().setMutationLocks(ev.rytm_pad_locks, ev.a4_track_locks);
       announce(

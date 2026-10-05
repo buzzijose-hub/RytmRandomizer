@@ -98,6 +98,8 @@ describe('SafetyRail', () => {
     ['profile_mismatch', 'The candidate belongs to another profile.'],
     ['source_snapshot_mismatch', 'The candidate belongs to another source.'],
     ['no_sendable_changes', 'No supported changes remain in the selected, unlocked pads.'],
+    ['parameter_scope_mismatch', 'Parameter scope changed. Regenerate the candidate'],
+    ['unsupported_control_changed', 'An unsupported or protected control changed. No part of this plan will be sent.'],
   ] as const)('explains the specific requirement for %s', (reason, message) => {
     act(() => {
       useCockpitStore.getState().setSendPlan({
