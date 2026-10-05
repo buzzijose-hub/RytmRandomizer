@@ -190,7 +190,7 @@ on one line for an existing module, you probably need a new module instead.
 | --------------------- | ------------------------------------------------------------------------------- |
 | `shell.py`            | Interactive command loop. Owns the V1.34 command alphabet. Injected deps.       |
 | `cli.py`              | **Passive** report-only CLI. NEVER imports `mido`, `mido_provider`, or engines. |
-| `reports/device_support_inventory.py` | Passive text summary/full JSON evidence inventory derived from canonical Rytm/A4 catalogs, typed saved-KIT fields, calibration and current transport policy; no port discovery, mutation or readiness grant. |
+| `reports/device_support_inventory.py` | Passive text summary/full JSON evidence inventory derived from canonical Rytm/A4 catalogs, typed saved-KIT fields, calibration and current transport policy. Enumerates `devices.all_devices()` for the registry-wide summary; unevidenced registrations remain explicit. No port discovery, mutation or readiness grant. |
 | `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm style shell; `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send` runs the all-12-pad current-kit snapshot shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --rytm-cc-observe` opens only Rytm input and may read or receive a snapshot for labels; `--arm --a4-soft-capture` opens only A4 input and reconstructs CC/NRPN state; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe; `--arm --a4-patch-send-plan --batch-manifest "<path>" --batch-manifest-sha256 "<reviewed digest>" --candidate N --confirm-a4-patch-send-plan --a4-output-port "<exact configured name>"` verifies the reviewed manifest and sends one committed generated A4 patch candidate. |
 | `reports/`            | Passive in-memory report package + shared formatter/helper layer, including the manual feedback packet report, the reference-style blueprint and bounded reference-audio atlas reports, the Analog Four initialized-baseline, patch genome, patch learning, patch corpus, and patch send-plan reports, the Analog Four OXI macro set planner report, the controller-brain mapping catalog and rehearsal/export reports, the style-performance arc chain through the live render bundle, live cue sheet, live runbook, reference match, snapshot preview, stage packet, stage snapshot-routing handoff, stage rehearsal-state packet, live set cockpit dashboard, live show export packet, live transition timeline, live command deck, live state packet, live analyzer handoff/targets, GUI readiness/session, capture queue/review, sidecar session packets, GUI screen-contract packets, GUI render-tree packets, GUI analyzer-overlay packets, GUI analyzer-frame packets, GUI interaction-script packets, GUI action-reducer packets, GUI controller-state packets, GUI playback-transcript packets, GUI playback-validation packets, GUI test-harness contract/readiness packets, GUI implementation-bridge/desktop-blueprint/desktop-app-plan/desktop-component-contract/desktop-view-model/desktop-render-contract/desktop-render-harness/cockpit-boundary-readiness packets, cockpit send-plan operator-readiness packets, cockpit send-plan rehearsal-surface packets, and the live GUI performance-console chain through live-kit capture workbench, package audition, and operator package, operator review ledger, and payload helpers under `reports/performance_console/`. Static manual feedback facts stay in `data/manual_feedback_packet.py`; static A4 patch-template facts stay in `data/analog_four_patch_templates.py`; static A4 patch-corpus facts stay in `data/analog_four_patch_corpus.py`; static A4 learning facts stay in `data/analog_four_learning.py`; static A4 SysEx calibration facts stay in `data/analog_four_sysex_calibration.py`; static GUI contract facts stay in `data/live_gui_contracts.py`; static controller-brain profiles stay in `data/controller_mapping_profiles.py`; static controller-brain rehearsal scenarios stay in `data/controller_rehearsal_scenarios.py`; repeated report CLI helpers stay in `reports/live_gui_common.py`. |
 | `inspection.py`       | Consolidated passive command-metadata inspection + preview + audit.             |
@@ -311,6 +311,10 @@ rule, change it here first, then update the test.
    field. Catalog presence, native saved-file support, live transport/precision
    and physical validation remain separate dimensions. JSON/text output is
    reproducible review evidence, never PREPARE, SEND or show-ready authority.
+   The report's declared `reports -> devices` edge enumerates
+   `devices.all_devices()`; it does not resolve an output adapter. Evidence
+   tables remain pure `data/` facts, and missing evidence never hides a
+   registered device or grants capabilities.
 
 8. **The retired V1.34 monolith stays buried.**
    No module inside the `rytm_randomizer` package -- and no test helper --
@@ -704,7 +708,11 @@ Common-page projection keeps its existing rules. Exact XT Classic ID 8 on pads
 6–8 has retained initialized and returned KIT evidence; other tom facts remain
 pending. Descriptive alias closure and remaining semantic/precision blockers are listed in
 [RYTM_MAPPING_STATUS.md](RYTM_MAPPING_STATUS.md). This projection grants no new
-transport or restore authority.
+restore authority. Continuous documented-only SRC rows can be guarded-CC7
+eligible under the same policy as legacy aliases; eligibility is not physical
+validation. Every CY Ride SRC key is refused until its native saved-slot
+associations are resolved. The exact audited rows and blockers are reproducible
+in the support inventory.
 
 The passive support report enumerates `devices.all_devices()` for its
 `registered_devices` summary. A canonical data mapping associates known registry

@@ -1,7 +1,7 @@
 # Show Kit Forge Remaining Studio Checklist
 
 Prepared: 2026-09-04
-Updated guidance: 2026-10-01 (no physical observations recorded)
+Updated guidance: 2026-10-05 (no new physical observations recorded)
 
 Status: **pending operator-present hardware validation**
 
@@ -9,6 +9,46 @@ This is the exact remaining physical checklist for Show Kit Forge. Every box
 is intentionally blank. Repository tests, successful file transfer, a manual
 save attestation, or a semantic match must not be rewritten as an unobserved
 hardware result.
+
+## Next Studio Session: One Bounded Rehearsal
+
+Use the exact portable build and hashes in the PR #254 software delivery
+receipt, not an older running server. Close FL Studio/Overbridge before the
+session. Record both firmware versions, configured track channels, unique
+exact port names, backed-up source files and operator-selected disposable
+source/favorite slots in the table below. Do not overwrite a show KIT.
+
+1. Start disarmed. Capture and explicitly retain the saved source KITs; verify
+   their identities. Cancel an input capture once and confirm the source is
+   unchanged. No output authority is needed for these steps.
+2. Target only Rytm Pad 2, protect Pad 1, and lock all A4 tracks. Start at 10%
+   using the previously observed common controls (filter frequency, amp decay,
+   overdrive and reverb send). Inspect the exact plan before arming. New SRC
+   eligibility is documented-only, not permission to skip its own rehearsal.
+3. Follow Section 2 for one exact-plan audition and manual saved-KIT reload.
+   Confirm listening/front-panel recovery, unaffected pads and a matching fresh
+   saved-KIT capture. Local UNDO/reset is not hardware recovery.
+4. Only after recovery passes, select the retained candidate again, save it as
+   a local favorite, and save the local bank. Restart disarmed and verify the
+   favorite/source identity persists. This still does not save the hardware.
+5. Audition that same candidate with a new matching source capture and new
+   exact-plan confirmation. Manually save the intended result to a separate
+   disposable favorite KIT, dump it back, compare the candidate fields, reload
+   it manually and rehearse recovery again. Record the actual result separately.
+
+Small/large local mutations and show-pack inspection can be rehearsed offline;
+large live changes, hardware favorite reload and show use remain NOT READY
+until their exact workflow/recovery has passed. A4/BOTH SEND, fractional paired
+controls and automatic hardware restore remain unavailable. Pi validation is
+separate from this computer build.
+
+The CY Ride experiment comes later on a disposable KIT copy: collect a saved
+baseline, change/save/dump one SRC control, return/save/dump its original value,
+then compare decoded bytes against the canonical address. Start with Hit Decay
+and retain the three frames plus the displayed values/firmware. An inbound CC
+alone cannot resolve a saved-slot association; one passing field cannot unlock
+its neighbours. Every CY Ride SRC control remains blocked until its own
+association is positively established.
 
 ## Fixed authority boundary
 

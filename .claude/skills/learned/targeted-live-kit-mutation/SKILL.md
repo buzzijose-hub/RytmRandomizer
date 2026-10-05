@@ -107,6 +107,15 @@ kit adoption, or a send plan that could reach an Elektron device.
 
 ## Verification
 
+When a machine family's saved-slot association is disputed, refuse every SRC
+row in that family before alias-specific level/pitch/selector checks. A known
+live CC address or a neighbouring slot does not establish native semantics.
+Test every canonical row through capture omission, mutation freezing and a
+constructed mixed SEND plan; the whole plan must remain non-executable.
+Keep documented-only eligibility explicit and audit it against the same policy
+used by capture and planning. Frontend labels/addresses/blockers must derive
+from that Python catalog, not a separately maintained TypeScript table.
+
 - Test empty/default scope, explicit targets, targets plus locks, invalid
   identifiers, stale-plan rejection, and contradictory packet rejection.
 - Exercise captured-anchor SEND and prove every untargeted item stays unchanged.

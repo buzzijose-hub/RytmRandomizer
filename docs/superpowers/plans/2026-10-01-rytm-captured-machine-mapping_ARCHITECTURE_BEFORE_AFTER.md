@@ -46,14 +46,21 @@ uses the existing beacon transport and locked provider, without introducing
 another HTTP stack, retry or update policy.
 
 The original mapping checkpoint projected **324 keys, including 60 SRC keys**.
-The later descriptive closure adds 29 unambiguous, unprotected primary-byte
-projections across eleven families: retained init/RIO return now project
-**328/329 keys, including 64/65 SRC values**, with 264 common values each.
-All224 SRC rows have names; uncertain native/live semantics and protected
-controls remain separate validation work in the
-[mapping inventory](../../RYTM_MAPPING_STATUS.md). These are offline projection
-receipts; the appliance runtime and fixed Studio pad-card display are separate
-deployment/display boundaries.
+The pre-October-5 descriptive closure made 29 documented-only primary-byte
+projections eligible across eleven families: those historical init/RIO counts
+were **328/329 keys, including 64/65 SRC values**, with 264 common values each.
+The October 5 family-wide CY Ride guard removes four of those rows and blocks
+all eight CY Ride SRC controls. **25 newly exposed controls across ten families
+remain documented-only guarded-CC7 eligible; current init/RIO projections are
+328/325 keys, including 64/61 SRC values and 264 common values each.** These
+software counts and catalog addresses do not grant physical validation.
+
+All 224 SRC rows retain descriptive bindings. Studio serialization now derives
+typed `src_parameters` metadata from the same catalog/policy; pad cards display
+canonical labels, captured values, addresses, evidence and exact blockers.
+Imported metadata is not authority and is regenerated. Uncertain native/live
+semantics remain separate work in the [mapping inventory](../../RYTM_MAPPING_STATUS.md).
+The appliance runtime stays on its separate deployment/validation path.
 
 ## Boundaries retained
 

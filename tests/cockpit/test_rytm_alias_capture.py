@@ -15,7 +15,10 @@ from rytm_randomizer.cockpit.data.rytm_parameter_map import (
     cockpit_parameter_mapping,
 )
 from rytm_randomizer.cockpit.engine import mutate, prepare_send_plan
-from rytm_randomizer.data.analog_rytm_midi import ANALOG_RYTM_MACHINE_SRC_BY_MACHINE
+from rytm_randomizer.data.analog_rytm_midi import (
+    ANALOG_RYTM_MACHINE_SRC_BY_MACHINE,
+    AnalogRytmCcMapping,
+)
 from rytm_randomizer.data.rytm_machine_catalog import (
     RYTM_MACHINE_PROFILES_BY_KEY,
     get_rytm_pad_capability,
@@ -49,7 +52,7 @@ def _profile() -> ProfileModel:
         ("cy_metallic", 11, (2, 3, 4)),
         ("cb_metallic", 12, (2,)),
         ("hh_basic", 9, (2, 3, 4)),
-        ("cy_ride", 11, (2, 5, 6, 7)),
+        ("cy_ride", 11, ()),
         ("dual_vco", 2, (2, 3, 6)),
         ("sy_chip", 3, (2,)),
         ("hh_lab", 9, (2,)),
@@ -82,10 +85,18 @@ def test_synthetic_family_capture_composes_without_promoting_hardware_evidence(
     candidate = mutate(snapshot, _profile(), 0.1, 12, frozenset({pad_id}), frozenset({7}))
     assert {delta.pad_id for delta in candidate.pad_deltas} == {pad_id}
     delta = candidate.pad_deltas[0]
-    assert delta.changed_keys & expected
+    if expected:
+        assert delta.changed_keys & expected
+    else:
+        assert delta.changed_keys and not any(key.startswith("src_") for key in delta.changed_keys)
     plan = prepare_send_plan(snapshot, _profile(), candidate, frozenset({7}), frozenset({pad_id}))
     assert plan is not None
-    assert any(packet.parameter in expected for packet in plan.packets)
+    if expected:
+        assert any(packet.parameter in expected for packet in plan.packets)
+    else:
+        assert plan.packets and not any(
+            packet.parameter.startswith("src_") for packet in plan.packets
+        )
     assert {packet.pad_id for packet in plan.packets} == {pad_id}
     for packet in plan.packets:
         mapping = cockpit_parameter_mapping(pad.machine, packet.parameter)
@@ -99,7 +110,7 @@ def test_synthetic_family_capture_composes_without_promoting_hardware_evidence(
     ("filename", "families", "src_count"),
     (
         ("RYTM_Test1_Init_Kit.syx", ("cy_classic", "cb_classic"), 64),
-        ("RYTM_RIO145_AR_CORE_RETURN_Kit.syx", ("cy_ride", "cb_metallic"), 65),
+        ("RYTM_RIO145_AR_CORE_RETURN_Kit.syx", ("cy_ride", "cb_metallic"), 61),
     ),
 )
 def test_unmodified_retained_captures_expose_only_verified_primary_byte_subset(
@@ -110,11 +121,81 @@ def test_unmodified_retained_captures_expose_only_verified_primary_byte_subset(
     snapshot = cockpit_snapshot_from_rytm_capture(capture)
     for pad_id, family in zip((11, 12), families, strict=True):
         pad = snapshot.pads[pad_id - 1]
-        assert f"src_{family}_2" in pad.params
+        if family == "cy_ride":
+            assert not any(key.startswith("src_cy_ride_") for key in pad.params)
+        else:
+            assert f"src_{family}_2" in pad.params
         assert f"src_{family}_1" not in pad.params  # newly exposed tuning stays protected
         assert f"src_{family}_0" not in pad.params
     assert sum(len(pad.params) for pad in snapshot.pads) == src_count + 264
     assert capture.frame == frame and capture.round_trip_verified
+
+
+@pytest.mark.parametrize("row", ANALOG_RYTM_MACHINE_SRC_BY_MACHINE["cy_ride"])
+def test_each_cy_ride_slot_freezes_in_mutation_and_blocks_constructed_proposals(
+    rytm_rio_return_frame: bytes, row: AnalogRytmCcMapping
+) -> None:
+    capture = decode_kit_capture_frame("analog_rytm_mk2", rytm_rio_return_frame)
+    assert isinstance(capture.snapshot, RytmKitSnapshot)
+    source_bytes = capture.snapshot.unpacked
+    original = cockpit_snapshot_from_rytm_capture(capture)
+    assert "cy_ride" in get_rytm_pad_capability(11).allowed_machine_keys
+    key = cockpit_parameter_key("CY Ride", "SRC", row.parameter)
+    assert key is not None
+    # An externally supplied SRC key must not regain authority after capture omission.
+    snapshot = replace(original, pads=(PadState(11, "CY Ride", {key: 0, "flt": 32}),))
+    generated = mutate(snapshot, _profile(), 0.1, 12)
+    assert generated.pad_deltas[0].proposed_params[key] == 0
+    assert key not in generated.pad_deltas[0].changed_keys
+    candidate = MutationCandidate(
+        candidate_id="ride-proposal",
+        source_snapshot_id=snapshot.snapshot_id,
+        profile_id=_profile().profile_id,
+        depth=0.1,
+        seed=12,
+        safety_status="safe",
+        pad_deltas=(PadDelta(11, {key: 1, "flt": 33}, frozenset({key, "flt"})),),
+        estimated_midi_msgs=2,
+    )
+    plan = prepare_send_plan(snapshot, _profile(), candidate, frozenset(), frozenset({11}))
+    assert plan is not None and not plan.ready
+    assert plan.blocked_reasons == ("candidate_high_risk",)
+    assert [packet.parameter for packet in plan.packets] == ["flt"]
+    src_only = replace(
+        candidate,
+        pad_deltas=(
+            replace(
+                candidate.pad_deltas[0],
+                proposed_params={key: 1, "flt": 32},
+                changed_keys=frozenset({key}),
+            ),
+        ),
+    )
+    empty = prepare_send_plan(snapshot, _profile(), src_only, frozenset())
+    assert empty is not None and not empty.ready and empty.packets == ()
+    assert empty.blocked_reasons == ("candidate_high_risk", "no_sendable_changes")
+    common_only = replace(
+        candidate,
+        pad_deltas=(
+            replace(
+                candidate.pad_deltas[0],
+                proposed_params={key: 0, "flt": 33},
+                changed_keys=frozenset({"flt"}),
+            ),
+        ),
+    )
+    common_plan = prepare_send_plan(snapshot, _profile(), common_only, frozenset())
+    assert common_plan is not None and common_plan.ready
+    other = replace(snapshot, pads=(PadState(1, "BD Hard", {"flt": 32}), *snapshot.pads))
+    mixed = replace(
+        candidate, pad_deltas=(*candidate.pad_deltas, PadDelta(1, {"flt": 33}, frozenset({"flt"})))
+    )
+    for locks, targets in ((frozenset({11}), frozenset()), (frozenset(), frozenset({1}))):
+        scoped = prepare_send_plan(other, _profile(), mixed, locks, targets)
+        assert scoped is not None and scoped.ready
+        assert {packet.pad_id for packet in scoped.packets} == {1}
+    assert capture.frame == rytm_rio_return_frame
+    assert capture.snapshot.unpacked == source_bytes
 
 
 @pytest.mark.parametrize(

@@ -1,12 +1,64 @@
 # Captured Rytm mapping software report
 
-> Status: in-flight — software published, scoped review and local capture verified;
-> protected review and further physical acceptance remain pending.
+> Status: in-flight — October 5 review repairs integrated, final software/build
+> acceptance in progress; protected review and physical rehearsal remain pending.
+
+## October 5 continuation
+
+Current delivery is `codex/studio-rytm-mapping` in PR #254, continuing from
+`0138d00b`. All eight CY Ride SRC rows are held, including compact aliases and
+constructed mixed proposals. The audited 29 fallback rows now comprise 25
+documented-only guarded-CC7 eligible controls and four blocked CY Ride controls.
+The exact initialized/RIO frames project 328/325 values, with source bytes
+unchanged. Studio pad cards derive SRC labels, addresses, values and blockers
+from the canonical Python catalog; display metadata conveys no SEND authority.
+
+The #240 stale-handshake outcome driver replaces the prior stale-store check;
+the shared beacon TLS repair is retained. The shared test snapshot factory is
+public. Detached failures are promptly observed, and dispatcher failures reuse
+the categorical ack builder. Fresh mutation orchestration records bounded
+pad/blocker preservation outcomes without changing pure mutation math or adding
+another RED command count. Frozen legacy `lev` arithmetic is tracked in issue
+[#256](https://github.com/buzzijose-hub/RytmRandomizer/issues/256).
+
+The first combined run had 10,036 passes, three failures, five skips and six
+warnings. Two non-parity inventory fixtures were intentionally updated; a facade
+construction test now explicitly clears the launch-only MIDI-off environment.
+Its focused recheck passed 294 cases without importing a MIDI backend or opening
+a port. The frontend has 1,070 passing tests and 100% measured coverage; typing,
+lint and the production web build pass. Final Python/coverage, browser and binary
+smoke receipts will be recorded before handoff. No listener remained on the usual
+Studio ports at preflight, and no MIDI access or new physical observation occurred.
+
+The second combined run had 10,042 passes and one architecture failure: an
+added broad exception catch was rejected. Its coverage was invalid because
+source changed during the run. The catch was removed; the task-completion
+observer now gives pre-ack failures one categorical RED result and post-ack
+failures a separate counter without duplicate acknowledgement. Completed failed
+tasks are not re-awaited during teardown. The focused 177-case recheck passed,
+and the targeted static observability re-review cleared both findings.
+
+The final source-frozen composition passed **10,044 tests, five skips and six
+warnings in 338.60 seconds**. Combined coverage is 99.6557048%; pure branch
+coverage is 99.3693402%. Coverage JSON independently confirms all 22 production
+modules in the full PR diff have zero missing lines or branches; the canonical
+committed-diff check follows the commit. No frozen parity fixture, dependency
+pin, safety gate or hardware observation changed. One-worker browser acceptance
+passed 33 scenarios with two explicit skips in 1.2 minutes. It covered the
+memory-output exact confirmation contract, paired-control refusal, input-file
+library persistence, wizard cancellation and reconnect/fresh-token behavior;
+it performed no physical send. Strict typing of 22 production modules reports
+zero errors/warnings. Whole-tree Ruff, Black (895 files), isort and Vulture
+pass; four version declarations remain at 1.34.0. The Windows binary will be
+built on the hosted runner rather than
+installing or compiling a Rust toolchain on the operator's computer.
+
+## Historical receipts through October 2
 
 Delivery starts at Studio PR #254 head `941643c5`, directly based on
 `modularize-v1.34`. The separate local runtime checkout at `2a19b094` contains
 only the mapping correction and its tests on the prior Pi source. Its software
-checks passed, and the studio server now runs that backend with outputs disarmed.
+checks passed, and at that historical checkpoint the studio server ran that backend with outputs disarmed.
 The existing `8cfa6f7b` frontend bundle is reused after exact hash verification
 and confirmation that frontend sources are unchanged between those commits.
 No new Pi package or frontend build is claimed. The operator reconnected and

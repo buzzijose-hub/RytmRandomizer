@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Final
 
 import uvicorn
-from cockpit.conftest import _make_default_snapshot
+from cockpit.conftest import make_default_snapshot
 
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.history import HistoryStore
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     token_file = Path(os.environ["RYTM_RAND_WS_TOKEN_FILE"])
     token = secrets.token_urlsafe(32)
     token_file.write_text(token, encoding="utf-8")
-    initial = _make_default_snapshot()
+    initial = make_default_snapshot()
     history = HistoryStore()
     history.initial(initial)
     output = MemoryOutput(token_file.parent / "send-contract-receipt.json")

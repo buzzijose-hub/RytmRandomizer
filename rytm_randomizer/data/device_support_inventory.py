@@ -40,8 +40,11 @@ DEVICE_SUPPORT_EVIDENCE: Final[MappingProxyType[str, tuple[str, ...]]] = Mapping
         ),
         "rytm_midi": (
             "rytm_randomizer/data/analog_rytm_midi.py",
+            "rytm_randomizer/data/analog_rytm_kit_layout.py",
             "rytm_randomizer/cockpit/data/rytm_parameter_map.py",
             "rytm_randomizer/cockpit/engine/send_plan.py",
+            "tests/cockpit/test_rytm_alias_capture.py",
+            "docs/RYTM_MAPPING_STATUS.md",
         ),
     }
 )
@@ -100,6 +103,12 @@ DEVICE_SUPPORT_OMISSIONS: Final[tuple[tuple[str, str, str, str], ...]] = (
         "machine_specific_note_tuning",
         "hardware_evidence_missing",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
+    ),
+    (
+        "rytm",
+        "cy_ride_source_slots",
+        "hardware_evidence_missing",
+        "All CY Ride SRC controls are blocked: src_cy_ride_slot_unverified; addresses do not verify saved-slot semantics.",
     ),
     (
         "rytm",

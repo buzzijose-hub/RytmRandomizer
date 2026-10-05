@@ -27,7 +27,7 @@ vi.mock('../src/updateProtocol', () => ({
   },
 }));
 
-import { run, until } from '../e2e/fixtures/native_update_driver';
+import { run, staleHandshakeOutcome, until } from '../e2e/fixtures/native_update_driver';
 
 describe('native acceptance polling deadline', () => {
   afterEach(() => vi.useRealTimers());
@@ -77,7 +77,7 @@ describe('native acceptance polling deadline', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it('waits for reconnection when rotated credentials precede the listener', async () => {
+  it.each(['rejected', 'accepted'] as const)('polls the socket despite stale connected state and detects %s', async (verdict) => {
     vi.useFakeTimers();
     document.body.innerHTML = '<div data-testid="cockpit-root"></div><div data-testid="update-chip">1.35.1</div>';
     window.__RYTM_RAND_WS_TOKEN__ = 'old-token';
@@ -87,7 +87,7 @@ describe('native acceptance polling deadline', () => {
     restartFixture.invoke.mockImplementation(async (command: string, args?: { action?: string }) => {
       if (command === 'update_snapshot') return restartFixture.snapshot;
       if (args?.action === 'restart_backend') {
-        restartFixture.connectionStatus = 'connecting';
+        // The old socket's close event has not reached the store yet.
         window.__RYTM_RAND_WS_TOKEN__ = 'new-token';
         window.__RYTM_RAND_ARM_SECRET__ = 'new-secret';
       }
@@ -100,27 +100,31 @@ describe('native acceptance polling deadline', () => {
       onclose: ((event: { code: number }) => void) | null = null;
       constructor() {
         probes.push(restartFixture.connectionStatus);
-        queueMicrotask(() => this.onopen?.());
+        queueMicrotask(() => {
+          if (probes.length === 1) this.onclose?.({ code: 1006 });
+          else this.onopen?.();
+        });
       }
       send(message: string) {
         expect(JSON.parse(message)).toEqual({ type: 'hello', token: 'old-token' });
-        queueMicrotask(() => this.onmessage?.({ data: '{"code":"auth_failed"}' }));
+        queueMicrotask(() => this.onmessage?.({ data: verdict === 'rejected'
+          ? '{"code":"auth_failed"}' : '{"type":"session_status"}' }));
       }
       close() {}
     }
     vi.stubGlobal('WebSocket', ProbeSocket);
     try {
       const pending = run('backend_restart', 'http://fixture.invalid');
-      await vi.advanceTimersByTimeAsync(75);
+      await vi.advanceTimersByTimeAsync(0);
       expect(window.__RYTM_RAND_WS_TOKEN__).toBe('new-token');
-      expect(probes).toEqual([]);
+      expect(probes).toEqual(['connected']);
 
-      restartFixture.connectionStatus = 'connected';
       await vi.advanceTimersByTimeAsync(75);
       await pending;
-      expect(probes).toEqual(['connected']);
+      expect(probes).toEqual(['connected', 'connected']);
       expect(restartFixture.invoke).toHaveBeenCalledWith('report', {
-        passed: true, detail: expect.stringContaining('native/DOM assertions'),
+        passed: verdict === 'rejected', detail: expect.stringContaining(verdict === 'rejected'
+          ? 'native/DOM assertions' : 'got accepted'),
       });
       expect(vi.getTimerCount()).toBe(0);
     } finally {
@@ -128,5 +132,64 @@ describe('native acceptance polling deadline', () => {
       document.body.innerHTML = '';
       window.localStorage.clear();
     }
+  });
+});
+
+describe('socket-level stale credential verdict', () => {
+  class ProbeSocket {
+    static script: (socket: ProbeSocket) => void = () => undefined;
+    onopen: (() => void) | null = null;
+    onmessage: ((event: { data: string }) => void) | null = null;
+    onclose: ((event: { code: number }) => void) | null = null;
+    sent: string[] = [];
+    constructor(public url: string, public protocol: string) {
+      queueMicrotask(() => ProbeSocket.script(this));
+    }
+    send(data: string): void { this.sent.push(data); }
+    close(): void {}
+  }
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+    window.localStorage.clear();
+  });
+  const probe = (script: (socket: ProbeSocket) => void): Promise<string> => {
+    ProbeSocket.script = script;
+    vi.stubGlobal('WebSocket', ProbeSocket);
+    return staleHandshakeOutcome('old-token', '4317');
+  };
+  it('distinguishes unreachable from rejection', async () => {
+    await expect(probe((socket) => socket.onclose?.({ code: 1006 }))).resolves.toBe('unreachable');
+    await expect(probe((socket) => socket.onclose?.({ code: 1008 }))).resolves.toBe('rejected');
+  });
+  it('sends the stale credential and settles only once', async () => {
+    let sent: string[] = [];
+    await expect(probe((socket) => {
+      socket.onopen?.();
+      sent = socket.sent;
+      socket.onmessage?.({ data: '{"code":"auth_failed"}' });
+      socket.onclose?.({ code: 1006 });
+    })).resolves.toBe('rejected');
+    expect(JSON.parse(sent[0] ?? '{}')).toEqual({ type: 'hello', token: 'old-token' });
+  });
+  it('does not treat an unrelated error or session bootstrap as rejection', async () => {
+    await expect(probe((socket) => socket.onmessage?.({ data: '{"code":"auth_required"}' })))
+      .resolves.toBe('no_verdict');
+    await expect(probe((socket) => socket.onmessage?.({ data: '{"type":"session_status"}' })))
+      .resolves.toBe('accepted');
+    await expect(probe((socket) => { socket.onopen?.(); socket.onclose?.({ code: 1000 }); }))
+      .resolves.toBe('no_verdict');
+  });
+  it('bounds silence and resolves the default port from the page', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('WebSocket', ProbeSocket);
+    window.localStorage.setItem('rytm-rand-ws-port', '4999');
+    let url = '';
+    ProbeSocket.script = (socket) => { url = socket.url; socket.onopen?.(); };
+    const pending = staleHandshakeOutcome('old-token');
+    await vi.advanceTimersByTimeAsync(5000);
+    await expect(pending).resolves.toBe('no_verdict');
+    expect(url).toBe('ws://127.0.0.1:4999/ws');
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

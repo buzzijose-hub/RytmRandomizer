@@ -55,6 +55,12 @@
   ],
   [
     "rytm",
+    "cy_ride_source_slots",
+    "hardware_evidence_missing",
+    "All CY Ride SRC controls are blocked: src_cy_ride_slot_unverified; addresses do not verify saved-slot semantics."
+  ],
+  [
+    "rytm",
     "paired_control_live_send",
     "hardware_evidence_missing",
     "Any changed in-scope paired control blocks the whole Cockpit plan, including supported packets."

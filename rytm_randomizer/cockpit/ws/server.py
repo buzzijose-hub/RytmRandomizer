@@ -121,16 +121,20 @@ import contextlib
 import hmac
 import json
 import os
+import time
 from dataclasses import dataclass
+from functools import partial
 from typing import Final, cast
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 from ...observability.logging import get_logger
+from ...observability.metrics import get_metrics
 from .handlers import (
     EventEmitter,
     cancel_pending_capture,
     disarm_session_on_teardown,
+    dispatcher_failure_ack,
     drain_pending_events,
     emit_initial_events,
     handle_command,
@@ -600,6 +604,33 @@ async def _writer_loop(websocket: WebSocket, queue: ConnectionQueue) -> None:
         return
 
 
+def _observe_capture_completion(
+    task: asyncio.Task[None],
+    *,
+    queue: ConnectionQueue,
+    request_id: object,
+    acknowledged: asyncio.Event,
+    started_at: float,
+) -> None:
+    """Retrieve detached failures, returning a safe ack only if none was enqueued."""
+
+    if task.cancelled():
+        return
+    error = task.exception()
+    if error is not None:
+        _logger.error("capture_dispatch_failed", extra={"error_type": type(error).__name__})
+        if not acknowledged.is_set():
+            ack = dispatcher_failure_ack(error, request_id)
+            get_metrics().record_ws_command(
+                COMMAND_CAPTURE_CURRENT_KIT,
+                (time.perf_counter() - started_at) * 1000.0,
+                error_code=cast(str, ack["code"]),
+            )
+            queue.put_frame(ack)
+        else:
+            get_metrics().record_error("capture_dispatch_failed")
+
+
 async def _reader_loop(
     websocket: WebSocket,
     *,
@@ -628,12 +659,16 @@ async def _reader_loop(
     teardown cancels only the capture owned by this reader.
     """
 
-    async def dispatch(envelope: dict[str, object]) -> None:
+    async def dispatch(
+        envelope: dict[str, object], acknowledged: asyncio.Event | None = None
+    ) -> None:
         ack = await handle_command(envelope, session)
         # ack-first, events-second per spec § "The Three Protocols" —
         # both enter the FIFO queue back-to-back, so the client sees the
         # ack it can correlate to its request before any state update.
         queue.put_frame(ack)
+        if acknowledged is not None:
+            acknowledged.set()
         await drain_pending_events(session, emitter)
 
     capture_task: asyncio.Task[None] | None = None
@@ -660,7 +695,17 @@ async def _reader_loop(
                 # Its handler reserves session.capture_cancel before awaiting the
                 # input thread. All other mutations refuse while it is active;
                 # DISARM remains available on this same authenticated connection.
-                capture_task = asyncio.create_task(dispatch(envelope))
+                acknowledged = asyncio.Event()
+                capture_task = asyncio.create_task(dispatch(envelope, acknowledged))
+                capture_task.add_done_callback(
+                    partial(
+                        _observe_capture_completion,
+                        queue=queue,
+                        request_id=envelope.get("request_id"),
+                        acknowledged=acknowledged,
+                        started_at=time.perf_counter(),
+                    )
+                )
                 await asyncio.sleep(0)
             else:
                 await dispatch(envelope)
@@ -669,8 +714,8 @@ async def _reader_loop(
             if not capture_task.done():
                 cancel_pending_capture(session)
                 capture_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await capture_task
+                with contextlib.suppress(asyncio.CancelledError):
+                    await capture_task
 
 
 def create_app(

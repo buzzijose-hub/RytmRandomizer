@@ -48,10 +48,26 @@ export type ConnectionPhase = 'disconnected' | 'searching' | 'listening' | 'arme
 
 // ---------- Core data abstractions (spec §"Core Data Abstractions") ----------
 
+/** Canonical Python SRC catalog/policy projection; never SEND authority. */
+export interface SrcParameter {
+  key: string;
+  parameter: string;
+  machine_key: string;
+  channel: number; // zero-based wire channel
+  cc_msb: number;
+  cc_lsb: number | null;
+  nrpn_msb: number | null;
+  nrpn_lsb: number | null;
+  mutation_status: 'validated_runtime' | 'documented_only' | 'locked_default' | 'forbidden';
+  pad_compatible: boolean;
+  live_blockers: string[];
+}
+
 export interface PadState {
   pad_id: number; // 1..12 Rytm tracks
   machine: string; // e.g. "BD Hard"
   params: Record<string, number>; // per-parameter values (tun, dec, lev, ...)
+  src_parameters?: SrcParameter[]; // optional for legacy snapshot payloads
 }
 
 export interface Snapshot {

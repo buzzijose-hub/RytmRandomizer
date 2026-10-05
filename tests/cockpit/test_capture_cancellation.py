@@ -6,6 +6,7 @@ import asyncio
 import gc
 import json
 import logging
+import time
 import weakref
 from datetime import datetime, timezone
 from pathlib import Path
@@ -15,7 +16,7 @@ from typing import cast
 from unittest.mock import Mock
 
 import pytest
-from cockpit.conftest import FixedFrameCaptureProvider, _make_default_snapshot
+from cockpit.conftest import FixedFrameCaptureProvider, make_default_snapshot
 from fastapi import WebSocket, WebSocketDisconnect
 
 from conftest import elektron_syx_message, rytm_real_layout_kit_payload
@@ -88,7 +89,7 @@ class InboundFrames:
 
 
 def session_with_input(tmp_path: Path, provider: DelayedInput) -> CockpitSession:
-    initial = _make_default_snapshot()
+    initial = make_default_snapshot()
     history = HistoryStore()
     history.initial(initial)
     return CockpitSession(
@@ -113,6 +114,168 @@ async def wait_for_capture_release(session: CockpitSession) -> None:
             await asyncio.sleep(0)
 
     await asyncio.wait_for(released(), 1)
+
+
+def test_detached_capture_failure_is_retrieved_before_replacement(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    async def exercise() -> None:
+        session = session_with_input(tmp_path, DelayedInput(cooperative=True))
+        inbound, outbound = InboundFrames(), server.ConnectionQueue()
+        first = asyncio.Event()
+        loop_errors: list[dict[str, object]] = []
+        loop = asyncio.get_running_loop()
+        previous = loop.get_exception_handler()
+        loop.set_exception_handler(lambda _loop, context: loop_errors.append(context))
+
+        async def dispatch(
+            envelope: dict[str, object], _session: CockpitSession
+        ) -> dict[str, object]:
+            if envelope["request_id"] == "failed":
+                first.set()
+                raise RuntimeError("private source path must not reach diagnostics")
+            return {"request_id": envelope["request_id"], "ok": True}
+
+        monkeypatch.setattr(server, "handle_command", dispatch)
+        metrics = Mock()
+        monkeypatch.setattr(server, "get_metrics", lambda: metrics)
+        logger = logging.getLogger("rytm_randomizer.cockpit.ws.server")
+        logger.addHandler(caplog.handler)
+        reader = asyncio.create_task(
+            server._reader_loop(
+                cast(WebSocket, inbound),
+                session=session,
+                queue=outbound,
+                emitter=server._QueueEmitter(outbound),
+                max_bytes=1024,
+            )
+        )
+        try:
+            command = {"type": "capture_current_kit"}
+            inbound.command("failed", command)
+            await asyncio.wait_for(first.wait(), 1)
+            for _ in range(10):
+                if any(record.message == "capture_dispatch_failed" for record in caplog.records):
+                    break
+                await asyncio.sleep(0)
+            records = [
+                record for record in caplog.records if record.message == "capture_dispatch_failed"
+            ]
+            assert len(records) == 1
+            assert records[0].error_type == "RuntimeError"
+            assert "private source path" not in caplog.text
+            assert await next_ack(outbound, "failed") == {
+                "request_id": "failed",
+                "ok": False,
+                "code": "internal_error",
+                "message": "internal error processing command",
+            }
+            metrics.record_ws_command.assert_called_once()
+            assert metrics.record_ws_command.call_args.args[0] == "capture_current_kit"
+            assert metrics.record_ws_command.call_args.args[1] >= 0
+            assert metrics.record_ws_command.call_args.kwargs == {"error_code": "internal_error"}
+            metrics.record_error.assert_not_called()
+            inbound.command("replacement", command)
+            assert await next_ack(outbound, "replacement") == {
+                "request_id": "replacement",
+                "ok": True,
+            }
+            gc.collect()
+            assert loop_errors == []
+            inbound.frames.put_nowait(None)
+            assert await asyncio.wait_for(reader, 1) is False
+        finally:
+            inbound.frames.put_nowait(None)
+            await asyncio.gather(reader, return_exceptions=True)
+            logger.removeHandler(caplog.handler)
+            loop.set_exception_handler(previous)
+
+    asyncio.run(exercise())
+
+
+def test_capture_completion_observer_logs_unexpected_post_ack_failure(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    async def exercise() -> None:
+        async def fail() -> None:
+            raise RuntimeError("private post-ack diagnostic")
+
+        task = asyncio.create_task(fail())
+        await asyncio.gather(task, return_exceptions=True)
+        logger = logging.getLogger("rytm_randomizer.cockpit.ws.server")
+        logger.addHandler(caplog.handler)
+        queue, acknowledged = server.ConnectionQueue(), asyncio.Event()
+        acknowledged.set()
+        try:
+            server._observe_capture_completion(
+                task,
+                queue=queue,
+                request_id="already-acked",
+                acknowledged=acknowledged,
+                started_at=time.perf_counter(),
+            )
+        finally:
+            logger.removeHandler(caplog.handler)
+        assert len(caplog.records) == 1
+        assert caplog.records[0].error_type == "RuntimeError"
+        assert "private post-ack" not in caplog.text
+        assert queue.size == 0
+
+    asyncio.run(exercise())
+
+
+def test_reader_post_ack_capture_failure_is_redacted_and_does_not_escape_disconnect(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    async def exercise() -> None:
+        session = session_with_input(tmp_path, DelayedInput(cooperative=True))
+        inbound, outbound = InboundFrames(), server.ConnectionQueue()
+        metrics = Mock()
+
+        async def dispatch(
+            envelope: dict[str, object], _session: CockpitSession
+        ) -> dict[str, object]:
+            return {"request_id": envelope["request_id"], "ok": True}
+
+        async def fail_drain(_session: CockpitSession, _emitter: server.EventEmitter) -> None:
+            raise RuntimeError("private post-ack source path")
+
+        monkeypatch.setattr(server, "handle_command", dispatch)
+        monkeypatch.setattr(server, "drain_pending_events", fail_drain)
+        monkeypatch.setattr(server, "get_metrics", lambda: metrics)
+        logger = logging.getLogger("rytm_randomizer.cockpit.ws.server")
+        logger.addHandler(caplog.handler)
+        reader = asyncio.create_task(
+            server._reader_loop(
+                cast(WebSocket, inbound),
+                session=session,
+                queue=outbound,
+                emitter=server._QueueEmitter(outbound),
+                max_bytes=1024,
+            )
+        )
+        try:
+            inbound.command("already-acked", {"type": "capture_current_kit"})
+            assert await next_ack(outbound, "already-acked") == {
+                "request_id": "already-acked",
+                "ok": True,
+            }
+            for _ in range(10):
+                if metrics.record_error.call_count:
+                    break
+                await asyncio.sleep(0)
+            metrics.record_error.assert_called_once_with("capture_dispatch_failed")
+            metrics.record_ws_command.assert_not_called()
+            assert outbound.size == 0
+            inbound.frames.put_nowait(None)
+            assert await asyncio.wait_for(reader, 1) is False
+            assert "private post-ack source path" not in caplog.text
+        finally:
+            inbound.frames.put_nowait(None)
+            await asyncio.gather(reader, return_exceptions=True)
+            logger.removeHandler(caplog.handler)
+
+    asyncio.run(exercise())
 
 
 def test_disarm_on_same_reader_cancels_input_and_rejects_late_frame(tmp_path: Path) -> None:

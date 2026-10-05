@@ -553,6 +553,37 @@ describe('CockpitClient — connect / open / status', () => {
 });
 
 describe('CockpitClient — message dispatch', () => {
+  it('preserves optional canonical SRC metadata through the existing JSON event parser', () => {
+    const h = makeHarness();
+    const events: Event[] = [];
+    h.client.on('snapshot_changed', (event) => events.push(event));
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    const event: Event = {
+      type: 'snapshot_changed',
+      snapshot: {
+        snapshot_id: 'captured-src', device: 'analog_rytm_mk2',
+        captured_at: '2026-10-05T12:00:00Z', scene_slot: null, bpm: null,
+        pads: [{
+          pad_id: 1, machine: 'SY Dual VCO', params: { src_dual_vco_2: 72 },
+          src_parameters: [{
+            key: 'src_dual_vco_2', parameter: 'Osc 1 Decay', machine_key: 'dual_vco',
+            channel: 0, cc_msb: 18, cc_lsb: null, nrpn_msb: 1, nrpn_lsb: 2,
+            mutation_status: 'documented_only', pad_compatible: true, live_blockers: [],
+          }],
+        }],
+      },
+    };
+    h.currentSocket().emitMessage(event);
+    expect(events).toEqual([event]);
+    const legacy: Event = { ...event, snapshot: { ...event.snapshot, pads: [{
+      pad_id: 1, machine: 'BD Hard', params: { dec: 80 },
+    }] } };
+    h.currentSocket().emitMessage(legacy);
+    expect(events).toEqual([event, legacy]);
+    h.client.close();
+  });
+
   it('routes recognized events to their handlers', () => {
     const h = makeHarness();
     const events: Event[] = [];

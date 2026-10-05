@@ -39,6 +39,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_SNAPSHOT_CHANGED,
 )
 from rytm_randomizer.cockpit.ws.session import CockpitSession
+from rytm_randomizer.data.analog_rytm_midi import ANALOG_RYTM_MACHINE_SRC_BY_MACHINE
 from rytm_randomizer.devices.strategies import RytmSnapshotMachineFacts
 
 pytestmark = pytest.mark.fast
@@ -374,7 +375,8 @@ def test_target_unit_capture_preserves_machine_src_through_targeted_planning(
             assert cockpit_parameter_control(event.machine_key, compact_key) == event.cc_msb
         assert "lev" not in pad.params
         assert "amp_volume" not in pad.params
-    # Retained CY Ride/CB Metallic source rows have no existing Cockpit aliases.
+    # Descriptive fallback bindings do not promote protected source values.
+    assert not any(key.startswith("src_cy_ride_") for key in snapshot.pads[10].params)
     assert "tun" not in snapshot.pads[10].params
     assert "tun" not in snapshot.pads[11].params
 
@@ -423,6 +425,60 @@ def test_target_unit_capture_preserves_machine_src_through_targeted_planning(
         assert packet["channel"] == pad.pad_id - 1
     assert session.device.capture_snapshot() == snapshot
     assert session.kit_captures["analog_rytm_mk2"] is capture
+
+
+@pytest.mark.parametrize(
+    "slot", tuple(row.nrpn_lsb for row in ANALOG_RYTM_MACHINE_SRC_BY_MACHINE["cy_ride"])
+)
+def test_every_cy_ride_src_proposal_refuses_send_of_its_safe_common_subset(
+    tmp_path: Path, rytm_rio_return_frame: bytes, slot: int
+) -> None:
+    session = _session(tmp_path, KitCaptureService(_Provider(rytm_rio_return_frame)))
+    captured = _dispatch(
+        session,
+        {
+            "type": COMMAND_CAPTURE_CURRENT_KIT,
+            "device_id": "analog_rytm_mk2",
+            "input_port": "Rytm Input",
+        },
+    )
+    assert captured["ok"] is True
+    capture = session.kit_captures["analog_rytm_mk2"]
+    source_bytes = capture.snapshot.unpacked
+    snapshot = session.device.capture_snapshot()
+    ride = snapshot.pads[10]
+    assert ride.pad_id == 11 and ride.machine == "CY Ride"
+    assert not any(key.startswith("src_cy_ride_") for key in ride.params)
+    key = f"src_cy_ride_{slot}"
+    session.active_profile = session.profile_registry.list_profiles()[0]
+    session.current_candidate = MutationCandidate(
+        candidate_id=f"ride-slot-{slot}",
+        source_snapshot_id=snapshot.snapshot_id,
+        profile_id=session.active_profile.profile_id,
+        depth=0.1,
+        seed=12,
+        safety_status="safe",
+        pad_deltas=(
+            PadDelta(
+                pad_id=11,
+                proposed_params={key: 1, "flt": (ride.params["flt"] + 1) % 128},
+                changed_keys=frozenset({key, "flt"}),
+            ),
+        ),
+        estimated_midi_msgs=2,
+    )
+    prepared = _dispatch(session, {"type": "prepare_send_plan"})
+    assert prepared["ok"] is True
+    assert prepared["send_plan"]["ready"] is False
+    assert prepared["send_plan"]["blocked_reasons"] == ["candidate_high_risk"]
+    assert [packet["parameter"] for packet in prepared["send_plan"]["packets"]] == ["flt"]
+    refused = _dispatch(session, {"type": "send"})
+    assert refused["ok"] is False
+    assert "no ready send plan" in refused["message"]
+    assert session.device.capture_snapshot() == snapshot
+    assert session.kit_captures["analog_rytm_mk2"] is capture
+    assert capture.frame == rytm_rio_return_frame and capture.round_trip_verified
+    assert capture.snapshot.unpacked == source_bytes  # Includes unknown and low bytes.
 
 
 @pytest.mark.parametrize("machine_value", (0, 15, 16, 127, 0x88))

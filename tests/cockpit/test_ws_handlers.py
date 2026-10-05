@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -118,6 +119,60 @@ def test_recompute_candidate_uses_lru_cache_hit(tmp_path: Path) -> None:
     assert second is first
     assert session.current_candidate is first
     handlers._recompute_cache.clear()
+
+
+@pytest.mark.parametrize(
+    ("depth", "targets", "locks", "expected_count"),
+    [(0.2, {11}, set(), 1), (0.2, {2}, set(), 0), (0.2, {11}, {11}, 0)],
+)
+def test_recompute_candidate_logs_bounded_guard_outcome_only_for_effective_pads(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+    depth: float,
+    targets: set[int],
+    locks: set[int],
+    expected_count: int,
+) -> None:
+    source = Snapshot(
+        snapshot_id="guarded-source",
+        device="analog_rytm_mk2",
+        captured_at=_FIXED_TS,
+        pads=(
+            PadState(pad_id=2, machine="SD Acoustic", params={"dec": 60}),
+            PadState(
+                pad_id=11, machine="CY Ride", params={"src_cy_ride_2": 30, "src_cy_ride_5": 40}
+            ),
+        ),
+        scene_slot="A01",
+        bpm=138.0,
+    )
+    session = _make_session(tmp_path)
+    session.device = MockDeviceAdapter(initial=source)
+    session.active_profile = _profile()
+    session.depth = depth
+    session.rytm_pad_targets = frozenset(targets)
+    session.pad_locks = frozenset(locks)
+    handlers._recompute_cache.clear()
+    logger = logging.getLogger("rytm_randomizer.cockpit.ws.handlers")
+    logger.addHandler(caplog.handler)
+    try:
+        with caplog.at_level(logging.INFO, logger=logger.name):
+            candidate = handlers._recompute_candidate(session)
+            assert handlers._recompute_candidate(session) is candidate
+        records = [
+            record for record in caplog.records if record.message == "mutation_guard_outcome"
+        ]
+        assert len(records) == expected_count
+        if expected_count:
+            assert records[0].pad_id == 11
+            assert records[0].blocker_codes == ["src_cy_ride_slot_unverified"]
+            assert records[0].outcome == "protected_preserved"
+            assert records[0].protected_field_count == 2
+            assert candidate is not None and candidate.pad_deltas[0].changed_keys == frozenset()
+        assert "guarded-source" not in caplog.text
+    finally:
+        logger.removeHandler(caplog.handler)
+        handlers._recompute_cache.clear()
 
 
 def test_recompute_candidate_evicts_oldest_when_over_capacity(tmp_path: Path) -> None:

@@ -11,7 +11,7 @@ import type { MutationCandidate, PadState } from '../ws/protocol';
 
 import { Knob } from './Knob';
 import { LockButton } from './LockButton';
-import { RYTM_PARAMETER_GROUPS, type ParameterDefinition } from './parameterGroups';
+import { parameterGroupsForPad, type ParameterDefinition } from './parameterGroups';
 import { usePadLocks } from './usePadLocks';
 import { useMutationTargets } from './useMutationTargets';
 import { RYTM_DEVICE_ID } from './devices';
@@ -78,7 +78,7 @@ export function PadCard({ pad, previewCandidate, previewOn }: PadCardProps): JSX
         </div>
       </div>
       <div className="pad-card-parameter-groups">
-        {RYTM_PARAMETER_GROUPS.map((group) => (
+        {parameterGroupsForPad(pad).map((group) => (
           <section className="pad-parameter-group" key={group.title}>
             <h3>{group.title}</h3>
             <div className="pad-card-knobs">
@@ -108,19 +108,44 @@ function ParameterSlot({
   padParams: Record<string, number>;
 }): JSX.Element {
   const value = padParams[definition.key];
-  const ghostValue = ghostParams === null ? null : ghostParams[definition.key] ?? null;
-  if (value === undefined) {
-    return (
-      <div className="parameter-slot missing">
-        <span className="parameter-label">{definition.label}</span>
-        <span className="parameter-missing">not mapped</span>
-      </div>
-    );
-  }
+  const src = definition.src;
+  const blocked =
+    src !== undefined &&
+    (!src.pad_compatible || src.live_blockers.length > 0 || src.cc_lsb !== null);
+  const ghostValue =
+    blocked || ghostParams === null ? null : ghostParams[definition.key] ?? null;
   return (
-    <div className="parameter-slot">
+    <div className={`parameter-slot${value === undefined ? ' missing' : ''}`}>
       <span className="parameter-label">{definition.label}</span>
-      <Knob label={definition.code} value={value} ghostValue={ghostValue} />
+      {value === undefined ? (
+        <span className="parameter-missing">
+          {src === undefined ? 'not mapped' : 'value unavailable'}
+        </span>
+      ) : (
+        <Knob label={definition.code} value={value} ghostValue={ghostValue} />
+      )}
+      {src === undefined ? null : (
+        <div className="parameter-label" title={src.key}>
+          <div>
+            CC7 / Ch {src.channel + 1} / CC {src.cc_msb}
+            {src.cc_lsb === null ? '' : ` + ${src.cc_lsb}`}
+          </div>
+          <div>
+            NRPN {src.nrpn_msb === null || src.nrpn_lsb === null
+              ? 'unavailable'
+              : `${src.nrpn_msb}:${src.nrpn_lsb}`}
+          </div>
+          <div>Catalog: {src.mutation_status.replaceAll('_', ' ')}</div>
+          {src.pad_compatible ? null : <div>Blocked: incompatible pad</div>}
+          {src.live_blockers.map((reason) => (
+            <div key={reason}>Blocked: {reason}</div>
+          ))}
+          {src.cc_lsb === null ? null : (
+            <div>Blocked: paired_control_precision_unverified</div>
+          )}
+          {value === undefined ? <div>Blocked: value unavailable</div> : null}
+        </div>
+      )}
     </div>
   );
 }

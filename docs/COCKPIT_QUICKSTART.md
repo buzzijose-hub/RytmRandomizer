@@ -72,6 +72,17 @@ does not validate them.
 Everything below is the **developer path** — building the three layers
 yourself from a clone.
 
+The October 5 Studio source shows canonical SRC names, CC/NRPN addresses,
+catalog evidence and shared-policy blockers on each pad card. Missing/protected
+values remain unavailable; display metadata cannot grant SEND authority. All
+CY Ride SRC controls are blocked pending saved-slot evidence. Of 29 newly
+eligible fallback SRC rows, 25 remain documented-only guarded-CC7 eligible,
+not physically validated. See the
+[exact row audit](RYTM_MAPPING_STATUS.md#october-5-fallback-src-audit) and
+[one bounded Studio rehearsal](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md#next-studio-session-one-bounded-rehearsal).
+Local favorites/bank saves and exported `.show-pack` files do not save or reload
+a hardware KIT; manual save, reload and fresh recapture remain separate actions.
+
 ---
 
 ## 1. Prerequisites

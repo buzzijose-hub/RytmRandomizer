@@ -12,6 +12,54 @@ only `SRC`; this drops already mapped machine parameters from every capture.
 
 ## Scope
 
+### October 5 review repair and Studio candidate
+
+Per docs/PLAN_REQUIREMENTS.md, this continuation remains in PR #254 on
+`codex/studio-rytm-mapping`, starting at `0138d00b`. Before implementation,
+Eddie's October 3 review and the clean delivery checkout were inspected.
+The original checkout is dirty and is not an editing or launch destination.
+
+The bounded dependency graph is: canonical policy repair and UI metadata repair
+in disjoint files -> composed regression gates -> identified Studio build ->
+software-only smoke/review -> operator-present rehearsal. At most two workers
+and one heavy verification/build job may run; no MIDI enumeration, input, output
+or device access is permitted in this software pass. Pi deployment stays separate.
+
+The backend worker owns the Rytm policy, support inventory and their tests at
+`C:/Users/Jose Buzzi/Documents/RytmRandomizer-worktrees/studio-cy-ride-guard`,
+branch `codex/studio-cy-ride-guard`. The UI worker owns dynamic machine control
+metadata/rendering and its tests at
+`C:/Users/Jose Buzzi/Documents/RytmRandomizer-worktrees/studio-src-ui`, branch
+`codex/studio-src-ui`. Both start at `0138d00b`; the coordinator integrates their
+disjoint diffs into the existing delivery worktree before composed verification.
+The coordinator owns native-driver reconciliation with #240, build, operator
+guidance, plan records, architecture diagrams and PR delivery. No new sender,
+codec, tuning value, native conversion, registry or hardware grant is planned.
+
+Pre-code maintainability audit (10 questions; historical gate deviations above
+remain disclosed, and the post-merge reassessment remains due):
+
+| Question | Baseline observation | Continuation constraint |
+| --- | --- | --- |
+| Onboarding curve | Public contribution/architecture guides locate all owners; no fresh-clone timing measured. | One ordered operator handoff and file links. |
+| Naming hygiene | Fixed frontend groups omit descriptive SRC keys. | Canonical labels, no machine catalog retyped in TypeScript. |
+| Coupling/module boundaries | Shared policy and Device registry/codecs already own evidence and encoding. | Reuse public seams; document the report-to-registry edge. |
+| Magic numbers/strings | CY Ride pending cases do not cover neighbours; keys derive canonical NRPN slots. | One family-wide categorical refusal, no invented constants. |
+| Configuration/convention | Ports/slots are operator-selected; source reload is manual. | No hardcoded hardware destination or restore automation. |
+| Test maintainability | Constructed proposals can bypass capture omissions; harness uses private fixture factory. | All SRC rows tested at actual planning; use a public shared helper. |
+| Build/dev-loop friction | About 9 GiB RAM free; 860 baseline architecture cases pass in87.64s; shared Vite8.0.14 differs from lock. | One heavy job, two pytest workers, isolated lockfile cache, hosted Windows packaging. |
+| Error messages | Readiness receipts contain categorical requirements. | Preserve/expose exact CY Ride and paired precision reasons. |
+| Versioning/release | VERSION and identified installer manifest already exist. | Record exact source commit, version, binary hashes; no show-ready inference. |
+| Future-proofing | Existing DTO/protocol/store lifecycle can carry canonical metadata. | Extend existing contract, no new registry/sender/codec or Any. |
+
+Acceptance: every CY Ride SRC key refuses SEND; the 29 newly eligible rows are
+audited with the remaining eligible rows explicitly documented-only; named SRC
+values appear in Studio; #240's robust stale-token probe is reused without
+weakening its rejection assertion. All mandatory tests, lint, typing, coverage
+and dimensional reviews precede delivery. Hardware observations are separate;
+the candidate is not show-ready until its full bounded workflow/recovery is
+rehearsed. Resource/tool/platform limitations must be recorded, not hidden.
+
 1. Promote XT Classic tom facts using its existing canonical machine ID, retaining
    pending status for other unverified tom facts and preserving raw payload bytes.
 2. Accept an exact owning machine section as well as `SRC` in the Cockpit reverse

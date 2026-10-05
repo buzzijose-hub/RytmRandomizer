@@ -1,24 +1,37 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-10-01. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-10-05. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
 
 The [captured Rytm mapping correction](superpowers/plans/2026-10-01-rytm-captured-machine-mapping.md)
-is integrated into the existing direct-base Studio PR #254. All224 SRC catalog
+is integrated into the existing direct-base Studio PR #254 on
+`codex/studio-rytm-mapping`. Its October 3 review at `0138d00b` requests
+eligibility corrections, not more exhaustive studio calibration. All 224 SRC catalog
 rows have descriptive bindings, closing 68 unnamed rows across 11 families.
 Existing compact aliases retain precedence; exact machine/NRPN-slot fallback
 keys reuse the canonical MIDI catalog. One conservative policy protects Level,
 new pitch/selectors and disputed semantic rows across capture, mutation,
 planning and inventory. Exact raw identity and physical pad compatibility are
 required; masked high-bit IDs and unverified tom facts gain no SRC authority.
-Retained init/RIO frames now project 64/65 SRC values plus 264 common values,
-328/329 total, without changing frame bytes. Synthetic families remain software
-contracts, not physical evidence. [Mapping boundaries](RYTM_MAPPING_STATUS.md)
-include the separate Studio pad-card display gap: fixed Synth definitions omit
-new namespaced keys. The appliance already renders catalog-driven SRC rows.
+The October 5 repair blocks all eight CY Ride SRC controls, including compact
+aliases and constructed mixed proposals, until saved-slot associations are
+proved. Of 29 newly eligible fallback controls, 25 remain documented-only
+guarded-CC7 eligible across ten families; eligibility is not physical
+validation. Retained init/RIO frames now project 64/61 SRC values plus 264
+common values, 328/325 total, without changing frame bytes. Synthetic families
+remain software contracts, not physical evidence. The reproducible row-level
+audit is in [Mapping boundaries](RYTM_MAPPING_STATUS.md). Studio SRC display is
+implemented. The clean October 5 composition passed 10,044 tests, five skips
+and six warnings in 338.60 seconds. All 22 touched production modules have
+100% line/branch coverage; combined coverage is 99.66%, pure branch 99.37%.
+Frontend verification passed 1,070 tests with 100% coverage; the single-worker
+browser suite passed 33 scenarios with two explicit skips. Strict typing,
+Ruff, Black, isort, Vulture and version checks pass. Identified portable
+packaging and actual-binary smoke remain in progress;
+physical rehearsal and protected approval remain pending.
 
-The final Python composition at `4bc21952` passed 9,927 tests, with five skips
+The historical Python composition at `4bc21952` passed 9,927 tests, with five skips
 and six existing warnings in 280.92s. All 21 touched production modules have
 100% line/branch coverage; combined coverage is99.66%, pure branch99.37%.
 Strict typing and whole-tree lint/dead-code/version checks pass. The
@@ -28,10 +41,10 @@ Windows installer handoffs each. Those historical results certify2a3789 only;
 normal final publication, post-push review and new mapping CI remain pending.
 Cargo is unavailable locally; locked package identities/checksums are unchanged.
 
-The running studio server remains `2a19b094`, with the unchanged hash-verified
-`8cfa6f7b` frontend and outputs disarmed. Its earlier fresh input-only KIT 01
-capture projected324 values and verified XT Classic on pads6–8. The alias
-increment has not been rolled into this runtime. The separate A4 helper source
+The prior studio server receipt was `2a19b094`, with the hash-verified
+`8cfa6f7b` frontend and outputs disarmed; no listener remains on the usual
+Studio ports at the October 5 software preflight. Its earlier input-only KIT 01
+capture projected324 values and verified XT Classic on pads6–8. The separate A4 helper source
 `76634665` passed 10,691 tests; two individually authorized CC74/channel 1 PWM
 Depth actions were observed at1, followed by manual KIT 01 reload to0 without
 saving. The original zero-send attempt remains failed evidence. No general
@@ -41,14 +54,15 @@ The [CY Ride inbound check](hardware-validation/2026-10-01-cy-ride-inbound-addre
 observed isolated TYP C→D→C on CC20 and HIT48→49→50→49→48 on CC19, MIDI 11.
 The operator manually reloaded saved KIT 01 and confirmed TYP C/HIT48. No output,
 SAVE, native-frame capture or automatic recovery was performed; native
-association and full value domains remain unverified, so both rows stay blocked.
+association and full value domains remain unverified, so all CY Ride SRC rows
+stay blocked, not only those two controls.
 The earlier approved16-message Rytm pad 2 audition checked four controls and
 manual recovery, with pad1 unchanged. Neither bounded observation establishes
 Pi/touchscreen/offline or touring readiness.
 
 The [studio evidence handoff](superpowers/plans/2026-10-01-studio-evidence-handoff.md)
 is implemented in [PR #254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254)
-on `codex/studio-evidence-handoff`, directly based on
+on the current `codex/studio-rytm-mapping` branch, directly based on
 `modularize-v1.34`. It extracts shared Studio safety repairs from PR #252:
 cancellable capture and stale-result refusal, passive preview retention,
 side-effect-free rejected DISARM, duplicate exact input-name refusal, and
@@ -176,6 +190,18 @@ Digitakt #240 remains a separate passive device PR; it is not included as merged
 support in this updater checkpoint.
 
 ## Recent Cleanup
+
+- 2026-10-05: PR #254 review repair blocks all CY Ride SRC rows and audits
+  29 previously eligible fallback rows: 25 remain documented-only eligible,
+  four newly refused. No hardware validation is inferred. Adopted PR #240's
+  reachable/rejected/accepted stale-token probe while retaining #254's shared
+  production beacon TLS fix; retrieved detached capture errors promptly and
+  replaced the test harness's private snapshot-factory import. Registry edges
+  are explicit in architecture prose/diagram. Frozen offline `lev` cleanup is
+  tracked in [issue #256](https://github.com/buzzijose-hub/RytmRandomizer/issues/256).
+  The next physical gate is one isolated Pad 2 rehearsal with manual recovery,
+  followed by favorite persistence/save/recapture, not an all-parameter matrix.
+  Exact new verification and portable-build receipts remain pending.
 
 - 2026-10-01: Integrated the [captured Rytm mapping correction](superpowers/plans/2026-10-01-rytm-captured-machine-mapping.md)
   into PR #254 delivery: exact XT Classic tom identity and existing machine SRC

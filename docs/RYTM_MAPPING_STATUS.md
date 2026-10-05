@@ -19,7 +19,10 @@ offset, ordinal domain or physical validation was invented.
 
 One shared conservative policy governs captured projection, canonical-device
 mutation, prepared live plans and the passive inventory. Level and SY Raw Noise
-Level remain excluded; the six disputed/guarded rows below remain blocked.
+Level remain excluded. **Every CY Ride SRC row** is blocked with
+`src_cy_ride_slot_unverified`, before the narrower pending, level, pitch or
+selector checks and regardless of compact/fallback spelling. The other
+disputed/guarded rows below remain blocked.
 Newly exposed pitch controls, including Chip Offset 2–4 and HH Lab Tune 1–6,
 and selector controls stay protected. These refusals retain their descriptive
 names and addresses. They are omitted from captured mutation parameters, and a
@@ -34,21 +37,32 @@ corpus uses device spelling `rytm_mk2` and includes arithmetic on `lev`; that
 frozen arithmetic is preserved. Canonical captured-device mutation freezes it,
 and every live plan refuses changed Level regardless of device/alias spelling.
 
-The eleven families supply **29 additional unambiguous, unprotected primary-byte
-SRC projections**, before unit-specific capture/authority checks. Unmodified
+The October 5 review repair reduces the earlier **29 eligible fallback rows to
+25 documented-only primary-byte SRC projections** across ten families, before
+unit-specific capture/authority checks. The four removed rows are CY Ride Tail
+Decay and Component 1/2/3; none of its eight SRC rows is live-eligible. Unmodified
 retained init and RIO return frames project respectively **64/65 SRC values plus
-264 common values (328/329 total)**. Their four newly covered families are CY
-Classic, CB Classic, CY Ride and CB Metallic. Altered codec fixtures exercise
+264 common values (328/329 total)** at the pre-repair baseline. After this guard,
+the counts are **64/61 SRC plus 264 common (328/325 total)**. The init exposes CY
+Classic/CB Classic; the RIO return exposes CB Metallic but omits all CY Ride SRC.
+Altered codec fixtures exercise
 the remaining families as software contracts only. These counts are software
 projection evidence, not outbound hardware, unsaved-state or touring acceptance.
 The pinned Pi counts and pre-patch tables below remain historical.
 
-These backend bindings do not complete every frontend. The Pi appliance's SRC
+These backend bindings do not establish frontend acceptance. The Pi appliance's SRC
 protection screen already renders catalog labels, projected values and blockers;
-it needs the repaired backend and a fresh capture. Studio pad cards still use a
-fixed Synth definition list and omit the new namespaced keys. Its decorative
-performance knobs do not display snapshot values. That separate display gap
-must not be represented as completed musician-facing control coverage.
+it needs the repaired backend and a fresh capture. At the pre-October-5 Studio
+baseline, pad cards use a fixed Synth definition list and omit the new namespaced
+keys, and decorative performance knobs do not display snapshot values. The
+separate UI repair owns that display gap and its verification; this backend
+audit is not a musician-facing UI acceptance receipt.
+
+The October 5 UI repair derives `src_parameters` display metadata from the
+same Python catalog and blockers, showing names, captured values, addresses,
+evidence labels and missing/protected reasons. Legacy payloads without metadata
+retain their rendering. Imported display metadata is not trusted: serialization
+derives it anew. Combined software/build acceptance is recorded separately.
 
 The Studio [Device Support Inventory](DEVICE_SUPPORT_INVENTORY.md) reports
 **105 A4 MIDI rows**, including the manual CC catalog, and **91 synth-track
@@ -57,6 +71,76 @@ seven native-only semantic controls. Studio separately counts **106 native
 locations per track: 98 semantic field names plus eight fraction components**.
 Those location counts and the Pi matrix's 98 saved-field projections describe
 different dimensions; coupled components are not independent controls.
+
+### October 5 fallback SRC audit
+
+Baseline `0138d00b` had 68 fallback bindings and 29 policy-eligible continuous
+rows. The table audits that exact 29-row set against canonical CC/NRPN facts,
+saved-sound primary-byte locations and current shared policy. All 29 have
+`mutation_status=documented_only`, `value_kind=continuous`, range 0..127,
+zero-based orientation and no paired CC. **25 remain documented-only eligible;
+4 are now blocked.** Eligible means conditional software projection/CC7 planning,
+not hardware validation, semantic calibration or permission to SEND.
+
+Native offsets below are sound-relative **primary bytes**, each followed by a
+retained low byte. C = [canonical MIDI catalog](../rytm_randomizer/data/analog_rytm_midi.py);
+S = [canonical saved-slot table](../rytm_randomizer/data/analog_rytm_kit_layout.py).
+Neither proves full-word/native-to-wire semantics. I/R = unmodified
+[initialized/RIO returned frames](../tests/fixtures/rio145) exercised by
+[capture tests](../tests/cockpit/test_rytm_alias_capture.py).
+T = explicitly synthetic machine substitution in those tests, not a new target
+return. [Shared policy](../rytm_randomizer/cockpit/data/rytm_parameter_map.py)
+and [inventory](../rytm_randomizer/reports/device_support_inventory.py) determine
+the status in every row. CB Metallic Decay also has a typed `DEC` recipe label;
+the other 24 eligible rows have slot bindings but no typed machine-source recipe
+layout. No missing recipe layout or historical fixture is a live calibration.
+
+<!-- fallback-src-audit -->
+| Exact Key | Canonical Name | CC | NRPN | Native Primary | Evidence | Current Policy |
+| --- | --- | --- | --- | --- | --- | --- |
+| `src_cb_classic_2` | Decay Time | 18 | 1:2 | 0x20 | C/S/I | documented-only eligible |
+| `src_cb_metallic_2` | Decay Time | 18 | 1:2 | 0x20 | C/S/R | documented-only eligible |
+| `src_cy_classic_2` | Decay | 18 | 1:2 | 0x20 | C/S/I | documented-only eligible |
+| `src_cy_classic_3` | Color | 19 | 1:3 | 0x22 | C/S/I | documented-only eligible |
+| `src_cy_classic_4` | Tone | 20 | 1:4 | 0x24 | C/S/I | documented-only eligible |
+| `src_cy_metallic_2` | Decay Time | 18 | 1:2 | 0x20 | C/S/T | documented-only eligible |
+| `src_cy_metallic_3` | Tone | 19 | 1:3 | 0x22 | C/S/T | documented-only eligible |
+| `src_cy_metallic_4` | Transient Decay | 20 | 1:4 | 0x24 | C/S/T | documented-only eligible |
+| `src_cy_ride_2` | Tail Decay | 18 | 1:2 | 0x20 | C/S/R | src_cy_ride_slot_unverified |
+| `src_cy_ride_5` | Component 1 | 21 | 1:5 | 0x26 | C/S/R | src_cy_ride_slot_unverified |
+| `src_cy_ride_6` | Component 2 | 22 | 1:6 | 0x28 | C/S/R | src_cy_ride_slot_unverified |
+| `src_cy_ride_7` | Component 3 | 23 | 1:7 | 0x2A | C/S/R | src_cy_ride_slot_unverified |
+| `src_dual_vco_2` | Osc 1 Decay | 18 | 1:2 | 0x20 | C/S/T | documented-only eligible |
+| `src_dual_vco_3` | Balance | 19 | 1:3 | 0x22 | C/S/T | documented-only eligible |
+| `src_dual_vco_6` | Osc 2 Decay | 22 | 1:6 | 0x28 | C/S/T | documented-only eligible |
+| `src_hh_basic_2` | Decay Time | 18 | 1:2 | 0x20 | C/S/T | documented-only eligible |
+| `src_hh_basic_3` | Tone | 19 | 1:3 | 0x22 | C/S/T | documented-only eligible |
+| `src_hh_basic_4` | Transient Decay | 20 | 1:4 | 0x24 | C/S/T | documented-only eligible |
+| `src_hh_lab_2` | Decay Time | 18 | 1:2 | 0x20 | C/S/T | documented-only eligible |
+| `src_sy_chip_2` | Decay | 18 | 1:2 | 0x20 | C/S/T | documented-only eligible |
+| `src_ut_impulse_1` | Attack | 17 | 1:1 | 0x1E | C/S/T | documented-only eligible |
+| `src_ut_impulse_2` | Decay | 18 | 1:2 | 0x20 | C/S/T | documented-only eligible |
+| `src_ut_noise_1` | LP Frequency | 17 | 1:1 | 0x1E | C/S/T | documented-only eligible |
+| `src_ut_noise_2` | Decay | 18 | 1:2 | 0x20 | C/S/T | documented-only eligible |
+| `src_ut_noise_3` | Sweep Depth | 19 | 1:3 | 0x22 | C/S/T | documented-only eligible |
+| `src_ut_noise_4` | Sweep Time | 20 | 1:4 | 0x24 | C/S/T | documented-only eligible |
+| `src_ut_noise_5` | LP Resonance | 21 | 1:5 | 0x26 | C/S/T | documented-only eligible |
+| `src_ut_noise_6` | HP Frequency | 22 | 1:6 | 0x28 | C/S/T | documented-only eligible |
+| `src_ut_noise_7` | Attack | 23 | 1:7 | 0x2A | C/S/T | documented-only eligible |
+<!-- /fallback-src-audit -->
+
+Reproduce and check every table cell against the current catalogs/inventory:
+
+```powershell
+Set-Location -LiteralPath 'C:\Users\Jose Buzzi\Documents\RytmRandomizer'
+& .\.venv\Scripts\python.exe -m pytest tests/test_device_support_inventory.py -k fallback_src_audit -n 0 -q
+```
+
+The audit test checks all 29 exact bindings and evidence references, recomputes
+the complete eligible fallback set (25), checks the four blocked keys and keeps
+all 224 descriptive SRC bindings. Capture/planning regressions separately prove
+omission, freezing and whole-plan refusal on physically allowed pad 11, including
+a mixed common-field proposal. Unknown/reserved and low bytes remain unchanged.
 
 ## What is already mapped
 
@@ -243,7 +327,9 @@ detune safety window. A mapped name alone must not bypass that window.
    displayed48–50 observed directly. Manual KIT 01 reload returned C/48.
    No output or SAVE occurred. This resolves the tested live address
    association only; native saved slots, complete selector domains and
-   outbound behavior remain unvalidated, so both rows stay blocked.
+   outbound behavior remain unvalidated. The October 5 guard therefore blocks
+   **all eight CY Ride SRC rows**, not only Hit/Type, with
+   `src_cy_ride_slot_unverified`. It does not swap canonical CCs or offsets.
 2. **CB Classic/Metallic:** the same official manual describes two pulse-width
    controls, while its MIDI appendix/current catalog contains only four rows.
    The typed CB Metallic saved recipe includes `PW1/PW2`. Add a saved-only

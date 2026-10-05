@@ -90,6 +90,7 @@ from ..data import (
     Snapshot,
     StageDeviceId,
 )
+from ..data.rytm_parameter_map import cockpit_parameter_live_blockers
 from ..device.connection import ConnectionState, active_connection_manager
 from ..diagnostics import build_diagnostics_payload
 from ..engine import mutate, prepare_send_plan
@@ -605,6 +606,26 @@ def _recompute_candidate(
         target_pad_ids=target_pad_ids,
         locked_pad_ids=frozenset(session.pad_locks),
     )
+    effective_ids = {delta.pad_id for delta in candidate.pad_deltas}
+    for pad in snapshot.pads:
+        if pad.pad_id not in effective_ids:
+            continue
+        protected = {
+            parameter: cockpit_parameter_live_blockers(pad.machine, parameter)
+            for parameter in pad.params
+            if parameter != "lev" or snapshot.device == ANALOG_RYTM_DEVICE_ID
+        }
+        blockers = sorted({code for codes in protected.values() for code in codes})
+        if blockers:
+            _logger.info(
+                "mutation_guard_outcome",
+                extra={
+                    "pad_id": pad.pad_id,
+                    "blocker_codes": blockers,
+                    "outcome": "protected_preserved",
+                    "protected_field_count": sum(bool(codes) for codes in protected.values()),
+                },
+            )
     _recompute_cache[key] = candidate
     # Evict the least-recently-used entry once over capacity. ``popitem
     # (last=False)`` removes the front (oldest) entry; with the touch
@@ -692,6 +713,13 @@ def _classify_handler_exception(exc: BaseException) -> tuple[str, str]:
     if isinstance(exc, (KeyError, ValueError, FileExistsError)):
         return ERR_VALIDATION, _HANDLER_VALIDATION_MESSAGE
     return ERR_INTERNAL, _HANDLER_INTERNAL_MESSAGE
+
+
+def dispatcher_failure_ack(exc: BaseException, request_id: object) -> dict[str, object]:
+    """Reuse categorical handler errors when the transport dispatcher itself fails."""
+
+    code, message = _classify_handler_exception(exc)
+    return {"request_id": request_id, **_error_ack(code, message)}
 
 
 def _exc_fingerprint(exc: BaseException) -> str | None:
@@ -3141,6 +3169,7 @@ __all__ = [
     "build_armed_watchdog",
     "build_connection_changed",
     "cancel_pending_capture",
+    "dispatcher_failure_ack",
     "drain_pending_events",
     "emit_initial_events",
     "handle_command",

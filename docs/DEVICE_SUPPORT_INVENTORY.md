@@ -91,6 +91,23 @@ native/live semantic and precision evidence remains incomplete. Its Pi matrix
 counts describe the pinned PR #252 source, while this
 report's 105 A4 MIDI rows use the grouping described above.
 
+The October 5 review repair blocks every CY Ride SRC row with
+`src_cy_ride_slot_unverified`, including compact/fallback aliases. Its eight
+descriptive catalog rows and source bytes remain available; a changed effective
+proposal refuses the whole plan, including any otherwise supported common subset.
+This is a shared-policy refusal, not missing MIDI addresses. Common controls are
+not blanket-blocked for a CY Ride pad, and locked/untargeted SRC rows cannot
+invalidate supported changes elsewhere. The report lists this evidence gap
+explicitly under `cy_ride_source_slots`.
+
+The [exact fallback audit](RYTM_MAPPING_STATUS.md#october-5-fallback-src-audit)
+reconciles the previous 29 eligible continuous rows to **25 documented-only
+eligible rows and four newly blocked CY Ride rows**. It records keys, names,
+CC/NRPN, saved primary-byte slots, evidence class and policy, with a reproducible
+catalog/inventory check. None is newly hardware-validated. The unchanged
+initialized frame projects 328 parameters; the RIO return now projects 325,
+with all 264 common values retained in each.
+
 Use [Quickstart section 6a](COCKPIT_QUICKSTART.md#6a-remaining-operator-present-studio-rehearsal),
 the [ordered physical checklist](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md),
 [Architecture section 6](ARCHITECTURE.md#6-where-to-put-new-work), and

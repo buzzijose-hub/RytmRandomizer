@@ -17,6 +17,7 @@ from rytm_randomizer.cockpit.data.rytm_parameter_map import (
 from rytm_randomizer.data.analog_rytm_midi import (
     ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER,
     ANALOG_RYTM_MACHINE_SRC_BY_MACHINE,
+    AnalogRytmCcMapping,
 )
 
 pytestmark = pytest.mark.fast
@@ -234,12 +235,35 @@ def test_catalog_fallback_keys_require_exact_canonical_ownership(key: str) -> No
     assert cockpit_parameter_mapping("BD Hard", "src_bd_hard_1") is None
 
 
+@pytest.mark.parametrize("row", ANALOG_RYTM_MACHINE_SRC_BY_MACHINE["cy_ride"])
+@pytest.mark.parametrize("machine", ("CY Ride", "cy_ride", "CY-RIDE"))
+@pytest.mark.parametrize("compact_alias", (False, True))
+def test_every_cy_ride_src_binding_is_blocked_before_narrower_protections(
+    monkeypatch: pytest.MonkeyPatch,
+    row: AnalogRytmCcMapping,
+    machine: str,
+    compact_alias: bool,
+) -> None:
+    if compact_alias:
+        aliases = dict(mapmod._MACHINE_PARAMETER_ALIASES)
+        aliases["cy_ride"] = {"ride_probe": row.parameter}
+        monkeypatch.setattr(mapmod, "_MACHINE_PARAMETER_ALIASES", aliases)
+        key = "ride_probe"
+    else:
+        key = cockpit_parameter_key(machine, "SRC", row.parameter)
+    assert key is not None
+    assert cockpit_machine_is_allowed_on_pad(machine, 11)
+    assert cockpit_parameter_mapping(machine, key) is row
+    assert cockpit_parameter_live_blockers(machine, key) == ("src_cy_ride_slot_unverified",)
+    assert cockpit_parameter_live_blockers(machine, "flt") == ()
+
+
 @pytest.mark.parametrize(
     ("machine", "key", "blocker"),
     (
         ("UT Impulse", "src_ut_impulse_3", "src_selector_encoding_unverified"),
-        ("CY Ride", "src_cy_ride_3", "src_native_slot_semantics_unverified"),
-        ("CY Ride", "src_cy_ride_4", "src_native_slot_semantics_unverified"),
+        ("CY Ride", "src_cy_ride_3", "src_cy_ride_slot_unverified"),
+        ("CY Ride", "src_cy_ride_4", "src_cy_ride_slot_unverified"),
         ("SY Chip", "src_sy_chip_3", "src_selector_encoding_unverified"),
         ("SY Chip", "src_sy_chip_4", "src_mode_encoding_unverified"),
         ("SY Dual VCO", "src_dual_vco_4", "src_requires_guarded_detune_window"),

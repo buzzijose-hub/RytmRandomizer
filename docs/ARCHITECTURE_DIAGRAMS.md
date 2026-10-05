@@ -3330,13 +3330,19 @@ flowchart LR
     CC --> Eligible["Shared conservative SRC blockers<br/>descriptive names retain refused rows"]
     Eligible --> Snapshot["Cockpit semantic snapshot<br/>protected rows omitted"]
     Eligible -. "same policy" .-> Inventory["Passive support inventory"]
+    Registry["devices.all_devices()<br/>every registered Device"] --> Inventory
+    Evidence["Pure data evidence-family mapping<br/>missing evidence stays explicit"] --> Inventory
     Snapshot --> Plan["Existing target-minus-locks + paired-control refusal"]
     Plan --> Armed["Existing exact-plan confirmation + ArmedApply"]
 ```
 
 Unknown aliases and unpromoted tom SRC rows are omitted while the original
-frame remains intact. This projection changes no MIDI boundary or restore
-authority. See [the source-bound mapping audit](RYTM_MAPPING_STATUS.md).
+frame remains intact. The report's `reports -> devices` registry edge cannot
+open an output adapter. Continuous documented-only SRC rows can be eligible
+under the existing guarded-CC7 policy without physical validation; the entire
+CY Ride SRC family is refused pending native saved-slot evidence. This
+projection changes no MIDI boundary or restore authority. See
+[the source-bound mapping audit](RYTM_MAPPING_STATUS.md).
 
 <a id="38-auto-update-flow-designed--spec-complete-implementation-pending"></a>
 <a id="37-auto-update-flow-designed--spec-complete-implementation-pending"></a>

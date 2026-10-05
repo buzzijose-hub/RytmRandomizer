@@ -26,8 +26,8 @@ from pathlib import Path
 import pytest
 from cockpit.conftest import (
     TEST_WS_TOKEN,
-    _make_default_snapshot,
     complete_handshake,
+    make_default_snapshot,
 )
 from fastapi.testclient import TestClient
 
@@ -107,7 +107,7 @@ def _make_session(tmp_path: Path, *, arm_secret: str | None = _ARM_TOKEN) -> Coc
     arming must then fail closed.
     """
 
-    initial = _make_default_snapshot()
+    initial = make_default_snapshot()
     session = CockpitSession(
         profile_registry=ProfileRegistry(tmp_path / "profiles"),
         history_store=HistoryStore(),

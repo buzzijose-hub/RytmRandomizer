@@ -29,7 +29,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
-from cockpit.conftest import TEST_WS_TOKEN, _make_default_snapshot, complete_handshake
+from cockpit.conftest import TEST_WS_TOKEN, complete_handshake, make_default_snapshot
 from fastapi.testclient import TestClient
 
 from rytm_randomizer.cockpit.data import CockpitSendPlan, PadDelta, SendPlanPacket
@@ -88,7 +88,7 @@ class _FakeProvider:
 
 
 def _make_session(tmp_path: Path) -> CockpitSession:
-    initial = _make_default_snapshot()
+    initial = make_default_snapshot()
     session = CockpitSession(
         profile_registry=ProfileRegistry(tmp_path / "profiles"),
         history_store=HistoryStore(),

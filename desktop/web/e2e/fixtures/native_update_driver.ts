@@ -72,17 +72,40 @@ async function clickConfirm(choice: string, waitForConsent = true): Promise<void
   if (waitForConsent) await until('consent reached native journal', async () => (await snapshot()).journal.some((row) => row.event === 'consent_granted'));
 }
 
-async function staleHandshakeRejected(token: string): Promise<boolean> {
-  const port = window.localStorage.getItem('rytm-rand-ws-port');
+export type HandshakeOutcome = 'rejected' | 'accepted' | 'unreachable' | 'no_verdict';
+
+// Reuse #240's socket-level verdict: credential rotation can precede listening.
+export function staleHandshakeOutcome(
+  token: string,
+  port: string | null = window.localStorage.getItem('rytm-rand-ws-port'),
+  timeoutMs = 5000,
+): Promise<HandshakeOutcome> {
   return new Promise((resolve) => {
+    let opened = false;
+    let settled = false;
     const ws = new WebSocket(`ws://127.0.0.1:${port}/ws`, WS_SUBPROTOCOL);
-    const deadline = setTimeout(() => { ws.close(); resolve(false); }, 5000);
-    ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', token }));
+    const finish = (outcome: HandshakeOutcome): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(deadline);
+      ws.close();
+      resolve(outcome);
+    };
+    const deadline = setTimeout(() => finish('no_verdict'), timeoutMs);
+    ws.onopen = () => {
+      opened = true;
+      ws.send(JSON.stringify({ type: 'hello', token }));
+    };
     ws.onmessage = (message) => {
       const payload = JSON.parse(String(message.data)) as { code?: string };
-      if (payload.code === 'auth_failed') { clearTimeout(deadline); ws.close(); resolve(true); }
+      if (payload.code === 'auth_failed') finish('rejected');
+      else if (payload.code !== undefined) finish('no_verdict');
+      else finish('accepted');
     };
-    ws.onclose = (event) => { clearTimeout(deadline); resolve(event.code === 1008); };
+    ws.onclose = (event) => {
+      if (event.code === 1008) finish('rejected');
+      else finish(opened ? 'no_verdict' : 'unreachable');
+    };
   });
 }
 
@@ -236,10 +259,13 @@ export async function run(scenario: string, origin: string): Promise<void> {
         await until('native bridge rotates both credentials', () =>
           Boolean(window.__RYTM_RAND_WS_TOKEN__ && window.__RYTM_RAND_WS_TOKEN__ !== oldToken &&
             window.__RYTM_RAND_ARM_SECRET__ && window.__RYTM_RAND_ARM_SECRET__ !== oldSecret));
-        // Credentials are published before the replacement listener starts.
-        // Wait for the reconnected listener before testing stale-token refusal.
+        let outcome = 'unreachable' as HandshakeOutcome;
+        await until('restarted backend answers the stale token', async () => {
+          outcome = await staleHandshakeOutcome(oldToken);
+          return outcome !== 'unreachable';
+        });
+        check(outcome === 'rejected', `old token rejected by restarted backend (got ${outcome})`);
         await connected();
-        check(await staleHandshakeRejected(oldToken), 'old token rejected by restarted backend');
         check(await requestUpdateCheck(), 'same page still invokes native after backend restart');
       }
       if (!['consent_quit', 'consent_now', 'install_failure'].includes(scenario)) {

@@ -148,7 +148,7 @@ _FIXED_TIMESTAMP = datetime(2026, 5, 23, 12, 0, 0, tzinfo=timezone.utc)
 """Frozen captured_at so to_dict round-trips are reproducible across runs."""
 
 
-def _make_default_snapshot() -> Snapshot:
+def make_default_snapshot() -> Snapshot:
     """Build the 12-pad reference Rytm snapshot every integration test starts with.
 
     Every machine is compatible with its physical pad. Three unprotected,
@@ -231,7 +231,7 @@ def cockpit_client(
     :class:`CockpitSession`, then ``create_app`` and yield a TestClient.
     """
 
-    initial = _make_default_snapshot()
+    initial = make_default_snapshot()
     session = CockpitSession(
         profile_registry=ProfileRegistry(tmp_path),
         history_store=HistoryStore(),

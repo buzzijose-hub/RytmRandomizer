@@ -393,9 +393,9 @@ def cockpit_default_machine_label(pad_id: int) -> str:
 def cockpit_parameter_control(machine: str, parameter: str) -> int | None:
     """Return the real Rytm CC for ``parameter`` on ``machine``.
 
-    ``None`` means the cockpit does not have a safe compact-key mapping for
-    that machine/key pair yet; callers should omit the packet instead of
-    falling back to a synthetic CC.
+    Compact and catalog fallback keys resolve descriptive addresses only.
+    Callers must also consult ``cockpit_parameter_live_blockers`` before live
+    projection or planning. ``None`` means no binding; never synthesize a CC.
     """
 
     mapping = cockpit_parameter_mapping(machine, parameter)
@@ -440,7 +440,8 @@ def cockpit_parameter_key(machine: str, section: str, parameter: str) -> str | N
     """Project a promoted snapshot row back to a compact Cockpit key.
 
     Existing compact keys take precedence. Missing names use an exact canonical
-    machine/NRPN-slot key; these descriptive bindings do not grant live eligibility.
+    machine/NRPN-slot key. Both feed the shared live policy used by capture,
+    mutation, planning and inventory; a binding alone is not an eligibility grant.
     """
 
     catalog_pair = (section, parameter)
@@ -470,15 +471,17 @@ def cockpit_parameter_live_blockers(machine: str, parameter: str) -> tuple[str, 
     """Return the shared conservative refusals for a descriptive SRC binding.
 
     Legacy pitch/selector behavior is preserved alongside global exclusions.
-    Newly exposed catalog
-    keys freeze pitch, level and selector rows; audited semantic/guarded gaps
-    remain refused regardless of spelling. Paired precision has its existing
-    separate whole-plan check.
+    Newly exposed catalog keys freeze pitch, level and selector rows. All CY
+    Ride SRC slots are unverified, including compact aliases, before narrower
+    pending checks. Other semantic/guarded gaps remain refused regardless of
+    spelling. Paired precision has its existing separate whole-plan check.
     """
 
     mapping = cockpit_parameter_mapping(machine, parameter)
     if mapping is None or mapping.machine_key is None:
         return ()
+    if mapping.machine_key == "cy_ride":
+        return ("src_cy_ride_slot_unverified",)
     pending = RYTM_COCKPIT_PENDING_SRC_PARAMETERS.get((mapping.machine_key, mapping.parameter))
     if pending is not None:
         return (pending,)

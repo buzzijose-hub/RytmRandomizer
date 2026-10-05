@@ -32,9 +32,9 @@ from pathlib import Path
 
 import pytest
 from cockpit.conftest import (
-    _make_default_snapshot,
     collect_initial_events,
     complete_handshake,
+    make_default_snapshot,
 )
 from fastapi.testclient import TestClient
 
@@ -75,7 +75,7 @@ _OUTPUT_PORT = "Elektron Analog Rytm MK2 Out"
 def test_shared_reference_snapshot_uses_compatible_unprotected_cc_controls() -> None:
     """Successful-send fixtures must satisfy the actual live planner policy."""
 
-    for pad in _make_default_snapshot().pads:
+    for pad in make_default_snapshot().pads:
         assert cockpit_machine_is_allowed_on_pad(pad.machine, pad.pad_id)
         assert len(pad.params) == 3
         for parameter in pad.params:
@@ -280,7 +280,7 @@ def test_verified_capture_to_targeted_send_and_snapshot_recovery(
     authority = _RehearsalMidiAuthority(
         elektron_syx_message(rytm_real_layout_kit_payload(b"ACCEPT LIVE KIT"))
     )
-    initial = _make_default_snapshot()
+    initial = make_default_snapshot()
     device = MockDeviceAdapter(initial)
     history = HistoryStore()
     history.initial(initial)

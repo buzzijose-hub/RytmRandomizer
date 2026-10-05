@@ -528,7 +528,9 @@ def test_write_token_file_tolerates_chmod_failure(
 # ---------------------------------------------------------------------------
 
 
-def test_build_port_enumerator_wraps_real_provider_when_mido_present() -> None:
+def test_build_port_enumerator_wraps_real_provider_when_mido_present(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """The dev venv ships ``mido``: the enumeration-only facade is picked.
 
     Constructing the facade must NOT import ``mido`` (the provider's
@@ -538,6 +540,7 @@ def test_build_port_enumerator_wraps_real_provider_when_mido_present() -> None:
 
     import sys
 
+    monkeypatch.delenv(cockpit_main._MIDI_BACKEND_ENV_VAR, raising=False)
     had_mido = "mido" in sys.modules
     enumerator = cockpit_main._build_port_enumerator()
 

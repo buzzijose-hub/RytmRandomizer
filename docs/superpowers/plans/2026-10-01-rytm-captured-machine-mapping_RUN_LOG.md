@@ -321,3 +321,31 @@ has not been updated by these records.
   activation or physical work. Protected approval, merge, actual post-merge
   assessment and physical acceptance remain pending. The resumed deadline
   remains `2026-10-02T02:43:47Z`; no scheduler or automatic merge was introduced.
+
+## October 5 review repair and software candidate
+
+- Reused PR #254 at `0138d00b`; preserved all unrelated worktrees and existing
+  user processes. Two disjoint implementation workers were integrated into the
+  delivery checkout; heavy local jobs ran one at a time with two pytest workers
+  or one browser worker. No MIDI or USB access occurred.
+- Blocked every CY Ride SRC row, audited all 29 new fallback controls against
+  canonical policy/evidence, and exposed canonical SRC metadata in Studio cards.
+  Twenty-five documented-only controls remain guarded-CC7 eligible; none gains
+  physical validation from a synthetic fixture. Init/RIO projections are 328/325.
+- Kept #254's shared beacon TLS repair and adopted #240's socket-outcome stale
+  handshake driver. Made the existing test snapshot factory public. Repaired
+  immediate capture failure acknowledgement, categorical metrics and teardown.
+  The targeted observability re-review cleared its two findings.
+- Retained failed intermediate verification honestly: first full 10,036 passes
+  with three fixture/environment failures, repaired; second full 10,042 passes
+  with one broad-except architecture failure, repaired, coverage invalidated by
+  mid-run edits. Final source-frozen run: 10,044 passes, five skips, six warnings,
+  338.60 seconds. Combined coverage 99.6557048%, pure branch 99.3693402%; all 22
+  touched production modules have 100% lines/branches. Focused rechecks: 294 and
+  177 passes. Web: 1,070 passes, 100% coverage; lint/type/build checks passed.
+- Browser acceptance passed 33 scenarios with two explicit skips in 1.2 minutes,
+  one worker and zero retries. Strict typing, lint, Vulture and version checks
+  passed. Hosted Windows packaging/actual-binary smoke follow this source
+  checkpoint. Protected review, post-merge maintainability audit
+  and bounded operator-present hardware rehearsal remain pending. Issue #256
+  tracks the frozen offline `lev` arithmetic/policy separation.

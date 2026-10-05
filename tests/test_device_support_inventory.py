@@ -14,6 +14,7 @@ from rytm_randomizer.cli import main
 from rytm_randomizer.cockpit.data.rytm_parameter_map import (
     cockpit_parameter_key,
     cockpit_parameter_live_blockers,
+    cockpit_parameter_mapping,
 )
 from rytm_randomizer.data.analog_four_kit_fields import A4_TRACK_OFFSETS
 from rytm_randomizer.data.analog_four_midi import (
@@ -24,7 +25,12 @@ from rytm_randomizer.data.analog_four_sysex_calibration import (
     ANALOG_FOUR_SYSEX_FIELD_CALIBRATIONS,
     ANALOG_FOUR_SYSEX_WRITE_VALIDATIONS,
 )
-from rytm_randomizer.data.analog_rytm_midi import ANALOG_RYTM_MANUAL_CC
+from rytm_randomizer.data.analog_rytm_kit_layout import RYTM_SOUND_FIELD_BY_NRPN_LSB
+from rytm_randomizer.data.analog_rytm_midi import (
+    ANALOG_RYTM_MACHINE_SRC_BY_MACHINE,
+    ANALOG_RYTM_MANUAL_CC,
+    AnalogRytmCcMapping,
+)
 from rytm_randomizer.data.device_support_inventory import (
     DEVICE_SUPPORT_EVIDENCE,
     DEVICE_SUPPORT_EVIDENCE_FAMILIES,
@@ -64,6 +70,95 @@ def test_inventory_uses_the_same_live_blockers_as_capture_and_planning() -> None
         )
         assert row["blockers"] == expected
         assert row["live_send"] == ("blocked" if expected else "conditional_guarded_cc7")
+
+
+@pytest.mark.parametrize("mapping", ANALOG_RYTM_MACHINE_SRC_BY_MACHINE["cy_ride"])
+def test_inventory_marks_every_cy_ride_src_slot_blocked(mapping: AnalogRytmCcMapping) -> None:
+    payload = build_device_support_inventory()
+    row = next(
+        row
+        for row in payload["parameters"]
+        if row["device"] == "rytm"
+        and row["surface"] == "midi_catalog"
+        and row["machine"] == "cy_ride"
+        and row["field"] == mapping.parameter
+    )
+    assert row["live_send"] == "blocked"
+    assert row["blockers"] == ("src_cy_ride_slot_unverified",)
+    assert payload["hardware_validation_granted"] is False
+    assert any(
+        item["category"] == "cy_ride_source_slots" for item in payload["unsupported_categories"]
+    )
+
+
+def test_fallback_src_audit_matches_exact_canonical_native_and_policy_facts() -> None:
+    document = (ROOT / "docs" / "RYTM_MAPPING_STATUS.md").read_text(encoding="utf-8")
+    _, begin, tail = document.partition("<!-- fallback-src-audit -->")
+    table, end, _ = tail.partition("<!-- /fallback-src-audit -->")
+    assert begin and end
+    cells = [
+        tuple(cell.strip().strip("`") for cell in line.split("|")[1:-1])
+        for line in table.splitlines()
+        if line.startswith("| `src_")
+    ]
+    assert len(cells) == 29 and len({row[0] for row in cells}) == 29
+    inventory = build_device_support_inventory()
+    report_rows = {
+        (row["machine"], row["field"]): row
+        for row in inventory["parameters"]
+        if row["device"] == "rytm" and row["surface"] == "midi_catalog"
+    }
+    src_bindings = {
+        (machine, cockpit_parameter_key(machine, row.section, row.parameter)): row
+        for machine, mappings in ANALOG_RYTM_MACHINE_SRC_BY_MACHINE.items()
+        for row in mappings
+    }
+    assert len(src_bindings) == 224 and all(key is not None for _, key in src_bindings)
+    src_rows = {key: row for (_, key), row in src_bindings.items() if key.startswith("src_")}
+    assert len(src_rows) == 68
+    eligible = {
+        key
+        for key, row in src_rows.items()
+        if key.startswith("src_") and not cockpit_parameter_live_blockers(row.machine_key, key)
+    }
+    audited_eligible: set[str] = set()
+    audited_blocked: set[str] = set()
+    for key, name, cc, nrpn, native, evidence, policy in cells:
+        mapping = src_rows[key]
+        assert cockpit_parameter_mapping(mapping.machine_key, key) is mapping
+        assert (name, int(cc), nrpn) == (
+            mapping.parameter,
+            mapping.cc_msb,
+            f"{mapping.nrpn_msb}:{mapping.nrpn_lsb}",
+        )
+        assert mapping.mutation_status == "documented_only"
+        assert mapping.value_kind == "continuous" and mapping.value_orientation == "zero_based"
+        assert (mapping.value_min, mapping.value_max, mapping.cc_lsb) == (0, 127, None)
+        offset = RYTM_SOUND_FIELD_BY_NRPN_LSB[mapping.nrpn_lsb].sound_offset
+        assert int(native, 16) == offset
+        report = report_rows[(mapping.machine_key, name)]
+        assert report["locations"] == (offset,)
+        assert report["protection"] == "documented_only"
+        assert report["evidence"] == DEVICE_SUPPORT_EVIDENCE["rytm_midi"]
+        assert all((ROOT / path).is_file() for path in report["evidence"])
+        fixture_class = (
+            "I"
+            if mapping.machine_key in {"cy_classic", "cb_classic"}
+            else "R" if mapping.machine_key in {"cy_ride", "cb_metallic"} else "T"
+        )
+        assert evidence == f"C/S/{fixture_class}"
+        if policy == "documented-only eligible":
+            assert report["live_send"] == "conditional_guarded_cc7" and not report["blockers"]
+            audited_eligible.add(key)
+        else:
+            assert policy == "src_cy_ride_slot_unverified"
+            assert report["live_send"] == "blocked" and report["blockers"] == (policy,)
+            audited_blocked.add(key)
+    assert audited_eligible == eligible and len(eligible) == 25
+    assert audited_blocked == {"src_cy_ride_2", "src_cy_ride_5", "src_cy_ride_6", "src_cy_ride_7"}
+    assert (
+        inventory["hardware_access"] is False and inventory["hardware_validation_granted"] is False
+    )
 
 
 def _native(field: str) -> DeviceSupportParameter:
