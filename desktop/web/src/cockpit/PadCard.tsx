@@ -125,7 +125,7 @@ function ParameterSlot({
         <Knob label={definition.code} value={value} ghostValue={ghostValue} />
       )}
       {src === undefined ? null : (
-        <div className="parameter-label" title={src.key}>
+        <div className="parameter-label parameter-metadata" title={src.key}>
           <div>
             CC7 / Ch {src.channel + 1} / CC {src.cc_msb}
             {src.cc_lsb === null ? '' : ` + ${src.cc_lsb}`}
