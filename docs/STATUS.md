@@ -6,7 +6,8 @@ Last updated: 2026-10-05. This file is a hand-authored snapshot and is meant to 
 
 The [captured Rytm mapping correction](superpowers/plans/2026-10-01-rytm-captured-machine-mapping.md)
 is integrated into the existing direct-base Studio PR #254 on
-`codex/studio-rytm-mapping`. Its October 3 review at `0138d00b` requests
+`codex/studio-evidence-handoff`, assembled in the local
+`codex/studio-rytm-mapping` checkout. Its October 3 review at `0138d00b` requests
 eligibility corrections, not more exhaustive studio calibration. All 224 SRC catalog
 rows have descriptive bindings, closing 68 unnamed rows across 11 families.
 Existing compact aliases retain precedence; exact machine/NRPN-slot fallback
@@ -62,7 +63,7 @@ Pi/touchscreen/offline or touring readiness.
 
 The [studio evidence handoff](superpowers/plans/2026-10-01-studio-evidence-handoff.md)
 is implemented in [PR #254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254)
-on the current `codex/studio-rytm-mapping` branch, directly based on
+on the remote `codex/studio-evidence-handoff` branch, directly based on
 `modularize-v1.34`. It extracts shared Studio safety repairs from PR #252:
 cancellable capture and stale-result refusal, passive preview retention,
 side-effect-free rejected DISARM, duplicate exact input-name refusal, and

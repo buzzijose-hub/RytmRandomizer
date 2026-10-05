@@ -5,7 +5,8 @@
 
 ## October 5 continuation
 
-Current delivery is `codex/studio-rytm-mapping` in PR #254, continuing from
+Current assembly checkout is `codex/studio-rytm-mapping`; the existing PR #254
+head is `codex/studio-evidence-handoff`, updated by a fast-forward, continuing from
 `0138d00b`. All eight CY Ride SRC rows are held, including compact aliases and
 constructed mixed proposals. The audited 29 fallback rows now comprise 25
 documented-only guarded-CC7 eligible controls and four blocked CY Ride controls.
@@ -52,6 +53,13 @@ zero errors/warnings. Whole-tree Ruff, Black (895 files), isort and Vulture
 pass; four version declarations remain at 1.34.0. The Windows binary will be
 built on the hosted runner rather than
 installing or compiling a Rust toolchain on the operator's computer.
+
+The committed-diff coverage gate passes for all 22 production modules. Normal
+pre-push verification passed lint/strict typing, 860 architecture cases in
+59.50 seconds and 697 not-fast cases (including all 685 V1.34 goldens) in 6.62
+seconds. A delivery-branch-only installer dispatch was cancelled before using
+it as evidence; the final portable build follows the actual PR head. No new
+PR, merge, auto-merge or protection bypass is introduced.
 
 ## Historical receipts through October 2
 
