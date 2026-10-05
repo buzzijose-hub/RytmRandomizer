@@ -1,7 +1,7 @@
 """Integration: connect → initial events (the bootstrap event set).
 
 The spec mandates that any client connecting to ``/ws`` immediately
-receives eleven event frames before the command loop opens:
+receives twelve event frames before the command loop opens:
 
 1. ``session_status`` — armed/mock pill, unsaved_sends, midi_port.
 2. ``snapshot_changed`` — the device's current parameter state.
@@ -12,8 +12,9 @@ receives eleven event frames before the command loop opens:
 7. ``kit_captures_changed`` — complete current-kit anchor set (empty on first boot).
 8. ``mutation_targets_changed`` — both explicit include-lists (empty by default).
 9. ``mutation_locks_changed`` — both lock deny-lists (empty by default).
-10. ``dual_machine_stage_changed`` — coordinated Rytm/A4 authority state.
-11. ``performance_console_changed`` — passive 12-pad performance console packet.
+10. ``mutation_parameters_changed`` — canonical controls and parameter include-lists.
+11. ``dual_machine_stage_changed`` — coordinated Rytm/A4 authority state.
+12. ``performance_console_changed`` — passive 12-pad performance console packet.
 
 This file pins that contract end-to-end across the FastAPI / TestClient
 boundary. Subsequent integration tests rely on the same ordering when
@@ -54,6 +55,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_HISTORY_UPDATED,
     EVENT_KIT_CAPTURES_CHANGED,
     EVENT_MUTATION_LOCKS_CHANGED,
+    EVENT_MUTATION_PARAMETERS_CHANGED,
     EVENT_MUTATION_TARGETS_CHANGED,
     EVENT_PATCH_GENOME_CHANGED,
     EVENT_PERFORMANCE_CONSOLE_CHANGED,
@@ -139,7 +141,7 @@ def _dispatch(session: CockpitSession, command: dict[str, object]) -> dict[str, 
 
 
 def test_initial_events_on_connect(cockpit_client: TestClient) -> None:
-    """On connect, server emits the full eleven-event bootstrap packet."""
+    """On connect, server emits the full twelve-event bootstrap packet."""
 
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
@@ -156,6 +158,7 @@ def test_initial_events_on_connect(cockpit_client: TestClient) -> None:
         EVENT_KIT_CAPTURES_CHANGED,
         EVENT_MUTATION_TARGETS_CHANGED,
         EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_MUTATION_PARAMETERS_CHANGED,
         EVENT_DUAL_MACHINE_STAGE_CHANGED,
         EVENT_PERFORMANCE_CONSOLE_CHANGED,
     }
@@ -179,6 +182,7 @@ def test_initial_events_order_is_stable(cockpit_client: TestClient) -> None:
         EVENT_KIT_CAPTURES_CHANGED,
         EVENT_MUTATION_TARGETS_CHANGED,
         EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_MUTATION_PARAMETERS_CHANGED,
         EVENT_DUAL_MACHINE_STAGE_CHANGED,
         EVENT_PERFORMANCE_CONSOLE_CHANGED,
     ]

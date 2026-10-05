@@ -43,6 +43,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_HISTORY_UPDATED,
     EVENT_KIT_CAPTURES_CHANGED,
     EVENT_MUTATION_LOCKS_CHANGED,
+    EVENT_MUTATION_PARAMETERS_CHANGED,
     EVENT_MUTATION_TARGETS_CHANGED,
     EVENT_PATCH_GENOME_CHANGED,
     EVENT_PERFORMANCE_CONSOLE_CHANGED,
@@ -137,7 +138,7 @@ def test_handshake_with_valid_token_unlocks_bootstrap_events(client: TestClient)
         ack = ws.receive_json()
         assert ack == {"ok": True}
 
-        # The eleven bootstrap events arrive in the documented order.
+        # The twelve bootstrap events arrive in the documented order.
         events = [ws.receive_json() for _ in range(INITIAL_EVENT_COUNT)]
         assert [e["type"] for e in events] == [
             EVENT_SESSION_STATUS,
@@ -149,6 +150,7 @@ def test_handshake_with_valid_token_unlocks_bootstrap_events(client: TestClient)
             EVENT_KIT_CAPTURES_CHANGED,
             EVENT_MUTATION_TARGETS_CHANGED,
             EVENT_MUTATION_LOCKS_CHANGED,
+            EVENT_MUTATION_PARAMETERS_CHANGED,
             EVENT_DUAL_MACHINE_STAGE_CHANGED,
             EVENT_PERFORMANCE_CONSOLE_CHANGED,
         ]

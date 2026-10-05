@@ -47,6 +47,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_HISTORY_UPDATED,
     EVENT_KIT_CAPTURES_CHANGED,
     EVENT_MUTATION_LOCKS_CHANGED,
+    EVENT_MUTATION_PARAMETERS_CHANGED,
     EVENT_MUTATION_PREVIEWED,
     EVENT_MUTATION_TARGETS_CHANGED,
     EVENT_PATCH_GENOME_CHANGED,
@@ -180,7 +181,7 @@ def _prepare_send_plan(ws, request_id: str = "req-prepare") -> dict:
 # ---------------------------------------------------------------------------
 
 
-def test_connect_emits_eleven_initial_events_in_order(session_factory) -> None:
+def test_connect_emits_twelve_initial_events_in_order(session_factory) -> None:
     session = session_factory()
     app = create_app(session, token=TEST_WS_TOKEN)
     client = TestClient(app)
@@ -199,6 +200,7 @@ def test_connect_emits_eleven_initial_events_in_order(session_factory) -> None:
         EVENT_KIT_CAPTURES_CHANGED,
         EVENT_MUTATION_TARGETS_CHANGED,
         EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_MUTATION_PARAMETERS_CHANGED,
         EVENT_DUAL_MACHINE_STAGE_CHANGED,
         EVENT_PERFORMANCE_CONSOLE_CHANGED,
     ]

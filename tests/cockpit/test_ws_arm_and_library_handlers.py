@@ -969,6 +969,7 @@ def test_bootstrap_event_set_is_authoritative_for_unwired_sessions(tmp_path: Pat
         "kit_captures_changed",
         "mutation_targets_changed",
         "mutation_locks_changed",
+        "mutation_parameters_changed",
         "dual_machine_stage_changed",
         "performance_console_changed",
     ]
