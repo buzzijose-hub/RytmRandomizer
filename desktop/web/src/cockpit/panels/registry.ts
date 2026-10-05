@@ -10,6 +10,7 @@ import { ConnectionDoctorPanel } from './ConnectionDoctorPanel';
 import { KitMorphPanel } from './KitMorphPanel';
 import { LibraryPanel } from './LibraryPanel';
 import { LiveMidiMonitorPanel } from './LiveMidiMonitorPanel';
+import { MutationParametersPanel } from './MutationParametersPanel';
 import { PanelRenderer } from './PanelRenderer';
 import { ScopedRandomizationPanel } from './ScopedRandomizationPanel';
 import { UpdatePanel } from './UpdatePanel';
@@ -72,6 +73,7 @@ export const PANEL_REGISTRY: ReadonlyArray<PanelManifestEntry> = [
     selector: analyzerPanelSpec,
     component: PanelRenderer,
   },
+  { kind: 'store-slice', id: 'mutation-parameters', region: 'bottom', component: MutationParametersPanel },
   { kind: 'store-slice', id: 'live-midi-monitor', region: 'bottom', component: LiveMidiMonitorPanel },
   { kind: 'store-slice', id: 'connection-doctor', region: 'bottom', component: ConnectionDoctorPanel },
   { kind: 'store-slice', id: 'library', region: 'bottom', component: LibraryPanel },

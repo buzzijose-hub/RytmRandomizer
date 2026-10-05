@@ -448,6 +448,10 @@ export class FakeCockpitClient {
     return Promise.resolve(ack);
   }
 
+  emitEvent(event: ProtocolEvent): void {
+    for (const handler of this.listeners.get(event.type) ?? []) handler(event);
+  }
+
   on<T extends EventType>(
     eventType: T,
     handler: EventHandler<Extract<ProtocolEvent, { type: T }>>,

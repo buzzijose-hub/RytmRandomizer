@@ -13,6 +13,10 @@ const SEND_PLAN_BLOCKER_TEXT: Readonly<Record<SendPlanReadinessReason, string>> 
     'The candidate belongs to another source. A candidate from the current captured source is required.',
   paired_control_precision_unverified:
     'Paired-control precision is unverified. No part of this plan will be sent. Choose a candidate without changed paired controls.',
+  parameter_scope_mismatch:
+    'Parameter scope changed. Regenerate the candidate and prepare a new exact plan for the current selection.',
+  unsupported_control_changed:
+    'An unsupported or protected control changed. No part of this plan will be sent. Regenerate with that control excluded.',
   no_sendable_changes:
     'No supported changes remain in the selected, unlocked pads. A supported nonempty plan is required.',
 };

@@ -28,6 +28,8 @@ export type SendPlanReadinessReason =
   | 'profile_mismatch'
   | 'source_snapshot_mismatch'
   | 'paired_control_precision_unverified'
+  | 'parameter_scope_mismatch'
+  | 'unsupported_control_changed'
   | 'no_sendable_changes';
 
 export type HistoryEntryKind = 'auto' | 'saved';
@@ -456,6 +458,10 @@ export interface LibraryRecord {
   captured_at: string;
   tags: string[];
   payload_hex: string;
+  /** Older capture-only libraries omit these additive fields. */
+  record_kind?: 'capture' | 'rehearsal_favorite';
+  /** Opaque retained evidence; only the server validates and reconstructs it. */
+  rehearsal?: Record<string, unknown> | null;
 }
 
 /**
@@ -652,6 +658,8 @@ export interface ShowKitScope {
   device_id: KitCaptureDeviceId;
   target_ids: number[];
   locked_ids: number[];
+  /** Omitted = legacy all; explicit [] = no mutable parameter cells. */
+  parameter_cells?: ParameterCell[];
 }
 
 export interface ShowKitRecipe {
@@ -844,7 +852,7 @@ export interface ShowBankEntry {
 }
 
 export interface ShowBank {
-  schema_version: 'show-bank-v1';
+  schema_version: 'show-bank-v1' | 'show-bank-v2';
   bank_id: string;
   name: string;
   description: string;
@@ -898,6 +906,39 @@ export interface MutationTargetsChangedEvent {
   type: 'mutation_targets_changed';
   rytm_pad_targets: number[];
   a4_track_targets: number[];
+}
+
+export interface ParameterCell {
+  item_id: number;
+  parameter_key: string;
+}
+
+/** Canonical backend projection, never a frontend parameter catalog. */
+export interface PerformanceParameterControl {
+  device_id: string;
+  item_id: number;
+  machine: string;
+  parameter_key: string;
+  page: string;
+  name: string;
+  value: number | null;
+  display_value: string | null;
+  minimum: number | null;
+  maximum: number | null;
+  native_precision: string;
+  mutation_supported: boolean;
+  send_supported: boolean;
+  protected: boolean;
+  reasons: string[];
+  evidence_level: string;
+}
+
+export interface MutationParametersChangedEvent {
+  type: 'mutation_parameters_changed';
+  /** null = legacy all; [] = intentionally none. */
+  rytm_parameters: ParameterCell[] | null;
+  a4_parameters: ParameterCell[] | null;
+  controls: PerformanceParameterControl[];
 }
 
 /** Whole-state lock authority used for bootstrap, reconnect, and every lock revision. */
@@ -1004,6 +1045,7 @@ export type Event =
   | KitCapturesChangedEvent
   | ShowBankChangedEvent
   | MutationTargetsChangedEvent
+  | MutationParametersChangedEvent
   | MutationLocksChangedEvent
   | DualMachineStageChangedEvent
   | PatchGenomeChangedEvent
@@ -1066,6 +1108,31 @@ export interface SetMutationTargetsCommand {
 export interface ClearMutationTargetsCommand {
   type: 'clear_mutation_targets';
   device_id: KitCaptureDeviceId;
+}
+
+export interface SetMutationParametersCommand {
+  type: 'set_mutation_parameters';
+  device_id: KitCaptureDeviceId;
+  parameter_cells: ParameterCell[] | null;
+}
+
+export interface GetMutationParametersCommand {
+  type: 'get_mutation_parameters';
+}
+
+export interface SetRehearsalPresetCommand {
+  type: 'set_rehearsal_preset';
+  preset_id: 'rytm_pad2_common';
+}
+
+export interface RetainRehearsalFavoriteCommand {
+  type: 'retain_rehearsal_favorite';
+  name: string;
+}
+
+export interface RecallRehearsalFavoriteCommand {
+  type: 'recall_rehearsal_favorite';
+  record_id: string;
 }
 
 export interface TogglePreviewCommand {
@@ -1398,6 +1465,11 @@ export type Command =
   | SetA4TrackLockCommand
   | SetMutationTargetsCommand
   | ClearMutationTargetsCommand
+  | SetMutationParametersCommand
+  | GetMutationParametersCommand
+  | SetRehearsalPresetCommand
+  | RetainRehearsalFavoriteCommand
+  | RecallRehearsalFavoriteCommand
   | TogglePreviewCommand
   | RegenCommand
   | PrepareSendPlanCommand
@@ -1519,6 +1591,7 @@ export function isEvent(msg: unknown): msg is Event {
     'kit_captures_changed',
     'show_bank_changed',
     'mutation_targets_changed',
+    'mutation_parameters_changed',
     'mutation_locks_changed',
     'dual_machine_stage_changed',
     'patch_genome_changed',

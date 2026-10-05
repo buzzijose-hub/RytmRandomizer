@@ -1,7 +1,7 @@
 /**
  * DepthSlider — DJ-style horizontal mutation amount slider.
  *
- * Range: 0.10..0.90 in 0.01 steps (per spec § "MutationCandidate.depth").
+ * Range: 0.00..0.90 in 0.01 steps; zero is the identity rehearsal.
  * On change → emits `set_depth { depth }` and re-renders the value chip.
  *
  * Local state mirrors the engine's last-applied depth; if the engine acks with a different
@@ -13,11 +13,13 @@
  * promise rejection (the cockpit mounts with no sidecar at all now).
  */
 
-import { useState, type ChangeEvent } from 'react';
+import { useEffect, useState, type ChangeEvent } from 'react';
+
+import { useCockpitStore } from '../state';
 
 import { useLoggedCommand } from './useLoggedCommand';
 
-const MIN = 0.1;
+const MIN = 0;
 const MAX = 0.9;
 const STEP = 0.01;
 const DEFAULT_DEPTH = 0.45;
@@ -30,10 +32,15 @@ export function DepthSlider({ initial = DEFAULT_DEPTH }: DepthSliderProps): JSX.
   const [depth, setDepth] = useState<number>(initial);
   const [active, setActive] = useState<boolean>(false);
   const sendCommand = useLoggedCommand();
+  const candidateDepth = useCockpitStore((state) => state.previewCandidate?.depth);
+  useEffect(() => {
+    if (candidateDepth !== undefined) setDepth(candidateDepth);
+  }, [candidateDepth]);
 
   const handleChange = (ev: ChangeEvent<HTMLInputElement>): void => {
     const next = Number.parseFloat(ev.target.value);
     setDepth(next);
+    useCockpitStore.getState().invalidateMutationContext();
     sendCommand({ type: 'set_depth', depth: next });
   };
 
@@ -66,6 +73,7 @@ export function DepthSlider({ initial = DEFAULT_DEPTH }: DepthSliderProps): JSX.
         />
       </div>
       <div className="depth-slider-ticks">
+        <span>0</span>
         <span>10</span>
         <span>30</span>
         <span>50</span>

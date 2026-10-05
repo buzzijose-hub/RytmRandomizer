@@ -225,6 +225,12 @@ describe('cockpit store — actions write each slice', () => {
       a4TrackTargets: [],
       rytmPadLocks: [],
       a4TrackLocks: [],
+      rytmParameters: null,
+      a4Parameters: null,
+      parameterControls: [],
+      mutationParametersReady: false,
+      parameterMetadataRefreshing: false,
+      mutationContextRevision: 0,
       dualMachineStage: null,
       performanceConsole: null,
       sendPlan: null,
@@ -1097,7 +1103,7 @@ describe('bindClientToStore', () => {
 
     // Unsubscribe should call client's individual unsubs.
     unbind();
-    expect(client.unsubCalls).toBe(18);
+    expect(client.unsubCalls).toBe(19);
   });
 
   it('falls back to the module-level singleton store when no store is provided', () => {

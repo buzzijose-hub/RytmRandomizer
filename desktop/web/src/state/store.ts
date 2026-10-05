@@ -44,6 +44,9 @@ import type {
   MidiActivityBatch,
   MidiActivityRow,
   MutationCandidate,
+  MutationParametersChangedEvent,
+  ParameterCell,
+  PerformanceParameterControl,
   ProfileModel,
   ProfileCatalogItem,
   SessionMode,
@@ -104,6 +107,12 @@ export interface CockpitState {
   a4TrackTargets: number[];
   rytmPadLocks: number[];
   a4TrackLocks: number[];
+  rytmParameters: ParameterCell[] | null;
+  a4Parameters: ParameterCell[] | null;
+  parameterControls: PerformanceParameterControl[];
+  mutationParametersReady: boolean;
+  parameterMetadataRefreshing: boolean;
+  mutationContextRevision: number;
   /** Latest whole-state coordinator snapshot; never merged field-by-field. */
   dualMachineStage: DualMachineStageState | null;
   performanceConsole: LiveGuiPerformanceConsoleModelDict | null;
@@ -162,6 +171,10 @@ export interface CockpitActions {
   setPatchGenome: (patchGenome: AnalogFourPatchGenomePayload) => void;
   setKitCaptures: (captures: KitCaptureResult[]) => void;
   setMutationTargets: (rytmPadTargets: number[], a4TrackTargets: number[]) => void;
+  setMutationParameters: (event: MutationParametersChangedEvent) => void;
+  replaceMutationParameters: (rytm: ParameterCell[] | null, a4: ParameterCell[] | null) => void;
+  invalidateParameterMetadata: () => void;
+  invalidateMutationContext: (recall?: boolean) => void;
   setMutationLocks: (rytmPadLocks: number[], a4TrackLocks: number[]) => void;
   setRytmPadLocks: (padIds: number[]) => void;
   setA4TrackLocks: (trackIds: number[]) => void;
@@ -217,6 +230,12 @@ export const INITIAL_STATE: CockpitState = {
   a4TrackTargets: [],
   rytmPadLocks: [],
   a4TrackLocks: [],
+  rytmParameters: null,
+  a4Parameters: null,
+  parameterControls: [],
+  mutationParametersReady: false,
+  parameterMetadataRefreshing: false,
+  mutationContextRevision: 0,
   dualMachineStage: null,
   performanceConsole: null,
   sendPlan: null,
@@ -281,6 +300,12 @@ function sameNumberSet(left: readonly number[], right: readonly number[]): boole
   return left.every((value) => rightSet.has(value));
 }
 
+function sameParameterSelection(left: ParameterCell[] | null, right: ParameterCell[] | null): boolean {
+  if (left === null || right === null) return left === right;
+  return left.length === right.length && left.every((cell) =>
+    right.some((other) => other.item_id === cell.item_id && other.parameter_key === cell.parameter_key));
+}
+
 function appendUnique(values: readonly string[], value: string): string[] {
   return values.includes(value) ? [...values] : [...values, value];
 }
@@ -327,6 +352,44 @@ export function createCockpitStore() {
     setProfileCatalog: (profileCatalog) => set({ profileCatalog }),
     setPatchGenome: (patchGenome) => set({ patchGenome, patchGenomeStale: false }),
     setKitCaptures: (kitCaptures) => set({ kitCaptures }),
+    setMutationParameters: (event) =>
+      set((state) => ({
+        rytmParameters: event.rytm_parameters,
+        a4Parameters: event.a4_parameters,
+        parameterControls: event.controls,
+        mutationParametersReady: true,
+        parameterMetadataRefreshing: false,
+        mutationContextRevision: state.mutationContextRevision + 1,
+        ...(!sameParameterSelection(state.rytmParameters, event.rytm_parameters) ||
+            !sameParameterSelection(state.a4Parameters, event.a4_parameters)
+          ? { previewCandidate: null, sendPlan: null,
+            patchGenomeStale: state.patchGenome !== null || state.patchGenomeStale }
+          : {}),
+      })),
+    invalidateParameterMetadata: () =>
+      set((state) => ({
+        parameterControls: [], mutationParametersReady: false, parameterMetadataRefreshing: true,
+        mutationContextRevision: state.mutationContextRevision + 1,
+        patchGenomeStale: state.patchGenome !== null || state.patchGenomeStale,
+      })),
+    replaceMutationParameters: (rytmParameters, a4Parameters) =>
+      set((state) => ({
+        rytmParameters, a4Parameters,
+        mutationContextRevision: state.mutationContextRevision + 1,
+        previewCandidate: null,
+        sendPlan: null,
+        patchGenomeStale: state.patchGenome !== null || state.patchGenomeStale,
+      })),
+    invalidateMutationContext: (recall = false) =>
+      set((state) => ({
+        mutationContextRevision: state.mutationContextRevision + 1,
+        previewCandidate: null,
+        sendPlan: null,
+        patchGenomeStale: state.patchGenome !== null || state.patchGenomeStale,
+        // Local authority is revoked immediately. The server's fresh events,
+        // not stored favorite metadata, establish the recalled session.
+        ...(recall ? { sessionStatusStale: true, dualMachineStage: null } : {}),
+      })),
     setMutationTargets: (rytmPadTargets, a4TrackTargets) =>
       set((state) => {
         const rytmChanged = !sameNumberSet(state.rytmPadTargets, rytmPadTargets);
@@ -335,6 +398,7 @@ export function createCockpitStore() {
         return {
           rytmPadTargets,
           a4TrackTargets,
+          mutationContextRevision: state.mutationContextRevision + 1,
           previewCandidate: null,
           sendPlan: null,
           patchGenomeStale:
@@ -349,6 +413,7 @@ export function createCockpitStore() {
         return {
           rytmPadLocks,
           a4TrackLocks,
+          mutationContextRevision: state.mutationContextRevision + 1,
           previewCandidate: null,
           sendPlan: null,
           patchGenomeStale:
@@ -358,13 +423,15 @@ export function createCockpitStore() {
     setRytmPadLocks: (rytmPadLocks) =>
       set((state) => {
         if (sameNumberSet(state.rytmPadLocks, rytmPadLocks)) return {};
-        return { rytmPadLocks, previewCandidate: null, sendPlan: null };
+        return { rytmPadLocks, previewCandidate: null, sendPlan: null,
+          mutationContextRevision: state.mutationContextRevision + 1 };
       }),
     setA4TrackLocks: (a4TrackLocks) =>
       set((state) => {
         if (sameNumberSet(state.a4TrackLocks, a4TrackLocks)) return {};
         return {
           a4TrackLocks,
+          mutationContextRevision: state.mutationContextRevision + 1,
           previewCandidate: null,
           sendPlan: null,
           patchGenomeStale: state.patchGenome !== null ? true : state.patchGenomeStale,
@@ -576,7 +643,7 @@ export const selectCanSend = (s: CockpitState): boolean => {
   const plan = s.sendPlan;
   const candidate = s.previewCandidate;
   const stage = s.dualMachineStage?.rytm;
-  if (s.connectionStatus !== 'connected' || plan === null || candidate === null) return false;
+  if (s.connectionStatus !== 'connected' || s.parameterMetadataRefreshing || plan === null || candidate === null) return false;
   if (!plan.ready || plan.plan_id.trim() === '') return false;
   if (plan.candidate_id !== candidate.candidate_id) return false;
   if (plan.source_snapshot_id !== candidate.source_snapshot_id) return false;
