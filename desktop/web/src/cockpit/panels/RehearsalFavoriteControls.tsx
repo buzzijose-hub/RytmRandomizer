@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useCockpitStore } from '../../state';
 import type { LibraryRecord } from '../../ws/protocol';
 import { useCockpitClient } from '../context';
+import './parameterScope.css';
 
 /** Local retention uses LibraryStore. Stored rehearsal metadata grants no UI authority. */
 export function RehearsalFavoriteControls({ records }: { records: LibraryRecord[] | null }): JSX.Element {
@@ -48,7 +49,7 @@ export function RehearsalFavoriteControls({ records }: { records: LibraryRecord[
   };
 
   return (
-    <section aria-label="Local rehearsal favorites" className="rehearsal-favorite-controls" data-testid="rehearsal-favorites">
+    <section aria-label="Local rehearsal favorites" className="cockpit-panel-controls rehearsal-favorite-controls" data-testid="rehearsal-favorites">
       <h3>Local rehearsal favorites</h3>
       <p>Local retention only. Hardware SAVE and manual KIT reload are separate.</p>
       {candidate !== null && <p data-testid="favorite-candidate-summary">

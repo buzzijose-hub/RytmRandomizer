@@ -1,6 +1,7 @@
 .parameter-scope { min-width: 0; }
 .parameter-scope-toolbar, .parameter-scope-actions, .parameter-scope-tabs {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  border: 0; border-radius: 0; background: transparent; padding: 0;
 }
 .parameter-scope-toolbar label { display: grid; gap: 4px; font-size: 12px; }
 .parameter-scope-toolbar select { max-width: 100%; min-height: 32px; }
@@ -22,6 +23,14 @@
 .parameter-scope code, .parameter-scope-evidence, .parameter-scope-values { overflow-wrap: anywhere; }
 .parameter-scope-selection code { color: var(--text-dim); }
 .parameter-scope button { min-height: 32px; }
+.rehearsal-favorite-controls {
+  display: grid; min-width: 0; border: 0; border-radius: 0; background: transparent; padding: 12px 0;
+}
+.rehearsal-favorite-controls h3 { margin: 0; font-size: 14px; letter-spacing: 0; }
+.rehearsal-favorite-controls p { margin: 0; overflow-wrap: anywhere; }
+.rehearsal-favorite-controls label { flex-wrap: wrap; min-width: 0; }
+.rehearsal-favorite-controls input, .rehearsal-favorite-controls select { min-height: 32px; max-width: 100%; min-width: 0; }
+.rehearsal-favorite-controls button { min-height: 32px; }
 @media (max-width: 760px) {
   .parameter-scope-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .parameter-scope-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }

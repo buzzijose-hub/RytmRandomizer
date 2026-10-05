@@ -97,7 +97,7 @@ export function MutationParametersPanel(): JSX.Element {
         sections: [], required_actions: [], blocked_actions: [],
         safety_lines: [deviceId === ANALOG_FOUR_DEVICE_ID ? 'A4 offline only; SEND blocked' : 'Protection and pad locks remain mandatory'],
       }} />
-      <div className="parameter-scope-toolbar">
+      <div className="cockpit-panel-controls parameter-scope-toolbar">
         <label>Device<select aria-label="Parameter scope device" value={deviceId}
           onChange={(event) => { setDeviceId(event.currentTarget.value as CockpitDeviceId); setItem(1); setPage(''); }}>
           <option value={RYTM_DEVICE_ID}>Analog Rytm</option>
@@ -116,7 +116,7 @@ export function MutationParametersPanel(): JSX.Element {
       </div>
       {!ready ? <p>Canonical parameter scope unavailable. Reconnect to a scope-capable sidecar.</p> : deviceControls.length === 0 ? <p>No canonical source controls available for this device.</p> : <>
         <p className="parameter-scope-source">{unit} {currentItem} / {itemControls[0]!.machine} / Source <code>{sourceIdentity ?? 'not available'}</code> / Targets: {targets.hasExplicitTargets ? [...targets.targets].join(', ') : 'all (legacy)'}</p>
-        <div className="parameter-scope-tabs" role="tablist" aria-label="Parameter pages">
+        <div className="cockpit-panel-controls parameter-scope-tabs" role="tablist" aria-label="Parameter pages">
           {pages.map((name, index) => <button key={name} type="button" role="tab" id={`${tabId}-tab-${index}`}
             aria-selected={name === currentPage} aria-controls={`${tabId}-page`} tabIndex={name === currentPage ? 0 : -1}
             onClick={() => setPage(name)} onKeyDown={(event) => {
@@ -128,7 +128,7 @@ export function MutationParametersPanel(): JSX.Element {
             }}>{name}</button>)}
         </div>
         <div role="tabpanel" id={`${tabId}-page`} aria-labelledby={`${tabId}-tab-${pages.indexOf(currentPage)}`}>
-          <div className="parameter-scope-actions">
+          <div className="cockpit-panel-controls parameter-scope-actions">
             <button type="button" disabled={disabled || locked || !targeted || eligible.length === 0} onClick={() => setPageSelection(true)}>Select page</button>
             <button type="button" disabled={disabled || eligible.length === 0} onClick={() => setPageSelection(false)}>Clear page</button>
             <button type="button" disabled={disabled} onClick={() => replace(deviceControls.filter(selectableParameter).map(({ item_id, parameter_key }) => ({ item_id, parameter_key })))}>Select all eligible</button>
