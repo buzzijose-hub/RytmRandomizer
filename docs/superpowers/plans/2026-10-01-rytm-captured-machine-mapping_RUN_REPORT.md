@@ -1,7 +1,7 @@
 # Captured Rytm mapping software report
 
-> Status: in-flight — October 5 review repairs integrated, final software/build
-> acceptance in progress; protected review and physical rehearsal remain pending.
+> Status: in-flight — October 5 software candidate packaged and MIDI-off smoke
+> passed; protected review and physical rehearsal remain pending.
 
 ## October 5 continuation
 
@@ -88,6 +88,79 @@ reservation lifetime. Operator instructions now acknowledge that scope selects
 whole pads/tracks, not a common-controls-only subset; a full-capture candidate
 may be blocked by changed paired LFO Depth. Rytm Filter Frequency is single CC74,
 not the paired A4 Filter 1 Frequency boundary. No paired conversion was unlocked.
+
+## Identified Windows candidate
+
+Production source: `fa43f86399394bd44ae97e2d48510f8b85a9fe7a`, version 1.34.0,
+remote branch `codex/studio-evidence-handoff`, existing PR #254. Later receipt-only
+commits do not change the packaged production source. Hosted Windows-only
+[installer run 37341458245](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/37341458245)
+succeeded. No local Rust toolchain or heavyweight native build was used.
+
+Local portable folder:
+`C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-studio-fa43f8639939`.
+Keep the executable and `binaries/rytm-sidecar.exe` together. The unsigned Studio
+copy requires WebView2, not a Python installation. `BUILD-MANIFEST.json` records
+the source, workflow, toolchains, resource/config overrides and these independently
+matched binary hashes:
+
+- Shell: `ffb1f9c0030bf620e539223e9bbf122dbe6453a49554e45be9a2d2c3b746dee3`.
+- Sidecar: `8c32b273f0aa4357e89b088f3bcb6ed78e08dccec2b9bf5a4940c42db9f58916`.
+
+The actual Tauri executable, bundled sidecar and embedded WebView passed an
+isolated MIDI-off smoke: disarmed startup, Pad 2 targeting/Pad 1 lock, 10%/90%
+previews, exact plan observation, specific paired/high-risk refusals, disabled
+capture without a backend, capture-panel close, local bank creation, missing-source
+adoption and empty-export refusal. Desktop/600px screenshots show readable SRC
+metadata with no horizontal overflow. The 10% candidate was refused for paired
+LFO precision; the 90% candidate was high-risk. Neither plan was transmitted.
+
+Only the owned bundled sidecar process tree was terminated for recovery testing.
+The shell restarted it, rotated credentials and reconnected while preserving
+local bank metadata and remaining disarmed. Full shutdown/relaunch also retained
+the bank, adopted the fresh token and stayed disarmed. This tests backend/socket
+recovery, not MIDI disconnect/reconnect, hardware restore, favorite audition or
+actual KIT capture. Those remain operator-present tests. Unit/browser fixtures
+cover candidate/favorite persistence; the binary smoke proves bank metadata only.
+
+The first CDP port did not open; a bounded isolated-profile/port retry succeeded.
+The bank smoke locator initially assumed an exact label despite option text
+being included in its accessible name; the corrected role locator passed.
+These failed harness attempts are not passing receipts or physical observations.
+No OS registry/security setting or runtime installation changed. All owned smoke
+processes and test listeners were stopped; QA browser profiles and credentials
+were retained outside the delivery folder, in ignored local output.
+
+Final receipts: Python 10,048 passed / 5 skipped / 6 warnings (324.94s),
+22 touched production modules 100% lines/branches, project 99.3693402% pure
+branch coverage; frontend 1,075 passed with 100% across four metrics; browser
+33 passed / 2 explicit skips (56.9s). Final ordinary pre-push gates passed
+860 architecture and 697 not-fast cases, including 685 frozen parity items;
+strict typing, lint, dead-code and version checks passed. Eight scoped reviews
+and production-head delta confirmations found no remaining code findings.
+Hosted native/full-platform outcomes and protected approval are separate gates.
+
+Offline launch (MIDI and updater disabled; clears a development sidecar override):
+
+```powershell
+Set-Location "C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-studio-fa43f8639939"
+.\Launch-Offline.ps1
+```
+
+The folder's `studio-procedure/STUDIO-FIRST-PASS.md` is the concise handoff.
+First physical step: back up operator-chosen spare KITs and input-capture their
+saved states while disarmed. Then target only Pad 2 at 10%, protect Pad 1/lock A4
+and inspect the full plan. Whole-pad scope is not a common-controls-only mode;
+stop on any blocker, never trim or bypass a refused plan. Only a separately
+approved ready exact plan may proceed to one audition, manual saved-KIT reload
+and fresh full fingerprint comparison. That can unlock a limited rehearsal,
+not general SRC/A4/BOTH output or show use. Local **Mark favorite**/**Save bank
+details** are not hardware saves; action-bar **SAVE** remains refused and
+local **UNDO**/**Reset Cockpit audition to source** cannot restore hardware.
+
+**READY for offline practice. NOT READY for shows.** No MIDI/USB port was
+enumerated, opened or written during this continuation. Historical Gate 14/16
+exceptions, Eddie's requested-changes state and merge protections remain intact.
 
 ## Historical receipts through October 2
 

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-05T16:25:00Z",
+  "updated_at": "2026-10-05T16:44:00Z",
   "status": "in-flight",
-  "phase": "oct05-review-repairs-integrated-composed-verification-and-studio-build-pending-hardware-held",
+  "phase": "oct05-software-candidate-packaged-and-MIDI-off-smoke-passed-protected-review-and-hardware-held",
   "prototype_source": "8cfa6f7b6cf9469ffa134598182febb60ecdd1df",
   "prototype_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-tom-mapping/RytmRandomizer",
   "delivery_start_source": "941643c551abfa225f45c70a954b6671d1cbb5f4",
@@ -21,14 +21,21 @@
   "work": {
     "mapping_implementation": "Oct05-all8-CY-Ride-SRC-blocked-25of29-new-fallback-rows-documented-only-guardedCC7-eligible-224-descriptive-bindings-retained-Studio-SRC-metadata-published3461f42e",
     "inventory": "registry-driven-29row-canonical-evidence-audit-25eligible-4CYremoved-init328-RIOreturn325-projections",
-    "dimension_reviews": "Oct05-eight-postpush-dimensions-complete-CI-log-count-repair-published2feffe74-schema-valid-doc-findings-being-reconciled-final-head-confirmation-pending-Gate14-16-retained",
+    "dimension_reviews": "Oct05-eight-postpush-dimensions-and-production-head-fa43f863-confirmations-complete-no-remaining-code-findings-CI-log-count-schema-doc-repairs-resolved-Gate14-16-retained",
     "plan_records": "source-bound-learning-and-probe-records-published-seventh-native-readiness-scope-declared-before-isolated-implementation",
     "delivery_integration": "4bc21952-verified-source-published-as-d6e8e164-separate-browser-scope47e43516-before-local-assertion-fix-isolated-runtime4b88-verified-not-activated",
-    "final_delivery_checks": "Oct05-full10048pass5skip6warnings324.94s-union22touched100linesbranches-web1070pass100coverage-strict22clean-lint-vulture-versionclean-browser33pass2skip-4b29hosted-Windows-build-hashes-match-native-WebView-startup-passed-final-refusal-explanations-and-binary-acceptance-pending",
+    "final_delivery_checks": "Oct05-full10048pass5skip6warnings324.94s-union22touched100linesbranches-web1075pass100coverage-strict22clean-lint-vulture-versionclean-browser33pass2skip56.9s-fa43f863-hosted-Windows-build37341458245-hashes-match-actual-MIDI-off-binary-target-lock-preview-refusal-local-bank-backend-recovery-and-restart-passed-physical-rehearsal-pending",
     "protected_review_and_merge": "pending",
     "post_merge_maintainability_audit": "pending"
   },
   "receipts": [
+    {
+      "scope": "Oct05-identified-Windows-portable-fa43f86399394bd44ae97e2d48510f8b85a9fe7a",
+      "result": "Hosted Windows run37341458245 succeeded; shellSHA256 ffb1f9c0030bf620e539223e9bbf122dbe6453a49554e45be9a2d2c3b746dee3; sidecarSHA256 8c32b273f0aa4357e89b088f3bcb6ed78e08dccec2b9bf5a4940c42db9f58916; actual MIDI-off startup, targeting, locks, small/large preview, paired/high-risk refusal, unavailable capture/export refusal, local bank metadata persistence, owned-backend recovery and full restart disarmed passed. No actual KIT capture, hardware audition/recovery, or favorite recapture performed; software READY offline only, NOT READY shows. All owned processes/listeners stopped and QA credentials retained outside delivery.",
+      "passing_verdict": true,
+      "hardware_observation": false,
+      "final_delivery_verdict": false
+    },
     {
       "scope": "Oct05-review-repair-source-frozen-composition",
       "result": "10044passed5skipped6warnings338.60seconds-web1070passed100coverage-strict22clean-lint-vulture-versionclean-browser33pass2skip-1.2minutes-binary-smoke-pending",
@@ -282,11 +289,11 @@
     }
   ],
   "remaining": [
-    "Complete packaged offline workflow smoke and publish its identified build receipt, final postpush dimensions and exact-head hosted acceptance",
+    "Publish the completed identified Windows MIDI-off smoke receipt and consolidated review; retain source-specific hosted acceptance and protected approval as separate gates",
     "Operator-present fresh backed-up source capture and exact-plan inspection are required before any physical audition; current UI does not select individual parameter subsets",
     "Protected new-head human review, hosted checks and merge",
     "Retrospective audit review and actual post-merge reassessment; Gate14 remains unchecked",
-    "Preserve historical Gate16 isolation/timing limitation and outstanding prior minor follow-ups"
+    "Preserve historical Gate16 isolation/timing limitation; frozen legacy offline lev arithmetic remains tracked in issue256"
   ],
   "limits": [
     "Historical October1 mapping-only local studio backend ran2a19b094 with hash-verified8cfa6f7b frontend; this is not the October5 identified portable build",

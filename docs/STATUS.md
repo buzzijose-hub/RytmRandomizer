@@ -23,14 +23,23 @@ validation. Retained init/RIO frames now project 64/61 SRC values plus 264
 common values, 328/325 total, without changing frame bytes. Synthetic families
 remain software contracts, not physical evidence. The reproducible row-level
 audit is in [Mapping boundaries](RYTM_MAPPING_STATUS.md). Studio SRC display is
-implemented. The clean October 5 composition passed 10,044 tests, five skips
-and six warnings in 338.60 seconds. All 22 touched production modules have
+implemented. The clean October 5 final composition passed 10,048 tests, five skips
+and six warnings in 324.94 seconds. All 22 touched production modules have
 100% line/branch coverage; combined coverage is 99.66%, pure branch 99.37%.
-Frontend verification passed 1,070 tests with 100% coverage; the single-worker
-browser suite passed 33 scenarios with two explicit skips. Strict typing,
-Ruff, Black, isort, Vulture and version checks pass. Identified portable
-packaging and actual-binary smoke remain in progress;
-physical rehearsal and protected approval remain pending.
+Frontend verification passed 1,075 tests with 100% coverage; the single-worker
+browser suite passed 33 scenarios with two explicit skips in 56.9 seconds. Strict typing,
+Ruff, Black, isort, Vulture and version checks pass. The identified Windows
+1.34.0 Studio copy at `fa43f86399394bd44ae97e2d48510f8b85a9fe7a` built in
+hosted run [37341458245](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/37341458245).
+Its actual-binary MIDI-off smoke passed startup, targeting/locks, small/large
+previews, explicit whole-plan refusals, unavailable capture/export refusal,
+local bank metadata persistence, backend recovery/fresh credentials and full
+restart disarmed. The 10% smoke candidate was blocked by paired LFO precision;
+no hardware audition or candidate/favorite recapture is claimed by this smoke.
+All eight review dimensions and final production-source delta checks are clear.
+Physical rehearsal and protected approval remain pending; READY for offline
+practice only, NOT READY for shows. See the source-bound
+[delivery receipt](superpowers/plans/2026-10-01-rytm-captured-machine-mapping_RUN_REPORT.md#identified-windows-candidate).
 
 The historical Python composition at `4bc21952` passed 9,927 tests, with five skips
 and six existing warnings in 280.92s. All 21 touched production modules have
