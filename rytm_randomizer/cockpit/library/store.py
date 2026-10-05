@@ -45,9 +45,15 @@ from ...data.persisted_state import (
 )
 from ...devices import all_devices
 from ...observability.errors import PersistedStateVersionError
+from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
+from ...observability.tracing import trace
 from ...snapshot.sysex_file import extract_sysex_payloads
+from ..data.rehearsal_favorite import LocalRehearsalFavorite
+from ..data.stage import ANALOG_RYTM_DEVICE_ID
+from ..engine import mutate
 from ..export.writer import atomic_write
+from ..parameter_scope import rytm_parameter_depths
 from ..profiles.paths import default_profiles_dir
 
 __all__ = [
@@ -73,6 +79,8 @@ it in one place is the only way to change what this store writes.
 _LIBRARY_LEAF: Final[str] = "library"
 _RECORD_SUFFIX: Final[str] = ".json"
 _CAPTURES_LEAF: Final[str] = "captures"
+_FAVORITE_NAME_LIMIT: Final[int] = 128
+_logger = get_logger(__name__)
 
 _RECORD_ID_RE: Final[re.Pattern[str]] = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
 """Strict record-id charset — record ids become filenames, so no dots,
@@ -131,6 +139,7 @@ class LibraryRecord:
     captured_at: str
     tags: tuple[str, ...]
     payload_hex: str
+    rehearsal: LocalRehearsalFavorite | None = None
 
     def to_dict(self) -> dict[str, object]:
         """JSON-safe dict form (the on-disk and on-wire shape)."""
@@ -143,6 +152,8 @@ class LibraryRecord:
             "captured_at": self.captured_at,
             "tags": list(self.tags),
             "payload_hex": self.payload_hex,
+            "record_kind": "capture" if self.rehearsal is None else "rehearsal_favorite",
+            "rehearsal": None if self.rehearsal is None else self.rehearsal.to_dict(),
         }
 
     @classmethod
@@ -154,7 +165,35 @@ class LibraryRecord:
         if not isinstance(tags_raw, (list, tuple)):
             raise ValueError(f"library record {record_id!r} has non-list tags")
         tag_values = cast("Sequence[object]", tags_raw)
-        return cls(
+        if raw.get(PERSISTED_STATE_VERSION_FIELD) == LIBRARY_STORE_SCHEMA_VERSION and (
+            "record_kind" not in raw or "rehearsal" not in raw
+        ):
+            raise ValueError("versioned library record is missing its explicit kind")
+        kind = raw.get("record_kind", "capture")
+        rehearsal_raw = raw.get("rehearsal")
+        if kind not in ("capture", "rehearsal_favorite") or (
+            (kind == "capture") != (rehearsal_raw is None)
+        ):
+            raise ValueError("library record kind does not match rehearsal payload")
+        rehearsal = (
+            None if rehearsal_raw is None else LocalRehearsalFavorite.from_dict(rehearsal_raw)
+        )
+        if rehearsal is not None and (
+            any(
+                not isinstance(raw.get(key), str)
+                for key in (
+                    "record_id",
+                    "device_id",
+                    "kit_name",
+                    "fingerprint",
+                    "captured_at",
+                    "payload_hex",
+                )
+            )
+            or any(not isinstance(tag, str) for tag in tag_values)
+        ):
+            raise ValueError("library favorite metadata requires exact text fields")
+        record = cls(
             record_id=record_id,
             device_id=str(raw.get("device_id", "")),
             kit_name=str(raw.get("kit_name", "")),
@@ -162,7 +201,17 @@ class LibraryRecord:
             captured_at=str(raw.get("captured_at", "")),
             tags=tuple(str(tag) for tag in tag_values),
             payload_hex=str(raw.get("payload_hex", "")),
+            rehearsal=rehearsal,
         )
+        if rehearsal is not None and (
+            record.record_id != rehearsal.favorite_id
+            or record.device_id != rehearsal.source_snapshot.device
+            or record.fingerprint != rehearsal.source_hash
+            or record.captured_at != rehearsal.source_snapshot.captured_at.isoformat()
+            or record.payload_hex
+        ):
+            raise ValueError("library favorite metadata does not match retained source identity")
+        return record
 
     def matches(self, query: str) -> bool:
         """Case-insensitive substring match over the searchable fields."""
@@ -257,6 +306,76 @@ class LibraryStore:
 
         return tuple(record for record in self.list_records() if record.matches(query))
 
+    @staticmethod
+    @trace("verify_rehearsal")
+    def verify_rehearsal(favorite: LocalRehearsalFavorite) -> None:
+        """Recompute retained values using canonical scope/engine, never send them.
+
+        Candidate ULIDs are intentionally fresh on recomputation. The retained
+        ULID is integrity-bound by the DTO hash; all deterministic values and
+        provenance must agree independently of that nondeterministic field.
+        """
+        if favorite.source_snapshot.device != ANALOG_RYTM_DEVICE_ID:
+            raise ValueError("favorite_a4_candidate_verification_unavailable")
+        scope = favorite.mutation_scope()
+        reproduced = mutate(
+            favorite.source_snapshot,
+            favorite.profile,
+            favorite.candidate.depth,
+            favorite.candidate.seed,
+            target_pad_ids=scope.target_ids,
+            locked_pad_ids=scope.locked_ids,
+            parameter_depths=rytm_parameter_depths(
+                favorite.source_snapshot, favorite.parameter_selection, favorite.candidate.depth
+            ),
+        )
+        expected = favorite.candidate.to_dict()
+        actual = reproduced.to_dict()
+        expected.pop("candidate_id")
+        actual.pop("candidate_id")
+        if expected != actual:
+            _logger.warning(
+                "rehearsal_verification",
+                extra={"decision": "deterministic_candidate", "outcome": "refused"},
+            )
+            raise ValueError("favorite_candidate_deterministic_verification_failed")
+        _logger.debug(
+            "rehearsal_verification",
+            extra={
+                "decision": "deterministic_candidate",
+                "outcome": "verified",
+                "item_count": len(favorite.candidate.pad_deltas),
+            },
+        )
+
+    def retain_rehearsal(self, favorite: LocalRehearsalFavorite, name: str) -> LibraryRecord:
+        """Retain an exact scoped candidate in the existing atomic JSON library."""
+        if (
+            not isinstance(cast(object, name), str)
+            or not name.strip()
+            or len(name) > _FAVORITE_NAME_LIMIT
+        ):
+            raise ValueError("favorite name must be nonempty text of at most 128 characters")
+        self.verify_rehearsal(favorite)
+        existing = self.get(favorite.favorite_id)
+        if existing is not None:
+            if existing.rehearsal != favorite:
+                raise ValueError("favorite_record_identity_collision")
+            return existing
+        # Refused/corrupt records cannot be overwritten by a subsequent retain.
+        record = LibraryRecord(
+            record_id=favorite.favorite_id,
+            device_id=favorite.source_snapshot.device,
+            kit_name=name,
+            fingerprint=favorite.source_hash,
+            captured_at=favorite.source_snapshot.captured_at.isoformat(),
+            tags=(),
+            payload_hex="",
+            rehearsal=favorite,
+        )
+        self._write_record(record, overwrite=False)
+        return record
+
     def tag(self, record_id: str, tags: Sequence[str]) -> LibraryRecord:
         """Replace a record's tags; returns the updated record.
 
@@ -275,6 +394,7 @@ class LibraryStore:
             captured_at=existing.captured_at,
             tags=clean_tags,
             payload_hex=existing.payload_hex,
+            rehearsal=existing.rehearsal,
         )
         self._write_record(updated, overwrite=True)
         return updated
@@ -386,6 +506,9 @@ class LibraryStore:
         # envelope is stamped here (disk only) rather than in the DTO —
         # adding a field to the wire payload would change the WS contract.
         payload = record.to_dict()
+        if record.rehearsal is not None:
+            LibraryRecord.from_dict(payload)
+            self.verify_rehearsal(record.rehearsal)
         payload[PERSISTED_STATE_VERSION_FIELD] = LIBRARY_STORE_SCHEMA_VERSION
         encoded = json.dumps(payload, indent=2, sort_keys=True).encode("utf-8")
         atomic_write(self._record_path(record.record_id), encoded, overwrite=overwrite)
@@ -443,8 +566,14 @@ def _safe_load_record(path: Path) -> LibraryRecord | None:
     if payload is None:  # pragma: no cover - accepted decisions always carry one
         return None
     try:
-        return LibraryRecord.from_dict(payload)
-    except ValueError:
+        record = LibraryRecord.from_dict(payload)
+        if record.record_id != path.stem:
+            raise ValueError("library record identity does not match filename")
+        if record.rehearsal is not None:
+            LibraryStore.verify_rehearsal(record.rehearsal)
+        return record
+    except (ValueError, TypeError, KeyError, OverflowError):
+        get_metrics().record_persisted_state_refusal(LIBRARY_STORE_ID, "unknown_shape")
         return None
 
 
