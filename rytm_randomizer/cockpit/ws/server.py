@@ -124,7 +124,7 @@ import os
 import time
 from dataclasses import dataclass
 from functools import partial
-from typing import Final, cast
+from typing import Final, TypedDict, cast
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
@@ -381,6 +381,16 @@ class ConnectionQueue:
         return await self._queue.get()
 
 
+class QueueDiagnostics(TypedDict):
+    """Read-only aggregate health counters; no frame or connection identity."""
+
+    connection_count: int
+    capacity_per_connection: int
+    queued_frames: int
+    high_water_per_connection: int
+    dropped_frames: int
+
+
 class ConnectionRegistry:
     """The server-owned registry of one :class:`ConnectionQueue` per connection.
 
@@ -403,7 +413,7 @@ class ConnectionRegistry:
 
         return len(self._queues)
 
-    def queue_diagnostics(self) -> dict[str, int]:
+    def queue_diagnostics(self) -> QueueDiagnostics:
         """Aggregate active queue bounds without publishing frames or peer identities."""
         queues = tuple(self._queues.values())
         return {

@@ -8,6 +8,7 @@ import json
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import TypedDict
 
 from rytm_randomizer.cockpit.data.show_bank import (
     A4_NATIVE_MUTATION_ALGORITHM,
@@ -23,7 +24,22 @@ from rytm_randomizer.devices.strategies.analog_four_saved_kit_codec import (
 from rytm_randomizer.observability.errors import RytmRandomizerError
 
 
-def verify_rehearsal_pack(package: Path) -> dict[str, object]:
+class RehearsalPackProof(TypedDict):
+    """Source-identity and precision evidence produced by the passive QA verifier."""
+
+    verified: bool
+    entry_count: int
+    candidate_count: int
+    original_frame_sha256: list[str]
+    native_candidate_frame_sha256: list[str]
+    native_value_checks: int
+    approved_changed_native_bytes: int
+    canonical_profile_replay: bool
+    hardware_access: bool
+    hardware_validation_granted: bool
+
+
+def verify_rehearsal_pack(package: Path) -> RehearsalPackProof:
     """Reverify exact frames/replay, then independently check declared byte isolation."""
     if not package.name.endswith(SHOW_PACK_SUFFIX):
         raise ValueError("expected one show-pack directory")

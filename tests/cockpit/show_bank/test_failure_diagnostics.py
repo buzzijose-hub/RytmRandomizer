@@ -36,7 +36,6 @@ from rytm_randomizer.cockpit.ws.show_bank_handlers import local_artifact_failure
 from rytm_randomizer.observability.errors import DataError, PersistedStateVersionError
 
 from .test_native_offline_journey import _disk, _favorite, _generate, _journey, _session
-from .test_observability import package_logs as package_logs
 
 pytestmark = [
     pytest.mark.fast,
