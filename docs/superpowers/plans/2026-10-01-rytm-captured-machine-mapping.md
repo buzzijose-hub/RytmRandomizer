@@ -608,3 +608,84 @@ pair and immediately rereads the frames through existing helpers. Reuse within
 that request could reduce duplicate reads, but no latency measurement or
 behavioral defect was found; avoid coupling this cleanup to acceptance fixes.
 Historical Gate14/16 exceptions, human approval and post-merge review stay open.
+
+## October 6 Reliability And Sustained Offline Rehearsal
+
+Pre-code scope recorded for the new user mission at2026-10-06T21:41:19Z;
+eight-hour ceiling2026-10-07T05:41:19Z. Starting receiptaf5a2b40, production6eb,
+Windows37523755117 and preserved delivery6eb. Coordinator is clean; PR254 is
+direct-base modularize-v1.34 with31successful checks/three skips. Eddie's
+October3 review remains changes requested. Resource preflight:16.93GiB free of
+31.75GiB. Primary dirty checkout and unrelated worktrees are not edited.
+
+### Boundaries And Ownership
+
+| Stream | Disjoint ownership / intended outcome |
+| --- | --- |
+| Failure reporting worker | Existing ShowPack export/reader and WS ShowBank adapters/handler error seam, focused failure tests. Reproduce missing-package generic error; return categorical actionable path-free reasons without echoing arbitrary exception messages or granting authority. No Library/workspace/write-engine/web changes. |
+| Adversarial retention worker | Library and ShowBank workspace/store or atomic writer only when a demonstrated failure requires it; new focused composed tests. Multi-cue source associations, immutable-profile recall, migration, duplicates, missing/corrupt/mismatched data, interrupted publication and exact protected bytes. No ShowPack exporter, WS handler, web or new error schema changes. |
+| Coordinator | Existing frontend consumer if required, rapid scope/backend-loss journeys, reproducible endurance driver/measurements, source composition, docs/checkpoints/review/build/delivery. |
+
+Workers branch from the pre-code scope commit in isolated managed worktrees;
+no sibling PRs. Agree a public producer/consumer call contract before crossing
+ownership. First real composition checkpoint executes the actual error handler
+and retention/import/recall producer-consumer tests, not mocked collaborators.
+Use existing DataError taxonomy, canonical JSON/readers, atomic writer, library,
+ShowBank, registered codecs/native capability and authenticated WS dispatch.
+Cancellation/refusal must preserve previous bank/source/favorite and publish no
+partial destination. Missing/corrupt/unsupported-schema/source-mismatch reasons
+must explain recovery without paths, secrets or raw exception chains.
+
+### Verification And Endurance Contract
+
+Two implementation workers initially; focused tests coordinated -n0, composed
+full coverage -n2; browser1/retries0 and only one heavy local job. No real
+MIDI/USB enumeration/open/arming/write, capture command, firmware/device change,
+pin/fixture/gate change, A4/BOTH/CYRide/paired/restore promotion or Pi activation.
+Every source/precision/selector claim stays on existing evidence and protection.
+
+The measured packaged-app run is90-120actual wall-clock minutes after any
+required repairs/new package. Use one isolated MIDI-off test-owned app/backend
+and retained representative files, legal bounded multi-cue banks and candidate
+counts. Cycle real UI generation/inspection/favorites/order/export/import/recall;
+include controlled owned-backend loss/restart and commands around reconnect.
+Keep bounded telemetry (latency, process working/private memory, handles/process
+count, client command/ack queues and server histories/caches through existing
+diagnostics), periodic durable progress, source/candidate/lock/precision identity
+assertions, a declared minimum duration and explicit pass/fail stop reason.
+Never call a shorter interrupted run an endurance pass. Optimize repeated reads
+only if measured evidence justifies it; preserve validation and byte checks.
+Stop only owned processes/listeners and keep QA credentials outside delivery.
+
+Production changes require a new exact-source unsigned Windows build through
+the existing hosted installer lane, manifest/hash verification and actual-binary
+acceptance. Preserve old copies. Source-frozen focused/full/architecture/parity,
+canonical touched100%coverage, strict typing, lint/dead-code, frontend coverage
+and actual journeys precede final acceptance. Required dimensional reviews and
+protected human approval remain separate; update only existing direct-basePR254.
+
+### Pre-Code Maintainability Assessment
+
+| Dimension | Intended contained change |
+| --- | --- |
+| Onboarding | One existing offline/studio handoff with exact tested build and four-field Pad2 first gate. |
+| Naming | Typed failure categories distinguish missing/corrupt/incompatible/mismatch from cancellation and hardware protection. |
+| Coupling | Existing export-reader/WS seam and Library/workspace/writer; public call contract and one integration checkpoint. |
+| Constants | Existing size/cue/candidate/cache/history bounds; no invented native or MIDI facts. |
+| Configuration | Existing MIDI-off launch and isolated state; QA duration/paths are explicit driver inputs, not a shipped bypass. |
+| Tests | Meaningful retained-frame/fake-port adversarial tests plus actual binary endurance; fixtures never grant physical evidence. |
+| Build loop | Prior full250.49s/front100.51s/browser1.1m; one heavy process, two pytest workers/one browser. |
+| Errors | Specific actionable messages, stable taxonomy and bounded path-free diagnostic context; previous complete artifacts survive failure. |
+| Versioning | Preserve source6eb delivery; new source commit/hashes if production changes, explicit supported legacy migration and newer-schema refusal. |
+| Extension | Reuse existing mechanisms; no parallel dashboard, workflow/store, exporter or sender. |
+
+All18gate definitions/checklists above remain binding. Reassess after integration;
+historical Gate14/16 exceptions are not retroactively cleared. Track actual
+start/end, interruptions, phase durations and stop reason in the run report and
+compact resume checkpoint. Rollback uses unchanged6eb and reverts only this
+contained phase; no user data/old delivery rollback or destructive cleanup.
+Done: specific safe failures, verified adversarial journeys, completed measured
+endurance, source-bound usable delivery/handoff, no independent software task
+left. First physical gate remains backed-up fresh capture, four-control Pad2 at
+10%, exact approved audition, DISARM, manual KIT reload and fresh comparison.
+Offline acceptance is not show readiness.
