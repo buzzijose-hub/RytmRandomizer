@@ -593,7 +593,9 @@ def test_duplicate_pack_and_io_failure_are_safe_acks_and_session_continues(
     duplicate = dispatch(export)
     assert duplicate["ok"] is False
     assert duplicate["code"] == ERR_VALIDATION
-    assert duplicate["message"] == "command rejected by handler validation"
+    assert duplicate["message"] == (
+        "Local destination already exists. Choose a new bank or package ID; existing files were not replaced."
+    )
 
     def denied(_bank):
         raise PermissionError("private-path-secret")
@@ -610,7 +612,8 @@ def test_duplicate_pack_and_io_failure_are_safe_acks_and_session_continues(
         }
     )
     assert failed["ok"] is False
-    assert failed["code"] == ERR_INTERNAL
+    assert failed["code"] == ERR_VALIDATION
+    assert "Check folder access" in failed["message"]
     assert "private-path-secret" not in repr(failed)
     assert dispatch({"type": "show_bank_list"})["ok"] is True
 

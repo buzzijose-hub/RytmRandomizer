@@ -126,3 +126,19 @@ def test_generation_accepts_matching_scope_and_safe_narrowing_with_added_locks(
         assert generated.recipe.rytm_scope.target_ids == (1,)
         assert generated.recipe.analog_four_scope.target_ids == (1,)
         assert set(generated.recipe.analog_four_scope.locked_ids) == locks[1] | {3}
+
+
+def test_generation_refuses_unknown_profile_without_revision_or_activation(tmp_path: Path) -> None:
+    session, command = _generation(tmp_path)
+    workspace = session.show_kit_forge
+    assert workspace is not None
+    original = workspace.banks[0]
+    command["profile_id"] = "missing-profile"
+    session.active_profile = None
+    ack = asyncio.run(
+        handle_command({"request_id": "unknown-profile", "command": command}, session)
+    )
+    assert ack["ok"] is False
+    assert workspace.bank(original.bank_id) == original
+    assert session.current_send_plan is None
+    assert session.armed_apply is None and not session.hardware_intent

@@ -398,7 +398,8 @@ def test_dispatcher_exception_repr_does_not_expose_rejected_library_identity(
     assert "PRIVATE_WS" not in repr(ack)
     failures = [log for log in source_logs.records if log.getMessage() == "handler_exception"]
     assert len(failures) == 1
-    assert "invalid library record_id" in failures[0].exception_repr
+    assert "redacted-local-artifact" in failures[0].exception_repr
+    assert failures[0].exception_type == "_LibrarySourceError"
     assert len(failures[0].exception_repr) < 128
     _assert_redacted(source_logs, "PRIVATE_WS", str(tmp_path))
     assert session.armed_apply is None and session.hardware_intent is False

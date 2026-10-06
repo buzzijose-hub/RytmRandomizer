@@ -518,7 +518,8 @@ def test_aggregate_scan_bounds_and_failed_export_reservation_are_enforced(
     assert not (service.package_root / "oversized.show-pack").exists()
     monkeypatch.setattr(export_module, "SHOW_PACK_MAX_TOTAL_BYTES", 64 * 1024 * 1024)
 
-    def fail_publication(_artifacts, *, overwrite=False):
+    def fail_publication(_artifacts, *, overwrite=False, redact_diagnostics=False):
+        assert redact_diagnostics is True
         raise RuntimeError(f"publication failed: {overwrite}")
 
     monkeypatch.setattr(export_module, "atomic_write_set", fail_publication)

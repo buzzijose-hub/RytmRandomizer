@@ -253,13 +253,8 @@ def test_rejected_request_logs_are_bounded_without_losing_internal_error_details
     assert len(detail) <= limit
     assert record.__dict__["exception_type"] == "ValueError"
     assert record.__dict__["code"] == "validation_error"
-    if kind in ("short_key", "candidate_id"):
-        assert detail == repr(internal_error.value)
-    else:
-        assert len(detail) == limit
-        assert detail.startswith("ValueError(")
-        assert detail.endswith("...")
-        assert "unlogged-tail" not in repr(record.__dict__)
+    assert detail == "ValueError('<redacted-local-artifact>')"
+    assert value not in detail and "unlogged-tail" not in repr(record.__dict__)
     assert session.armed_apply is None
     assert session.current_send_plan is None
     assert session.unsaved_sends == 0

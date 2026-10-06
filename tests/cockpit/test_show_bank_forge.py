@@ -606,6 +606,15 @@ def test_mock_ws_forge_journey_refuses_paired_plan_and_never_claims_save(
     )
     assert ack["ok"] is True
     assert len(cast(list[str], ack["candidate_ids"])) == 3
+    assert session.current_candidate is None and session.current_send_plan is None
+    ack, _ = command(
+        "show_bank_select_candidate",
+        bank_id=bank.bank_id,
+        entry_id=entry.entry_id,
+        candidate_id=cast(list[str], ack["candidate_ids"])[0],
+        expected_revision=workspace.bank(bank.bank_id).revision,
+    )
+    assert ack["ok"] is True
     assert session.current_candidate is not None
     assert {delta.pad_id for delta in session.current_candidate.pad_deltas} == {1}
     delta = session.current_candidate.pad_deltas[0]

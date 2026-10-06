@@ -524,3 +524,44 @@ def test_expected_artifact_categories_do_not_change_unrelated_handler_classifica
     assert handlers._local_artifact_failure_message(error, "regen") is None
     assert handlers._classify_handler_exception(error)[0] == ERR_INTERNAL
     assert handlers.dispatcher_failure_ack(error, "request")["code"] == ERR_INTERNAL
+
+
+def test_unrelated_programmer_failure_keeps_bounded_log_detail(
+    artifact_harness: _Harness,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    size = handlers._HANDLER_EXCEPTION_REPR_MAX_CHARS
+
+    def broken(_command: dict[str, object], _session: CockpitSession) -> object:
+        raise RuntimeError("x" * (size * 2) + "must-be-truncated")
+
+    monkeypatch.setattr(handlers, "_resolve_handler", lambda _kind: broken)
+    caplog.set_level(logging.DEBUG, logger="rytm_randomizer")
+    ack = _command(artifact_harness.session, "regen")
+    assert ack["code"] == ERR_INTERNAL
+    failure = next(record for record in caplog.records if record.msg == "handler_exception")
+    assert len(failure.exception_repr) == size
+    assert failure.exception_repr.endswith("...")
+    assert "must-be-truncated" not in repr(failure.__dict__)
+
+
+def test_package_root_inspection_error_has_access_category_without_wire_details(
+    artifact_harness: _Harness,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    root = artifact_harness.service.package_root
+    original = Path.is_symlink
+
+    def denied(path: Path) -> bool:
+        if path == root:
+            raise PermissionError(_SECRET)
+        return original(path)
+
+    monkeypatch.setattr(Path, "is_symlink", denied)
+    caplog.set_level(logging.DEBUG, logger="rytm_randomizer")
+    ack = _command(artifact_harness.session, "show_bank_import", pack_name="missing")
+    assert ack["code"] == ERR_VALIDATION
+    assert "Check folder access" in ack["message"]
+    assert "SECRET_TOKEN" not in repr([record.__dict__ for record in caplog.records])
