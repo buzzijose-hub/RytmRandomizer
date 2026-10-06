@@ -91,13 +91,14 @@ from ..data import (
     Snapshot,
     StageDeviceId,
 )
-from ..data.rytm_parameter_map import cockpit_parameter_live_blockers
-from ..data.parameter_scope import ParameterSelection, RYTM_PAD2_REHEARSAL_PRESET_ID
+from ..data.parameter_scope import RYTM_PAD2_REHEARSAL_PRESET_ID, ParameterSelection
 from ..data.rehearsal_favorite import LocalRehearsalFavorite
+from ..data.rytm_parameter_map import cockpit_parameter_live_blockers
 from ..device.connection import ConnectionState, active_connection_manager
 from ..diagnostics import build_diagnostics_payload
 from ..engine import mutate, prepare_send_plan
 from ..export import pack_profile_model
+from ..export.writer import WriteError
 from ..library import LibraryStore
 from ..mutation_targets import (
     A4_TRACK_TARGET_MAX,
@@ -122,6 +123,7 @@ from .protocol import (
     COMMAND_DIAGNOSTICS,
     COMMAND_DISARM,
     COMMAND_EXPORT_PROFILE_MODEL,
+    COMMAND_GET_MUTATION_PARAMETERS,
     COMMAND_LIBRARY_DELETE,
     COMMAND_LIBRARY_IMPORT_CAPTURES,
     COMMAND_LIBRARY_LIST,
@@ -132,21 +134,20 @@ from .protocol import (
     COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
     COMMAND_PREPARE_SEND_PLAN,
     COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+    COMMAND_RECALL_REHEARSAL_FAVORITE,
     COMMAND_REGEN,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
+    COMMAND_RETAIN_REHEARSAL_FAVORITE,
     COMMAND_SAVE,
     COMMAND_SELECT_PROFILE,
     COMMAND_SEND,
     COMMAND_SET_A4_TRACK_LOCK,
     COMMAND_SET_DEPTH,
-    COMMAND_SET_MUTATION_TARGETS,
     COMMAND_SET_MUTATION_PARAMETERS,
-    COMMAND_GET_MUTATION_PARAMETERS,
-    COMMAND_SET_REHEARSAL_PRESET,
-    COMMAND_RETAIN_REHEARSAL_FAVORITE,
-    COMMAND_RECALL_REHEARSAL_FAVORITE,
+    COMMAND_SET_MUTATION_TARGETS,
     COMMAND_SET_PAD_LOCK,
+    COMMAND_SET_REHEARSAL_PRESET,
     COMMAND_TOGGLE_PREVIEW,
     COMMAND_UNDO,
     ERR_INTERNAL,
@@ -538,8 +539,8 @@ async def emit_initial_events(emitter: EventEmitter, session: CockpitSession) ->
     # a freshly-connected client also receives the latest passive
     # connection state so the header renders plug/unplug truth without
     # waiting for the next poll diff. Unwired sessions (unit tests,
-    # embedded harnesses) keep the authoritative 11-event whole-state
-    # bootstrap; wired sessions append this connection frame as event 12.
+    # embedded harnesses) keep the authoritative 12-event whole-state
+    # bootstrap; wired sessions append this connection frame as event 13.
     manager = active_connection_manager()
     if manager is not None:
         await emitter.send_event(build_connection_changed(manager.state))
@@ -693,6 +694,13 @@ def _clear_send_plan_if_needed(session: CockpitSession) -> list[dict[str, object
 # responsibility to log via :data:`_logger` BEFORE calling this helper
 # -- the helper itself takes only the safe text.
 # ---------------------------------------------------------------------------
+
+
+def _record_scope_refusal(reason: str) -> None:
+    _logger.info(
+        "studio_scope_refused",
+        extra={"decision": "scope_or_recall", "reason": reason, "outcome": "refused"},
+    )
 
 
 def _error_ack(code: str, message: str) -> dict[str, object]:
@@ -1249,6 +1257,7 @@ async def _handle_set_mutation_parameters(
     try:
         validate_parameter_selection(selection, controls, device_id)
     except ValueError:
+        _record_scope_refusal("control_protected_or_unavailable")
         return HandlerResult(
             ack=_error_ack(
                 ERR_VALIDATION,
@@ -1281,10 +1290,12 @@ async def _handle_set_rehearsal_preset(
     cmd: dict[str, object], session: CockpitSession
 ) -> HandlerResult:
     if cmd["preset_id"] != RYTM_PAD2_REHEARSAL_PRESET_ID:
+        _record_scope_refusal("preset_unknown")
         raise ValueError("unsupported rehearsal preset")
     try:
         selection = pad2_rehearsal_selection(session.device.capture_snapshot())
     except ValueError:
+        _record_scope_refusal("preset_source_fields_unavailable")
         return HandlerResult(
             ack=_error_ack(
                 ERR_VALIDATION,
@@ -1299,10 +1310,8 @@ async def _handle_set_rehearsal_preset(
     session.a4_track_locks = set(range(A4_TRACK_TARGET_MIN, A4_TRACK_TARGET_MAX + 1))
     session.depth = 0.10
     session.preview_on = True
-    events = _parameter_scope_transition(session)
-    events.extend(
-        [_build_mutation_targets_changed(session), _build_mutation_locks_changed(session)]
-    )
+    events = [_build_mutation_targets_changed(session), _build_mutation_locks_changed(session)]
+    events.extend(_parameter_scope_transition(session))
     _logger.info(
         "rehearsal_preset_selected",
         extra={"preset_id": RYTM_PAD2_REHEARSAL_PRESET_ID, "physical_validation": "pending"},
@@ -1444,12 +1453,14 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
         parameter_selection=session.rytm_parameters,
     )
     if checked is None or not checked.ready or checked.to_dict() != sent_plan.to_dict():
+        _record_scope_refusal("prepared_plan_stale")
         return HandlerResult(
             ack=_error_ack(
                 ERR_VALIDATION, "send plan is stale; prepare the current exact scope again"
             )
         )
     if live_hardware_audition and session.recalled_offline_favorite:
+        _record_scope_refusal("recall_requires_fresh_capture")
         return HandlerResult(
             ack=_error_ack(
                 ERR_VALIDATION,
@@ -3022,7 +3033,11 @@ async def _handle_retain_rehearsal_favorite(
         rytm_parameter_selection=session.rytm_parameters,
         a4_parameter_selection=session.a4_parameters,
     )
-    record = store.retain_rehearsal(favorite, require_text(cmd["name"], "name"))
+    try:
+        record = store.retain_rehearsal(favorite, require_text(cmd["name"], "name"))
+    except (OSError, WriteError) as exc:
+        _record_scope_refusal("favorite_persistence_failed")
+        raise WriteError("local rehearsal favorite persistence failed") from exc
     return HandlerResult(
         ack={"ok": True, "library_record": record.to_dict()}, events=[_build_library_changed(store)]
     )
@@ -3036,6 +3051,7 @@ async def _handle_recall_rehearsal_favorite(
         return _library_unconfigured_ack()
     record = store.get(require_text(cmd["record_id"], "record_id"))
     if record is None or record.rehearsal is None:
+        _record_scope_refusal("favorite_missing_or_invalid")
         return HandlerResult(
             ack=_error_ack(
                 ERR_VALIDATION,
@@ -3165,7 +3181,7 @@ def _resolve_handler(cmd_type: str) -> HandlerFn | None:
         return _CORE_HANDLERS[cmd_type]
     if cmd_type.startswith("show_bank_"):
         # Show Kit Forge is loaded only when its panel requests state, keeping
-        # the fixed eleven-event bootstrap and ordinary passive edit path
+        # the fixed twelve-event bootstrap and ordinary passive edit path
         # unchanged.
         from .show_bank_handlers import SHOW_BANK_HANDLERS  # noqa: PLC0415
 

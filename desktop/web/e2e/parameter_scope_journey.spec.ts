@@ -42,8 +42,11 @@ test('Pad 2 parameter scope, exact local favorite recall and restart remain disa
   expect(candidates.at(-1)?.pad_deltas.every((delta) => delta.changed_keys.length === 0)).toBe(true);
   for (let step = 0; step < 10; step += 1) await depth.press('ArrowRight');
   await expect(page.getByTestId('depth-slider-value')).toHaveText('10%');
+  const beforeLockId = candidates.at(-1)?.candidate_id;
   await scope.getByLabel('Lock pad').check();
   await page.getByTestId('action-regen').click();
+  await expect.poll(() => candidates.at(-1)?.candidate_id).not.toBe(beforeLockId);
+  await expect.poll(() => candidates.at(-1)?.depth).toBe(0.10);
   await expect.poll(() => candidates.at(-1)?.pad_deltas.every((delta) => delta.changed_keys.length === 0)).toBe(true);
   await scope.getByLabel('Lock pad').uncheck();
   await page.getByTestId('action-regen').click();

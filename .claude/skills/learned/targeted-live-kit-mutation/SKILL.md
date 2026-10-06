@@ -140,6 +140,15 @@ focused work. Use
 `docs/hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md` for the
 ordered operator-present gates and evidence-specific unlock limits.
 
+For Studio parameter scopes, distinguish null/all eligible from an explicit
+empty selection. Resolve cells through canonical source-backed metadata before
+proposals, preserve excluded native values before any clamp, and enforce actual
+proposed-value differences at SEND even when changed_keys claims fewer rows.
+Local favorites use the existing schema-versioned library and deterministic
+verification; recall revokes output and preparation but never restores hardware.
+Disarmed Show Forge reselection follows a fresh manual-reload capture: it must
+not advance that capture's recovery cutoff, and must publish restored scope
+before the candidate even when the source identity is unchanged.
 The mandatory project rule is
 `.claude/rules/targeted-mutation-safety.md`. The canonical code surfaces are
 `rytm_randomizer/snapshot/mutation_scope.py`,

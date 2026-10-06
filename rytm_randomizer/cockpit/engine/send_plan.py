@@ -21,13 +21,13 @@ from ..data import (
     SendPlanPacket,
     Snapshot,
 )
+from ..data.parameter_scope import DEFAULT_PARAMETER_SELECTION, ParameterSelection
 from ..data.rytm_parameter_map import (
     cockpit_machine_is_allowed_on_pad,
     cockpit_pad_channel,
     cockpit_parameter_live_blockers,
     cockpit_parameter_mapping,
 )
-from ..data.parameter_scope import DEFAULT_PARAMETER_SELECTION, ParameterSelection
 from ..mutation_targets import MutationTargets
 
 _logger = get_logger(__name__)

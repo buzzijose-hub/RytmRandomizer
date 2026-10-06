@@ -32,7 +32,7 @@ describe('Studio canonical parameter scope', () => {
     ready();
     useCockpitStore.setState({ snapshot: null });
     mount();
-    expect(screen.getByText(/Source/)).toHaveTextContent('not available');
+    expect(screen.getByText('not available', { selector: 'code' })).toBeVisible();
   });
   it('fails closed without fresh canonical controls', () => {
     const { fake } = mount();

@@ -55,7 +55,7 @@ def _object(value: object, keys: frozenset[str], label: str) -> Mapping[str, obj
     return raw
 
 
-def _number(value: object, label: str) -> float:
+def _rehearsal_number(value: object, label: str) -> float:
     result = require_float(value, label, ValueError)
     if not math.isfinite(result):
         raise ValueError(f"{label} must be finite")
@@ -105,7 +105,7 @@ def _snapshot(value: object) -> Snapshot:
         datetime.fromisoformat(require_text(raw["captured_at"], "captured_at", ValueError)),
         tuple(pads),
         None if scene is None else require_text(scene, "scene_slot", ValueError),
-        None if raw["bpm"] is None else _number(raw["bpm"], "bpm"),
+        None if raw["bpm"] is None else _rehearsal_number(raw["bpm"], "bpm"),
     )
 
 
@@ -132,7 +132,7 @@ def _profile(value: object) -> ProfileModel:
         traits.append(
             StyleTrait(
                 require_text(trait["name"], "trait name", ValueError),
-                _number(trait["value"], "trait value"),
+                _rehearsal_number(trait["value"], "trait value"),
             )
         )
     weights: list[TraitPadWeight] = []
@@ -142,7 +142,7 @@ def _profile(value: object) -> ProfileModel:
             TraitPadWeight(
                 require_text(weight["trait"], "trait", ValueError),
                 require_int(weight["pad_id"], "pad_id", ValueError),
-                _number(weight["weight"], "weight"),
+                _rehearsal_number(weight["weight"], "weight"),
             )
         )
     return ProfileModel(
@@ -159,7 +159,7 @@ def _profile(value: object) -> ProfileModel:
     )
 
 
-def _candidate(value: object) -> MutationCandidate:
+def _rehearsal_candidate(value: object) -> MutationCandidate:
     raw = _object(
         value,
         frozenset(
@@ -193,7 +193,7 @@ def _candidate(value: object) -> MutationCandidate:
         require_text(raw["candidate_id"], "candidate_id", ValueError),
         require_text(raw["source_snapshot_id"], "source_snapshot_id", ValueError),
         require_text(raw["profile_id"], "profile_id", ValueError),
-        _number(raw["depth"], "depth"),
+        _rehearsal_number(raw["depth"], "depth"),
         require_int(raw["seed"], "seed", ValueError),
         tuple(deltas),
         narrow_status(require_text(raw["safety_status"], "safety_status", ValueError)),
@@ -233,7 +233,7 @@ class LocalRehearsalFavorite:
             self, "source_snapshot", _snapshot(_snapshot_payload(self.source_snapshot))
         )
         object.__setattr__(self, "profile", _profile(self.profile.to_dict()))
-        object.__setattr__(self, "candidate", _candidate(self.candidate.to_dict()))
+        object.__setattr__(self, "candidate", _rehearsal_candidate(self.candidate.to_dict()))
         if self.source_snapshot.device not in STAGE_DEVICE_IDS:
             raise ValueError("favorite requires a supported device identity")
         for key, device_id in (
@@ -346,7 +346,7 @@ class LocalRehearsalFavorite:
         favorite = cls(
             source_snapshot=_snapshot(raw["source_snapshot"]),
             profile=_profile(raw["profile"]),
-            candidate=_candidate(raw["candidate"]),
+            candidate=_rehearsal_candidate(raw["candidate"]),
             rytm_parameter_selection=ParameterSelection.parse(raw["rytm_parameter_selection"]),
             a4_parameter_selection=ParameterSelection.parse(raw["a4_parameter_selection"]),
             rytm_pad_targets=_ids(raw["rytm_pad_targets"], ANALOG_RYTM_DEVICE_ID),

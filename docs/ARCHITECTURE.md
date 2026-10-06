@@ -341,6 +341,8 @@ rule, change it here first, then update the test.
     | `cockpit.show_bank` | `cockpit.capture`, `cockpit.data`, `cockpit.engine`, `cockpit.export`, `cockpit.profiles`, `data`, `devices`, `guardrails` (input-validation leaf), `observability`, `snapshot` |
     | `cockpit.ws` | `cockpit.show_bank` (authoritative workspace and lifecycle dispatch), `guardrails` (input-validation leaf) |
     | `cockpit.stage` | `snapshot` (shared registry-derived mutation domain) |
+    | `cockpit.capture` | `snapshot` (neutral registered item domain used by source-backed parameter metadata) |
+    | `cockpit.library` | `cockpit.data` (strict favorite DTOs), `cockpit.engine` (pure deterministic candidate verification) |
 
     Adding another edge is a separate architecture decision. The workflow and
     optional offline A4 capability are described in
@@ -818,6 +820,7 @@ UI drives the engine with **typed commands** that ack synchronously.
 | `kit_captures_changed` | `{ captures: KitCaptureResult[] }` | On connect and after a verified input-only current-KIT capture |
 | `mutation_targets_changed` | `{ rytm_pad_targets, a4_track_targets }` | On connect and after whole-state target replacement/clear |
 | `mutation_locks_changed` | `{ rytm_pad_locks, a4_track_locks }` | On connect and after either independent deny-list changes |
+| `mutation_parameters_changed` | `{ rytm_parameters, a4_parameters, controls }` | On connect, metadata refresh and selection/recall. Canonical item/key cells and evidence; no output grant. |
 | `dual_machine_stage_changed` | `{ stage: DualMachineStageState }` | On connect and every capture/scope/candidate/plan/authority/recovery transition |
 | `history_updated` | `{ history: History }` | After capture adoption, SEND, LOAD, or UNDO; refused SAVE emits no event |
 | `profile_changed` | `{ profile: ProfileModel \| null }` | After `select_profile` |
@@ -836,7 +839,7 @@ After authentication, bootstrap emits exactly these twelve events in order:
 
 Studio parameter scopes reuse the appliance engine's per-cell effective-depth
 seam. `cockpit/data/parameter_scope.py` owns immutable include cells;
-`cockpit/parameter_scope.py` resolves canonical controls and validates them
+`cockpit/capture/parameter_scope.py` resolves canonical controls and validates them
 against current source values. Null keeps the legacy all-control scope; an
 empty array selects no fields. Page selection is a UI grouping of those cells,
 not another parameter catalog. Source precision and unknown values are preserved
@@ -844,8 +847,19 @@ before proposals, and locks/mandatory protection win. SEND independently checks
 the proposed values against the current selection and revalidates the exact
 plan. Unsupported or paired changes refuse the whole plan, never a trimmed subset.
 
-Local rehearsal favorites extend `LibraryStore`, not hardware SAVE. The library
-uses its registered schema 2 with an explicit 1-to-2 migration; strict records
+The root `cockpit/parameter_scope.py` is only a public facade. Capture metadata
+consumes the Device registry and neutral snapshot item-domain primitive; local
+library verification consumes `cockpit.data` and the pure `cockpit.engine`,
+never WS/session or hardware providers. These downward edges are declared in
+the architecture matrix and represented by the scoped recall diagram.
+
+Local rehearsal favorites extend `LibraryStore`, not hardware SAVE.
+
+Local favorite `source_hash` identifies the semantic snapshot, not a raw SysEx
+frame or whole decoded instrument payload. These Rytm rehearsal records retain
+no raw KIT bytes; A4 artifact retention remains the separate Show Forge path.
+
+The library uses its registered schema 2 with an explicit 1-to-2 migration; strict records
 retain source, profile, candidate, seed/depth, target/parameter scopes and locks.
 Recall verifies identity and deterministic values, then uses the existing
 output-revocation boundary. It leaves output disarmed and the plan empty; no

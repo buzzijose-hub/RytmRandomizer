@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-05T16:44:00Z",
+  "updated_at": "2026-10-06T01:05:00Z",
   "status": "in-flight",
-  "phase": "oct05-software-candidate-packaged-and-MIDI-off-smoke-passed-protected-review-and-hardware-held",
+  "phase": "parameter-scope-and-local-favorite-source-verified-build-and-binary-proof-pending-hardware-held",
   "prototype_source": "8cfa6f7b6cf9469ffa134598182febb60ecdd1df",
   "prototype_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-tom-mapping/RytmRandomizer",
   "delivery_start_source": "941643c551abfa225f45c70a954b6671d1cbb5f4",
@@ -21,10 +21,10 @@
   "work": {
     "mapping_implementation": "Oct05-all8-CY-Ride-SRC-blocked-25of29-new-fallback-rows-documented-only-guardedCC7-eligible-224-descriptive-bindings-retained-Studio-SRC-metadata-published3461f42e",
     "inventory": "registry-driven-29row-canonical-evidence-audit-25eligible-4CYremoved-init328-RIOreturn325-projections",
-    "dimension_reviews": "Oct05-eight-postpush-dimensions-and-production-head-fa43f863-confirmations-complete-no-remaining-code-findings-CI-log-count-schema-doc-repairs-resolved-Gate14-16-retained",
+    "dimension_reviews": "Historical-fa43-eight-dimensions-complete; current-eight-dimensions-reviewed; architecture-safety-type-repaired-and-confirmed; final-published-source-confirmations-pending",
     "plan_records": "source-bound-learning-and-probe-records-published-seventh-native-readiness-scope-declared-before-isolated-implementation",
     "delivery_integration": "4bc21952-verified-source-published-as-d6e8e164-separate-browser-scope47e43516-before-local-assertion-fix-isolated-runtime4b88-verified-not-activated",
-    "final_delivery_checks": "Oct05-full10048pass5skip6warnings324.94s-union22touched100linesbranches-web1075pass100coverage-strict22clean-lint-vulture-versionclean-browser33pass2skip56.9s-fa43f863-hosted-Windows-build37341458245-hashes-match-actual-MIDI-off-binary-target-lock-preview-refusal-local-bank-backend-recovery-and-restart-passed-physical-rehearsal-pending",
+    "final_delivery_checks": "Previous-fa43-delivery-preserved; source-frozen10209pass5skip6warnings305.67s-35touched100coverage-purebranch99.3804607-web1135pass100coverage-strict35clean-lint-vulture-versionclean; final-browser-push-CI-new-build-and-executable-proof-pending",
     "protected_review_and_merge": "pending",
     "post_merge_maintainability_audit": "pending"
   },
@@ -290,7 +290,7 @@
   ],
   "remaining": [
     "Publish the completed identified Windows MIDI-off smoke receipt and consolidated review; retain source-specific hosted acceptance and protected approval as separate gates",
-    "Operator-present fresh backed-up source capture and exact-plan inspection are required before any physical audition; current UI does not select individual parameter subsets",
+    "Operator-present fresh backed-up source capture and exact-plan inspection are required before any physical audition; preserved fa43 package has whole-pad scope, current source adds parameter selection but final gates and new build remain pending",
     "Protected new-head human review, hosted checks and merge",
     "Retrospective audit review and actual post-merge reassessment; Gate14 remains unchecked",
     "Preserve historical Gate16 isolation/timing limitation; frozen legacy offline lev arithmetic remains tracked in issue256"

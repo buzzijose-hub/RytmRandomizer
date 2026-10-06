@@ -21,22 +21,24 @@ source/favorite slots in the table below. Do not overwrite a show KIT.
 1. Start disarmed. Capture and explicitly retain the saved source KITs; verify
    their identities. Cancel an input capture once and confirm the source is
    unchanged. No output authority is needed for these steps.
-2. Target only Rytm Pad 2, protect Pad 1, and lock all A4 tracks. Start at 10%
-   and inspect every row of the exact plan before arming. The current UI scopes
-   whole pads/tracks, not a common-controls-only parameter subset. The intended
-   isolated-common-control rehearsal is not an implemented selection mode.
+2. On the new parameter-scope build, select **Pad 2 rehearsal**. Confirm exactly
+   Filter Frequency, AMP Decay, Overdrive and Reverb Send are selected; other
+   parameters, other pads and all A4 tracks are excluded/locked. Start at 10%
+   and inspect every row of the exact plan before arming. The previous `fa43`
+   copy has only whole-pad scope and must not be mistaken for this build.
    Rytm filter frequency (single CC74), amp decay, overdrive and reverb send have
    earlier bounded observations; other eligible rows have not inherited them.
    Rytm LFO Depth is paired and blocks the entire plan if changed. New SRC
    eligibility is documented-only, not permission to skip its own rehearsal.
-   If PREPARE blocks this full-pad candidate, stop and retain its reasons. Do
+   If PREPARE blocks this scoped candidate, stop and retain its reasons. Do
    not remove rows after PREPARE, silently send a subset or use a legacy bypass.
 3. Follow Section 2 for one exact-plan audition and manual saved-KIT reload.
    Confirm listening/front-panel recovery, unaffected pads and a matching fresh
    saved-KIT capture. Local UNDO/reset is not hardware recovery.
-4. Only after recovery passes, select the retained candidate again, save it as
-   a local favorite, and save the local bank. Restart disarmed and verify the
-   favorite/source identity persists. This still does not save the hardware.
+4. Only after recovery passes, select the retained candidate again and retain
+   a local rehearsal favorite in the Library. Restart disarmed and verify the
+   favorite/source identity, exact values, cells, locks, seed and depth persist.
+   Recall must clear the old plan; prepare afresh. This does not save hardware.
 5. Audition that same candidate with a new matching source capture and new
    exact-plan confirmation. Manually save the intended result to a separate
    disposable favorite KIT, dump it back, compare the candidate fields, reload

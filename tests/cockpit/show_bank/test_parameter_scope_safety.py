@@ -30,6 +30,125 @@ from .conftest import ShowBankHarness, build_show_bank_harness
 pytestmark = pytest.mark.fast
 
 
+def test_a4_one_explicit_cell_preserves_excluded_fractional_native_values(tmp_path) -> None:
+    from dataclasses import replace
+
+    from cockpit.conftest import capture_fixed_frame
+
+    from conftest import analog_four_saved_kit_frame
+    from rytm_randomizer.cockpit.capture import (
+        ANALOG_FOUR_DEVICE_ID,
+        cockpit_snapshot_from_rytm_capture,
+    )
+    from rytm_randomizer.cockpit.data.show_bank import ShowKitRecipe
+    from rytm_randomizer.cockpit.show_bank.forge import build_source_entry, forge_candidate_pair
+    from rytm_randomizer.data.analog_four_sysex_calibration import (
+        A4_FILTER1_FREQUENCY_PARAMETER,
+        analog_four_sysex_calibration_for,
+    )
+    from rytm_randomizer.devices import resolve_saved_kit_capture_capability
+
+    harness = build_show_bank_harness(tmp_path)
+    calibration = analog_four_sysex_calibration_for(A4_FILTER1_FREQUENCY_PARAMETER)
+    overrides = {}
+    for track in range(1, 5):
+        offset = calibration.native_offset_for_track(track)
+        overrides[offset], overrides[offset + 1] = divmod(16257, 256)
+    frame = analog_four_saved_kit_frame(unpacked_overrides=overrides)
+    a4 = capture_fixed_frame(ANALOG_FOUR_DEVICE_ID, frame)
+    source = cockpit_snapshot_from_rytm_capture(harness.rytm)
+    entry = build_source_entry(
+        entry_id="positive-cell",
+        cue_index=1,
+        name="Positive scope",
+        description="software fixture",
+        rytm_capture=harness.rytm,
+        analog_four_capture=a4,
+        rytm_slot=20,
+        analog_four_slot=21,
+        rytm_snapshot_id=source.snapshot_id,
+        now=harness.clock(),
+    )
+    recipe = ShowKitRecipe(
+        profile_id=harness.profile.profile_id,
+        depth_preset="small",
+        depth=0.25,
+        seed=7373,
+        rytm_scope=ShowKitScope(RYTM_SHOW_KIT_DEVICE_ID, parameters=ParameterSelection(())),
+        analog_four_scope=ShowKitScope(
+            A4_SHOW_KIT_DEVICE_ID,
+            target_ids=(1, 2, 3, 4),
+            parameters=ParameterSelection((ParameterCell(3, A4_FILTER1_FREQUENCY_PARAMETER),)),
+        ),
+    )
+    first = forge_candidate_pair(
+        entry=entry,
+        rytm_source_snapshot=source,
+        analog_four_source_frame=frame,
+        profile=harness.profile,
+        recipe=recipe,
+        now=harness.clock(),
+    )
+    second = forge_candidate_pair(
+        entry=entry,
+        rytm_source_snapshot=source,
+        analog_four_source_frame=frame,
+        profile=harness.profile,
+        recipe=recipe,
+        now=harness.clock(),
+    )
+    assert first.analog_four_frame == second.analog_four_frame
+    assert first.candidate.to_dict() == second.candidate.to_dict()
+    assert [value.track_id for value in first.candidate.analog_four_candidate.values] == [3]
+    codec = resolve_saved_kit_capture_capability(ANALOG_FOUR_DEVICE_ID).capability
+    original = codec.decode_saved_kit_capture(frame).unpacked
+    rendered = codec.decode_saved_kit_capture(first.analog_four_frame).unpacked
+    offset = calibration.native_offset_for_track(3)
+    assert rendered[offset : offset + 2] != original[offset : offset + 2]
+    assert (
+        rendered[:offset] == original[:offset] and rendered[offset + 2 :] == original[offset + 2 :]
+    )
+    for track in (1, 2, 4):
+        excluded = calibration.native_offset_for_track(track)
+        assert int.from_bytes(rendered[excluded : excluded + 2], "big") == 16257
+    assert first.candidate.analog_four_candidate.evidence_status != "hardware-write-validated"
+    with pytest.raises(ValueError, match="offline-only"):
+        replace(first.candidate.analog_four_candidate, evidence_status="hardware-write-validated")
+
+
+@pytest.mark.parametrize("key", [None, "Amp Attack"])
+def test_a4_scope_excludes_or_refuses_unpromoted_fields(tmp_path, key) -> None:
+    harness = build_show_bank_harness(tmp_path)
+    selection = (
+        ParameterSelection(()) if key is None else ParameterSelection((ParameterCell(1, key),))
+    )
+
+    def generate():
+        return harness.workspace.generate_candidates(
+            harness.bank_id,
+            harness.entry_id,
+            harness.workspace.bank(harness.bank_id).revision,
+            profile=harness.profile,
+            depth_preset="small",
+            depth=0.25,
+            seed=6789,
+            candidate_count=1,
+            rytm_targets=(2,),
+            rytm_locks=(),
+            analog_four_targets=(),
+            analog_four_locks=(),
+            rytm_parameters=ParameterSelection(()),
+            analog_four_parameters=selection,
+        )
+
+    if key is not None:
+        with pytest.raises(ValueError, match="unsupported saved-KIT field"):
+            generate()
+    else:
+        (candidate,) = generate()
+        assert candidate.analog_four_candidate.values == ()
+
+
 @pytest.fixture
 def scoped_show(tmp_path: Path) -> tuple[ShowBankHarness, CockpitSession, tuple[str, ...]]:
     harness = build_show_bank_harness(tmp_path)

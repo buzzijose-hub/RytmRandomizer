@@ -251,10 +251,12 @@ def test_local_favorite_reopens_exact_values_and_scope_after_restart(
     record_id = saved["library_record"]["record_id"]
     prepared = request(first, "prepare_send_plan")["send_plan"]
     second = session()
+    second.history_store.initial(replace(scope_source, snapshot_id="different-startup-source"))
     ack = request(second, "recall_rehearsal_favorite", record_id=record_id)
     assert ack["ok"]
     assert second.current_candidate.to_dict() == retained
     assert second.device.capture_snapshot() == scope_source
+    assert len(second.history_store.current.entries) == 2
     assert second.rytm_parameters == original_scope
     assert second.pad_locks == first.pad_locks
     assert second.a4_track_locks == {1, 2, 3, 4}
@@ -524,3 +526,148 @@ def test_scope_cell_requires_strict_positive_owner_and_bounded_key(item, key) ->
 def test_scope_parse_refuses_over_limit_array() -> None:
     with pytest.raises(ValueError, match="bounded array"):
         ParameterSelection.parse([{"item_id": 2, "parameter_key": "flt"}] * 2049)
+
+
+def test_scope_missing_source_or_mapping_fails_without_guessing(scope_source, monkeypatch) -> None:
+    with pytest.raises(ValueError, match="pad2_source_unavailable"):
+        pad2_rehearsal_selection(replace(scope_source, pads=scope_source.pads[:1]))
+    from rytm_randomizer.cockpit.capture import parameter_scope as metadata
+
+    monkeypatch.setattr(metadata, "cockpit_parameter_key", lambda *_args: None)
+    with pytest.raises(ValueError, match="mapping_unavailable"):
+        pad2_rehearsal_selection(scope_source)
+
+
+def test_scope_unknown_engine_cell_is_refused(scope_source) -> None:
+    with pytest.raises(ValueError, match="unknown_control"):
+        rytm_parameter_depths(scope_source, ParameterSelection((ParameterCell(2, "absent"),)), 0.1)
+
+
+def test_scope_truthfully_declared_unselected_change_is_refused(
+    scope_source, scope_profile
+) -> None:
+    selection = pad2_rehearsal_selection(scope_source)
+    candidate = mutate(
+        scope_source,
+        scope_profile,
+        0.1,
+        42,
+        frozenset({2}),
+        parameter_depths=rytm_parameter_depths(scope_source, selection, 0.1),
+    )
+    delta = candidate.pad_deltas[0]
+    forged = replace(
+        candidate,
+        pad_deltas=(
+            replace(
+                delta,
+                proposed_params={
+                    **delta.proposed_params,
+                    "dec": scope_source.pads[1].params["dec"] + 1,
+                },
+                changed_keys=delta.changed_keys | {"dec"},
+            ),
+        ),
+    )
+    plan = prepare_send_plan(
+        scope_source, scope_profile, forged, frozenset(), parameter_selection=selection
+    )
+    assert plan is not None and not plan.ready
+    assert "parameter_scope_mismatch" in plan.blocked_reasons
+
+
+def test_favorite_persistence_failure_logs_no_private_path(
+    scope_source, scope_profile, tmp_path, monkeypatch, ws_handler_caplog
+) -> None:
+    import logging
+
+    ws_handler_caplog.set_level(logging.INFO, logger="rytm_randomizer.cockpit.ws.handlers")
+    store = LibraryStore(tmp_path / "library")
+    session = CockpitSession(
+        ProfileRegistry(tmp_path / "profiles"),
+        HistoryStore(),
+        MockDeviceAdapter(scope_source),
+        library_store=store,
+    )
+    session.active_profile = scope_profile
+
+    def request(kind, **body):
+        return asyncio.run(
+            handle_command({"request_id": kind, "command": {"type": kind, **body}}, session)
+        )
+
+    assert request("set_rehearsal_preset", preset_id="rytm_pad2_common")["ok"]
+    sentinel = "PRIVATE-FAVORITE-PATH-DO-NOT-LOG"
+
+    def fail(*_args, **_kwargs):
+        raise OSError(f"C:/private/{sentinel}/favorite.json")
+
+    monkeypatch.setattr(store, "retain_rehearsal", fail)
+    original = session.current_candidate
+    ack = request("retain_rehearsal_favorite", name="failure proof")
+    assert not ack["ok"]
+    assert sentinel not in str(ack)
+    assert session.current_candidate is original
+    assert not (tmp_path / "library").exists()
+    serialized = repr([record.__dict__ for record in ws_handler_caplog.records])
+    assert sentinel not in serialized
+    assert "favorite_persistence_failed" in serialized
+    assert sentinel not in repr(session.error_journal)
+
+
+def test_scope_failure_paths_preserve_or_revoke_only_the_intended_context(
+    scope_source, scope_profile, tmp_path
+):
+    store = LibraryStore(tmp_path / "library")
+    session = CockpitSession(
+        ProfileRegistry(tmp_path / "profiles"),
+        HistoryStore(),
+        MockDeviceAdapter(scope_source),
+        library_store=store,
+    )
+
+    def request(kind, **body):
+        return asyncio.run(
+            handle_command({"request_id": kind, "command": {"type": kind, **body}}, session)
+        )
+
+    assert not request("retain_rehearsal_favorite", name="no candidate")["ok"]
+    assert not request("recall_rehearsal_favorite", record_id="missing")["ok"]
+    assert not request("set_depth", depth=1.0)["ok"]
+    assert not request("set_rehearsal_preset", preset_id="unknown")["ok"]
+    assert not request(
+        "set_mutation_parameters",
+        device_id="analog_rytm_mk2",
+        parameter_cells=[{"item_id": 2, "parameter_key": "lev"}],
+    )["ok"]
+    assert session.rytm_parameters.cells is None
+    session.active_profile = scope_profile
+    assert request("set_rehearsal_preset", preset_id="rytm_pad2_common")["ok"]
+    assert request("set_mutation_parameters", device_id="analog_four_mk2", parameter_cells=[])["ok"]
+    assert session.a4_parameters.cells == ()
+    session.rytm_parameters = ParameterSelection((ParameterCell(2, "old-machine-key"),))
+    assert request("set_depth", depth=0.1)["ok"]
+    assert session.rytm_parameters.cells == ()
+    assert session.current_candidate.estimated_midi_msgs == 0
+    saved = request("retain_rehearsal_favorite", name="empty exact rehearsal")
+    assert saved["ok"]
+    cold = CockpitSession(
+        ProfileRegistry(tmp_path / "cold-profiles"),
+        HistoryStore(),
+        MockDeviceAdapter(scope_source),
+        library_store=LibraryStore(tmp_path / "library"),
+    )
+    ack = asyncio.run(
+        handle_command(
+            {
+                "request_id": "cold",
+                "command": {
+                    "type": "recall_rehearsal_favorite",
+                    "record_id": saved["library_record"]["record_id"],
+                },
+            },
+            cold,
+        )
+    )
+    assert ack["ok"] and len(cold.history_store.current.entries) == 1
+    assert cold.current_send_plan is None and cold.recalled_offline_favorite

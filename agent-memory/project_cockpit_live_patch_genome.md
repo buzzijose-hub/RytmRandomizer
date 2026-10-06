@@ -66,12 +66,13 @@ description + A4 track
     -> Patch Genome workspace
 ```
 
-The authoritative bootstrap now has eleven ordered whole-state events:
+The authoritative bootstrap now has twelve ordered whole-state events:
 `session_status`, `snapshot_changed`, `profile_changed`,
 `profile_catalog_changed`, `history_updated`, `patch_genome_changed`,
 `kit_captures_changed`, `mutation_targets_changed`, `mutation_locks_changed`,
-`dual_machine_stage_changed`, and `performance_console_changed`. A wired
-connection manager may append `connection_changed` as event 12. Keep the
+`mutation_parameters_changed`, `dual_machine_stage_changed`, and
+`performance_console_changed`. A wired connection manager may append
+`connection_changed` as event 13. Keep the
 Python TypedDicts, TypeScript discriminated unions, Zustand setters, event
 guards, and tests synchronized when this shape changes.
 

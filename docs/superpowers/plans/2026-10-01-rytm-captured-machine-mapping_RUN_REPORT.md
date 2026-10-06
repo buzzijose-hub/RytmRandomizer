@@ -3,7 +3,50 @@
 > Status: in-flight — October 5 software candidate packaged and MIDI-off smoke
 > passed; protected review and physical rehearsal remain pending.
 
-## October 5 continuation
+## Parameter Scopes And Local Rehearsal
+
+The current continuation keeps one direct-base PR #254 and preserves the
+identified `fa43f863` portable copy. Canonical server-validated item/page/control
+selection runs before mutation; excluded values remain exact, including native
+fractional values. Targets, locks and mandatory protection take precedence.
+Changing scope invalidates candidates, prepared plans and confirmations. SEND
+independently reconstructs the whole current plan; unknown, protected or paired
+changes are refused rather than removed from a blocked plan.
+
+The Pad 2 rehearsal preset selects Filter Frequency, AMP Decay, Overdrive and
+Reverb Send by canonical identity, protects all other pads/fields and locks A4.
+It requires fresh physical validation on this build. A4 exposes canonical
+controls offline; only the evidenced Filter 1 Frequency saved-KIT field is
+selectable for offline mutation, with exact native Q8.8 precision. General
+A4/BOTH output, CY Ride SRC, paired conversion and automatic restore remain held.
+
+Local favorites reuse the atomic library's explicit schema-1-to-2 migration.
+Recall preserves source semantic identity, scope, locks, seed/depth and exact
+candidate values, disarms output, clears confirmations and requires fresh
+preparation. The semantic source hash is not a raw KIT fingerprint or hardware
+backup. ShowBank v2 persists the same scope DTO and explicitly reads legacy v1.
+
+Source-frozen acceptance: **10,209 passed / five skipped / six warnings in
+305.67 seconds**; all 35 touched production modules have 100% line/branch
+coverage. Project combined coverage is 99.6602008%, pure branch 99.3804607%.
+Strict Pyright reports zero errors/warnings; Ruff, Black (903 files), isort,
+Vulture and all four 1.34.0 version declarations pass. Frontend: **1,135 tests**,
+100% statements/branches/functions/lines, clean ESLint/TypeScript/production build.
+The production-handler browser journey verifies exact scoped favorite recall,
+restart, new locked candidate identity and the 600px layout while disarmed.
+Final browser composition passes **34 scenarios / two explicit skips in 59.2
+seconds**, one worker, zero retries. Serializer identity/refusal regression and
+data-layer drift pass 241 cases. Ordinary push gates, hosted native build, actual
+executable scope/restart smoke and source-bound binary hashes follow before
+delivery. Preliminary failed/mid-edit receipts are retained, not acceptance.
+
+Safety, architecture and type reviews confirmed their repaired findings clear.
+Remaining final dimensional confirmations run against the published source.
+No MIDI/USB access, real port enumeration/open/write or physical observation
+occurred. One heavy local verification job at a time, at most two review agents,
+two pytest workers and one browser worker avoid an unbounded local build load.
+
+## Earlier October 5 Continuation
 
 Current assembly checkout is `codex/studio-rytm-mapping`; the existing PR #254
 head is `codex/studio-evidence-handoff`, updated by a fast-forward, continuing from

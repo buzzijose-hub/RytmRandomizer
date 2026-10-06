@@ -2930,8 +2930,8 @@ sequenceDiagram
     alt token matches
         Endpoint-->>TauriShell: {"ok": true}
         Note over Endpoint: BOOTSTRAP
-        Endpoint-->>TauriShell: 1 session_status<br/>2 snapshot_changed<br/>3 profile_changed<br/>4 profile_catalog_changed<br/>5 history_updated<br/>6 patch_genome_changed<br/>7 kit_captures_changed<br/>8 mutation_targets_changed<br/>9 mutation_locks_changed<br/>10 dual_machine_stage_changed<br/>11 performance_console_changed
-        Note over Endpoint,TauriShell: Optional 12 connection_changed<br/>when a connection manager is wired
+        Endpoint-->>TauriShell: 1 session_status<br/>2 snapshot_changed<br/>3 profile_changed<br/>4 profile_catalog_changed<br/>5 history_updated<br/>6 patch_genome_changed<br/>7 kit_captures_changed<br/>8 mutation_targets_changed<br/>9 mutation_locks_changed<br/>10 mutation_parameters_changed<br/>11 dual_machine_stage_changed<br/>12 performance_console_changed
+        Note over Endpoint,TauriShell: Optional 13 connection_changed<br/>when a connection manager is wired
         Note over Endpoint: COMMAND LOOP (SX1)
         loop until disconnect
             TauriShell->>Endpoint: text frame
@@ -3186,6 +3186,11 @@ flowchart LR
     ParameterScope["canonical page / item / parameter selection<br/>null = legacy all; empty = none<br/>validate before proposals; locks/protection win"] --> RytmLane
     ParameterScope --> A4Offline
     ParameterScope --> Prepare
+    ScopeFacade["cockpit/parameter_scope.py<br/>public facade only"] --> CaptureMetadata["cockpit/capture/parameter_scope.py<br/>catalog / Device / snapshot domain"]
+    ScopeFacade --> PureCellValidator["cockpit/engine/parameter_scope.py<br/>pure canonical cell validator"]
+    CaptureMetadata --> ParameterScope
+    LocalFavorites --> PureCellValidator
+    LocalFavorites --> FavoriteDTO["cockpit.data<br/>immutable source / recipe / candidate"]
     LocalFavorites["LibraryStore schema 2<br/>source + profile + exact candidate<br/>scope / locks / seed / depth"] --> LocalRecall["verify deterministic values<br/>disarm; invalidate plan<br/>fresh preparation required"]
     RytmLane --> LocalFavorites
     LocalRecall --> RytmLane

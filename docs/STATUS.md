@@ -4,6 +4,23 @@ Last updated: 2026-10-05. This file is a hand-authored snapshot and is meant to 
 
 ## Current Snapshot
 
+October 5 parameter-scope continuation is in software verification on the same
+PR #254, not another PR. Server-validated page/item/control selection precedes
+generation, with exact excluded-value preservation, zero depth, lock/protection
+precedence and independent SEND revalidation. The Pad 2 rehearsal preset selects
+only four previously observed common controls. Local favorites extend the atomic
+library with schema 2 and restore exact source/recipe/candidate state disarmed.
+The production-handler browser journey passed scope, favorite recall, backend
+restart and the 600px layout check, without MIDI actions. Source-frozen Python
+acceptance: 10,209 passed, five skipped, six warnings in 305.67 seconds; all 35
+touched production modules have 100% lines/branches, project pure-branch
+coverage 99.3804607%. Frontend acceptance: 1,135 tests, 100% across four metrics.
+Browser composition: 34 passed, two explicit skips in 59.2 seconds, one worker,
+zero retries. Strict typing, lint, dead-code and version checks pass. Final review confirmations,
+CI, new portable build and actual-binary scope/favorite smoke remain pending.
+The previous `fa43f863` copy below is preserved and does
+not contain these new controls. Physical and show readiness remain pending.
+
 The [captured Rytm mapping correction](superpowers/plans/2026-10-01-rytm-captured-machine-mapping.md)
 is integrated into the existing direct-base Studio PR #254 on
 `codex/studio-evidence-handoff`, assembled in the local

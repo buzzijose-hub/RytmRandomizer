@@ -52,8 +52,8 @@ from ...snapshot.sysex_file import extract_sysex_payloads
 from ..data.rehearsal_favorite import LocalRehearsalFavorite
 from ..data.stage import ANALOG_RYTM_DEVICE_ID
 from ..engine import mutate
-from ..export.writer import atomic_write
 from ..engine.parameter_scope import rytm_parameter_depths
+from ..export.writer import atomic_write
 from ..profiles.paths import default_profiles_dir
 
 __all__ = [
@@ -130,7 +130,11 @@ def _validate_record_id(record_id: object) -> str:
 
 @dataclass(frozen=True)
 class LibraryRecord:
-    """One immutable library record (a captured kit/sound payload)."""
+    """One captured payload or inert Rytm semantic rehearsal favorite.
+
+    Rehearsal source_hash is not a raw KIT frame fingerprint. Rehearsals
+    retain exact semantic source/candidate values, not hardware restore bytes.
+    """
 
     record_id: str
     device_id: str

@@ -1016,11 +1016,11 @@ class ShowKitCandidate:
         effective_a4 = frozenset(self.recipe.analog_four_scope.effective_ids)
         changed_a4 = {value.track_id for value in self.analog_four_candidate.values}
         if not changed_a4 and (
-            effective_a4
+            (effective_a4 and self.recipe.analog_four_scope.parameters.cells != ())
             or self.analog_four_candidate.semantic_fingerprint != self.source_a4_fingerprint
         ):
             raise ValueError(
-                "unchanged A4 partner requires all tracks locked and the exact source fingerprint"
+                "unchanged A4 partner requires all tracks locked or no selected fields, and the exact source fingerprint"
             )
         if not changed_a4 <= effective_a4:
             raise ValueError("A4 candidate changes an untargeted or locked track")

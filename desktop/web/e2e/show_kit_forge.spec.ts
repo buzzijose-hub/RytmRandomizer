@@ -4,6 +4,7 @@ import { expect, test } from '@playwright/test';
 import type { CommandEnvelope, Event } from '../src/ws/protocol';
 import { history, profile, readyDualMachineStage, sendPlan, sessionMock, snapshot } from '../tests/cockpit/_fixtures';
 import { forgeCaptures, forgeEntry, showBankState } from '../tests/cockpit/showKitForgeFixture';
+import { parameterEvent } from '../tests/cockpit/parameterScopeFixture';
 
 import { trackConsoleErrors } from './fixtures/console_guard';
 
@@ -30,6 +31,7 @@ test('Show Kit Forge displays paired evidence and rehearses exact offline auditi
     { type: 'kit_captures_changed', captures: forgeCaptures },
     { type: 'mutation_targets_changed', rytm_pad_targets: pair.recipe.rytm_scope.target_ids, a4_track_targets: [] },
     { type: 'mutation_locks_changed', rytm_pad_locks: pair.recipe.rytm_scope.locked_ids, a4_track_locks: [] },
+    { ...parameterEvent, a4_parameters: null },
     { type: 'dual_machine_stage_changed', stage: { ...readyDualMachineStage, rytm: { ...readyDualMachineStage.rytm, target_ids: pair.recipe.rytm_scope.target_ids } } },
     { type: 'mutation_previewed', candidate: pair.rytm_candidate },
     { type: 'send_plan_changed', send_plan: plan },
@@ -46,6 +48,9 @@ test('Show Kit Forge displays paired evidence and rehearses exact offline auditi
       socket.send(JSON.stringify({ request_id: payload.request_id, ok: true }));
       if (payload.command.type === 'show_bank_list') {
         socket.send(JSON.stringify({ type: 'show_bank_changed', show_bank: showBankState }));
+      }
+      if (payload.command.type === 'get_mutation_parameters') {
+        socket.send(JSON.stringify({ ...parameterEvent, a4_parameters: null }));
       }
     });
   });

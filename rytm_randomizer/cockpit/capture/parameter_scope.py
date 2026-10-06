@@ -12,7 +12,6 @@ from ...data.analog_four_sysex_calibration import (
 from ...data.analog_rytm_midi import ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER
 from ...devices import resolve_saved_kit_capture_capability
 from ...snapshot.mutation_scope import registered_mutation_ids
-from .service import KitCaptureResult
 from ..data import Snapshot
 from ..data.parameter_scope import (
     RYTM_PAD2_REHEARSAL_PARAMETERS,
@@ -27,6 +26,7 @@ from ..data.rytm_parameter_map import (
     cockpit_parameter_mapping,
 )
 from ..data.stage import ANALOG_FOUR_DEVICE_ID, ANALOG_RYTM_DEVICE_ID
+from .service import KitCaptureResult
 
 
 def _rytm_controls(snapshot: Snapshot) -> list[PerformanceParameterControl]:

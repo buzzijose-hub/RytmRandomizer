@@ -105,6 +105,9 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "devices",
             "engines",
             "observability",
+            # Canonical display metadata resolves the same registry-backed
+            # item domain as mutation; this is a neutral read-only primitive.
+            "snapshot",
         }
     ),
     "cockpit.data": frozenset(

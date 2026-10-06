@@ -291,6 +291,12 @@ def test_protected_rows_freeze_or_refuse_manually_constructed_live_proposals(
     assert "candidate_high_risk" in blocked.blocked_reasons
     assert [packet.parameter for packet in blocked.packets] == ["flt"]
     safe_delta = replace(candidate.pad_deltas[0], changed_keys=frozenset({"flt"}))
+    hidden = prepare_send_plan(
+        snapshot, _profile(), replace(candidate, pad_deltas=(safe_delta,)), frozenset()
+    )
+    assert hidden is not None and not hidden.ready
+    assert "parameter_scope_mismatch" in hidden.blocked_reasons
+    safe_delta = replace(safe_delta, proposed_params={**params, "flt": 33})
     safe = prepare_send_plan(
         snapshot, _profile(), replace(candidate, pad_deltas=(safe_delta,)), frozenset()
     )
