@@ -9,9 +9,6 @@ from pathlib import Path
 from typing import Final, cast
 
 import pytest
-from cockpit.show_bank.test_offline_retention import (  # noqa: F401 - reuse the autouse offline backend guard
-    refuse_hardware_imports,
-)
 from cockpit.test_show_bank_ws_boundary import _Boundary, _boundary, _command
 from cockpit.test_ws_armed_send import _FakeProvider, _stage_send
 
@@ -25,7 +22,7 @@ from rytm_randomizer.cockpit.library.store import SourceOrigin
 from rytm_randomizer.cockpit.show_bank.readiness import is_catalog_only_show_bank
 from rytm_randomizer.cockpit.show_bank.workspace import ShowKitForgeWorkspace
 
-pytestmark = pytest.mark.fast
+pytestmark = [pytest.mark.fast, pytest.mark.usefixtures("offline_hardware_denied")]
 
 _FIXTURES: Final[Path] = Path(__file__).resolve().parents[1] / "fixtures" / "rio145"
 

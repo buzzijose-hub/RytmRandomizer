@@ -60,10 +60,9 @@ from .test_native_offline_journey import (
     _journey,
     _session,
 )
-from .test_native_offline_journey import refuse_hardware_backends as refuse_hardware_backends
 from .test_offline_retention import generate_offline, offline_workspace
 
-pytestmark = pytest.mark.fast
+pytestmark = [pytest.mark.fast, pytest.mark.usefixtures("offline_hardware_denied")]
 
 
 def _review(

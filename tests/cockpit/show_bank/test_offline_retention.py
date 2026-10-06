@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import builtins
 import hashlib
 import json
 from dataclasses import replace
@@ -25,20 +24,8 @@ from rytm_randomizer.cockpit.show_bank.store import ShowBankStore, canonical_sho
 from rytm_randomizer.cockpit.show_bank.workspace import ShowKitForgeWorkspace
 from rytm_randomizer.observability.errors import DataError, PersistedStateVersionError
 
-pytestmark = pytest.mark.fast
+pytestmark = [pytest.mark.fast, pytest.mark.usefixtures("offline_hardware_denied")]
 FIXTURES = Path(__file__).resolve().parents[2] / "fixtures" / "rio145"
-
-
-@pytest.fixture(autouse=True)
-def refuse_hardware_imports(monkeypatch: pytest.MonkeyPatch) -> None:
-    original_import = builtins.__import__
-
-    def checked_import(name, *args, **kwargs):
-        if name.split(".")[0] in ("mido", "rtmidi"):
-            raise AssertionError("offline retention must not load a hardware backend")
-        return original_import(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, "__import__", checked_import)
 
 
 def library_sources(root: Path):

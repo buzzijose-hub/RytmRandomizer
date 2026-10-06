@@ -43,6 +43,7 @@ not from sibling test files, per Gate 11 (fixture deduplication).
 
 from __future__ import annotations
 
+import builtins
 import hashlib
 import logging
 from collections.abc import Generator, Iterator
@@ -67,6 +68,21 @@ from rytm_randomizer.cockpit.ws.protocol import (
 )
 from rytm_randomizer.cockpit.ws.server import create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
+
+
+@pytest.fixture
+def offline_hardware_denied(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Opt-in guard for original-file tests; reject every hardware backend import."""
+    monkeypatch.setenv("RYTM_RAND_MIDI_BACKEND", "off")
+    original_import = builtins.__import__
+
+    def checked_import(name, *args, **kwargs):
+        if name.split(".")[0] in ("mido", "rtmidi"):
+            pytest.fail("offline preparation must not import a hardware backend")
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", checked_import)
+
 
 TEST_WS_TOKEN: Final[str] = "test-token-only-for-pytest-do-not-use-in-prod"
 """The fixed handshake token every cockpit test fixture passes to ``create_app``.

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import builtins
 import json
 import logging
 import traceback
@@ -35,20 +34,7 @@ from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
 
 from .conftest import make_default_snapshot
 
-pytestmark = pytest.mark.fast
-
-
-@pytest.fixture(autouse=True)
-def no_library_hardware(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("RYTM_RAND_MIDI_BACKEND", "off")
-    original_import = builtins.__import__
-
-    def checked_import(name, *args, **kwargs):
-        if name.split(".")[0] in ("mido", "rtmidi"):
-            pytest.fail("Library diagnostics attempted to load a MIDI backend")
-        return original_import(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, "__import__", checked_import)
+pytestmark = [pytest.mark.fast, pytest.mark.usefixtures("offline_hardware_denied")]
 
 
 @pytest.fixture

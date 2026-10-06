@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import builtins
 import hashlib
 import json
 from dataclasses import dataclass, replace
@@ -49,7 +48,7 @@ from rytm_randomizer.devices.strategies.analog_four_saved_kit_codec import (
 from rytm_randomizer.observability.errors import DataError
 from rytm_randomizer.snapshot.mutation_scope import MutationScope
 
-pytestmark = pytest.mark.fast
+pytestmark = [pytest.mark.fast, pytest.mark.usefixtures("offline_hardware_denied")]
 _RIO: Final[Path] = Path(__file__).resolve().parents[2] / "fixtures" / "rio145"
 _CORE: Final[str] = "A4_RIO145_CORE_RETURN_Kit.syx"
 _FIELDS: Final[tuple[str, ...]] = (
@@ -59,19 +58,6 @@ _FIELDS: Final[tuple[str, ...]] = (
     "filter2_frequency",
     "env2_depth_a",
 )
-
-
-@pytest.fixture(autouse=True)
-def refuse_hardware_backends(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("RYTM_RAND_MIDI_BACKEND", "off")
-    original_import = builtins.__import__
-
-    def checked_import(name, *args, **kwargs):
-        if name.split(".")[0] in ("mido", "rtmidi"):
-            raise AssertionError("the retained-file journey must not load a MIDI backend")
-        return original_import(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, "__import__", checked_import)
 
 
 @dataclass(frozen=True)

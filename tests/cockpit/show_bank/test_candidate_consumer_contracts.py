@@ -44,9 +44,8 @@ from .test_native_offline_journey import (
     _journey,
     _session,
 )
-from .test_native_offline_journey import refuse_hardware_backends as refuse_hardware_backends
 
-pytestmark = pytest.mark.fast
+pytestmark = [pytest.mark.fast, pytest.mark.usefixtures("offline_hardware_denied")]
 
 
 @pytest.fixture(autouse=True)

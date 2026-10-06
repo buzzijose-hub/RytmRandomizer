@@ -549,7 +549,9 @@ class MidiMetrics:
             f"{_format_counter(self.persisted_state_refusals_by_code)}"
         )
         if self.local_artifact_decisions:
-            summary += f", local_artifact_decisions={_format_counter(self.local_artifact_decisions)}"
+            summary += (
+                f", local_artifact_decisions={_format_counter(self.local_artifact_decisions)}"
+            )
         return summary
 
 

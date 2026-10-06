@@ -231,7 +231,9 @@ def test_rejected_request_logs_are_bounded_without_losing_internal_error_details
             },
         }
     command_type = str(command["type"])
-    with pytest.raises(ValueError, match="filename-safe" if kind == "candidate_id" else "unknown") as internal_error:
+    with pytest.raises(
+        ValueError, match="filename-safe" if kind == "candidate_id" else "unknown"
+    ) as internal_error:
         asyncio.run(SHOW_BANK_HANDLERS[command_type](command, session))
     if kind == "candidate_id":
         assert value not in str(internal_error.value)
