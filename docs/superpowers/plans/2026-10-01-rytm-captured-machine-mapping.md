@@ -476,3 +476,111 @@ Done means scoped candidate and favorite survive the actual offline UI/restart
 journey, all required software gates pass, a reviewed source-bound portable copy
 is delivered and one focused physical audition/manual-reload test is documented.
 No software result labels this build show-ready.
+
+# October 6 Continuation: Complete Offline Kit Preparation
+
+Recorded before implementation at `0aaf9f3dbaa20ec5743805e2a5e377583ad3330b`.
+Production baseline is `8b6b2ce0`; prior deliveries are immutable. PR #254 is
+open against `modularize-v1.34`, 31 successful checks/three explicit skips,
+Eddie's October 3 requested-changes review still controls approval. Already
+completed scopes, Pad 2 preset and local semantic favorite recall are reused.
+
+Working interval: **2026-10-06 12:24:24 through 20:24:24 America/New_York**
+(`2026-10-06T16:24:24Z` through `2026-10-07T00:24:24Z`). This is an eight-hour
+development deadline, not permission to create filler or promote hardware
+evidence. On interruption inspect this plan, state/run report, ignored
+`output/local/OCT06-OFFLINE-PREPARATION-RESUME.md`, actual branches and runner
+receipts. Finish useful independent work; stop rather than wait for hardware.
+
+## Remaining Demonstrated Gaps And Architecture
+
+Studio exposes only Filter 1 Frequency despite existing native A4 field codecs.
+Audit each candidate field's canonical offset, width, converter, legal domain,
+coupling and executable retained evidence before exposing offline mutation.
+Do not infer native locations from MIDI addresses, normalize unknown selectors,
+mutate FIN independently or drop hidden precision. OXI-related AMP protection
+and include-minus-deny locks win over requested scope.
+
+Library records already retain decoded payloads and semantic favorites;
+ShowBankStore/ShowPackService already retain framed artifacts and verify
+packages. Inspect actual loss/validation/export gaps before extending them.
+No second library, envelope codec, sender, package root or device registry.
+Original frames, semantic favorites and generated candidates remain different
+artifact kinds. An imported original is codec-verified file evidence, not a
+fresh physical observation. Import/restart must revoke output/confirmation.
+
+Complete one path: source files/retained capture -> canonical precise scope ->
+small/large local candidates -> exact differences -> named favorite -> ordered
+bank -> bounded export/import -> exact disarmed recall. Preview-only status
+must stay explicit; software packages cannot manufacture hardware readiness.
+Retain source identity, exact frames where available, scope, locks, seed/depth,
+recipe/profile association and candidate values. Any schema change has an
+explicit supported legacy read/migration and fails closed on newer versions.
+
+## Pre-Code Ten-Row Assessment
+
+| Dimension | Baseline / intended change |
+| --- | --- |
+| Onboarding | Existing scope/library/Forge owners documented; connect actual source import and offline bank path with one operator entry point. |
+| Naming | Canonical field identity is separate from native/display/normalized values; original frame is not semantic favorite or hardware backup. |
+| Coupling | Core Device/native capability, Cockpit integration and existing atomic stores; disjoint workers, one composed checkpoint at first real import. |
+| Constants | Derive widths/domains/enums from canonical facts/converters; no invented offsets, selectors or TypeScript copies. |
+| Configuration | Existing roots, path policies, runtime/backend and hosted installer lane; backend off, no new arbitrary wire paths. |
+| Tests | Reuse retained fixtures/shared fakes; source-specific byte isolation, coupled precision, corruption/rollback and real producer/consumer tests. |
+| Build loop | Prior accepted Python 305.67s, browser 59.2s; resource preflight about 17GB free. Two pytest workers, one browser worker, one heavy local job. |
+| Errors | Specific field/source/schema/size/integrity refusal, bounded logs, no path leakage or silent replacement with demo data. |
+| Versioning | Product version/pins unchanged; source-bound Windows manifest/hashes; preserve both earlier portable deliveries. |
+| Extension | Use existing catalogs, DTOs, atomic library/artifact/pack machinery; future fields require their own evidence, not inheritance from a neighbour. |
+
+This continuation does not cure historical Gate 14/16 timing exceptions or
+claim the outstanding post-merge audit. Reassess these ten rows after integration.
+
+## Ownership And Composition Contracts
+
+| Stream | Owner / branch | Write ownership |
+| --- | --- | --- |
+| A4 native capability | worker A / `codex/offline-a4-native-oct06` | `data/analog_four_*` native facts only as needed, `devices/` native capability/strategies, focused native tests, field-evidence inventory; no Cockpit/web/store changes |
+| Retention and packs | worker B / `codex/offline-retention-oct06` | `cockpit/library/`, `cockpit/show_bank/store.py`, `export.py`, `workspace.py`, persistence registry/migration if needed and focused retention/export tests; no shared ShowBank DTO, Forge/A4 preparation, WS or web changes |
+| Integrated workflow | coordinator / existing delivery checkout | shared Cockpit DTOs, source import/Forge generation/A4 review, WS/session/protocol, existing frontend, full journey tests, docs and delivery |
+
+Workers begin by surveying evidence/interfaces and report a small concrete API
+contract before changing a cross-owner boundary. Native capability returns typed
+field metadata and selected-field candidate render/readback, always without live
+authority. Retention exposes validated original frames/package results through
+public store/workspace methods, not caller filesystem paths. WS commands use
+existing authenticated dispatch and canonical events; frontend invokes real
+command call forms. Source import invokes registered family codecs, not synthetic
+capture construction. All consumers test the real collaborator on composition.
+
+Security examples must reject bool ids, foreign families, mismatched frame/hash,
+duplicate JSON keys, unsupported schemas, truncation, malformed native values,
+unselected/protected/coupled changes, stale revisions and interrupted publication.
+Rehashed metadata cannot grant live authority. One paired manifest is published
+last only after both required frame sets are durable; failed writes preserve the
+previous complete generation. Bound bytes, files, history, queues and caches.
+
+## Verification, Checkpoints And Delivery
+
+Two implementers maximum. Focused tests during implementation, coordinated
+`-n 0`; one integrated source-frozen Python coverage run with `-n 2`, canonical
+touched coverage, architecture/parity, strict typing, lint/dead code. Frontend
+coverage/type/lint/build and browser use one worker, zero retries. Do not repeat
+unchanged accepted suites; inspect runner summaries rather than worker prose.
+At first cross-owner import run the composed native/retention/WS consumer cases
+with real artifacts before broad acceptance. Checkpoint before each long job.
+
+Publish one coherent increment to existing direct-base PR #254, no stacked or
+competing PR. Normal hooks and eight bounded review dimensions remain required.
+Build Windows on existing hosted installer workflow, preserve earlier deliveries,
+verify source commit and binary hashes, and exercise the actual package with MIDI
+off: import, scope, repeated small/large previews/recalls, named ordered favorites,
+export/import, stale/cancel/error handling, backend loss/restart and exact disarmed
+recall. Stop only owned processes/listeners; no hardware/USB/MIDI access, arming,
+device writes, dependency/pin changes, parity regeneration or policy bypass.
+
+Rollback reverts only this phase and uses the unchanged earlier package; new
+records cannot be silently downgraded. Done is the complete evidence-backed
+offline preparation journey, passing source/build receipts and concise handoff.
+Remaining native gaps and all physical/transport restrictions are explicit.
+The first physical gate stays one scoped Pad 2 audition, manual KIT reload and
+fresh exact baseline comparison; no software result grants show readiness.
