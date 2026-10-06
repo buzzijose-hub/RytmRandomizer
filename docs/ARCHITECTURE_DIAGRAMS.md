@@ -3191,7 +3191,12 @@ flowchart LR
     CaptureMetadata --> ParameterScope
     LocalFavorites --> PureCellValidator
     LocalFavorites --> FavoriteDTO["cockpit.data<br/>immutable source / recipe / candidate"]
-    LocalFavorites["LibraryStore schema 2<br/>source + profile + exact candidate<br/>scope / locks / seed / depth"] --> LocalRecall["verify deterministic values<br/>disarm; invalidate plan<br/>fresh preparation required"]
+    LocalFavorites["LibraryStore schema 3<br/>original framed source + semantic favorite<br/>profile / scope / locks / seed / depth"] --> LocalRecall["verify deterministic values<br/>disarm; invalidate plan<br/>fresh preparation required"]
+    LocalFavorites --> SourceFiles["file sources via registered codec<br/>no live-capture freshness"]
+    SourceFiles --> PortableBank["ShowBank v3<br/>immutable recipe/profile/native algorithm<br/>original + generated frames retained"]
+    PortableBank --> BankReplay["export/import exact replay<br/>explicit unused bank ID<br/>catalog-only; disarmed recall"]
+    ArtifactReader["cockpit.export.reader<br/>bounded stable-identity reads<br/>duplicate-key JSON refusal"] --> LocalFavorites
+    ArtifactReader --> PortableBank
     RytmLane --> LocalFavorites
     LocalRecall --> RytmLane
     Coordinator["DualMachineStageCoordinator<br/>whole-state revision"] --> RytmLane
@@ -3204,9 +3209,9 @@ flowchart LR
     Confirm --> ArmedApply["senders/armed_apply.py<br/>sole Cockpit output handle"]
     ArmedApply --> Rytm["Analog Rytm RAM-only CC"]
 
-    A4Lane --> A4Offline["Filter 1 Frequency only<br/>offline captured-KIT candidate<br/>Q8.8 · stride 350"]
+    A4Lane --> A4Offline["optional native-field Device capability<br/>106 policy rows / 72 potentially mutable keys<br/>exact domain indices / source-known values"]
     A4Offline --> LocalFile["local bytes only<br/>hardware_send_validated=false"]
-    A4Lane --> A4Block["BLOCKED<br/>A4 SEND + every other<br/>unpromoted saved-KIT field"]
+    A4Lane --> A4Block["BLOCKED<br/>A4 SEND; OXI AMP; independent FIN<br/>unknown/default-only native fields"]
 
     OXI["OXI One<br/>sequencing / notes / triggers<br/>mutes / pattern motion"] --> Rytm
     OXI --> A4["Analog Four"]

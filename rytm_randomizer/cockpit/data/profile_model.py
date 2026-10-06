@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Final, Self, TypedDict
+from typing import Final, Self, TypedDict, cast
 
 from ...guardrails.input_validation import (
     require_exact_keys,
@@ -200,9 +200,9 @@ class ProfileModel:
     def from_dict(cls, data: ProfileModelDict) -> Self:
         traits_obj = data["traits"]
         mappings_obj = data["pad_mappings"]
-        if not isinstance(traits_obj, (list, tuple)):
+        if not isinstance(cast(object, traits_obj), (list, tuple)):
             raise TypeError(f"traits must be a list/tuple; got {type(traits_obj).__name__}")
-        if not isinstance(mappings_obj, (list, tuple)):
+        if not isinstance(cast(object, mappings_obj), (list, tuple)):
             raise TypeError(f"pad_mappings must be a list/tuple; got {type(mappings_obj).__name__}")
         return cls(
             profile_id=data["profile_id"],

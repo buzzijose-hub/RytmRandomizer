@@ -1,9 +1,11 @@
 # A4 Offline Native Field Evidence
 
-October 6 worker A slice, based on `a0cb9d22`. This is local-file capability,
+October 6 native capability, integrated from the worker slice based on `a0cb9d22`.
+This is local-file capability,
 not new hardware evidence, a legacy writer promotion, or live authority.
-The coordinator owns Cockpit, parameter scope, Forge, preparation, shared
-ShowBank DTOs and web integration.
+Studio resolves it through the Device boundary for parameter scope, Forge,
+preparation, immutable ShowBank recipes and exact local retention. Its software
+and packaged-application acceptance receipts remain source-bound separately.
 
 ## Public Contract
 
@@ -122,7 +124,7 @@ native test cases are software evidence only, not new hardware observations.
 
 ## Field Inventory
 
-There are **106 mapped keys, 75 mutable field keys / 300 source-known cells**
+There are **106 mapped keys, 72 mutable field keys / 288 source-known cells**
 on the retained initialized source. Protection takes precedence over domain.
 Fraction aliases cannot be selected independently, but the approved parent
 MOD_DEPTH field owns both bytes. FIN aliases describe the whole pitch word;
@@ -142,8 +144,8 @@ their residual must be unchanged during a TUN edit.
 | osc2_level | 42 | U7 | 0..127 step 1 | mutable if source known |
 | osc1_waveform | 44 | ENUM | known enum codes | mutable if source known |
 | osc2_waveform | 46 | ENUM | known enum codes | mutable if source known |
-| osc1_sub | 48 | ENUM | known enum codes | mutable if source known |
-| osc2_sub | 50 | ENUM | known enum codes | mutable if source known |
+| osc1_sub | 48 | ENUM | known enum codes | native_nondefault_evidence_missing |
+| osc2_sub | 50 | ENUM | known enum codes | native_nondefault_evidence_missing |
 | osc1_pw | 52 | BIPOLAR | 0..127 step 1 | mutable if source known |
 | osc2_pw | 54 | BIPOLAR | 0..127 step 1 | mutable if source known |
 | osc1_pwm_speed | 56 | U7 | 0..127 step 1 | mutable if source known |
@@ -213,7 +215,7 @@ their residual must be unchanged during a TUN edit.
 | lfo2_multiplier | 186 | ENUM | known enum codes | mutable if source known |
 | lfo1_fade | 188 | BIPOLAR | 0..127 step 1 | mutable if source known |
 | lfo2_fade | 190 | BIPOLAR | 0..127 step 1 | mutable if source known |
-| lfo1_phase | 192 | U7 | 0..127 step 1 | mutable if source known |
+| lfo1_phase | 192 | U7 | 0..127 step 1 | native_nondefault_evidence_missing |
 | lfo2_phase | 194 | U7 | 0..127 step 1 | mutable if source known |
 | lfo1_mode | 196 | ENUM | known enum codes | mutable if source known |
 | lfo2_mode | 198 | ENUM | known enum codes | mutable if source known |

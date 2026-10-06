@@ -42,7 +42,7 @@ import {
 } from './showKitForgeModel';
 
 const SAFE_ARTIFACT_NAME = /^[a-z0-9][a-z0-9_-]{0,95}$/;
-const CANDIDATE_COUNTS = [2, 3, 4, 5] as const;
+const CANDIDATE_COUNTS = [1, 2, 3, 4, 5] as const;
 const SLOT_MIN = 1;
 const SLOT_MAX = 128;
 
@@ -167,6 +167,8 @@ export function ShowKitForgePanel(): JSX.Element {
   const showBankStale = useCockpitStore((state) => state.showBankStale);
   const currentCandidate = useCockpitStore((state) => state.previewCandidate);
   const captures = useCockpitStore((state) => state.kitCaptures);
+  const libraryRecords = useCockpitStore((state) => state.libraryRecords);
+  const parameterControls = useCockpitStore((state) => state.parameterControls);
   const profile = useCockpitStore((state) => state.profile);
   const connectionStatus = useCockpitStore((state) => state.connectionStatus);
   const sessionStatus = useCockpitStore((state) => state.sessionStatus);
@@ -220,9 +222,12 @@ export function ShowKitForgePanel(): JSX.Element {
   const [seed, setSeed] = useState(1);
   const [rytmSlot, setRytmSlot] = useState(1);
   const [a4Slot, setA4Slot] = useState(1);
+  const [rytmRecordId, setRytmRecordId] = useState('');
+  const [a4RecordId, setA4RecordId] = useState('');
   const [rytmSavedSlot, setRytmSavedSlot] = useState(1);
   const [a4SavedSlot, setA4SavedSlot] = useState(1);
   const [packName, setPackName] = useState('');
+  const [importBankId, setImportBankId] = useState('');
   const [artifactName, setArtifactName] = useState('');
   const observedBankVersion = useRef<string | null>(null);
   const observedBankIdentity = useRef<string | null>(null);
@@ -249,8 +254,9 @@ export function ShowKitForgePanel(): JSX.Element {
 
   const rytmCapture = captures.find((capture) => capture.device_id === RYTM_DEVICE_ID);
   const a4Capture = captures.find((capture) => capture.device_id === ANALOG_FOUR_DEVICE_ID);
-  const rytmScopeIds = rytmCapture?.layout_items.map((item) => item.index) ?? [];
-  const a4ScopeIds = a4Capture?.layout_items.map((item) => item.index) ?? [];
+  const rytmScopeIds = [...new Set(parameterControls.filter((item) => item.device_id === RYTM_DEVICE_ID).map((item) => item.item_id))];
+  const a4ScopeIds = [...new Set(parameterControls.filter((item) => item.device_id === ANALOG_FOUR_DEVICE_ID).map((item) => item.item_id))];
+  const fileSources = (libraryRecords ?? []).filter((record) => record.record_kind !== 'rehearsal_favorite' && record.source_frame != null);
   const pairedCaptureReady =
     rytmCapture?.round_trip_verified === true &&
     a4Capture?.round_trip_verified === true &&
@@ -907,6 +913,33 @@ export function ShowKitForgePanel(): JSX.Element {
               <span>{pairedCaptureReady ? 'Ready to adopt' : 'Two verified captures required'}</span>
             </div>
             <p className="show-kit-forge-help">Use each device rail’s input-only KIT capture: manually load the source slot on the instrument, start capture, then send its current KIT dump from the instrument. Save A4 edits on the instrument before dumping; unsaved edits may not appear in its current-KIT dump.</p>
+            <fieldset className="show-kit-forge-file-sources" disabled={actionDisabled}>
+              <legend>Retained source files (offline only)</legend>
+              <div className="show-kit-forge-actions">
+                <button type="button" onClick={() => void issue({ type: 'library_import_captures' }, 'Import source files')}>Import captures folder</button>
+                <button type="button" onClick={() => void issue({ type: 'library_list' }, 'Refresh source library')}>Refresh source files</button>
+              </div>
+              <div className="show-kit-forge-fields-grid">
+                <label>Rytm source file
+                  <select value={rytmRecordId} onChange={(event) => setRytmRecordId(event.currentTarget.value)}>
+                    <option value="">Select original Rytm frame</option>
+                    {fileSources.filter((record) => record.device_id === RYTM_DEVICE_ID).map((record) => <option key={record.record_id} value={record.record_id}>{record.kit_name || 'Unnamed KIT'} · {record.record_id}</option>)}
+                  </select>
+                </label>
+                <label>Analog Four source file
+                  <select value={a4RecordId} onChange={(event) => setA4RecordId(event.currentTarget.value)}>
+                    <option value="">Select original A4 frame</option>
+                    {fileSources.filter((record) => record.device_id === ANALOG_FOUR_DEVICE_ID).map((record) => <option key={record.record_id} value={record.record_id}>{record.kit_name || 'Unnamed KIT'} · {record.record_id}</option>)}
+                  </select>
+                </label>
+              </div>
+              <button type="button" disabled={rytmRecordId === '' || a4RecordId === ''} onClick={() => void issue({
+                type: 'show_bank_adopt_library_sources', bank_id: activeBank.bank_id,
+                expected_revision: activeBank.revision, rytm_record_id: rytmRecordId,
+                a4_record_id: a4RecordId, rytm_slot: boundedSlot(rytmSlot), a4_slot: boundedSlot(a4Slot),
+              }, 'Adopt file sources', true, () => 'Original file sources retained. Hardware capture and SEND remain separate.')}>Adopt source files</button>
+              <p>Codec-verified file evidence, not a fresh physical capture. Source slots below are operator-declared recovery metadata.</p>
+            </fieldset>
             <div className="show-kit-forge-source-grid">
               {sourceCaptureRows.map(({ label, capture, slot, setSlot }) => {
                 return (
@@ -1087,7 +1120,7 @@ export function ShowKitForgePanel(): JSX.Element {
                     Custom depth: {Math.round(depth * 100)}%
                     <input
                       type="range"
-                      min="0.1"
+                      min="0"
                       max="0.9"
                       step="0.01"
                       value={depth}
@@ -1140,7 +1173,7 @@ export function ShowKitForgePanel(): JSX.Element {
                        );
                        return (
                          <article key={candidate.candidate_id} className="show-kit-forge-candidate" aria-label={`Candidate ${index + 1}`}>
-                           <header><h4>Candidate {index + 1}</h4><span>{isFavorite ? 'Favorite' : selected ? 'Selected for audition' : 'In-memory candidate'}</span></header>
+                           <header><h4>Candidate {index + 1}</h4><span>{isFavorite ? 'Local favorite' : selected ? 'Selected for preview' : 'Retained offline candidate'}</span></header>
                            <p>Profile {candidate.recipe.profile_id}</p>
                            <dl><div><dt>Depth</dt><dd>{candidate.recipe.depth_preset} · {Math.round(candidate.recipe.depth * 100)}%</dd></div><div><dt>Seed</dt><dd>{candidate.recipe.seed}</dd></div><div><dt>Rytm semantic fingerprint</dt><dd><code>{candidate.rytm_semantic_fingerprint}</code></dd></div><div><dt>A4 semantic fingerprint</dt><dd><code>{candidate.analog_four_candidate.semantic_fingerprint}</code></dd></div><div><dt>A4 artifact fingerprint</dt><dd><code>{candidate.analog_four_candidate.artifact_fingerprint}</code></dd></div></dl>
                            <details className="show-kit-forge-candidate-details">
@@ -1161,11 +1194,19 @@ export function ShowKitForgePanel(): JSX.Element {
                              {candidate.analog_four_candidate.values.length === 0 ? (
                                <p>No mapped A4 parameter changes. Source bytes preserved.</p>
                              ) : <ul>
-                               {candidate.analog_four_candidate.values.map((value) => (
+                               {candidate.analog_four_candidate.values.map((value) => {
+                                 const sourceControl = parameterControls.find((control) =>
+                                   control.device_id === ANALOG_FOUR_DEVICE_ID &&
+                                   control.item_id === value.track_id &&
+                                   (control.parameter_key === value.parameter ||
+                                    (value.parameter === 'filter1_frequency' && control.parameter_key === 'Filter1 Frequency')),
+                                 );
+                                 return (
                                  <li key={`${value.track_id}-${value.parameter}`}>
-                                   Track {value.track_id} {value.parameter}: {value.screen_value}
+                                   Track {value.track_id} {value.parameter}: source {sourceControl?.display_value ?? 'unavailable'} to {value.screen_value}; native {sourceControl?.value ?? 'unavailable'} to {'encoded_native' in value ? value.encoded_native : value.encoded_unsigned_8_8}
                                  </li>
-                               ))}
+                                 );
+                               })}
                              </ul>}
                              <p>
                                Rytm scope: {idList(candidate.recipe.rytm_scope.target_ids, 'pad')}; locks:{' '}
@@ -1189,7 +1230,7 @@ export function ShowKitForgePanel(): JSX.Element {
                                <div><dt>Local retention</dt><dd>{a4Artifact.retained === null ? 'In memory only' : <>Retained as <code>{a4Artifact.retained.artifact_name}</code> · <code>{a4Artifact.retained.sha256}</code> · {a4Artifact.retained.byte_count} bytes</>}</dd></div>
                              </dl>
                              <p>{candidate.analog_four_candidate.evidence_status}</p>
-                             <p>Local file only. Cockpit cannot SEND this artifact to Analog Four and has not saved it on hardware. Only Filter 1 Frequency is available here; Amp Attack and every other unsupported captured-KIT field remain mapping-blocked.</p>
+                             <p>Preview-only saved-KIT file. A4 SEND and hardware SAVE remain blocked. Unsupported selectors, independent FIN and OXI AMP controls are protected.</p>
                              {a4Artifact.retained === null ? (
                                <button
                                  type="button"
@@ -1203,7 +1244,7 @@ export function ShowKitForgePanel(): JSX.Element {
                                <p><strong>Retained locally and included in show-pack export.</strong></p>
                              )}
                            </section>
-                           <p>Rytm candidate remains in memory until exact-plan audition.</p>
+                           <p>Retained local preparation, not a hardware KIT save.</p>
                            <div className="show-kit-forge-actions">
                              <button type="button" aria-pressed={selected && selectedCandidateIsCurrent} disabled={actionDisabled || (selected && selectedCandidateIsCurrent)} onClick={() => void issue({ type: 'show_bank_select_candidate', bank_id: activeBank.bank_id, entry_id: activeEntry.entry_id, candidate_id: candidate.candidate_id, expected_revision: activeBank.revision }, 'Select candidate for audition')}>Select for audition</button>
                              <button type="button" aria-pressed={isFavorite} disabled={actionDisabled || isFavorite} onClick={() => markFavorite(activeBank, activeEntry, candidate.candidate_id)}>Mark favorite</button>
@@ -1498,12 +1539,17 @@ export function ShowKitForgePanel(): JSX.Element {
         </div>
         <div className="show-kit-forge-inline-fields">
           <label>Import package ID<input value={packName} pattern={SAFE_ARTIFACT_NAME.source} maxLength={96} autoCapitalize="none" onChange={(event) => setPackName(event.currentTarget.value.toLowerCase())} placeholder="my-show" /></label>
+          <label>New bank ID (optional)<input value={importBankId} pattern={SAFE_ARTIFACT_NAME.source} maxLength={96} autoCapitalize="none" onChange={(event) => setImportBankId(event.currentTarget.value.toLowerCase())} /></label>
           <button
             type="button"
-            disabled={actionDisabled || !validPackName}
+            disabled={actionDisabled || !validPackName || (importBankId !== '' && !SAFE_ARTIFACT_NAME.test(importBankId))}
             onClick={() =>
               void issue(
-                { type: 'show_bank_import', pack_name: packName },
+                {
+                  type: 'show_bank_import',
+                  pack_name: packName,
+                  ...(importBankId === '' ? {} : { destination_bank_id: importBankId }),
+                },
                 'Import show pack',
                 true,
                 (ack) =>

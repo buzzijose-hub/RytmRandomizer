@@ -56,13 +56,9 @@ from ..data.show_bank import RetainedSysexArtifact
 from ..data.stage import ANALOG_RYTM_DEVICE_ID
 from ..engine import mutate
 from ..engine.parameter_scope import rytm_parameter_depths
+from ..export.reader import decode_json_rejecting_duplicate_keys, read_bounded_artifact
 from ..export.writer import atomic_write_set, guard_atomic_write_tree
 from ..profiles.paths import default_profiles_dir
-from ..show_bank.store import (
-    SHOW_BANK_SYSEX_MAX_BYTES,
-    decode_json_rejecting_duplicate_keys,
-    read_bounded_show_bank_file,
-)
 
 __all__ = [
     "LIBRARY_STORE_ID",
@@ -91,6 +87,7 @@ _FAVORITE_NAME_LIMIT: Final[int] = 128
 LIBRARY_MAX_RECORD_BYTES: Final[int] = 4 * 1024 * 1024
 LIBRARY_MAX_FILES: Final[int] = 4096
 LIBRARY_MAX_CAPTURE_FILE_BYTES: Final[int] = 8 * 1024 * 1024
+LIBRARY_MAX_SOURCE_FRAME_BYTES: Final[int] = 2 * 1024 * 1024
 LIBRARY_MAX_TOTAL_BYTES: Final[int] = 64 * 1024 * 1024
 SourceOrigin = Literal["input_capture", "file_import"]
 _logger = get_logger(__name__)
@@ -252,7 +249,7 @@ class LibraryRecord:
             payload_hex=str(raw.get("payload_hex", "")),
             rehearsal=rehearsal,
             source_frame=source_frame,
-            source_origin=cast(SourceOrigin | None, origin),
+            source_origin=origin,
         )
         if rehearsal is not None and (
             record.record_id != rehearsal.favorite_id
@@ -578,7 +575,7 @@ class LibraryStore:
         """Import one ``*.syx`` file; never raises for a bad file."""
 
         try:
-            raw = read_bounded_show_bank_file(path, maximum=LIBRARY_MAX_CAPTURE_FILE_BYTES)
+            raw = read_bounded_artifact(path, maximum=LIBRARY_MAX_CAPTURE_FILE_BYTES)
             frames = extract_sysex_payloads(raw, keep_framing=True)
         except (OSError, ValueError, DataError):
             return LibraryImportResult(
@@ -711,7 +708,7 @@ def _safe_load_record(path: Path) -> LibraryRecord | None:
     raw: object = None
     try:
         raw = decode_json_rejecting_duplicate_keys(
-            read_bounded_show_bank_file(path, maximum=LIBRARY_MAX_RECORD_BYTES)
+            read_bounded_artifact(path, maximum=LIBRARY_MAX_RECORD_BYTES)
         )
     except (OSError, ValueError, DataError, RecursionError):
         readable = False
@@ -788,8 +785,8 @@ def _read_record_source_frame(directory: Path, record: LibraryRecord) -> bytes:
     artifact = record.source_frame
     if artifact is None:
         raise ValueError("library record has no retained source frame")
-    frame = read_bounded_show_bank_file(
-        directory / artifact.artifact_name, maximum=SHOW_BANK_SYSEX_MAX_BYTES
+    frame = read_bounded_artifact(
+        directory / artifact.artifact_name, maximum=LIBRARY_MAX_SOURCE_FRAME_BYTES
     )
     _validate_record_source_frame(record, frame)
     return frame

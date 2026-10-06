@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import replace
 
 import pytest
@@ -90,3 +91,80 @@ def test_strict_profile_refuses_corruption_without_scalar_coercion(tmp_path, cor
         raw["traits"][0]["extra"] = True
     with pytest.raises(ValueError):
         ProfileModel.from_strict_dict(raw)
+
+
+def test_restarted_bank_recalls_retained_profile_missing_from_registry_disarmed(tmp_path) -> None:
+    from rytm_randomizer.cockpit.data.parameter_scope import ParameterCell, ParameterSelection
+    from rytm_randomizer.cockpit.device import MockDeviceAdapter
+    from rytm_randomizer.cockpit.history import HistoryStore
+    from rytm_randomizer.cockpit.profiles import ProfileRegistry
+    from rytm_randomizer.cockpit.show_bank.workspace import ShowKitForgeWorkspace
+    from rytm_randomizer.cockpit.ws import handlers
+    from rytm_randomizer.cockpit.ws.session import CockpitSession
+
+    harness = build_show_bank_harness(tmp_path)
+    source = harness.workspace.source_snapshot(harness.bank_id, harness.entry_id)
+    profile = replace(harness.profile, profile_id="portable-author", kind="user")
+    recipe = ShowKitRecipe(
+        profile.profile_id,
+        "small",
+        0.1,
+        123,
+        ShowKitScope(
+            RYTM_SHOW_KIT_DEVICE_ID,
+            (2,),
+            tuple(item for item in range(1, 13) if item != 2),
+            ParameterSelection((ParameterCell(2, "flt"),)),
+        ),
+        ShowKitScope(A4_SHOW_KIT_DEVICE_ID, (), (1, 2, 3, 4), ParameterSelection(())),
+        profile=profile,
+    )
+    (candidate,) = harness.workspace.generate_candidates(
+        harness.bank_id,
+        harness.entry_id,
+        harness.workspace.bank(harness.bank_id).revision,
+        profile=profile,
+        depth_preset=recipe.depth_preset,
+        depth=recipe.depth,
+        seed=recipe.seed,
+        candidate_count=1,
+        rytm_targets=recipe.rytm_scope.target_ids,
+        rytm_locks=recipe.rytm_scope.locked_ids,
+        analog_four_targets=recipe.analog_four_scope.target_ids,
+        analog_four_locks=recipe.analog_four_scope.locked_ids,
+        rytm_parameters=recipe.rytm_scope.parameters,
+        analog_four_parameters=recipe.analog_four_scope.parameters,
+    )
+    bank = harness.workspace.bank(harness.bank_id)
+    restarted = ShowKitForgeWorkspace(harness.store, clock=harness.clock)
+    registry = ProfileRegistry(tmp_path / "missing-profiles")
+    assert registry.get(profile.profile_id) is None
+    history = HistoryStore()
+    history.initial(source)
+    session = CockpitSession(
+        profile_registry=registry,
+        history_store=history,
+        device=MockDeviceAdapter(source),
+        show_kit_forge=restarted,
+    )
+    ack = asyncio.run(
+        handlers.handle_command(
+            {
+                "request_id": "portable-recall",
+                "command": {
+                    "type": "show_bank_select_candidate",
+                    "bank_id": bank.bank_id,
+                    "entry_id": harness.entry_id,
+                    "candidate_id": candidate.candidate_id,
+                    "expected_revision": bank.revision,
+                },
+            },
+            session,
+        )
+    )
+    assert ack["ok"], ack
+    assert session.active_profile == profile
+    assert session.current_candidate == candidate.rytm_candidate
+    assert session.rytm_parameters == recipe.rytm_scope.parameters
+    assert session.current_send_plan is None
+    assert session.armed_apply is None and not session.hardware_intent

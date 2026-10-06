@@ -462,6 +462,8 @@ export interface LibraryRecord {
   record_kind?: 'capture' | 'rehearsal_favorite';
   /** Opaque retained evidence; only the server validates and reconstructs it. */
   rehearsal?: Record<string, unknown> | null;
+  source_frame?: { artifact_name: string; sha256: string; byte_count: number } | null;
+  source_origin?: 'input_capture' | 'file_import' | null;
 }
 
 /**
@@ -669,6 +671,9 @@ export interface ShowKitRecipe {
   seed: number;
   rytm_scope: ShowKitScope;
   analog_four_scope: ShowKitScope;
+  /** Immutable authored intelligence; legacy recipes omit this. */
+  profile?: ProfileModel;
+  a4_algorithm?: 'filter1-frequency-v1' | 'native-fields-v1';
 }
 
 export interface ShowAnalogFourCandidateValue {
@@ -679,12 +684,21 @@ export interface ShowAnalogFourCandidateValue {
   unpacked_offset: number;
 }
 
+export interface ShowAnalogFourNativeValue {
+  track_id: number;
+  parameter: string;
+  screen_value: string;
+  encoded_native: number;
+  native_encoding: string;
+  unpacked_offsets: number[];
+}
+
 export interface ShowAnalogFourOfflineCandidate {
   artifact_fingerprint: string;
   semantic_fingerprint: string;
   source_fingerprint: string;
   sysex: ShowKitSysex;
-  values: ShowAnalogFourCandidateValue[];
+  values: (ShowAnalogFourCandidateValue | ShowAnalogFourNativeValue)[];
   evidence_status: ShowKitEvidenceStatus;
 }
 
@@ -793,15 +807,20 @@ export interface A4PreparationReport {
   candidate_is_local: boolean;
   candidate_bytes_verified: boolean;
   current_source_verified: boolean;
-  changes: {
+  changes: ({
     track_id: number;
     parameter: string;
-    before_raw_q8_8: number;
-    after_raw_q8_8: number;
     before_screen_value: string;
     after_screen_value: string;
     unpacked_offsets: number[];
-  }[];
+  } & ({
+    before_raw_q8_8: number;
+    after_raw_q8_8: number;
+  } | {
+    before_encoded_native: number;
+    after_encoded_native: number;
+    native_encoding: string;
+  }))[];
   blocked_reasons: A4PreparationBlocker[];
   ready: false;
   hardware_send_validated: false;
@@ -852,7 +871,7 @@ export interface ShowBankEntry {
 }
 
 export interface ShowBank {
-  schema_version: 'show-bank-v1' | 'show-bank-v2';
+  schema_version: 'show-bank-v1' | 'show-bank-v2' | 'show-bank-v3';
   bank_id: string;
   name: string;
   description: string;
@@ -1349,6 +1368,17 @@ export interface ShowBankGenerateCandidatesCommand {
   a4_locks: number[];
 }
 
+export interface ShowBankAdoptLibrarySourcesCommand {
+  type: 'show_bank_adopt_library_sources';
+  bank_id: string;
+  expected_revision: number;
+  rytm_record_id: string;
+  a4_record_id: string;
+  rytm_slot: number;
+  a4_slot: number;
+  allow_legacy_reconstruction?: boolean;
+}
+
 export interface ShowBankSelectCandidateCommand {
   type: 'show_bank_select_candidate';
   bank_id: string;
@@ -1445,6 +1475,7 @@ export interface ShowBankImportCommand {
   type: 'show_bank_import';
   /** Filename-safe pack name resolved by the server beneath its injected import root. */
   pack_name: string;
+  destination_bank_id?: string;
 }
 
 export interface ShowBankExportCommand {
@@ -1496,6 +1527,7 @@ export type Command =
   | ShowBankSelectCommand
   | ShowBankUpdateCommand
   | ShowBankAdoptSourcesCommand
+  | ShowBankAdoptLibrarySourcesCommand
   | ShowBankGenerateCandidatesCommand
   | ShowBankSelectCandidateCommand
   | ShowBankMarkFavoriteCommand

@@ -80,7 +80,7 @@ def test_empty_selection_is_exact_zero_depth_identity_for_retained_sources(name:
 def test_inventory_support_is_not_inferred_from_accessor_width_or_midi_catalog() -> None:
     fields = get_analog_four_native_field_capability().native_fields()
     assert len(fields) == 106
-    assert sum(field.mutation_supported for field in fields) == 75
+    assert sum(field.mutation_supported for field in fields) == 72
     by_key = {field.parameter: field for field in fields}
     for key in (
         "osc1_tracking",
@@ -138,7 +138,7 @@ def test_novel_values_for_every_supported_field_on_every_track_use_only_approved
             mutations.append(
                 AnalogFourNativeMutation(value.parameter, value.track, value.domain.value_at(index))
             )
-    assert len(mutations) == 300
+    assert len(mutations) == 288
     first = capability.render_native_fields(source, mutations)
     assert capability.render_native_fields(source, mutations) == first
     assert first.changed_unpacked_offsets
@@ -224,6 +224,19 @@ def test_every_known_native_enum_code_renders_and_unknown_source_cannot_be_norma
     assert capability.render_native_fields(unknown, ()).framed_sysex == unknown
     with pytest.raises(ValueError, match="unknown native selector"):
         capability.render_native_fields(source, (AnalogFourNativeMutation(field, 2, 127),))
+
+
+@pytest.mark.parametrize("field", ["lfo1_phase", "osc1_sub", "osc2_sub"])
+def test_default_only_evidence_does_not_authorize_nondefault_mutation(field: str) -> None:
+    capability = get_analog_four_native_field_capability()
+    source = _source()
+    cell = capability.read_native_fields(source).value(field, 1)
+    assert cell.source_value_known and cell.encoded_native == 0
+    assert not cell.mutable
+    assert cell.protection_reason == "native_nondefault_evidence_missing"
+    with pytest.raises(ValueError, match="native_nondefault_evidence_missing"):
+        capability.render_native_fields(source, (AnalogFourNativeMutation(field, 1, 1),))
+    assert capability.render_native_fields(source, ()).framed_sysex == source
 
 
 @pytest.mark.parametrize(

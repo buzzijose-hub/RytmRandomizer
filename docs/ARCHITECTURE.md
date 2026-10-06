@@ -211,11 +211,12 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/stage/{coordinator,policy}.py` | Hardware-inert lane orchestration plus registry-derived device domains/authority policy; no codec or port ownership. |
 | `cockpit/data/a4_preparation.py` | Frozen candidate-bound A4 preparation report and closed blockers; output authority is always offline-only and cannot be imported as a grant. |
 | `cockpit/show_bank/a4_preparation.py` | Pure review of exact source/candidate bytes, current capture, scope, recovery and port intent through registered capabilities; never creates packets, enumerates or opens MIDI. |
-| `cockpit/show_bank/forge.py` | Pure deterministic paired candidate generation. Rytm reuses captured-anchor mutation planning; A4 calls only the offline Filter 1 Frequency renderer and cannot create A4 output authority. |
+| `cockpit/show_bank/forge.py` | Pure deterministic paired candidate generation. Rytm reuses captured-anchor mutation planning; A4 resolves optional native-field rendering through Device capabilities, preserves protected bytes and cannot create output authority. |
 | `cockpit/show_bank/readiness.py` | Pure lifecycle transitions, semantic favorite-recapture comparison, exact full-capture show-time preflight, cue-order readiness, and non-destructive source return. |
 | `cockpit/show_bank/workspace.py` | Authoritative session orchestration for paired sources, candidates, favorites, retained evidence, and fresh preflight. Composes capture/history/stage and the existing Rytm exact-plan ArmedApply boundary; invalidates stale live state and never grants A4 SEND or persistent SAVE authority. |
 | `cockpit/show_bank/store.py` | Revisioned canonical-JSON store and explicit content-addressed SysEx retention using the shared atomic writer; validates bounds, framing, hashes, paths, and corruption categories. |
 | `cockpit/show_bank/export.py` | Self-contained `.show-pack` publication/verification/import beneath configured roots. Publishes the manifest last and rejects missing, extra, noncanonical, malformed, or hash-mismatched artifacts before import. |
+| `cockpit/export/reader.py` | Shared bounded, regular-file and stable-identity artifact reads plus duplicate-key JSON rejection; independent of Library and Show Bank stores. |
 | `cockpit/data/rytm_parameter_map.py` | Canonical cockpit-facing Analog Rytm machine aliases and parameter bindings; delegates CC/NRPN facts to the shared device data layer instead of duplicating controls or offsets. |
 | `style_analysis/analog_four_patch_inference.py` | Typed, single-decode audio evidence and audio-dependent four-column A4 patch-genome inference with direct RED metrics. |
 | `style_analysis/runtime_types.py` | Shared runtime type-validation helper used by extractor and A4 inference boundaries. |
@@ -338,11 +339,11 @@ rule, change it here first, then update the test.
     | Importing package | Declared Show Kit Forge dependency edges |
     | --- | --- |
     | `cockpit.data` | `snapshot` (device-neutral mutation scope/domain), `guardrails` (strict input-validation leaf only) |
-    | `cockpit.show_bank` | `cockpit.capture`, `cockpit.data`, `cockpit.engine`, `cockpit.export`, `cockpit.profiles`, `data`, `devices`, `guardrails` (input-validation leaf), `observability`, `snapshot` |
+    | `cockpit.show_bank` | `cockpit.capture`, `cockpit.data`, `cockpit.engine`, `cockpit.export`, `cockpit.profiles`, `cockpit.library` (validated original-source lookup), `data`, `devices`, `guardrails` (input-validation leaf), `observability`, `snapshot` |
     | `cockpit.ws` | `cockpit.show_bank` (authoritative workspace and lifecycle dispatch), `guardrails` (input-validation leaf) |
     | `cockpit.stage` | `snapshot` (shared registry-derived mutation domain) |
     | `cockpit.capture` | `snapshot` (neutral registered item domain used by source-backed parameter metadata) |
-    | `cockpit.library` | `cockpit.data` (strict favorite DTOs), `cockpit.engine` (pure deterministic candidate verification) |
+    | `cockpit.library` | `cockpit.data` (strict favorite DTOs), `cockpit.engine` (pure deterministic candidate verification), `cockpit.capture` (registered framed identity), `cockpit.export` (shared bounded readers and atomic writers) |
 
     Adding another edge is a separate architecture decision. The workflow and
     optional offline A4 capability are described in

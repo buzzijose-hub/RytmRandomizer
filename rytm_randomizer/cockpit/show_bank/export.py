@@ -34,7 +34,7 @@ from ...observability.tracing import trace
 from ..capture import KitCaptureResult, cockpit_snapshot_from_rytm_capture, decode_kit_capture_frame
 from ..data import Snapshot
 from ..data.show_bank import (
-    A4_LEGACY_MUTATION_ALGORITHM,
+    A4_NATIVE_MUTATION_ALGORITHM,
     A4_SHOW_KIT_DEVICE_ID,
     LEGACY_SHOW_BANK_SCHEMA_VERSION,
     PREVIOUS_SHOW_BANK_SCHEMA_VERSION,
@@ -424,6 +424,11 @@ def _required_retained_ids(bank: ShowBank) -> frozenset[str]:
         favorite = entry.favorite_candidate
         if favorite is not None:
             required.add(favorite.analog_four_candidate.sysex.artifact_id)
+        required.update(
+            candidate.analog_four_candidate.sysex.artifact_id
+            for candidate in entry.candidates
+            if candidate.recipe.a4_algorithm == A4_NATIVE_MUTATION_ALGORITHM
+        )
         for recapture in (entry.rytm_recapture, entry.analog_four_recapture):
             if recapture is not None:
                 required.add(recapture.capture.sysex.artifact_id)
@@ -453,14 +458,6 @@ def _verify_entry_candidates(
 
     for candidate in entry.candidates:
         if candidate.recipe.profile is not None:
-            # Until the shared Forge dispatches the native algorithm, do not
-            # reinterpret its marker as the legacy Filter-1 implementation.
-            if candidate.recipe.a4_algorithm != A4_LEGACY_MUTATION_ALGORITHM:
-                _raise_show_pack_corruption(
-                    "cross-reference",
-                    "show-pack candidate algorithm is not available",
-                    artifact_name=candidate.candidate_id,
-                )
             try:
                 reproduced = forge_candidate_pair(
                     entry=entry,
@@ -1092,6 +1089,8 @@ class ShowPackService:
     def store_verified_import(
         self,
         result: ShowPackImportResult,
+        *,
+        destination_bank_id: str | None = None,
     ) -> ShowPackStoredImportResult:
         """Normalize one verified package and publish its new namespace."""
 
@@ -1099,6 +1098,9 @@ class ShowPackService:
         # proof that verify() produced it. Recheck source claims before writes.
         _verify_package_device_claims(result.bank, result.frames_by_artifact_id)
         normalized = normalize_catalog_import(result.bank, clock=self._clock)
+        if destination_bank_id is not None:
+            validate_show_bank_id(destination_bank_id, "destination_bank_id")
+            normalized = replace(normalized, bank_id=destination_bank_id)
         writes = self._store.import_verified(normalized, result.frames_by_artifact_id)
         _logger.info(
             "show_pack_imported",
@@ -1115,10 +1117,14 @@ class ShowPackService:
             writes=writes,
         )
 
-    def import_into_store(self, package_id: str) -> ShowPackStoredImportResult:
+    def import_into_store(
+        self, package_id: str, *, destination_bank_id: str | None = None
+    ) -> ShowPackStoredImportResult:
         """Verify a package completely, then atomically publish it to the store."""
 
-        return self.store_verified_import(self.verify(package_id))
+        return self.store_verified_import(
+            self.verify(package_id), destination_bank_id=destination_bank_id
+        )
 
 
 __all__ = [

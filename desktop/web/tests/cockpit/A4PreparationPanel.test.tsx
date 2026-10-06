@@ -36,7 +36,7 @@ async function requestReview(): Promise<void> {
   await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Review A4 preparation' })); });
 }
 
-afterEach(() => useCockpitStore.getState().reset());
+afterEach(() => act(() => useCockpitStore.getState().reset()));
 
 describe('A4 preparation review', () => {
   it('dispatches only an explicit read-only review and displays blocked verified evidence', async () => {
@@ -51,7 +51,7 @@ describe('A4 preparation review', () => {
       output_port_name: 'A4 studio',
     } }]);
     expect(screen.getByRole('status')).toHaveTextContent('Candidate bytes verified against the immutable source. A4 SEND remains blocked.');
-    expect(screen.getByRole('status')).toHaveTextContent('Track 1 Filter 1 Frequency: 0 → 16');
+    expect(screen.getByRole('status')).toHaveTextContent('Track 1 filter1_frequency: 0 → 16');
     expect(screen.getByRole('status')).toHaveTextContent('source-sha');
     expect(screen.getByRole('status')).toHaveTextContent('live MIDI value mapping still needs separate validation');
     fireEvent.change(screen.getByLabelText('Intended A4 output name (review only)'), { target: { value: 'Different A4' } });
@@ -70,6 +70,109 @@ describe('A4 preparation review', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Candidate bytes are not verified.');
     expect(screen.getByRole('status')).toHaveTextContent('source slot not recorded');
     expect(screen.getByRole('status')).toHaveTextContent('Unavailable');
+  });
+
+  it('preserves native signed and fractional before/after values without granting live output authority', async () => {
+    const nativeReport: A4PreparationReport = { ...report, changes: [
+      { track_id: 2, parameter: 'filter2_frequency', before_encoded_native: 0, after_encoded_native: 1,
+        native_encoding: 'unsigned-big-endian-q8.8', before_screen_value: '0', after_screen_value: '0.00390625', unpacked_offsets: [510, 511] },
+      { track_id: 3, parameter: 'osc1_tune', before_encoded_native: 1, after_encoded_native: 257,
+        native_encoding: 'centered-16384-pitch-preserve-fine', before_screen_value: '-64', after_screen_value: '-63', unpacked_offsets: [760, 761] },
+    ] };
+    const fake = new FakeCockpitClient();
+    fake.ackQueue.push({ request_id: 'native', ok: true, a4_preparation: nativeReport });
+    mount(fake);
+    await requestReview();
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent('Track 2 filter2_frequency: 0 \u2192 0.00390625 Native 0 \u2192 1');
+    expect(status).toHaveTextContent('Track 3 osc1_tune: -64 \u2192 -63 Native 1 \u2192 257');
+    expect(status).toHaveTextContent('A4 SEND remains blocked.');
+    expect(status).toHaveTextContent('still needs physical load, listening, save and recapture evidence');
+    expect(fake.sent).toEqual([{ type: 'show_bank_list', a4_preparation: {
+      bank_id: bank.bank_id, entry_id: forgeEntry.entry_id, expected_revision: bank.revision, output_port_name: null,
+    } }]);
+    expect(useCockpitStore.getState().sendPlan).toBeNull();
+  });
+
+  it('cannot review a selected candidate while its parent context is disabled', async () => {
+    const fake = new FakeCockpitClient();
+    mount(fake, forgeEntry, true);
+    expect(screen.getByLabelText('Intended A4 output name (review only)')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Review A4 preparation' })).toBeDisabled();
+    await requestReview();
+    expect(fake.sent).toEqual([]);
+  });
+
+  it.each(['bank', 'revision', 'cue', 'selection', 'disabled'] as const)(
+    'revokes an existing preparation report after its %s prop changes', async (change) => {
+      const fake = new FakeCockpitClient();
+      fake.ackQueue.push({ request_id: 'review', ok: true, a4_preparation: report });
+      const view = mount(fake);
+      await requestReview();
+      expect(screen.getByRole('status')).toBeInTheDocument();
+      view.rerender(<CockpitClientProvider client={fake.asClient()}><A4PreparationPanel
+        bank={{ ...bank, bank_id: change === 'bank' ? 'other-bank' : bank.bank_id,
+          revision: change === 'revision' ? bank.revision + 1 : bank.revision }}
+        entry={{ ...forgeEntry, entry_id: change === 'cue' ? 'other-cue' : forgeEntry.entry_id,
+          selected_candidate_id: change === 'selection' ? 'candidate-two' : forgeEntry.selected_candidate_id }}
+        disabled={change === 'disabled'}
+      /></CockpitClientProvider>);
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(fake.sent).toHaveLength(1);
+    },
+  );
+
+  it.each(['accept', 'refuse', 'throw'] as const)(
+    'keeps a newer review intact when an obsolete request later %s', async (outcome) => {
+      const fake = new FakeCockpitClient();
+      let settle!: (ack: CommandAck) => void;
+      let fail!: (error: Error) => void;
+      fake.responseQueue.push(new Promise((resolve, reject) => { settle = resolve; fail = reject; }));
+      mount(fake);
+      await requestReview();
+      act(() => useCockpitStore.setState({ sessionGeneration: 2 }));
+      fake.ackQueue.push({ request_id: 'current', ok: true, a4_preparation: { ...report, preparation_id: 'current-review' } });
+      await requestReview();
+      expect(screen.getByRole('status')).toHaveTextContent('current-review');
+      await act(async () => {
+        if (outcome === 'throw') fail(new Error('obsolete failure'));
+        else settle({ request_id: 'old', ok: outcome === 'accept', message: 'obsolete failure', a4_preparation: report });
+      });
+      expect(screen.getByRole('status')).toHaveTextContent('current-review');
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Review A4 preparation' })).toBeEnabled();
+      expect(fake.sent.every((command) => command.type === 'show_bank_list' && 'a4_preparation' in command)).toBe(true);
+    },
+  );
+
+  it.each([false, true])('discards response after panel unmount (reject=%s)', async (reject) => {
+    const fake = new FakeCockpitClient();
+    let settle!: (ack: CommandAck) => void;
+    let fail!: (error: Error) => void;
+    fake.responseQueue.push(new Promise((resolve, refused) => { settle = resolve; fail = refused; }));
+    const view = mount(fake);
+    await requestReview();
+    view.unmount();
+    await act(async () => {
+      if (reject) fail(new Error('obsolete failure'));
+      else settle({ request_id: 'old', ok: true, a4_preparation: report });
+    });
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(fake.sent).toHaveLength(1);
+  });
+
+  it('clears a refused review when the operator edits output intent', async () => {
+    const fake = new FakeCockpitClient();
+    fake.ackQueue.push({ request_id: 'refused', ok: false });
+    mount(fake);
+    await requestReview();
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Intended A4 output name (review only)'), { target: { value: 'A4 replacement intent' } });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(fake.sent).toHaveLength(1);
   });
 
   it.each([true, false])('cannot review with disabled=%s and no selected candidate', async (disabled) => {

@@ -16,16 +16,20 @@ from ...guardrails.input_validation import (
     require_text,
     require_text_tuple,
 )
+from ..capture import decode_kit_capture_frame
 from ..data.show_bank import (
+    A4_NATIVE_MUTATION_ALGORITHM,
     OxiShowMetadata,
     ShowKitDepthPreset,
     ShowKitDeviceId,
     narrow_show_kit_depth_preset,
     narrow_show_kit_device_id,
 )
+from ..show_bank.readiness import is_catalog_only_show_bank
 from ..show_bank.workspace import CaptureKind, ShowKitForgeWorkspace
 from ..stage.policy import ANALOG_FOUR_DEVICE_ID, ANALOG_RYTM_DEVICE_ID
 from .protocol import (
+    COMMAND_SHOW_BANK_ADOPT_LIBRARY_SOURCES,
     COMMAND_SHOW_BANK_ADOPT_SOURCES,
     COMMAND_SHOW_BANK_ATTEST_HARDWARE_SAVED,
     COMMAND_SHOW_BANK_CREATE,
@@ -186,6 +190,8 @@ def _sync_source(
 ) -> list[dict[str, object]]:
     source = workspace.source_snapshot(bank_id, entry_id)
     session.device.adopt_snapshot(source)
+    a4_frame = workspace.original_source_frames(bank_id, entry_id)[ANALOG_FOUR_DEVICE_ID]
+    session.offline_a4_capture = decode_kit_capture_frame(ANALOG_FOUR_DEVICE_ID, a4_frame)
     _ensure_history_snapshot(session, source.snapshot_id)
     session.current_candidate = None
     session.current_send_plan = None
@@ -204,8 +210,17 @@ def _sync_selected_candidate(
     bank_id: str,
     entry_id: str,
 ) -> list[dict[str, object]]:
-    _, source, selected = workspace.audition_context(bank_id, entry_id)
-    profile = session.profile_registry.get(selected.recipe.profile_id)
+    bank = workspace.bank(bank_id)
+    entry = bank.entry(entry_id)
+    selected = entry.selected_candidate
+    if selected is None:
+        raise ValueError("select a candidate before local recall")
+    source = workspace.source_snapshot(bank_id, entry_id)
+    a4_frame = workspace.original_source_frames(bank_id, entry_id)[ANALOG_FOUR_DEVICE_ID]
+    session.offline_a4_capture = decode_kit_capture_frame(ANALOG_FOUR_DEVICE_ID, a4_frame)
+    if is_catalog_only_show_bank(bank):
+        session.recalled_offline_favorite = True
+    profile = selected.recipe.profile or session.profile_registry.get(selected.recipe.profile_id)
     if profile is None:
         raise ValueError("candidate profile is no longer available")
     session.device.adopt_snapshot(source)
@@ -351,10 +366,46 @@ async def _handle_adopt_sources(cmd: dict[str, object], session: CockpitSession)
     return HandlerResult(ack={"ok": True, "show_bank_entry_id": entry.entry_id}, events=events)
 
 
+async def _handle_adopt_library_sources(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    workspace = _workspace(session)
+    if session.library_store is None:
+        raise ValueError("source library is not configured")
+    bank_id = _show_bank_text(cmd, "bank_id")
+    entry = workspace.adopt_retained_sources(
+        bank_id,
+        _integer(cmd, "expected_revision"),
+        library=session.library_store,
+        rytm_record_id=_show_bank_text(cmd, "rytm_record_id"),
+        analog_four_record_id=_show_bank_text(cmd, "a4_record_id"),
+        rytm_slot=_integer(cmd, "rytm_slot"),
+        analog_four_slot=_integer(cmd, "a4_slot"),
+        allow_legacy_reconstruction=_optional_boolean(
+            cmd, "allow_legacy_reconstruction", default=False
+        ),
+    )
+    from .handlers import build_mutation_parameters_changed, revoke_session_output
+
+    status = revoke_session_output(session)
+    session.recalled_offline_favorite = True
+    events = [
+        status,
+        *_sync_source(session, workspace, bank_id, entry.entry_id),
+        build_mutation_parameters_changed(session),
+        build_show_bank_changed(session),
+    ]
+    return HandlerResult(ack={"ok": True, "show_bank_entry_id": entry.entry_id}, events=events)
+
+
 async def _handle_generate(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     workspace = _workspace(session)
     profile_id = _show_bank_text(cmd, "profile_id")
-    profile = session.profile_registry.get(profile_id)
+    profile = (
+        session.active_profile
+        if session.active_profile is not None and session.active_profile.profile_id == profile_id
+        else session.profile_registry.get(profile_id)
+    )
     if profile is None:
         raise ValueError("unknown candidate profile")
     bank_id = _show_bank_text(cmd, "bank_id")
@@ -377,6 +428,8 @@ async def _handle_generate(cmd: dict[str, object], session: CockpitSession) -> H
         analog_four_locks=_integer_list(cmd, "a4_locks"),
         rytm_parameters=session.rytm_parameters,
         analog_four_parameters=session.a4_parameters,
+        offline_only=True,
+        a4_algorithm=A4_NATIVE_MUTATION_ALGORITHM,
     )
     events = _sync_selected_candidate(session, workspace, bank_id, entry_id)
     events.append(build_show_bank_changed(session))
@@ -398,6 +451,7 @@ async def _handle_select_candidate(
         entry_id,
         candidate_id,
         _integer(cmd, "expected_revision"),
+        offline_only=True,
     )
     events = _sync_selected_candidate(session, workspace, bank_id, entry_id)
     events.append(build_show_bank_changed(session))
@@ -419,6 +473,7 @@ async def _handle_mark_favorite(cmd: dict[str, object], session: CockpitSession)
             "replace_existing",
             default=False,
         ),
+        offline_only=True,
     )
     events = _sync_selected_candidate(session, workspace, bank_id, entry_id)
     events.append(build_show_bank_changed(session))
@@ -613,22 +668,38 @@ async def _handle_import(cmd: dict[str, object], session: CockpitSession) -> Han
         raise ValueError("show-pack import is not configured")
     package_id = _show_bank_text(cmd, "pack_name")
     verified = pack_service.verify(package_id)
+    destination_id = (
+        _show_bank_text(cmd, "destination_bank_id")
+        if "destination_bank_id" in cmd
+        else verified.bank.bank_id
+    )
     # Check the in-memory collision before writing. The store independently
     # refuses every existing revision, so a concurrent collision also fails
     # closed at publication.
-    if any(bank.bank_id == verified.bank.bank_id for bank in workspace.banks):
-        raise ValueError("a show bank with that id already exists")
-    stored = pack_service.store_verified_import(verified)
+    if any(bank.bank_id == destination_id for bank in workspace.banks):
+        raise ValueError("a show bank with that id already exists; choose a new import bank ID")
+    stored = pack_service.store_verified_import(verified, destination_bank_id=destination_id)
     imported = workspace.register_imported(stored.bank)
+    from .handlers import revoke_session_output
+
+    status = revoke_session_output(session)
+    session.recalled_offline_favorite = True
     import_ack: ShowPackImportAck = {
         "package_id": package_id,
         "bank_id": imported.bank_id,
         "artifact_count": len(verified.frames_by_artifact_id),
         "write_count": len(stored.writes),
     }
-    return _ok(
-        session,
-        show_pack_import=import_ack,
+    session.current_candidate = None
+    session.current_send_plan = None
+    session.preview_on = False
+    session.stage_coordinator.record_candidate(ANALOG_RYTM_DEVICE_ID, ready=None)
+    session.stage_coordinator.record_candidate(
+        ANALOG_FOUR_DEVICE_ID, ready=None, blocked_reason=A4_HARDWARE_BLOCK_REASON
+    )
+    return HandlerResult(
+        ack={"ok": True, "show_pack_import": import_ack},
+        events=[status, *_source_events(session), build_show_bank_changed(session)],
     )
 
 
@@ -641,6 +712,7 @@ SHOW_BANK_HANDLERS: Final[Mapping[str, ShowBankHandler]] = MappingProxyType(
         COMMAND_SHOW_BANK_SELECT: _handle_select,
         COMMAND_SHOW_BANK_UPDATE: _handle_update,
         COMMAND_SHOW_BANK_ADOPT_SOURCES: _handle_adopt_sources,
+        COMMAND_SHOW_BANK_ADOPT_LIBRARY_SOURCES: _handle_adopt_library_sources,
         COMMAND_SHOW_BANK_GENERATE_CANDIDATES: _handle_generate,
         COMMAND_SHOW_BANK_SELECT_CANDIDATE: _handle_select_candidate,
         COMMAND_SHOW_BANK_MARK_FAVORITE: _handle_mark_favorite,

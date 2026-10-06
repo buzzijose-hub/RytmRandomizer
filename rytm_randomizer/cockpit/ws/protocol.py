@@ -355,6 +355,9 @@ COMMAND_SHOW_BANK_UPDATE: Final[Literal["show_bank_update"]] = "show_bank_update
 COMMAND_SHOW_BANK_ADOPT_SOURCES: Final[Literal["show_bank_adopt_sources"]] = (
     "show_bank_adopt_sources"
 )
+COMMAND_SHOW_BANK_ADOPT_LIBRARY_SOURCES: Final[Literal["show_bank_adopt_library_sources"]] = (
+    "show_bank_adopt_library_sources"
+)
 COMMAND_SHOW_BANK_GENERATE_CANDIDATES: Final[Literal["show_bank_generate_candidates"]] = (
     "show_bank_generate_candidates"
 )
@@ -433,6 +436,7 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_SHOW_BANK_SELECT,
             COMMAND_SHOW_BANK_UPDATE,
             COMMAND_SHOW_BANK_ADOPT_SOURCES,
+            COMMAND_SHOW_BANK_ADOPT_LIBRARY_SOURCES,
             COMMAND_SHOW_BANK_GENERATE_CANDIDATES,
             COMMAND_SHOW_BANK_SELECT_CANDIDATE,
             COMMAND_SHOW_BANK_MARK_FAVORITE,
@@ -1190,6 +1194,17 @@ class ShowBankGenerateCandidatesCommand(TypedDict):
     a4_locks: list[int]
 
 
+class ShowBankAdoptLibrarySourcesCommand(TypedDict):
+    type: Literal["show_bank_adopt_library_sources"]
+    bank_id: str
+    expected_revision: int
+    rytm_record_id: str
+    a4_record_id: str
+    rytm_slot: int
+    a4_slot: int
+    allow_legacy_reconstruction: NotRequired[bool]
+
+
 class ShowBankSelectCandidateCommand(TypedDict):
     type: Literal["show_bank_select_candidate"]
     bank_id: str
@@ -1285,6 +1300,7 @@ class ShowBankRetainCaptureCommand(TypedDict):
 class ShowBankImportCommand(TypedDict):
     type: Literal["show_bank_import"]
     pack_name: str
+    destination_bank_id: NotRequired[str]
 
 
 class ShowBankExportCommand(TypedDict):
@@ -1336,6 +1352,7 @@ __all__ = [
     "COMMAND_RECALL_REHEARSAL_FAVORITE",
     "COMMAND_SET_PAD_LOCK",
     "COMMAND_SHOW_BANK_ADOPT_SOURCES",
+    "COMMAND_SHOW_BANK_ADOPT_LIBRARY_SOURCES",
     "COMMAND_SHOW_BANK_ATTEST_HARDWARE_SAVED",
     "COMMAND_SHOW_BANK_CREATE",
     "COMMAND_SHOW_BANK_DUPLICATE_ENTRY",
@@ -1435,6 +1452,7 @@ __all__ = [
     "SetPadLockCommand",
     "SnapshotChangedEvent",
     "ShowBankAdoptSourcesCommand",
+    "ShowBankAdoptLibrarySourcesCommand",
     "ShowBankAttestHardwareSavedCommand",
     "ShowBankChangedEvent",
     "ShowBankCreateCommand",

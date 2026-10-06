@@ -289,13 +289,9 @@ def test_show_bank_websocket_complete_lifecycle_pack_and_recovery(
     assert session.current_candidate is not None
     with monkeypatch.context() as scoped:
         scoped.setattr(session.profile_registry, "get", lambda _profile_id: None)
-        with pytest.raises(ValueError, match="profile is no longer available"):
-            show_bank_handlers._sync_selected_candidate(
-                session,
-                boundary.workspace,
-                bank_id,
-                entry_id,
-            )
+        show_bank_handlers._sync_selected_candidate(session, boundary.workspace, bank_id, entry_id)
+        assert session.active_profile == profile
+        assert session.armed_apply is None and not session.hardware_intent
 
     ack, _ = _command(
         session,

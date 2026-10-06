@@ -108,6 +108,8 @@ class CockpitSession:
     kit_captures: dict[KitCaptureDeviceId, KitCaptureResult] = field(
         default_factory=dict[KitCaptureDeviceId, KitCaptureResult]
     )
+    offline_a4_capture: KitCaptureResult | None = None
+    """Retained-file metadata source, never a live/fresh input capture."""
     capture_cancel: Event | None = None
     """Cancellation signal for the one owned input capture, never output authority."""
     capture_generation: int = 0

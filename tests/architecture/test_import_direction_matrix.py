@@ -186,6 +186,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             # payloads via snapshot/sysex_file.
             "devices",
             "snapshot",
+            "cockpit.capture",  # Canonical input-only framed KIT identity validation.
         }
     ),
     "cockpit.profiles": frozenset(
@@ -207,6 +208,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "cockpit.engine",
             "cockpit.export",
             "cockpit.profiles",
+            "cockpit.library",  # Retained-source lookup; library never imports this layer.
             "data",
             # Forge resolves family-neutral codec/candidate capabilities from
             # the device registry; it never imports a concrete family module.

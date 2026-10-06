@@ -28,6 +28,10 @@ export function MutationParametersPanel(): JSX.Element {
   const snapshot = useCockpitStore((state) => state.snapshot);
   const captures = useCockpitStore((state) => state.kitCaptures);
   const candidate = useCockpitStore((state) => state.previewCandidate);
+  const bankState = useCockpitStore((state) => state.showBank);
+  const bank = bankState?.banks.find((item) => item.bank_id === bankState.active_bank_id);
+  const sourceEntry = bank?.entries.find((item) => item.rytm_source.snapshot_id === snapshot?.snapshot_id);
+  const pairedCandidate = sourceEntry?.candidates.find((item) => item.candidate_id === candidate?.candidate_id);
   const { selection, replace } = useMutationParameters(deviceId);
   const targets = useMutationTargets(deviceId);
   const locks = usePadLocks(deviceId);
@@ -61,7 +65,7 @@ export function MutationParametersPanel(): JSX.Element {
   const unit = deviceId === RYTM_DEVICE_ID ? 'Pad' : 'Track';
   const eligible = visible.filter(selectableParameter);
   const scopeLabel = selection === null ? 'All eligible controls (legacy)' : `${selection.length} explicit cells`;
-  const sourceIdentity = deviceId === RYTM_DEVICE_ID ? snapshot?.snapshot_id : captures.find((capture) => capture.device_id === deviceId)?.fingerprint;
+  const sourceIdentity = deviceId === RYTM_DEVICE_ID ? snapshot?.snapshot_id : captures.find((capture) => capture.device_id === deviceId)?.fingerprint ?? sourceEntry?.analog_four_source.fingerprint;
 
   const setPageSelection = (selected: boolean): void => {
     replace(replaceParameterCells(selection, deviceControls, visible, selected));
@@ -86,7 +90,11 @@ export function MutationParametersPanel(): JSX.Element {
   };
 
   const proposal = (control: PerformanceParameterControl): number | undefined => {
-    if (deviceId !== RYTM_DEVICE_ID || candidate?.source_snapshot_id !== snapshot?.snapshot_id) return undefined;
+    if (deviceId === ANALOG_FOUR_DEVICE_ID) {
+      const value = pairedCandidate?.analog_four_candidate.values.find((item) => item.track_id === control.item_id && (item.parameter === control.parameter_key || (item.parameter === 'filter1_frequency' && control.parameter_key === 'Filter1 Frequency')));
+      return value === undefined ? undefined : 'encoded_native' in value ? value.encoded_native : value.encoded_unsigned_8_8;
+    }
+    if (candidate?.source_snapshot_id !== snapshot?.snapshot_id) return undefined;
     return candidate?.pad_deltas.find((delta) => delta.pad_id === control.item_id)?.proposed_params[control.parameter_key];
   };
 

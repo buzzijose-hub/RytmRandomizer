@@ -439,7 +439,8 @@ def build_mutation_parameters_changed(session: CockpitSession) -> dict[str, obje
         "rytm_parameters": session.rytm_parameters.to_list(),
         "a4_parameters": session.a4_parameters.to_list(),
         "controls": performance_parameter_controls(
-            session.device.capture_snapshot(), session.kit_captures.get(ANALOG_FOUR_DEVICE_ID)
+            session.device.capture_snapshot(),
+            session.offline_a4_capture or session.kit_captures.get(ANALOG_FOUR_DEVICE_ID),
         ),
     }
 
@@ -1031,6 +1032,7 @@ async def _handle_capture_current_kit(
                 events.append(_build_mutation_previewed(candidate))
         else:
             _record_stage_scope(session, ANALOG_FOUR_DEVICE_ID)
+            session.offline_a4_capture = None
         session.kit_captures[device_id] = result
         if session.show_kit_forge is not None and session.show_kit_forge.observe_capture(result):
             events.extend(_show_bank_state_events(session))
@@ -1252,7 +1254,8 @@ async def _handle_set_mutation_parameters(
     device_id = narrow_kit_capture_device_id(cmd["device_id"])
     selection = ParameterSelection.parse(cmd["parameter_cells"])
     controls = performance_parameter_controls(
-        session.device.capture_snapshot(), session.kit_captures.get(ANALOG_FOUR_DEVICE_ID)
+        session.device.capture_snapshot(),
+        session.offline_a4_capture or session.kit_captures.get(ANALOG_FOUR_DEVICE_ID),
     )
     try:
         validate_parameter_selection(selection, controls, device_id)

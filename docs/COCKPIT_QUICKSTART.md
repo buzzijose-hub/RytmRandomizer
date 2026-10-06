@@ -388,10 +388,11 @@ The device rail can switch the center view between the default Analog Rytm
 MKII 12-pad snapshot surface and the Analog Four MKII four-track staged
 surface. The Analog Four lane supports input-only verified KIT capture, track
 targets and locks, and independent coordinated stage state. Show Kit Forge may
-render Filter 1 Frequency for selected, unlocked A4 tracks as an offline
-saved-KIT candidate. That narrow renderer grants no output authority:
-**A4 SEND remains blocked**, and every other unpromoted A4 saved-KIT field is
-refused.
+render evidence-backed native fields for selected, unlocked A4 tracks as offline
+saved-KIT candidates. Studio's canonical parameter table shows mutable and
+protected fields separately; a known source value is required. This renderer
+grants no output authority: **A4 SEND remains blocked**, and unpromoted native
+fields, independent FIN and OXI AMP remain immutable.
 
 The Style Crates queue also includes a passive Analog Four set-plan card. It
 renders the current/up-next A4 `warehouse-arc` macro sequence from
@@ -439,12 +440,13 @@ favorites rather than a single live mutation.
 4. Generate and compare candidate pairs. Selecting a candidate is separate
    from **Mark favorite**. For Rytm, Preview -> PREPARE -> confirmed SEND uses
    the existing exact-plan `ArmedApply` route and is labelled **Live unsaved
-   hardware**. For A4, the candidate is a local Filter 1 Frequency saved-KIT
+   hardware**. For A4, the candidate is a local scoped native saved-KIT
    artifact only; the control stays labelled **A4 SEND blocked — offline
    only**.
-   Use **Retain selected A4 offline artifact** to preserve the selected exact `.syx`
-   before favoriting or moving on. Cockpit shows its content-addressed filename,
-   SHA-256, and byte count; retention grants no A4 SEND authority.
+   Every newly generated A4 artifact is retained atomically with the paired
+   recipe. The explicit retention action remains for older candidates.
+   Cockpit shows its content-addressed filename, SHA-256, and byte count;
+   retention grants no A4 SEND authority.
    **Review A4 preparation** revalidates the selected candidate's exact source,
    bytes, track scope and recovery evidence. An optional exact output name is
    review intent only. The report expires when the cue, capture, scope, port
@@ -724,6 +726,49 @@ against any key you provide via `--key-bytes`, and the profile's name +
 trait set + pad-mapping summary.
 
 ---
+
+### 5b. Offline Preparation From Original Files
+
+Keep the MIDI-off launcher selected. This procedure is software preparation,
+not a hardware backup, instrument SAVE or rehearsal approval.
+
+1. Use your backed-up original Rytm and A4 KIT `.syx` files. Place them in
+   `captures` beneath the launch working directory. In Show Kit Forge, create
+   a bank, choose **Import captures folder**, then **Refresh source files**.
+   Select one original file per device and explicitly record source slots.
+   **Adopt source files** validates exact framing, family identity and hashes;
+   it does not mark either instrument connected or physically captured.
+2. Choose a profile. In **Mutation parameter scope**, choose device, pad/track
+   and page. Start with **Select none**, then select individual eligible rows.
+   Protected rows explain their refusal. Targets and locks remain independent;
+   locks always win. A4 displays exact source/native precision, not MIDI values.
+3. Forge one or more Small/Large candidates with a seed. Zero depth preserves
+   the source. Scope, protection and native-domain validation run before the
+   proposal is generated, not by filtering a blocked send plan afterwards.
+4. Expand **Compare musical changes**. Inspect exact requested fields, source
+   and proposed screen/native values, source and candidate hashes, and scope.
+   A4 preparation can verify these bytes but always reports output blocked.
+5. Mark a local favorite, name its cue and record transition/recovery notes.
+   Duplicate/reorder cues to form the bank. Original sources and generated A4
+   frames are retained atomically; Rytm favorites retain exact semantic values
+   and recipe, not a newly rendered Rytm hardware KIT file.
+6. Export a draft local pack. Import by package ID; if the bank already exists,
+   supply an unused **New bank ID** to import a separate copy. Both original
+   and imported banks remain intact. Imported history is catalog-only and
+   cannot authorize output. Unsupported schemas, missing/truncated frames,
+   hash/family/scope mismatch and failed deterministic replay refuse the import.
+7. Restart, select the bank and select the retained candidate again. Check exact
+   source, profile, scope, locks, seed, depth, values and cue order. Recall is
+   disarmed and requires fresh preparation. A reconnect does not re-arm or
+   restore instrument RAM. Local UNDO and **Return to source** change only
+   local state; hardware recovery is a manual saved-KIT reload and fresh dump.
+
+See [field-level native evidence](A4_OFFLINE_NATIVE_FIELD_EVIDENCE.md) and
+[the reproducible support inventory](DEVICE_SUPPORT_INVENTORY.md).
+The next physical gate remains the separately supervised Pad 2 four-control
+10% audition, DISARM, manual KIT reload and exact fresh baseline comparison.
+This does not unlock general A4/BOTH sending, CY Ride SRC, paired precision,
+automatic restore, hardware SAVE or Pi operation.
 
 ## 6. Connecting to real hardware
 

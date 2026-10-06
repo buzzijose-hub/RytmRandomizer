@@ -1,8 +1,20 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-10-05. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-10-06. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
+
+October 6 offline-preparation continuation is implemented locally on the same
+PR #254 assembly, with acceptance and a new package still in progress. The
+optional A4 native capability exposes 106 policy rows and 72 potentially mutable
+field keys, subject to the actual known source domain. Original framed sources,
+immutable profiles, algorithm IDs and generated A4 bytes are retained through
+Library schema 3 / Show Bank v3; imports and recall remain disarmed. Native
+scope, protected-byte replay, no-op identity and retained-file regressions pass
+focused checks. The shared artifact reader removes the initial Library/Show Bank
+dependency cycle. Do not substitute these interim results for final full-suite,
+coverage, browser or actual-executable acceptance. The October 5 build remains
+the last delivered candidate; all hardware restrictions below are unchanged.
 
 October 5 parameter-scope continuation is delivered for offline rehearsal on the same
 PR #254, not another PR. Server-validated page/item/control selection precedes

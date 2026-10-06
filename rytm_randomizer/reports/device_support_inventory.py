@@ -48,7 +48,7 @@ from ..data.device_support_inventory import (
     DEVICE_SUPPORT_OMISSIONS,
 )
 from ..data.rytm_machine_catalog import RYTM_MACHINE_PROFILES_BY_KEY, RYTM_PAD_CAPABILITIES
-from ..devices import all_devices
+from ..devices import all_devices, get_analog_four_native_field_capability
 from ..devices.strategies.analog_four_kit_fields import (
     A4_FINE_DISPLAY_MAX,
     A4_FINE_DISPLAY_MIN,
@@ -203,8 +203,26 @@ class DeviceSupportInventory(TypedDict):
     rytm_machine_layout_gaps: list[RytmMachineLayoutGap]
     parameters: list[DeviceSupportParameter]
     a4_field_calibrations: list[A4FieldCalibration]
+    a4_studio_native_fields: list[A4StudioNativeField]
     unsupported_categories: list[UnsupportedCategory]
     evidence_boundary: str
+
+
+class A4StudioNativeField(TypedDict):
+    """Exact offline scope policy, distinct from wider codec storage domains."""
+
+    parameter: str
+    relative_offsets: tuple[int, ...]
+    native_encoding: str
+    display_quantum: str | None
+    minimum_native: int | None
+    maximum_native: int | None
+    quantum_native: int | None
+    legal_codes: tuple[tuple[int, str], ...]
+    offline_mutation: str
+    protection_reason: str | None
+    evidence: tuple[str, ...]
+    live_send: Literal["blocked"]
 
 
 @dataclass(frozen=True)
@@ -311,6 +329,10 @@ def _write_payload(item: AnalogFourSysexWriteValidationEvidence) -> A4WriteEvide
 def _a4_native_rows() -> tuple[DeviceSupportRow, ...]:
     rows: list[DeviceSupportRow] = []
     fractions = frozenset(A4_MOD_DEPTH_FIELDS.values())
+    studio = {
+        field.parameter: field
+        for field in get_analog_four_native_field_capability().native_fields()
+    }
     for field, offset in A4_TRACK_OFFSETS.items():
         encoding, minimum, maximum, step = "u7", "0", "127", "1"
         locations = (offset,)
@@ -360,6 +382,15 @@ def _a4_native_rows() -> tuple[DeviceSupportRow, ...]:
             if enum_type is not None:
                 legal_values = tuple((int(item), item.name) for item in enum_type)
                 authority = "typed_codec_enum"
+        native = studio.get(field)
+        protection = "scope_and_locks"
+        if native is not None:
+            if native.mutation_supported:
+                offline = "studio_scoped_native_file_only; requires_known_source"
+            protection = native.protection_reason or "scope_and_locks"
+            blockers = (A4_MAPPING_BLOCK_REASON,) + (
+                () if native.protection_reason is None else (native.protection_reason,)
+            )
         rows.append(
             DeviceSupportRow(
                 "a4",
@@ -377,7 +408,7 @@ def _a4_native_rows() -> tuple[DeviceSupportRow, ...]:
                 offline,
                 "blocked",
                 "manual_reload_and_fresh_capture",
-                "scope_and_locks",
+                protection,
                 blockers,
                 DEVICE_SUPPORT_EVIDENCE["a4_native"],
             )
@@ -619,6 +650,27 @@ def build_device_support_inventory() -> DeviceSupportInventory:
             if profile.machine_value not in RYTM_MACHINE_PARAMETER_NAMES
         ],
         "parameters": [_parameter_payload(row) for row in ordered],
+        "a4_studio_native_fields": [
+            {
+                "parameter": field.parameter,
+                "relative_offsets": field.relative_offsets,
+                "native_encoding": field.native_encoding.value,
+                "display_quantum": field.display_quantum,
+                "minimum_native": None if field.domain is None else field.domain.minimum,
+                "maximum_native": None if field.domain is None else field.domain.maximum,
+                "quantum_native": None if field.domain is None else field.domain.quantum,
+                "legal_codes": field.enum_values,
+                "offline_mutation": (
+                    "scoped_native_file_only; requires_known_source"
+                    if field.mutation_supported
+                    else "read_only"
+                ),
+                "protection_reason": field.protection_reason,
+                "evidence": field.evidence,
+                "live_send": "blocked",
+            }
+            for field in get_analog_four_native_field_capability().native_fields()
+        ],
         "a4_field_calibrations": [
             {
                 "parameter": field.parameter,
@@ -661,7 +713,7 @@ def format_device_support_inventory() -> list[str]:
             *[f"- {key}: {value}" for key, value in inventory_counts().items()],
             "Native field domains, MIDI addresses, machine compatibility and exact blockers: use --json.",
             "Rytm: targeted guarded CC7 only when scope, locks, source and complete plan pass.",
-            "A4: typed offline recipes; Cockpit live audition and BOTH output remain blocked.",
+            "A4: scoped native offline candidates and typed recipes; live audition and BOTH output remain blocked.",
             "Recovery: manual saved-KIT reload and fresh capture; local UNDO does not restore hardware.",
             "Unsupported/protected categories:",
             *[

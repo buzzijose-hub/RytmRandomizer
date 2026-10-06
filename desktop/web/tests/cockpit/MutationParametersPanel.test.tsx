@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { CockpitClientProvider } from '../../src/cockpit/context';
@@ -8,9 +8,9 @@ import { bindClientToStore, useCockpitStore } from '../../src/state';
 import { isEvent } from '../../src/ws/protocol';
 import { runAxe } from '../a11y/__helpers__/axe';
 import { candidate, FakeCockpitClient, readyDualMachineStage, sendPlan, sessionLive, sessionMock, snapshot } from './_fixtures';
-import { parameterEvent } from './parameterScopeFixture';
-import { forgeCaptures } from './showKitForgeFixture';
-import type { CommandAck } from '../../src/ws/protocol';
+import { parameterEvent, scopeControl } from './parameterScopeFixture';
+import { forgeCaptures, forgeEntry, showBankState } from './showKitForgeFixture';
+import type { CommandAck, ShowBankEntry } from '../../src/ws/protocol';
 
 function mount(fake = new FakeCockpitClient()) {
   return { fake, ...render(<CockpitClientProvider client={fake.asClient()}><MutationParametersPanel /></CockpitClientProvider>) };
@@ -24,10 +24,82 @@ async function click(name: string): Promise<void> {
   await act(async () => { fireEvent.click(screen.getByRole('button', { name })); });
 }
 
-beforeEach(() => useCockpitStore.getState().reset());
-afterEach(() => useCockpitStore.getState().reset());
+beforeEach(() => act(() => useCockpitStore.getState().reset()));
+afterEach(() => act(() => useCockpitStore.getState().reset()));
 
 describe('Studio canonical parameter scope', () => {
+  it('keeps exact native source and proposal values distinct and removes proposals for a different source', () => {
+    ready();
+    useCockpitStore.setState({ previewCandidate: { ...candidate,
+      pad_deltas: [{ pad_id: 2, changed_keys: ['flt'], proposed_params: { flt: 0 } }],
+    } });
+    const { fake } = mount();
+    pad2();
+    const row = within(screen.getByTestId('parameter-row-2-flt'));
+    expect(row.getByText('Source 64')).toBeVisible();
+    expect(row.getByText('Native 64 / cc7')).toBeVisible();
+    expect(row.getByText('Proposal 0')).toBeVisible();
+    expect(screen.getByText(snapshot.snapshot_id, { selector: 'code' })).toBeVisible();
+    act(() => useCockpitStore.setState({ previewCandidate: { ...candidate, source_snapshot_id: 'different-original',
+      pad_deltas: [{ pad_id: 2, changed_keys: ['flt'], proposed_params: { flt: 127 } }],
+    } }));
+    expect(row.getByText('Proposal not generated')).toBeVisible();
+    expect(row.queryByText('Proposal 127')).not.toBeInTheDocument();
+    expect(fake.sent).toEqual([]);
+  });
+
+  it.each(['legacy_q8_8', 'native_alias', 'native'] as const)('displays exact offline A4 %s proposals for the current preview identity', (encoding) => {
+    ready();
+    const first = forgeEntry.candidates[0]!;
+    const entry: ShowBankEntry = { ...forgeEntry, candidates: [{ ...first,
+      rytm_candidate: { ...first.rytm_candidate, candidate_id: first.candidate_id },
+      analog_four_candidate: { ...first.analog_four_candidate, values: [encoding === 'legacy_q8_8'
+        ? { track_id: 1, parameter: 'filter1_frequency', screen_value: '64.00390625', encoded_unsigned_8_8: 16385, unpacked_offset: 128 }
+        : { track_id: 1, parameter: encoding === 'native_alias' ? 'filter1_frequency' : 'Filter1 Frequency',
+          screen_value: '64.00390625', encoded_native: 16385,
+          native_encoding: 'unsigned_q8_8', unpacked_offsets: [128, 129] }],
+      },
+    }] };
+    useCockpitStore.getState().setMutationParameters({ ...parameterEvent, controls: [
+      scopeControl({ device_id: 'analog_four_mk2', item_id: 1, machine: 'A4', parameter_key: 'Filter1 Frequency',
+        value: 16256, display_value: '63.50', native_precision: 'unsigned_q8_8', send_supported: false }),
+      scopeControl({ device_id: 'analog_four_mk2', item_id: 2, machine: 'A4', parameter_key: 'Filter1 Frequency',
+        value: 0, display_value: '0', native_precision: 'unsigned_q8_8', send_supported: false }),
+    ] });
+    useCockpitStore.setState({ snapshot: { ...snapshot, snapshot_id: entry.rytm_source.snapshot_id! },
+      showBank: { ...showBankState, banks: [{ ...showBankState.banks[0]!, entries: [entry] }] },
+      previewCandidate: entry.candidates[0]!.rytm_candidate, kitCaptures: forgeCaptures,
+    });
+    const { fake } = mount();
+    fireEvent.change(screen.getByLabelText('Parameter scope device'), { target: { value: 'analog_four_mk2' } });
+    const row = within(screen.getByTestId('parameter-row-1-Filter1 Frequency'));
+    expect(screen.getByText('bbbbbbbb', { selector: 'code' })).toBeVisible();
+    expect(row.getByText('Source 63.50')).toBeVisible();
+    expect(row.getByText('Native 16256 / unsigned_q8_8')).toBeVisible();
+    expect(row.getByText('Proposal 16385')).toBeVisible();
+    expect(screen.getByText('A4 offline only; SEND blocked')).toBeVisible();
+    act(() => useCockpitStore.setState({ previewCandidate: { ...entry.candidates[0]!.rytm_candidate, candidate_id: 'obsolete-preview' } }));
+    expect(row.getByText('Proposal not generated')).toBeVisible();
+    fireEvent.change(screen.getByLabelText('Parameter scope item'), { target: { value: '2' } });
+    expect(screen.getByText('Proposal not generated')).toBeVisible();
+    expect(screen.getByText('Native 0 / unsigned_q8_8')).toBeVisible();
+    expect(fake.sent).toEqual([]);
+  });
+
+  it('uses the paired original A4 fingerprint only when no current capture identity exists', () => {
+    ready();
+    useCockpitStore.setState({ snapshot: { ...snapshot, snapshot_id: forgeEntry.rytm_source.snapshot_id! },
+      showBank: showBankState, kitCaptures: [],
+    });
+    const { fake } = mount();
+    fireEvent.change(screen.getByLabelText('Parameter scope device'), { target: { value: 'analog_four_mk2' } });
+    expect(screen.getByText(forgeEntry.analog_four_source.fingerprint, { selector: 'code' })).toBeVisible();
+    act(() => useCockpitStore.setState({ showBank: null }));
+    expect(screen.getByText('not available', { selector: 'code' })).toBeVisible();
+    expect(screen.getByText('Proposal not generated')).toBeVisible();
+    expect(fake.sent).toEqual([]);
+  });
+
   it('does not invent a source identity from display controls', () => {
     ready();
     useCockpitStore.setState({ snapshot: null });
@@ -47,7 +119,7 @@ describe('Studio canonical parameter scope', () => {
     pad2();
     expect(screen.getByRole('checkbox', { name: 'Mutate Pad 2 Filter Frequency' })).toBeChecked();
     expect(screen.getByText('Source 64')).toBeVisible();
-    useCockpitStore.setState({ previewCandidate: { ...candidate, pad_deltas: [{ pad_id: 2, changed_keys: ['flt'], proposed_params: { flt: 66 } }] }, sendPlan });
+    act(() => useCockpitStore.setState({ previewCandidate: { ...candidate, pad_deltas: [{ pad_id: 2, changed_keys: ['flt'], proposed_params: { flt: 66 } }] }, sendPlan }));
     expect(await screen.findByText('Proposal 66')).toBeVisible();
     await click('Select none');
     expect(fake.sent.at(-1)).toEqual({ type: 'set_mutation_parameters', device_id: 'analog_rytm_mk2', parameter_cells: [] });
@@ -194,6 +266,36 @@ describe('Studio canonical parameter scope', () => {
     await act(async () => { useCockpitStore.getState().setConnectionStatus('connected'); useCockpitStore.getState().setSessionStatus(sessionMock); });
     expect(fake.sent.filter((command) => command.type === 'get_mutation_parameters')).toHaveLength(3);
     unbind();
+  });
+
+  it('refreshes canonical controls independently after A4 fingerprint and capture-time changes', async () => {
+    ready();
+    const fake = new FakeCockpitClient();
+    const unbind = bindClientToStore(fake.asClient());
+    useCockpitStore.getState().setSessionStatus(sessionMock);
+    const view = mount(fake);
+    try {
+      await act(async () => undefined);
+      act(() => fake.emitEvent(parameterEvent));
+      expect(screen.getByRole('button', { name: 'Pad 2 rehearsal' })).toBeEnabled();
+      await act(async () => useCockpitStore.getState().setKitCaptures(forgeCaptures));
+      expect(fake.sent.filter((command) => command.type === 'get_mutation_parameters')).toHaveLength(2);
+      expect(screen.getByRole('button', { name: 'Pad 2 rehearsal' })).toBeDisabled();
+      act(() => fake.emitEvent(parameterEvent));
+      const captures = forgeCaptures.map((capture) => capture.device_id === 'analog_four_mk2'
+        ? { ...capture, fingerprint: 'new-a4-original' } : capture);
+      await act(async () => useCockpitStore.getState().setKitCaptures(captures));
+      expect(fake.sent.filter((command) => command.type === 'get_mutation_parameters')).toHaveLength(3);
+      expect(useCockpitStore.getState().parameterControls).toEqual([]);
+      act(() => fake.emitEvent(parameterEvent));
+      await act(async () => useCockpitStore.getState().setKitCaptures(captures.map((capture) => capture.device_id === 'analog_four_mk2'
+        ? { ...capture, captured_at: '2026-10-06T18:00:00Z' } : capture)));
+      expect(fake.sent).toEqual(Array.from({ length: 4 }, () => ({ type: 'get_mutation_parameters' })));
+      expect(screen.getByRole('button', { name: 'Pad 2 rehearsal' })).toBeDisabled();
+    } finally {
+      view.unmount();
+      unbind();
+    }
   });
   it.each([{ message: 'unavailable' }, { error: 'unavailable' }, {}])('logs metadata refusal and remains closed: %j', async (detail) => {
     ready();

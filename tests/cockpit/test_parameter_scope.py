@@ -475,7 +475,7 @@ def test_a4_metadata_decodes_native_width_and_fraction_without_granting_output(
     assert len(rows) == 4
     assert all(
         row["value"] == raw
-        and row["native_precision"] == "unsigned Q8.8"
+        and row["native_precision"].startswith("unsigned-big-endian-q8.8")
         and not row["send_supported"]
         for row in rows
     )

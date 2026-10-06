@@ -52,10 +52,45 @@ typed-recipe compatibility. Missing source layouts are explicit gaps.
 | Capture | Round-trip decode of supplied/supervised kit dumps; cancellable input session; stale-result refusal | Saved-KIT bytes do not prove unsaved front-panel RAM synchronization |
 | Rytm targeted mutation | Depth, seed, targets/locks, source-linked candidates and exact prepared CC7 plan | In-scope paired controls refuse the entire plan; source must be manually restored and freshly captured before each Show Forge audition |
 | A4 native recipes | Typed enums, coupled pitch, exact Q8.8 frequencies and Q8.7 depth components in offline kit files | General Cockpit mutation/audition is narrower; native encoding evidence is not live-send evidence |
-| Show Kit Forge A4 | Source-preserving Filter 1 Frequency artifact and retained local evidence | General A4/BOTH SEND remains blocked; other fields are not promoted by file-codec coverage |
+| Show Kit Forge A4 | Source-linked, parameter-scoped native offline candidates; exact domain-index sampling, canonical render/readback and unknown-byte isolation | General A4/BOTH SEND remains blocked; source-unknown selectors, independent FIN, OXI AMP and default-only fields are immutable |
 | Favorites/packages | Local candidate selection, favorite records, exact retained files and validated show-pack persistence | Not a hardware save or restore; manual instrument save and fresh return captures are required |
 | Recovery | Applied-delta receipts and local history are available; local UNDO does not restore hardware | Stop, manually reload the backed-up saved KIT and freshly capture it before another candidate; automated hardware restoration is not implemented |
 | Pi | PR #252 touchscreen and packaging groundwork | Non-simulation appliance APPLY refuses; ARM64, boot, kiosk and physical acceptance remain unproven |
+
+### October 6 Native Scope And Original Retention
+
+`a4_studio_native_fields` is the reproducible Studio policy projection from the
+public optional Device native-field capability. Its 106 rows include read-only
+word components; **72 field keys** can be mutable when the actual source value
+is known. This is not 106 independent controls or a physical validation count.
+Unknown native selector codes stay immutable even if the target code is known.
+The row contains exact native offsets/encoding, display quantum, domain grid or
+canonical enum codes, protection reason, evidence and unconditional live block.
+The older `parameters` rows also describe broader codec storage ranges. They
+must not be used as Studio sampling ranges; the native capability owns those.
+
+TUN changes only the evidenced coarse component and retains the complete source
+FIN residual and hidden half-step. Independent FIN and modulation fractions are
+read-only. AMP remains OXI-protected. `lfo1_phase`, `osc1_sub` and `osc2_sub`
+remain read-only because the retained evidence establishes only defaults.
+See [the field-level evidence table](A4_OFFLINE_NATIVE_FIELD_EVIDENCE.md).
+
+Library schema 3 retains exact original framed `.syx` bytes and full hashes,
+separately from payload projections and semantic rehearsal favorites. File
+import validates the registered family codec but never enters the live capture
+map or establishes physical freshness. Show Bank v3 retains the immutable full
+profile and generation algorithm so exact candidate replay does not depend on
+an installed profile registry. Original sources, generated A4 frames, recipe,
+scope, locks and local favorite identity survive restart and validated package
+round trips. Native packages require canonical deterministic replay; rehashing
+metadata cannot legitimize protected or excluded byte changes.
+
+Import into an existing store requires an explicitly supplied unused bank ID
+when the original ID already exists. Neither bank is overwritten. Import and
+candidate recall revoke output and clear preparation; catalog records grant no
+SEND or show-ready authority. Bank history, frames, package entries and reads
+remain bounded, and manifest-last atomic publication preserves the prior
+complete state on interrupted writes.
 
 The report includes exact A4 calibration captures/write-return records, but
 those receipts apply only to their recorded fields, values and target context.

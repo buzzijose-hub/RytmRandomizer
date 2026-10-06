@@ -206,6 +206,8 @@ def analog_four_native_fields() -> tuple[AnalogFourNativeField, ...]:
         if parameter == "portamento":
             reason = "native_domain_unestablished"
             evidence = ()
+        if parameter in ("lfo1_phase", "osc1_sub", "osc2_sub"):
+            reason = "native_nondefault_evidence_missing"
         fields.append(
             AnalogFourNativeField(
                 parameter, encoding, offsets, quantum, domain, enums, reason, evidence

@@ -661,34 +661,38 @@ def test_new_ws_capture_revokes_old_live_audition_label(
     )
 
 
-def test_candidate_bytes_survive_explicit_keep_and_fail_closed_after_eviction(
+def test_candidate_bytes_survive_restart_and_cache_eviction(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     harness = _harness(tmp_path)
     workspace = harness.workspace
     first, second = _generate(harness)
-    workspace._volatile_frames.clear()
-    bank = workspace.bank(harness.bank_id)
-    with pytest.raises(ValueError, match="no longer in memory"):
-        workspace.retain_capture(
-            harness.bank_id,
-            harness.entry_id,
-            bank.revision,
-            capture_kind="candidate",
-            device_id=A4_SHOW_KIT_DEVICE_ID,
-            current_captures={},
-        )
-    # Regeneration repairs only the bounded byte cache, preserving deterministic
-    # candidate identities and the prior revision even when no new candidate exists.
-    with pytest.raises(ValueError, match="already exists"):
-        _generate(harness)
     workspace.mark_favorite(
         harness.bank_id,
         harness.entry_id,
         first.candidate_id,
-        bank.revision,
+        workspace.bank(harness.bank_id).revision,
     )
+    workspace._volatile_frames.clear()
+    bank = workspace.bank(harness.bank_id)
+    retained = bank.entry(harness.entry_id).selected_candidate.analog_four_candidate.sysex.retained
+    assert retained is not None
+    restarted = ShowKitForgeWorkspace(harness.store, clock=harness.clock)
+    assert restarted.favorite_context(harness.bank_id, harness.entry_id)[2] == (
+        harness.store.read_retained(retained)
+    )
+    workspace.retain_capture(
+        harness.bank_id,
+        harness.entry_id,
+        bank.revision,
+        capture_kind="candidate",
+        device_id=A4_SHOW_KIT_DEVICE_ID,
+        current_captures={},
+    )
+    # Duplicate generation cannot republish an existing deterministic candidate.
+    with pytest.raises(ValueError, match="already exists"):
+        _generate(harness)
     revision = workspace.bank(harness.bank_id).revision
     workspace.retain_capture(
         harness.bank_id,

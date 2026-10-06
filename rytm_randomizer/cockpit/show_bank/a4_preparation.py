@@ -19,18 +19,27 @@ from ...data.analog_four_sysex_calibration import (
 )
 from ...devices import (
     AnalogFourFilter1FrequencyCandidateMutation,
+    AnalogFourNativeMutation,
     get_analog_four_filter1_frequency_candidate_capability,
+    get_analog_four_native_field_capability,
     resolve_saved_kit_capture_capability,
 )
 from ...guardrails.input_validation import require_boolean, require_text
 from ...snapshot.mutation_scope import MutationScope, registered_mutation_ids
 from ..capture import KitCaptureResult
 from ..data.a4_preparation import (
+    A4NativePreparationChange,
     A4PreparationBlocker,
     A4PreparationChange,
     A4PreparationReport,
 )
-from ..data.show_bank import ShowBankEntry, ShowKitCandidate, ShowKitCapture
+from ..data.show_bank import (
+    AnalogFourCandidateValue,
+    AnalogFourNativeCandidateValue,
+    ShowBankEntry,
+    ShowKitCandidate,
+    ShowKitCapture,
+)
 from ..data.stage import ANALOG_FOUR_DEVICE_ID
 
 _MAX_OUTPUT_NAME: Final[int] = 256
@@ -106,7 +115,7 @@ def _candidate_changes(
     source: ShowKitCapture,
     source_frame: bytes,
     candidate_frame: bytes,
-) -> tuple[A4PreparationChange, ...]:
+) -> tuple[A4PreparationChange | A4NativePreparationChange, ...]:
     """Derive change rows from canonical rendering, never claimed offsets."""
 
     a4 = candidate.analog_four_candidate
@@ -117,6 +126,43 @@ def _candidate_changes(
         or a4.sysex.frame_bytes != len(candidate_frame)
     ):
         raise ValueError("A4 candidate does not match its source and artifact identities")
+    if any(isinstance(value, AnalogFourNativeCandidateValue) for value in a4.values):
+        if not all(isinstance(value, AnalogFourNativeCandidateValue) for value in a4.values):
+            raise ValueError("mixed A4 value encoding claims")
+        native_values = tuple(
+            value for value in a4.values if isinstance(value, AnalogFourNativeCandidateValue)
+        )
+        rendered_native = get_analog_four_native_field_capability().render_native_fields(
+            source_frame,
+            tuple(
+                AnalogFourNativeMutation(value.parameter, value.track_id, value.encoded_native)
+                for value in native_values
+            ),
+        )
+        if rendered_native.framed_sysex != candidate_frame:
+            raise ValueError("native artifact differs from canonical selected-field renderer")
+        native_changes: list[A4NativePreparationChange] = []
+        for claimed, applied in zip(native_values, rendered_native.applied_mutations, strict=True):
+            after = applied.rendered
+            if (
+                claimed.native_encoding != after.metadata.native_encoding.value
+                or claimed.unpacked_offsets != after.unpacked_offsets
+                or claimed.screen_value != after.screen_value
+            ):
+                raise ValueError("native field claims differ from canonical readback")
+            native_changes.append(
+                A4NativePreparationChange(
+                    after.track,
+                    after.parameter,
+                    applied.source.encoded_native,
+                    after.encoded_native,
+                    after.metadata.native_encoding.value,
+                    applied.source.screen_value or str(applied.source.encoded_native),
+                    after.screen_value or str(after.encoded_native),
+                    after.unpacked_offsets,
+                )
+            )
+        return tuple(native_changes)
     capability = get_analog_four_filter1_frequency_candidate_capability()
     rendered = capability.render_filter1_frequency_candidate(
         source_frame,
@@ -138,7 +184,8 @@ def _candidate_changes(
     calibration = analog_four_sysex_calibration_for(A4_FILTER1_FREQUENCY_PARAMETER)
     for claimed, applied in zip(a4.values, rendered.applied_mutations, strict=True):
         if (
-            claimed.parameter != A4_FILTER1_FREQUENCY_PARAMETER
+            not isinstance(claimed, AnalogFourCandidateValue)
+            or claimed.parameter != A4_FILTER1_FREQUENCY_PARAMETER
             or claimed.unpacked_offset != applied.intended_unpacked_offsets[0]
             or claimed.encoded_unsigned_8_8 != applied.redecoded_raw_q8_8
         ):
@@ -200,7 +247,9 @@ def _review_candidate(
     candidate_frame: bytes | None,
     context: A4PreparationContext,
     blockers: list[A4PreparationBlocker],
-) -> tuple[ShowKitCandidate | None, tuple[A4PreparationChange, ...], bool]:
+) -> tuple[
+    ShowKitCandidate | None, tuple[A4PreparationChange | A4NativePreparationChange, ...], bool
+]:
     candidate = next(
         (item for item in entry.candidates if item.candidate_id == entry.selected_candidate_id),
         None,
@@ -233,12 +282,35 @@ def _review_candidate(
             candidate, entry.analog_four_source, source_frame, candidate_frame
         )
         changed_tracks = frozenset(change.track_id for change in changes)
-        if changed_tracks != frozenset(recipe_scope.effective_ids):
+        if not changed_tracks <= frozenset(recipe_scope.effective_ids):
             raise ValueError("A4 candidate values do not match its recipe scope")
+        selected = recipe_scope.parameters.cells
+        if selected is not None:
+            allowed = {(cell.item_id, cell.parameter_key) for cell in selected}
+            if any(
+                (
+                    change.track_id,
+                    (
+                        A4_FILTER1_FREQUENCY_PARAMETER
+                        if change.parameter == "filter1_frequency"
+                        else change.parameter
+                    ),
+                )
+                not in allowed
+                for change in changes
+            ):
+                raise ValueError("A4 candidate changes an excluded parameter")
     except (TypeError, ValueError):
         blockers.append("candidate_bytes_invalid")
         return candidate, (), False
-    if not any(change.before_raw_q8_8 != change.after_raw_q8_8 for change in changes):
+    if not any(
+        (
+            (change.before_encoded_native != change.after_encoded_native)
+            if isinstance(change, A4NativePreparationChange)
+            else (change.before_raw_q8_8 != change.after_raw_q8_8)
+        )
+        for change in changes
+    ):
         blockers.append("no_a4_changes")
     return candidate, changes, True
 

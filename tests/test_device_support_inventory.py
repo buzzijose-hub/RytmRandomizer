@@ -265,6 +265,29 @@ def test_exact_native_fractional_domains_do_not_grant_midi_conversion() -> None:
     assert all(row["live_send"] == "blocked" for row in (frequency, depth))
 
 
+def test_studio_native_policy_inventory_matches_public_optional_capability() -> None:
+    from rytm_randomizer.devices import get_analog_four_native_field_capability
+
+    metadata = get_analog_four_native_field_capability().native_fields()
+    rows = build_device_support_inventory()["a4_studio_native_fields"]
+    assert len(rows) == len(metadata) == 106
+    assert sum(field.mutation_supported for field in metadata) == 72
+    for row, field in zip(rows, metadata, strict=True):
+        assert row["parameter"] == field.parameter
+        assert row["relative_offsets"] == field.relative_offsets
+        assert row["native_encoding"] == field.native_encoding.value
+        assert row["legal_codes"] == field.enum_values
+        assert row["protection_reason"] == field.protection_reason
+        assert row["live_send"] == "blocked"
+        assert row["evidence"] == field.evidence
+    by_key = {row["parameter"]: row for row in rows}
+    assert by_key["filter1_frequency"]["maximum_native"] == 32512
+    assert by_key["osc1_tune"]["minimum_native"] is None
+    assert by_key["osc1_fine"]["offline_mutation"] == "read_only"
+    assert by_key["amp_decay"]["protection_reason"] == "oxi_amp_protection"
+    assert by_key["lfo1_phase"]["protection_reason"] == "native_nondefault_evidence_missing"
+
+
 def test_selectors_are_canonical_choices_not_all_raw_integers() -> None:
     wave = _native("osc1_waveform")
     values = wave["legal_values"]

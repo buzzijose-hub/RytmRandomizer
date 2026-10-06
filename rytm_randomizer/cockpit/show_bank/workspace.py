@@ -925,6 +925,7 @@ class ShowKitForgeWorkspace:
         rytm_parameters: ParameterSelection = DEFAULT_PARAMETER_SELECTION,
         analog_four_parameters: ParameterSelection = DEFAULT_PARAMETER_SELECTION,
         offline_only: bool = False,
+        a4_algorithm: str = A4_LEGACY_MUTATION_ALGORITHM,
     ) -> tuple[ShowKitCandidate, ...]:
         if type(offline_only) is not bool:
             raise ValueError("offline_only must be a boolean")
@@ -948,7 +949,7 @@ class ShowKitForgeWorkspace:
             recipe = ShowKitRecipe(
                 profile_id=profile.profile_id,
                 profile=profile,
-                a4_algorithm=A4_LEGACY_MUTATION_ALGORITHM,
+                a4_algorithm=a4_algorithm,
                 depth_preset=depth_preset,
                 depth=depth,
                 seed=(seed + index) & 0xFFFFFFFF,
@@ -975,6 +976,30 @@ class ShowKitForgeWorkspace:
             )
             if forged.candidate.candidate_id in existing_ids:
                 continue
+            artifact = forged.candidate.analog_four_candidate.sysex
+            previous_artifact = next(
+                (
+                    item
+                    for item in updated.sysex_artifacts()
+                    if item.artifact_id == artifact.artifact_id
+                ),
+                None,
+            )
+            if previous_artifact is not None:
+                if (previous_artifact.frame_sha256, previous_artifact.frame_bytes) != (
+                    artifact.frame_sha256,
+                    artifact.frame_bytes,
+                ):
+                    raise ValueError("candidate artifact identity collision")
+                forged = replace(
+                    forged,
+                    candidate=replace(
+                        forged.candidate,
+                        analog_four_candidate=replace(
+                            forged.candidate.analog_four_candidate, sysex=previous_artifact
+                        ),
+                    ),
+                )
             updated = add_candidate(
                 updated,
                 entry_id,

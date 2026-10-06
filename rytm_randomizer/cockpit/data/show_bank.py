@@ -25,6 +25,7 @@ from decimal import Decimal, InvalidOperation
 from types import MappingProxyType
 from typing import Final, Literal, NotRequired, Self, TypedDict, cast
 
+from ...data.analog_four_saved_kit_layout import A4_SAVED_KIT_OBJECT_SIZE
 from ...data.analog_four_sysex_calibration import (
     A4_FILTER1_FREQUENCY_PARAMETER,
     analog_four_sysex_calibration_for,
@@ -156,7 +157,7 @@ SHOW_KIT_EVIDENCE_STATUS_VALUES: Final[tuple[ShowKitEvidenceStatus, ...]] = (
 
 _SHA256_RE: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{64}$")
 _FINGERPRINT_RE: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{8,64}$")
-_MIN_DEPTH: Final[float] = 0.10
+_MIN_DEPTH: Final[float] = 0.0
 _MAX_DEPTH: Final[float] = 0.90
 _MAX_TEXT: Final[int] = 512
 _MAX_NAME: Final[int] = 128
@@ -498,7 +499,7 @@ class ShowKitCapture:
         validate_show_bank_id(self.capture_id, "capture_id")
         if self.device_id not in SHOW_KIT_DEVICE_ID_VALUES:
             raise ValueError("unsupported show-kit capture device")
-        _validate_text(self.kit_name, "kit_name", maximum=_MAX_NAME)
+        _validate_text(self.kit_name, "kit_name", maximum=_MAX_NAME, allow_empty=True)
         if self.hardware_slot is not None and not (
             _MIN_OPERATOR_SLOT <= self.hardware_slot <= _MAX_OPERATOR_SLOT
         ):
@@ -680,7 +681,7 @@ class ShowKitRecipe:
         if self.a4_algorithm not in SHOW_KIT_A4_ALGORITHMS:
             raise ValueError("unsupported A4 recipe algorithm")
         if self.profile is not None:
-            if not isinstance(self.profile, ProfileModel):
+            if not isinstance(cast(object, self.profile), ProfileModel):
                 raise ValueError("recipe profile must be an immutable ProfileModel")
             preserved = ProfileModel.from_strict_dict(self.profile.to_dict())
             if preserved.profile_id != self.profile_id:
@@ -718,7 +719,7 @@ class ShowKitRecipe:
                     "analog_four_scope",
                 }
             )
-            | (frozenset(("profile", "a4_algorithm")) if "profile" in data else frozenset()),
+            | (frozenset(("profile", "a4_algorithm")) if "profile" in data else frozenset[str]()),
             "recipe",
         )
         return cls(
@@ -828,12 +829,81 @@ class AnalogFourCandidateValue:
         )
 
 
+class AnalogFourNativeCandidateValueDict(TypedDict):
+    track_id: int
+    parameter: str
+    screen_value: str
+    encoded_native: int
+    native_encoding: str
+    unpacked_offsets: list[int]
+
+
+@dataclass(frozen=True)
+class AnalogFourNativeCandidateValue:
+    """Inert native claim; services verify it against canonical frame readback."""
+
+    track_id: int
+    parameter: str
+    screen_value: str
+    encoded_native: int
+    native_encoding: str
+    unpacked_offsets: tuple[int, ...]
+
+    def __post_init__(self) -> None:
+        if type(self.track_id) is not int or self.track_id not in registered_mutation_ids(
+            A4_SHOW_KIT_DEVICE_ID
+        ):
+            raise ValueError("native candidate track must be in the registered domain")
+        _validate_text(self.parameter, "native parameter", maximum=128)
+        _validate_text(self.screen_value, "native screen value", maximum=64)
+        _validate_text(self.native_encoding, "native encoding", maximum=64)
+        if type(self.encoded_native) is not int or not 0 <= self.encoded_native <= 0xFFFF:
+            raise ValueError("encoded native value must be an unsigned non-boolean integer")
+        if (
+            not isinstance(cast(object, self.unpacked_offsets), tuple)
+            or not 1 <= len(self.unpacked_offsets) <= 2
+            or len(set(self.unpacked_offsets)) != len(self.unpacked_offsets)
+            or any(
+                type(offset) is not int or not 0 <= offset < A4_SAVED_KIT_OBJECT_SIZE
+                for offset in self.unpacked_offsets
+            )
+        ):
+            raise ValueError("native offsets must be a bounded distinct tuple")
+
+    def to_dict(self) -> AnalogFourNativeCandidateValueDict:
+        return {
+            "track_id": self.track_id,
+            "parameter": self.parameter,
+            "screen_value": self.screen_value,
+            "encoded_native": self.encoded_native,
+            "native_encoding": self.native_encoding,
+            "unpacked_offsets": list(self.unpacked_offsets),
+        }
+
+    @classmethod
+    def from_dict(cls, raw: Mapping[str, object]) -> Self:
+        data = require_object(raw, "native candidate value")
+        require_exact_keys(
+            data,
+            frozenset(AnalogFourNativeCandidateValueDict.__required_keys__),
+            "native candidate value",
+        )
+        return cls(
+            require_integer_field(data, "track_id", "native candidate value"),
+            require_text_field(data, "parameter", "native candidate value"),
+            require_text_field(data, "screen_value", "native candidate value"),
+            require_integer_field(data, "encoded_native", "native candidate value"),
+            require_text_field(data, "native_encoding", "native candidate value"),
+            require_integer_tuple(data["unpacked_offsets"], "native offsets"),
+        )
+
+
 class AnalogFourOfflineCandidateDict(TypedDict):
     artifact_fingerprint: str
     semantic_fingerprint: str
     source_fingerprint: str
     sysex: ShowKitSysexDict
-    values: list[AnalogFourCandidateValueDict]
+    values: list[AnalogFourCandidateValueDict | AnalogFourNativeCandidateValueDict]
     evidence_status: str
 
 
@@ -845,7 +915,7 @@ class AnalogFourOfflineCandidate:
     semantic_fingerprint: str
     source_fingerprint: str
     sysex: ShowKitSysex
-    values: tuple[AnalogFourCandidateValue, ...]
+    values: tuple[AnalogFourCandidateValue | AnalogFourNativeCandidateValue, ...]
     evidence_status: ShowKitEvidenceStatus
 
     def __post_init__(self) -> None:
@@ -903,12 +973,15 @@ class AnalogFourOfflineCandidate:
                 require_object(data["sysex"], "A4 offline candidate.sysex")
             ),
             values=tuple(
-                AnalogFourCandidateValue.from_dict(
-                    require_object(item, "A4 offline candidate value")
+                (
+                    AnalogFourNativeCandidateValue.from_dict(item)
+                    if "encoded_native" in item
+                    else AnalogFourCandidateValue.from_dict(item)
                 )
-                for item in require_sequence(
+                for raw_item in require_sequence(
                     data["values"], "A4 offline candidate.values", kind="array"
                 )
+                for item in (require_object(raw_item, "A4 offline candidate value"),)
             ),
             evidence_status=narrow_show_kit_evidence_status(
                 require_text_field(data, "evidence_status", "A4 offline candidate")
@@ -1049,9 +1122,20 @@ class ShowKitCandidate:
         if not changed_rytm <= effective_rytm:
             raise ValueError("Rytm candidate changes an untargeted or locked pad")
         effective_a4 = frozenset(self.recipe.analog_four_scope.effective_ids)
+        native_recipe = self.recipe.a4_algorithm == A4_NATIVE_MUTATION_ALGORITHM
+        if any(
+            isinstance(value, AnalogFourNativeCandidateValue) != native_recipe
+            for value in self.analog_four_candidate.values
+        ):
+            raise ValueError("A4 candidate representation must match its retained recipe algorithm")
         changed_a4 = {value.track_id for value in self.analog_four_candidate.values}
         if not changed_a4 and (
-            (effective_a4 and self.recipe.analog_four_scope.parameters.cells != ())
+            (
+                not native_recipe
+                and self.recipe.depth != 0
+                and effective_a4
+                and self.recipe.analog_four_scope.parameters.cells != ()
+            )
             or self.analog_four_candidate.semantic_fingerprint != self.source_a4_fingerprint
         ):
             raise ValueError(
@@ -2220,6 +2304,8 @@ __all__ = [
     "RetainedSysexArtifact",
     "RetainedSysexArtifactDict",
     "SHOW_BANK_SCHEMA_VERSION",
+    "AnalogFourNativeCandidateValue",
+    "AnalogFourNativeCandidateValueDict",
     "PREVIOUS_SHOW_BANK_SCHEMA_VERSION",
     "A4_LEGACY_MUTATION_ALGORITHM",
     "A4_NATIVE_MUTATION_ALGORITHM",

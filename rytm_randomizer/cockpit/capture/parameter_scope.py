@@ -4,13 +4,11 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from ...data.analog_four_midi import ANALOG_FOUR_SYNTH_TRACK_CC, ANALOG_FOUR_SYNTH_TRACK_NRPN
 from ...data.analog_four_sysex_calibration import (
     A4_FILTER1_FREQUENCY_PARAMETER,
-    analog_four_sysex_calibration_for,
 )
 from ...data.analog_rytm_midi import ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER
-from ...devices import resolve_saved_kit_capture_capability
+from ...devices import get_analog_four_native_field_capability
 from ...snapshot.mutation_scope import registered_mutation_ids
 from ..data import Snapshot
 from ..data.parameter_scope import (
@@ -100,54 +98,62 @@ def _rytm_controls(snapshot: Snapshot) -> list[PerformanceParameterControl]:
 
 
 def _a4_controls(capture: KitCaptureResult | None) -> list[PerformanceParameterControl]:
-    calibration = analog_four_sysex_calibration_for(A4_FILTER1_FREQUENCY_PARAMETER)
-    unpacked = None
-    if capture is not None:
-        resolved = resolve_saved_kit_capture_capability(ANALOG_FOUR_DEVICE_ID)
-        unpacked = resolved.capability.decode_saved_kit_capture(capture.frame).unpacked
-    rows = {**ANALOG_FOUR_SYNTH_TRACK_CC, **ANALOG_FOUR_SYNTH_TRACK_NRPN}
+    capability = get_analog_four_native_field_capability()
+    native = None if capture is None else capability.read_native_fields(capture.frame)
+    fields = capability.native_fields()
     controls: list[PerformanceParameterControl] = []
     for track in sorted(registered_mutation_ids(ANALOG_FOUR_DEVICE_ID)):
-        for key, row in rows.items():
-            supported = key == A4_FILTER1_FREQUENCY_PARAMETER and (
-                calibration.offline_saved_kit_mutation_validated
-                or calibration.hardware_send_validated
+        for metadata in fields:
+            cell = None if native is None else native.value(metadata.parameter, track)
+            # Retain the established F1 recipe identity; all other IDs are native.
+            key = (
+                A4_FILTER1_FREQUENCY_PARAMETER
+                if metadata.parameter == "filter1_frequency"
+                else metadata.parameter
             )
-            value = None
-            if supported and unpacked is not None:
-                offset = calibration.native_offset_for_track(track)
-                value = int.from_bytes(unpacked[offset : offset + calibration.native_width], "big")
+            domain = metadata.domain if cell is None else cell.domain
+            prefix = metadata.parameter.split("_", 1)[0].upper()
+            page = "FILTER" if prefix.startswith("FILTER") else prefix
             reasons = ["a4_hardware_send_unavailable"]
-            if not supported:
-                reasons.append("a4_saved_field_not_promoted")
-            elif value is None:
+            protection = metadata.protection_reason if cell is None else cell.protection_reason
+            if protection is not None:
+                reasons.append(protection)
+            if cell is None:
                 reasons.append("source_value_unavailable")
-            elif not calibration.native_raw_min <= value <= calibration.native_raw_max:
+            elif not cell.source_value_known:
                 reasons.append("source_value_outside_verified_domain")
-            mutable = supported and value is not None and len(reasons) == 1
+            mutable = cell is not None and cell.mutable
+            encoding = metadata.native_encoding.value
+            precision = f"{encoding}; quantum {metadata.display_quantum or 'not established'}"
+            if metadata.enum_values:
+                precision += "; legal native codes " + ",".join(
+                    str(code) for code, _name in metadata.enum_values
+                )
             controls.append(
                 {
                     "device_id": ANALOG_FOUR_DEVICE_ID,
                     "item_id": track,
                     "machine": "Analog Four synth track",
                     "parameter_key": key,
-                    "page": row.section,
-                    "name": row.parameter,
-                    "value": value,
-                    "display_value": (
-                        calibration.format_native_screen_value(value) if mutable else None
+                    "page": page,
+                    "name": (
+                        A4_FILTER1_FREQUENCY_PARAMETER
+                        if key == A4_FILTER1_FREQUENCY_PARAMETER
+                        else metadata.parameter.replace("_", " ").upper()
                     ),
-                    "minimum": calibration.native_raw_min if supported else None,
-                    "maximum": calibration.native_raw_max if supported else None,
-                    "native_precision": (
-                        "unsigned Q8.8" if supported else "unverified saved-KIT encoding"
-                    ),
+                    "value": None if cell is None else cell.encoded_native,
+                    "display_value": None if cell is None else cell.screen_value,
+                    "minimum": None if domain is None else domain.minimum,
+                    "maximum": None if domain is None else domain.maximum,
+                    "native_precision": precision,
                     "mutation_supported": mutable,
                     "send_supported": False,
-                    "protected": not supported,
+                    "protected": protection is not None,
                     "reasons": reasons,
                     "evidence_level": (
-                        calibration.status if supported else "manual MIDI catalog only"
+                        "offline native codec evidence"
+                        if metadata.evidence
+                        else "unestablished saved-KIT field"
                     ),
                 }
             )
