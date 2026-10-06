@@ -660,7 +660,10 @@ class ShowKitForgeWorkspace:
         entry = build_source_entry(
             entry_id=resolved_entry_id,
             cue_index=len(bank.entries) + 1,
-            name=f"{rytm.kit_name} + {analog_four.kit_name}",
+            name=(
+                f"{rytm.kit_name or 'Unnamed Rytm KIT'} + "
+                f"{analog_four.kit_name or 'Unnamed Analog Four KIT'}"
+            ),
             description="Paired immutable source anchors",
             rytm_capture=rytm,
             analog_four_capture=analog_four,
@@ -729,7 +732,10 @@ class ShowKitForgeWorkspace:
         entry = build_source_entry(
             entry_id=resolved_id,
             cue_index=len(bank.entries) + 1,
-            name=f"{rytm.kit_name} + {analog_four.kit_name}",
+            name=(
+                f"{rytm.kit_name or 'Unnamed Rytm KIT'} + "
+                f"{analog_four.kit_name or 'Unnamed Analog Four KIT'}"
+            ),
             description="Paired Library file sources; offline evidence only",
             rytm_capture=rytm,
             analog_four_capture=analog_four,
@@ -1058,9 +1064,9 @@ class ShowKitForgeWorkspace:
         source = self._source_snapshot(updated, selected)
         self.original_source_frames(bank_id, entry_id)
         artifact = candidate.analog_four_candidate.sysex
-        updated = self._retain_frames(
-            updated, ((artifact.artifact_id, self._retained_frame(updated, artifact.artifact_id)),)
-        )
+        frame = self._retained_frame(updated, artifact.artifact_id)
+        self.candidate_context(bank_id, entry_id, candidate_id)
+        updated = self._retain_frames(updated, ((artifact.artifact_id, frame),))
         self._active_entry_ids[bank_id] = entry_id
         self._current_rytm_auditions.pop((bank_id, entry_id), None)
         self._publish(updated, already_saved=True)
@@ -1152,6 +1158,7 @@ class ShowKitForgeWorkspace:
             raise AssertionError("favorite transition lost its selected candidate")
         artifact = favorite.analog_four_candidate.sysex
         frame = self._retained_frame(updated, artifact.artifact_id)
+        self.candidate_context(bank_id, entry_id, candidate_id)
         updated = self._retain_frames(updated, ((artifact.artifact_id, frame),))
         self._active_entry_ids[bank_id] = entry_id
         self._current_preflight_grants.pop((bank_id, entry_id), None)
