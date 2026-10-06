@@ -28,10 +28,10 @@ from ...guardrails.input_validation import (
 from ...snapshot.mutation_scope import MutationScope, registered_mutation_ids
 from .mutation_candidate import MutationCandidate, PadDelta
 from .parameter_scope import ParameterSelection
-from .profile_model import ProfileModel, StyleTrait, TraitPadWeight
+from .profile_model import ProfileModel
 from .snapshot import PadState, Snapshot
 from .stage import ANALOG_FOUR_DEVICE_ID, ANALOG_RYTM_DEVICE_ID, STAGE_DEVICE_IDS
-from .types import narrow_kind, narrow_status, narrow_transition_curve
+from .types import narrow_status
 
 _FAVORITE_FIELDS: Final[frozenset[str]] = frozenset(
     (
@@ -109,56 +109,6 @@ def _snapshot(value: object) -> Snapshot:
     )
 
 
-def _profile(value: object) -> ProfileModel:
-    raw = _object(
-        value,
-        frozenset(
-            (
-                "profile_id",
-                "name",
-                "kind",
-                "model_version",
-                "traits",
-                "pad_mappings",
-                "transition_curve",
-                "source_summary",
-            )
-        ),
-        "profile",
-    )
-    traits: list[StyleTrait] = []
-    for item in require_sequence(raw["traits"], "traits", ValueError):
-        trait = _object(item, frozenset(("name", "value")), "trait")
-        traits.append(
-            StyleTrait(
-                require_text(trait["name"], "trait name", ValueError),
-                _rehearsal_number(trait["value"], "trait value"),
-            )
-        )
-    weights: list[TraitPadWeight] = []
-    for item in require_sequence(raw["pad_mappings"], "pad_mappings", ValueError):
-        weight = _object(item, frozenset(("trait", "pad_id", "weight")), "pad mapping")
-        weights.append(
-            TraitPadWeight(
-                require_text(weight["trait"], "trait", ValueError),
-                require_int(weight["pad_id"], "pad_id", ValueError),
-                _rehearsal_number(weight["weight"], "weight"),
-            )
-        )
-    return ProfileModel(
-        require_text(raw["profile_id"], "profile_id", ValueError),
-        require_text(raw["name"], "profile name", ValueError),
-        narrow_kind(require_text(raw["kind"], "kind", ValueError)),
-        require_text(raw["model_version"], "model_version", ValueError),
-        tuple(traits),
-        tuple(weights),
-        narrow_transition_curve(
-            require_text(raw["transition_curve"], "transition_curve", ValueError)
-        ),
-        require_text(raw["source_summary"], "source_summary", ValueError),
-    )
-
-
 def _rehearsal_candidate(value: object) -> MutationCandidate:
     raw = _object(
         value,
@@ -232,7 +182,7 @@ class LocalRehearsalFavorite:
         object.__setattr__(
             self, "source_snapshot", _snapshot(_snapshot_payload(self.source_snapshot))
         )
-        object.__setattr__(self, "profile", _profile(self.profile.to_dict()))
+        object.__setattr__(self, "profile", ProfileModel.from_strict_dict(self.profile.to_dict()))
         object.__setattr__(self, "candidate", _rehearsal_candidate(self.candidate.to_dict()))
         if self.source_snapshot.device not in STAGE_DEVICE_IDS:
             raise ValueError("favorite requires a supported device identity")
@@ -345,7 +295,7 @@ class LocalRehearsalFavorite:
         raw = _object(value, _FAVORITE_FIELDS | _HASH_FIELDS, "local rehearsal favorite")
         favorite = cls(
             source_snapshot=_snapshot(raw["source_snapshot"]),
-            profile=_profile(raw["profile"]),
+            profile=ProfileModel.from_strict_dict(raw["profile"]),
             candidate=_rehearsal_candidate(raw["candidate"]),
             rytm_parameter_selection=ParameterSelection.parse(raw["rytm_parameter_selection"]),
             a4_parameter_selection=ParameterSelection.parse(raw["a4_parameter_selection"]),

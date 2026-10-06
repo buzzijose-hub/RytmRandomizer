@@ -44,13 +44,20 @@ from ...guardrails.input_validation import (
 from ...snapshot.mutation_scope import MutationScope, registered_mutation_ids
 from .mutation_candidate import MutationCandidate, MutationCandidateDict, PadDelta
 from .parameter_scope import DEFAULT_PARAMETER_SELECTION, ParameterCellDict, ParameterSelection
+from .profile_model import ProfileModel
 from .stage import ANALOG_FOUR_DEVICE_ID as A4_SHOW_KIT_DEVICE_ID
 from .stage import ANALOG_RYTM_DEVICE_ID as RYTM_SHOW_KIT_DEVICE_ID
 from .stage import STAGE_DEVICE_IDS, StageDeviceId
 from .types import narrow_status, safe_repr
 
-SHOW_BANK_SCHEMA_VERSION: Final[str] = "show-bank-v2"
+SHOW_BANK_SCHEMA_VERSION: Final[str] = "show-bank-v3"
 LEGACY_SHOW_BANK_SCHEMA_VERSION: Final[str] = "show-bank-v1"
+PREVIOUS_SHOW_BANK_SCHEMA_VERSION: Final[str] = "show-bank-v2"
+A4_LEGACY_MUTATION_ALGORITHM: Final[str] = "filter1-frequency-v1"
+A4_NATIVE_MUTATION_ALGORITHM: Final[str] = "native-fields-v1"
+SHOW_KIT_A4_ALGORITHMS: Final[frozenset[str]] = frozenset(
+    (A4_LEGACY_MUTATION_ALGORITHM, A4_NATIVE_MUTATION_ALGORITHM)
+)
 SHOW_BANK_REVISION_MAX: Final[int] = 99_999_999
 SHOW_BANK_ID_MAX_LENGTH: Final[int] = 64
 SHOW_PACK_ID_MAX_LENGTH: Final[int] = 96
@@ -641,6 +648,8 @@ class ShowKitRecipeDict(TypedDict):
     seed: int
     rytm_scope: ShowKitScopeDict
     analog_four_scope: ShowKitScopeDict
+    profile: NotRequired[dict[str, object]]
+    a4_algorithm: NotRequired[str]
 
 
 @dataclass(frozen=True)
@@ -653,6 +662,8 @@ class ShowKitRecipe:
     seed: int
     rytm_scope: ShowKitScope
     analog_four_scope: ShowKitScope
+    profile: ProfileModel | None = None
+    a4_algorithm: str = A4_LEGACY_MUTATION_ALGORITHM
 
     def __post_init__(self) -> None:
         _validate_text(self.profile_id, "profile_id", maximum=_MAX_NAME)
@@ -666,9 +677,20 @@ class ShowKitRecipe:
             raise ValueError("rytm_scope must target the Analog Rytm lane")
         if self.analog_four_scope.device_id != A4_SHOW_KIT_DEVICE_ID:
             raise ValueError("analog_four_scope must target the Analog Four lane")
+        if self.a4_algorithm not in SHOW_KIT_A4_ALGORITHMS:
+            raise ValueError("unsupported A4 recipe algorithm")
+        if self.profile is not None:
+            if not isinstance(self.profile, ProfileModel):
+                raise ValueError("recipe profile must be an immutable ProfileModel")
+            preserved = ProfileModel.from_strict_dict(self.profile.to_dict())
+            if preserved.profile_id != self.profile_id:
+                raise ValueError("recipe profile identity does not match profile_id")
+            object.__setattr__(self, "profile", preserved)
+        elif self.a4_algorithm != A4_LEGACY_MUTATION_ALGORITHM:
+            raise ValueError("native-field recipes require a retained profile")
 
     def to_dict(self) -> ShowKitRecipeDict:
-        return {
+        result: ShowKitRecipeDict = {
             "profile_id": self.profile_id,
             "depth_preset": self.depth_preset,
             "depth": self.depth,
@@ -676,6 +698,10 @@ class ShowKitRecipe:
             "rytm_scope": self.rytm_scope.to_dict(),
             "analog_four_scope": self.analog_four_scope.to_dict(),
         }
+        if self.profile is not None:
+            result["profile"] = self.profile.to_dict()
+            result["a4_algorithm"] = self.a4_algorithm
+        return result
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> Self:
@@ -691,7 +717,8 @@ class ShowKitRecipe:
                     "rytm_scope",
                     "analog_four_scope",
                 }
-            ),
+            )
+            | (frozenset(("profile", "a4_algorithm")) if "profile" in data else frozenset()),
             "recipe",
         )
         return cls(
@@ -706,6 +733,14 @@ class ShowKitRecipe:
             ),
             analog_four_scope=ShowKitScope.from_dict(
                 require_object(data["analog_four_scope"], "recipe.analog_four_scope")
+            ),
+            profile=(
+                None if "profile" not in data else ProfileModel.from_strict_dict(data["profile"])
+            ),
+            a4_algorithm=(
+                A4_LEGACY_MUTATION_ALGORITHM
+                if "profile" not in data
+                else require_text_field(data, "a4_algorithm", "recipe")
             ),
         )
 
@@ -2133,7 +2168,8 @@ class ShowBank:
         bank = cls(
             schema_version=(
                 SHOW_BANK_SCHEMA_VERSION
-                if data["schema_version"] == LEGACY_SHOW_BANK_SCHEMA_VERSION
+                if data["schema_version"]
+                in (LEGACY_SHOW_BANK_SCHEMA_VERSION, PREVIOUS_SHOW_BANK_SCHEMA_VERSION)
                 else require_text_field(data, "schema_version", "show bank")
             ),
             bank_id=require_text_field(data, "bank_id", "show bank"),
@@ -2184,6 +2220,10 @@ __all__ = [
     "RetainedSysexArtifact",
     "RetainedSysexArtifactDict",
     "SHOW_BANK_SCHEMA_VERSION",
+    "PREVIOUS_SHOW_BANK_SCHEMA_VERSION",
+    "A4_LEGACY_MUTATION_ALGORITHM",
+    "A4_NATIVE_MUTATION_ALGORITHM",
+    "SHOW_KIT_A4_ALGORITHMS",
     "SHOW_KIT_DEPTH_PRESET_VALUES",
     "SHOW_KIT_DEPTH_PRESETS",
     "SHOW_KIT_DEVICE_ID_VALUES",

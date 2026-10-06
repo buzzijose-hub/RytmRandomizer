@@ -11,9 +11,18 @@ See ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md``
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Final, Self, TypedDict
 
+from ...guardrails.input_validation import (
+    require_exact_keys,
+    require_float,
+    require_int,
+    require_object,
+    require_sequence,
+    require_text,
+)
 from .types import (
     KIND_VALUES,
     TRANSITION_CURVE_VALUES,
@@ -204,6 +213,47 @@ class ProfileModel:
             pad_mappings=tuple(TraitPadWeight.from_dict(m) for m in mappings_obj),
             transition_curve=narrow_transition_curve(data["transition_curve"]),
             source_summary=data["source_summary"],
+        )
+
+    @classmethod
+    def from_strict_dict(cls, value: object) -> Self:
+        """Parse portable recipe/favorite data without scalar coercion."""
+
+        raw = require_object(value, "profile", ValueError)
+        require_exact_keys(raw, frozenset(ProfileModelDict.__required_keys__), "profile")
+        traits: list[StyleTrait] = []
+        for item in require_sequence(raw["traits"], "traits", ValueError):
+            trait = require_object(item, "trait", ValueError)
+            require_exact_keys(trait, frozenset(("name", "value")), "trait")
+            number = require_float(trait["value"], "trait value", ValueError)
+            if not math.isfinite(number):
+                raise ValueError("trait value must be finite")
+            traits.append(StyleTrait(require_text(trait["name"], "trait name", ValueError), number))
+        weights: list[TraitPadWeight] = []
+        for item in require_sequence(raw["pad_mappings"], "pad_mappings", ValueError):
+            weight = require_object(item, "pad mapping", ValueError)
+            require_exact_keys(weight, frozenset(("trait", "pad_id", "weight")), "pad mapping")
+            number = require_float(weight["weight"], "weight", ValueError)
+            if not math.isfinite(number):
+                raise ValueError("weight must be finite")
+            weights.append(
+                TraitPadWeight(
+                    require_text(weight["trait"], "trait", ValueError),
+                    require_int(weight["pad_id"], "pad_id", ValueError),
+                    number,
+                )
+            )
+        return cls(
+            require_text(raw["profile_id"], "profile_id", ValueError),
+            require_text(raw["name"], "profile name", ValueError),
+            narrow_kind(require_text(raw["kind"], "kind", ValueError)),
+            require_text(raw["model_version"], "model_version", ValueError),
+            tuple(traits),
+            tuple(weights),
+            narrow_transition_curve(
+                require_text(raw["transition_curve"], "transition_curve", ValueError)
+            ),
+            require_text(raw["source_summary"], "source_summary", ValueError),
         )
 
 
