@@ -31,7 +31,7 @@ from __future__ import annotations
 import json
 import os
 import re
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Generator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
@@ -195,7 +195,7 @@ def _source_outcome(
 @contextmanager
 def _source_boundary(
     decision: Literal["retain_source", "read_source_frame"],
-) -> Iterator[None]:
+) -> Generator[None, None, None]:
     """Sanitize external reader/codec/writer failures at the Library boundary."""
     try:
         yield

@@ -42,6 +42,9 @@
     "local_budget_checkpoint": { "$ref": "#/$defs/timestamp" },
     "local_budget_deadline": { "$ref": "#/$defs/timestamp" },
     "local_budget_scope": { "const": "historical-Oct02-only-not-the-current-Oct05-session" },
+    "oct06_started_at": { "$ref": "#/$defs/timestamp" },
+    "oct06_deadline": { "$ref": "#/$defs/timestamp" },
+    "oct06_checkpoint": { "$ref": "#/$defs/sourceSha" },
     "historical_elapsed_time_recorded": { "type": "boolean" },
     "work": {
       "type": "object",
