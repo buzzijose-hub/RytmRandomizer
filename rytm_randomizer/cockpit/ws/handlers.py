@@ -38,8 +38,10 @@ do **not** raise to express "the command is invalid" — they return
 the same categorical shape directly via :func:`_error_ack` so the
 wire-format contract is one and the same regardless of whether the
 failure was a handler-detected precondition or a raised exception.
-A structured :func:`logger.warning` call captures ``repr(exc)`` and
-the exception type server-side only, *never* on the wire
+A structured :func:`logger.warning` call captures the exception type and
+bounded forensic detail server-side only, *never* on the wire. Known local
+artifact refusals instead use fixed recovery text and redact forensic detail
+from both the log and the diagnostic journal. Other failures retain ``repr(exc)``
 (CODE_REVIEW.md PR 14, RR4f). ``repr(exc)`` is used (rather than
 ``str(exc)``) so the AST guard in
 ``tests/architecture/test_no_raw_exception_messages_on_wire.py`` can
@@ -738,6 +740,28 @@ _HANDLER_VALIDATION_MESSAGE: Final[str] = "command rejected by handler validatio
 _HANDLER_INTERNAL_MESSAGE: Final[str] = "internal error processing command"
 
 
+def _is_local_artifact_command(cmd_type: str | None) -> bool:
+    from .show_bank_handlers import SHOW_BANK_HANDLERS
+
+    return cmd_type in SHOW_BANK_HANDLERS or cmd_type in (
+        COMMAND_LIBRARY_LIST,
+        COMMAND_LIBRARY_SEARCH,
+        COMMAND_LIBRARY_TAG,
+        COMMAND_LIBRARY_DELETE,
+        COMMAND_LIBRARY_IMPORT_CAPTURES,
+        COMMAND_RETAIN_REHEARSAL_FAVORITE,
+        COMMAND_RECALL_REHEARSAL_FAVORITE,
+    )
+
+
+def _local_artifact_failure_message(exc: BaseException, cmd_type: str) -> str | None:
+    if not _is_local_artifact_command(cmd_type):
+        return None
+    from .show_bank_handlers import local_artifact_failure_message
+
+    return local_artifact_failure_message(exc)
+
+
 def _classify_handler_exception(exc: BaseException) -> tuple[str, str]:
     """Map a handler-raised exception to a ``(code, canonical_message)`` pair.
 
@@ -806,9 +830,11 @@ def _redacted_exception_repr(
     return repr(exc)
 
 
-def _bounded_handler_exception_repr(exc: BaseException) -> str:
+def _bounded_handler_exception_repr(exc: BaseException, *, redact_artifact: bool = False) -> str:
     """Keep useful exception context without logging an oversized rejected request."""
 
+    if redact_artifact:
+        return f"{type(exc).__name__}('<redacted-local-artifact>')"
     detail = repr(exc)
     if len(detail) <= _HANDLER_EXCEPTION_REPR_MAX_CHARS:
         return detail
@@ -3229,7 +3255,8 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
       id wasn't found); everything else (``TypeError`` / ``RuntimeError``
       / :class:`RytmRandomizerError`) maps to ``code=ERR_INTERNAL`` and
       is the last-line safety net for genuine bugs. In every case the
-      full ``repr(exc)`` and exception type are logged server-side; only
+      exception type and bounded detail are logged server-side; known local
+      artifact failures use safe categories with redacted detail. Only
       the categorical ``code`` and a short canonical ``message`` reach
       the wire (PR 14 / RR4f).
 
@@ -3368,7 +3395,14 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
             # stays at floor 0 for this file -- ``repr`` still carries the
             # exception type + args for forensic purposes. Only the log copy
             # is truncated; the internal exception retains its full details.
-            code, message = _classify_handler_exception(exc)
+            # Recognized local artifact failures omit that detail entirely;
+            # unknown failures keep the original RR4f classification/logging.
+            artifact_message = _local_artifact_failure_message(exc, _label)
+            code, message = (
+                _classify_handler_exception(exc)
+                if artifact_message is None
+                else (ERR_VALIDATION, artifact_message)
+            )
             # Wave 4: taxonomy errors also land in the session's bounded
             # error journal so the ``diagnostics`` command can replay the
             # last 50 categorized failures without log access. The
@@ -3390,7 +3424,9 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
                     "code": code,
                     "cmd_type": cmd_type,
                     "exception_type": type(exc).__name__,
-                    "exception_repr": _bounded_handler_exception_repr(exc),
+                    "exception_repr": _bounded_handler_exception_repr(
+                        exc, redact_artifact=artifact_message is not None
+                    ),
                     # OBS O4 — when ``exc`` is a :class:`RytmRandomizerError`
                     # subclass (one of the arms of the except tuple above),
                     # this is the stable ``<subsystem>.<verb>.<noun>``

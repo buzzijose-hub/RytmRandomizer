@@ -669,6 +669,11 @@ def verify_show_bank_frames(bank: ShowBank, frames_by_artifact_id: Mapping[str, 
 def _show_pack_directory_identity(path: Path) -> tuple[int, int]:
     try:
         metadata = path.stat(follow_symlinks=False)
+    except FileNotFoundError as exc:
+        raise DataError(
+            "show-pack directory cannot be inspected: package is missing",
+            context={"category": "missing", "artifact_name": path.name},
+        ) from exc
     except OSError as exc:
         raise DataError(
             "show-pack directory cannot be inspected",
@@ -793,7 +798,7 @@ def _read_verified_pack_payloads(package_dir: Path, manifest: ShowPackManifest) 
     actual_names = {path.name for path in paths}
     if actual_names != expected_names:
         _raise_show_pack_corruption(
-            "cross-reference",
+            "missing" if expected_names - actual_names else "cross-reference",
             "show-pack file set differs from its manifest",
             artifact_name=package_dir.name,
         )
@@ -1000,7 +1005,7 @@ class ShowPackService:
         published = False
         try:
             with guard_atomic_write_tree(package_dir, identity):
-                writes = atomic_write_set(artifacts, overwrite=False)
+                writes = atomic_write_set(artifacts, overwrite=False, redact_diagnostics=True)
             published = True
         finally:
             if not published:
@@ -1033,12 +1038,6 @@ class ShowPackService:
                     "path",
                     "show-pack root cannot be a symlink",
                     artifact_name=self._package_root.name,
-                )
-            if package_dir.is_symlink() or not package_dir.is_dir():
-                _raise_show_pack_corruption(
-                    "missing",
-                    "show-pack package directory is missing",
-                    artifact_name=package_dir.name,
                 )
         except OSError as exc:
             raise DataError(
