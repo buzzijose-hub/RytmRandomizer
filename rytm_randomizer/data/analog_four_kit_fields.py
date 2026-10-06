@@ -208,6 +208,45 @@ A4_MOD_DEPTH_FIELDS: Final[MappingProxyType[str, str]] = MappingProxyType(
     }
 )
 
+# Continuous native-byte domains established by the retained RIO145 recipe.
+# Other u7-accessible fields may be selectors; accessor width is not a domain.
+A4_NATIVE_CONTINUOUS_U7_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "osc1_level",
+        "osc2_level",
+        "osc1_pwm_speed",
+        "osc2_pwm_speed",
+        "osc1_pwm_depth",
+        "osc2_pwm_depth",
+        "noise_sample_hold",
+        "noise_level",
+        "sync_amount",
+        "slide_time",
+        "vibrato_speed",
+        "vibrato_depth",
+        "filter1_resonance",
+        "filter2_resonance",
+        "envf_attack",
+        "env2_attack",
+        "envf_decay",
+        "env2_decay",
+        "envf_sustain",
+        "env2_sustain",
+        "envf_release",
+        "env2_release",
+        "lfo1_phase",
+        "lfo2_phase",
+        "amp_chorus_send",
+        "amp_delay_send",
+        "amp_reverb_send",
+        "amp_volume",
+        "amp_attack",
+        "amp_decay",
+        "amp_sustain",
+        "amp_release",
+    }
+)
+
 __all__ = [
     "A4_BIPOLAR_FIELDS",
     "A4_FIXED_8_8_ENCODING",
@@ -215,6 +254,7 @@ __all__ = [
     "A4_FIXED_8_8_SCALE",
     "A4_FIXED_8_8_WIDTH",
     "A4_MOD_DEPTH_FIELDS",
+    "A4_NATIVE_CONTINUOUS_U7_FIELDS",
     "A4_SOUND_NAME_LENGTH",
     "A4_SOUND_NAME_OFFSET",
     "A4_SOUND_SIGNATURE",

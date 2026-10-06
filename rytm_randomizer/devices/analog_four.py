@@ -24,6 +24,15 @@ from .strategies.analog_four_filter1_frequency_candidate import (
     AnalogFourFilter1FrequencyCandidateResult,
     render_analog_four_filter1_frequency_candidate,
 )
+from .strategies.analog_four_native_fields import (
+    AnalogFourNativeCandidateResult,
+    AnalogFourNativeField,
+    AnalogFourNativeMutation,
+    AnalogFourNativeReadback,
+    analog_four_native_fields,
+    read_analog_four_native_fields,
+    render_analog_four_native_fields,
+)
 from .strategies.analog_four_saved_kit_codec import (
     decode_analog_four_saved_kit_payload,
     encode_analog_four_saved_kit_payload,
@@ -95,6 +104,22 @@ class AnalogFourFilter1FrequencyCandidateCapability(Protocol):
         raw: bytes,
         mutations: Sequence[AnalogFourFilter1FrequencyCandidateMutation],
     ) -> AnalogFourFilter1FrequencyCandidateResult: ...
+
+
+@runtime_checkable
+class AnalogFourNativeFieldCapability(Protocol):
+    """Optional precise native-field inspection/rendering, with no live authority."""
+
+    @abstractmethod
+    def native_fields(self) -> tuple[AnalogFourNativeField, ...]: ...
+
+    @abstractmethod
+    def read_native_fields(self, raw: bytes) -> AnalogFourNativeReadback: ...
+
+    @abstractmethod
+    def render_native_fields(
+        self, raw: bytes, mutations: Sequence[AnalogFourNativeMutation]
+    ) -> AnalogFourNativeCandidateResult: ...
 
 
 class AnalogFourDevice:
@@ -197,6 +222,20 @@ class AnalogFourDevice:
             unpacked=decoded.unpacked,
         )
 
+    def native_fields(self) -> tuple[AnalogFourNativeField, ...]:
+        """Return native evidence metadata, never MIDI transport ordinals."""
+        return analog_four_native_fields()
+
+    def read_native_fields(self, raw: bytes) -> AnalogFourNativeReadback:
+        """Inspect a canonical source while retaining exact unknown values."""
+        return read_analog_four_native_fields(raw)
+
+    def render_native_fields(
+        self, raw: bytes, mutations: Sequence[AnalogFourNativeMutation]
+    ) -> AnalogFourNativeCandidateResult:
+        """Render selected source-bound native fields without hardware I/O."""
+        return render_analog_four_native_fields(raw, mutations)
+
     def encode_saved_kit_capture(self, decoded: object) -> bytes:
         """Re-encode a captured A4 frame for exact stability validation."""
 
@@ -243,6 +282,14 @@ def get_analog_four_filter1_frequency_candidate_capability() -> (
     return device
 
 
+def get_analog_four_native_field_capability() -> AnalogFourNativeFieldCapability:
+    """Resolve the optional offline capability through the existing registry."""
+    device = registry.get_device(_DEVICE_ID)
+    if not isinstance(device, AnalogFourNativeFieldCapability):
+        raise TypeError("registered Analog Four device lacks offline native field capability")
+    return device
+
+
 __all__ = [
     "AnalogFourDevice",
     "AnalogFourFilter1FrequencyCandidateCapability",
@@ -251,6 +298,12 @@ __all__ = [
     "AnalogFourSavedKitCapability",
     "AnalogFourSavedKitMutation",
     "AnalogFourSavedKitRenderResult",
+    "AnalogFourNativeFieldCapability",
+    "AnalogFourNativeCandidateResult",
+    "AnalogFourNativeField",
+    "AnalogFourNativeMutation",
+    "AnalogFourNativeReadback",
     "get_analog_four_filter1_frequency_candidate_capability",
     "get_analog_four_saved_kit_capability",
+    "get_analog_four_native_field_capability",
 ]
