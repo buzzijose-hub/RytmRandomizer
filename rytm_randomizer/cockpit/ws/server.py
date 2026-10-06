@@ -290,6 +290,7 @@ class ConnectionQueue:
         self._loop = asyncio.get_running_loop()
         self._closing = False
         self._dropped = 0
+        self._high_water = 0
 
     @property
     def size(self) -> int:
@@ -302,6 +303,11 @@ class ConnectionQueue:
         """Total frames dropped on this connection (overflow + post-close)."""
 
         return self._dropped
+
+    @property
+    def high_water(self) -> int:
+        """Largest observed depth on this connection, including bootstrap."""
+        return self._high_water
 
     def put_frame(self, frame: dict[str, object], *, close_code: int | None = None) -> None:
         """Enqueue one outbound frame without ever blocking the caller.
@@ -347,6 +353,7 @@ class ConnectionQueue:
                 },
             )
         self._queue.put_nowait(_OutboundItem(frame=frame, close_code=close_code))
+        self._high_water = max(self._high_water, self._queue.qsize())
 
     def put_frame_threadsafe(self, frame: dict[str, object]) -> None:
         """Enqueue an ordinary frame from any thread, never blocking.
@@ -395,6 +402,17 @@ class ConnectionRegistry:
         """Number of currently registered (live, authenticated) connections."""
 
         return len(self._queues)
+
+    def queue_diagnostics(self) -> dict[str, int]:
+        """Aggregate active queue bounds without publishing frames or peer identities."""
+        queues = tuple(self._queues.values())
+        return {
+            "connection_count": len(queues),
+            "capacity_per_connection": self._queue_maxsize,
+            "queued_frames": sum(queue.size for queue in queues),
+            "high_water_per_connection": max((queue.high_water for queue in queues), default=0),
+            "dropped_frames": sum(queue.dropped_count for queue in queues),
+        }
 
     def register(self) -> tuple[int, ConnectionQueue]:
         """Create + track a fresh queue; return ``(connection_id, queue)``.
@@ -780,6 +798,7 @@ def create_app(
             "version": APP_VERSION,
             "mode": "live" if session_is_armed(session) else "mock",
             "connection_phase": resolve_connection_phase(session),
+            "outbound_queue": registry.queue_diagnostics(),
         }
 
     # Justified suppression: same decorated-route false positive as

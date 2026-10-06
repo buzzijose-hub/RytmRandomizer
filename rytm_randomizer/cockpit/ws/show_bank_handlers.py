@@ -6,6 +6,11 @@ from collections.abc import Awaitable, Callable, Mapping
 from types import MappingProxyType
 from typing import Final, cast
 
+from ...data.local_artifact_recovery import (
+    LOCAL_ARTIFACT_RECOVERY_MESSAGES,
+    LOCAL_EXPORT_RECOVERY_MESSAGES,
+    LOCAL_SOURCE_RECOVERY_MESSAGES,
+)
 from ...guardrails.input_validation import (
     require_boolean,
     require_exact_keys,
@@ -31,16 +36,15 @@ from ..data.show_bank import (
     validate_show_pack_id,
 )
 from ..export.file_export_contracts import (
-    LocalFileExportErrorCode,
     attach_local_file_export_error_context,
     classify_local_file_export_error,
     local_file_export_error_context,
 )
 from ..export.writer import WriteError
-from ..library.store import LIBRARY_STORE_ID, SourceRefusal
+from ..library.store import LIBRARY_STORE_ID
 from ..mutation_targets import MutationTargets
 from ..show_bank.readiness import is_catalog_only_show_bank
-from ..show_bank.store import ShowBankCorruptionCategory, show_bank_corruption_category
+from ..show_bank.store import show_bank_corruption_category
 from ..show_bank.workspace import CaptureKind, ShowKitForgeWorkspace
 from ..stage.policy import (
     A4_LANE_POLICY,
@@ -98,108 +102,31 @@ _GENERATION_TARGETS_MESSAGE: Final[str] = (
 _GENERATION_LOCKS_REASON: Final[str] = "operator_locks_omitted"
 _GENERATION_TARGETS_REASON: Final[str] = "operator_targets_expanded"
 
-_ARTIFACT_MISSING_MESSAGE: Final[str] = (
-    "Local artifact is missing. Restore the complete package or retained source, then retry."
-)
-_ARTIFACT_CORRUPT_MESSAGE: Final[str] = (
-    "Local artifact failed integrity checks. Restore a verified copy or re-export it, then retry."
-)
-_ARTIFACT_SCHEMA_MESSAGE: Final[str] = (
-    "Local artifact schema is incompatible or invalid. Use a compatible app or re-export a verified package."
-)
-_ARTIFACT_MISMATCH_MESSAGE: Final[str] = (
-    "Local artifact does not match its source or manifest. Restore matching source files or re-export the package."
-)
-_ARTIFACT_ACCESS_MESSAGE: Final[str] = (
-    "Local artifact could not be accessed or changed during reading. Check folder access and retry."
-)
-_ARTIFACT_PATH_MESSAGE: Final[str] = (
-    "Local artifact location is unsafe. Use a regular local file or package directory, then retry."
-)
-_ARTIFACT_SIZE_MESSAGE: Final[str] = (
-    "Local artifact size exceeds supported bounds or differs from its manifest. Restore a verified copy or export a smaller package."
-)
-_ARTIFACT_WRITE_MESSAGE: Final[str] = (
-    "Local files could not be saved. Check available space and folder access, then retry."
-)
-_ARTIFACT_EXISTS_MESSAGE: Final[str] = (
-    "Local destination already exists. Choose a new bank or package ID; existing files were not replaced."
-)
-_ARTIFACT_MESSAGES: Final[Mapping[ShowBankCorruptionCategory, str]] = MappingProxyType(
-    {
-        "missing": _ARTIFACT_MISSING_MESSAGE,
-        "malformed-json": _ARTIFACT_CORRUPT_MESSAGE,
-        "schema": _ARTIFACT_SCHEMA_MESSAGE,
-        "cross-reference": _ARTIFACT_MISMATCH_MESSAGE,
-        "size": _ARTIFACT_SIZE_MESSAGE,
-        "path": _ARTIFACT_PATH_MESSAGE,
-        "hash": _ARTIFACT_CORRUPT_MESSAGE,
-        "framing": _ARTIFACT_CORRUPT_MESSAGE,
-        "access": _ARTIFACT_ACCESS_MESSAGE,
-    }
-)
-_LIBRARY_MESSAGES: Final[Mapping[SourceRefusal, str]] = MappingProxyType(
-    {
-        "invalid_record_id": "Library source ID is invalid. Select a retained source from the Library.",
-        "access": _ARTIFACT_ACCESS_MESSAGE,
-        "path": _ARTIFACT_PATH_MESSAGE,
-        "size": _ARTIFACT_SIZE_MESSAGE,
-        "missing": _ARTIFACT_MISSING_MESSAGE,
-        "record_shape": _ARTIFACT_CORRUPT_MESSAGE,
-        "record_schema": _ARTIFACT_SCHEMA_MESSAGE,
-        "frame_integrity": _ARTIFACT_CORRUPT_MESSAGE,
-        "payload_identity": _ARTIFACT_MISMATCH_MESSAGE,
-        "codec": _ARTIFACT_CORRUPT_MESSAGE,
-        "metadata": _ARTIFACT_MISMATCH_MESSAGE,
-        "timestamp": _ARTIFACT_CORRUPT_MESSAGE,
-        "provenance": _ARTIFACT_MISMATCH_MESSAGE,
-        "input_only": _ARTIFACT_MISMATCH_MESSAGE,
-        "identity_collision": _ARTIFACT_MISMATCH_MESSAGE,
-        "legacy_reconstruction_required": (
-            "Library source has no retained original frame. Explicitly reconstruct the legacy source or import its original KIT file."
-        ),
-        "no_original_source": _ARTIFACT_MISSING_MESSAGE,
-        "validation": "Library source is invalid. Select a verified retained source, then retry.",
-        "schema_newer_than_app": _ARTIFACT_SCHEMA_MESSAGE,
-    }
-)
-_FILE_EXPORT_MESSAGES: Final[Mapping[LocalFileExportErrorCode, str]] = MappingProxyType(
-    {
-        "input_not_found": _ARTIFACT_MISSING_MESSAGE,
-        "interrupted": "Local file operation was interrupted. Review the destination before retrying.",
-        "overwrite_refused": _ARTIFACT_EXISTS_MESSAGE,
-        "permission_denied": _ARTIFACT_ACCESS_MESSAGE,
-        "source_read_failed": _ARTIFACT_ACCESS_MESSAGE,
-        "validation": "Local file request is invalid. Review the selected source and destination, then retry.",
-        "write_failed": _ARTIFACT_WRITE_MESSAGE,
-    }
-)
-
 
 def local_artifact_failure_message(exc: BaseException) -> str | None:
     """Project existing public failure metadata without exception text or artifact names."""
 
     if isinstance(exc, PersistedStateVersionError):
-        return _ARTIFACT_SCHEMA_MESSAGE
+        return LOCAL_ARTIFACT_RECOVERY_MESSAGES["schema"]
     if isinstance(exc, DataError):
         category = show_bank_corruption_category(exc)
         if category is not None:
-            return _ARTIFACT_MESSAGES[category]
+            return LOCAL_ARTIFACT_RECOVERY_MESSAGES[category]
         reason = exc.context.get("reason")
         if (
             exc.context.get("store_id") == LIBRARY_STORE_ID
             and isinstance(reason, str)
-            and reason in _LIBRARY_MESSAGES
+            and reason in LOCAL_SOURCE_RECOVERY_MESSAGES
         ):
-            return _LIBRARY_MESSAGES[cast(SourceRefusal, reason)]
+            return LOCAL_SOURCE_RECOVERY_MESSAGES[reason]
     context = local_file_export_error_context(exc)
     if context is not None:
-        return _FILE_EXPORT_MESSAGES[context.error_code]
+        return LOCAL_EXPORT_RECOVERY_MESSAGES[context.error_code]
     if isinstance(exc, WriteError):
-        return _ARTIFACT_WRITE_MESSAGE
+        return LOCAL_EXPORT_RECOVERY_MESSAGES["write_failed"]
     if isinstance(exc, (FileNotFoundError, FileExistsError, PermissionError)):
         code = classify_local_file_export_error(exc, phase="source_read")
-        return _FILE_EXPORT_MESSAGES[code]
+        return LOCAL_EXPORT_RECOVERY_MESSAGES[code]
     return None
 
 
@@ -376,8 +303,6 @@ def _sync_selected_candidate(
     workspace: ShowKitForgeWorkspace,
     bank_id: str,
     entry_id: str,
-    *,
-    preserve_scope: bool = False,
 ) -> list[dict[str, object]]:
     bank = workspace.bank(bank_id)
     entry = bank.entry(entry_id)
@@ -395,13 +320,12 @@ def _sync_selected_candidate(
     session.active_profile = profile
     session.depth = selected.recipe.depth
     session.seed = selected.recipe.seed
-    if not preserve_scope:
-        session.rytm_pad_targets = set(selected.recipe.rytm_scope.target_ids)
-        session.pad_locks = set(selected.recipe.rytm_scope.locked_ids)
-        session.a4_track_targets = set(selected.recipe.analog_four_scope.target_ids)
-        session.a4_track_locks = set(selected.recipe.analog_four_scope.locked_ids)
-        session.rytm_parameters = selected.recipe.rytm_scope.parameters
-        session.a4_parameters = selected.recipe.analog_four_scope.parameters
+    session.rytm_pad_targets = set(selected.recipe.rytm_scope.target_ids)
+    session.pad_locks = set(selected.recipe.rytm_scope.locked_ids)
+    session.a4_track_targets = set(selected.recipe.analog_four_scope.target_ids)
+    session.a4_track_locks = set(selected.recipe.analog_four_scope.locked_ids)
+    session.rytm_parameters = selected.recipe.rytm_scope.parameters
+    session.a4_parameters = selected.recipe.analog_four_scope.parameters
     # Recall is local preparation, never an output grant or hardware restore.
     from .handlers import build_mutation_parameters_changed, revoke_session_output
 
@@ -632,7 +556,18 @@ async def _handle_generate(cmd: dict[str, object], session: CockpitSession) -> H
         offline_only=True,
         a4_algorithm=A4_NATIVE_MUTATION_ALGORITHM,
     )
-    events = _sync_selected_candidate(session, workspace, bank_id, entry_id, preserve_scope=True)
+    # Generation adds reviewable choices; only explicit recall/favorite selects one.
+    from .handlers import revoke_session_output
+
+    status = revoke_session_output(session)
+    session.current_candidate = None
+    session.current_send_plan = None
+    session.preview_on = False
+    session.stage_coordinator.record_candidate(ANALOG_RYTM_DEVICE_ID, ready=None)
+    session.stage_coordinator.record_candidate(
+        ANALOG_FOUR_DEVICE_ID, ready=None, blocked_reason=A4_HARDWARE_BLOCK_REASON
+    )
+    events = [status, *_source_events(session)]
     events.append(build_show_bank_changed(session))
     return HandlerResult(
         ack={"ok": True, "candidate_ids": [item.candidate_id for item in created]},

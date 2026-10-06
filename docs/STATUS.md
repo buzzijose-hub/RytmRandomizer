@@ -4,6 +4,17 @@ Last updated: 2026-10-06. This file is a hand-authored snapshot and is meant to 
 
 ## Current Snapshot
 
+The later October6 reliability continuation is in source verification, not yet
+a new delivery. It fixes the delivered missing-package generic error, rejects
+generation requests that drop current locks or expand targets, verifies direct
+favorite/selection transitions before publication, and permits unnamed exact
+KIT sources with local cue-label fallbacks. New adversarial source/profile/
+migration/rollback cases and read-only health queue statistics are integrated.
+The reproducible packaged-app driver passed a100-second trial, explicitly not
+endurance; the required90-120minute new-build rehearsal remains pending.
+Start21:41:19UTC, ceiling05:41:19UTC October7. MIDI stays off; old deliveries and
+the dirty primary checkout are preserved. Human and physical gates stay open.
+
 October 6 offline preparation is delivered from production
 `6eb5d4c1e3ed103b9870d935c3be2656857de708` in the same PR #254. Original framed
 files, exact native scopes, small/large previews, named local favorites, ordered
@@ -25,7 +36,8 @@ zero-depth identity, exact favorite/bank copy, full restart and sidecar loss wit
 fresh credentials. Bounded failure/cancel checks passed without partial state.
 All owned QA processes/listeners stopped; credentials moved outside delivery.
 Earlier8b/fa43 copies are hash-verified unchanged. Eight scoped reviews found no
-new blocking production issue; docs-only receipt publication remains separate.
+new blocking production issue. Receiptaf5a2b40 publication completed with31
+successful checks/three skips; this is the baseline for the later reliability pass.
 READY for offline preparation only, NOT READY for shows. Protected review and
 the first scoped Pad2 physical audition/manual reload/fresh dump remain pending.
 

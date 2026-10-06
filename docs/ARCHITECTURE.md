@@ -1625,6 +1625,21 @@ remain deterministic and logger-free; their callers own the observable
 decision. Decision payloads exclude raw frames, kit names, operator notes,
 and absolute local paths.
 
+Known local artifact refusals project existing store/source/file-export error
+categories into fixed actionable messages, without echoing exception text,
+paths or artifact names. Other programming failures keep the generic dispatcher
+contract. Package writes opt into the shared writer's redacted diagnostics.
+Generation validates requested locks/targets against authoritative session
+scope before publication and does not replace operator scope with narrower
+wire data. Public workspace selection/favorite transitions revalidate exact
+retained recipe/source claims before committing a revision.
+
+The existing token-free GET /health also exposes aggregate outbound-queue
+capacity, active-connection count, current depth, active-connection high-water
+and drops. These read-only counts reveal no frames or peer identities and do
+not enumerate MIDI or add authority. ConnectionRegistry remains the owner;
+FIFO/drop-oldest/close behavior and authenticated command dispatch are unchanged.
+
 OXI project/pattern/chapter/cue fields are descriptive metadata. Show Kit Forge
 does not issue OXI commands; OXI remains responsible for sequencing, notes,
 triggers, mutes, and pattern motion.

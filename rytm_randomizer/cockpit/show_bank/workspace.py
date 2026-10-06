@@ -944,6 +944,13 @@ class ShowKitForgeWorkspace:
         if not offline_only:
             self._require_editable_candidate_authority(bank)
         entry = bank.entry(entry_id)
+        prior_ids = dict.fromkeys(
+            prior.candidate_id
+            for prior in (entry.selected_candidate, entry.favorite_candidate)
+            if prior is not None
+        )
+        for prior_id in prior_ids:
+            self.candidate_context(bank_id, entry_id, prior_id)
         self.original_source_frames(bank_id, entry_id)
         source_snapshot = self._source_snapshot(bank, entry)
         analog_four_frame = self._retained_frame(bank, entry.analog_four_source.sysex.artifact_id)

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-06T20:39:00Z",
+  "updated_at": "2026-10-06T22:17:00Z",
   "status": "in-flight",
-  "phase": "Oct06-native-offline-Windows-delivery-verified-receipt-publication-and-physical-review-held",
+  "phase": "Oct06-reliability-repairs-integrated-source-verification-and-new-build-endurance-pending",
   "prototype_source": "8cfa6f7b6cf9469ffa134598182febb60ecdd1df",
   "prototype_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-tom-mapping/RytmRandomizer",
   "delivery_start_source": "941643c551abfa225f45c70a954b6671d1cbb5f4",
@@ -20,6 +20,8 @@
   "oct06_started_at": "2026-10-06T16:24:24Z",
   "oct06_deadline": "2026-10-07T00:24:24Z",
   "oct06_checkpoint": "6eb5d4c1e3ed103b9870d935c3be2656857de708",
+  "reliability_started_at": "2026-10-06T21:41:19Z",
+  "reliability_deadline": "2026-10-07T05:41:19Z",
   "historical_elapsed_time_recorded": false,
   "work": {
     "mapping_implementation": "Oct05-all8-CY-Ride-SRC-blocked-25of29-new-fallback-rows-documented-only-guardedCC7-eligible-224-descriptive-bindings-retained-Studio-SRC-metadata-published3461f42e",
@@ -32,6 +34,13 @@
     "post_merge_maintainability_audit": "pending"
   },
   "receipts": [
+    {
+      "scope": "Oct06-final-af5a2b40-baseline-and-new-reliability-mission",
+      "result": "Prior receipt publication complete31SUCCESS3SKIPPED0failure/pending; production6eb and Windows37523755117 preserved. Newmission21:41:19UTC/eighthourceiling05:41:19UTC. Actual baseline missing-package genericerror reproduced without bank/favorite/revision loss. Parent2 server-lock bypass tests failed then repaired. Two isolated workers merged normally6d7ecc9f/67417c48 into3d1689a1;96composed and4 rapid/restart cases pass;115 health/queue tests pass after fixing3 explicit contract/test setup failures. Short actual driver100s/5cycles/restart/cleanup pass isNOT90-minute endurance. New source acceptance/package/endurance still required; no hardware access.",
+      "passing_verdict": true,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
     {
       "scope": "Oct06-identified-native-offline-Windows-6eb5d4c1e3ed103b9870d935c3be2656857de708",
       "result": "Hosted37523755117success; exactsourceCI31success3skip; shellSHA592736462d2fcee0f746c8ef1af4ac4faf5413fee7bce4d6c8c4243c802e0bd9; sidecarSHA950133d3f70c768a524da3246c1912d589e9916fc3dff508f247b33886adff13; actual retained-file/native scope/small-large/favorite/order/bank-copy import/exact disarmed recall/fullrestart/backendloss-tokenrotation/zero-lock-cancel-refusal pass; QAcredentialsoutside-delivery andownedprocessesstopped; old8b-fa43hashesunchanged; READYoffline NOTREADYshows; receipt-onlymetadata publicationstilldue",
@@ -313,7 +322,7 @@
     }
   ],
   "remaining": [
-    "Publish Oct06 final receipt-only metadata and confirm its exact-head CI; production6eb Windows build and source checks are verified separately",
+    "Complete reliability source acceptance and dimensional review, source-bound new offline Windows build, measured90-120minute actual packaged rehearsal and finalhandoff",
     "Operator-present fresh backed-up source capture, new-build four-field Pad2 preset at10percent and exact-plan inspection, separately approved audition, DISARM and manual sourceKIT reload/fresh exact fingerprint comparison",
     "Protected new-head human review, hosted checks and merge",
     "Retrospective audit review and actual post-merge reassessment; Gate14 remains unchecked",
@@ -337,7 +346,7 @@
     "Match runner summaries to source checkpoint and rerun affected checks after changes",
     "Preserve original dirty user checkout, running studio checkout and concurrent work"
   ],
-  "local_termination": "Native offline Windows candidate6eb5d4c1 verified with exact executable source/scope/favorite/bank-copy/restart/recovery/failure checks and MIDIoff; receipt-only publication pending; protected approval and physical/show gates remain separate",
+  "local_termination": "Reliability mission remains active toward new source-bound Windows endurance; prior6eb/af5 delivery complete and preserved; human approval and physical/show gates remain separate",
   "plan_termination": "Protected merge and actual post-merge maintainability reassessment recorded",
   "budget_exhaustion_status": "BUDGET_EXCEEDED",
   "user_stop_status": "INTERRUPTED"

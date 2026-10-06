@@ -3425,7 +3425,7 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
                     "cmd_type": cmd_type,
                     "exception_type": type(exc).__name__,
                     "exception_repr": _bounded_handler_exception_repr(
-                        exc, redact_artifact=artifact_message is not None
+                        exc, redact_artifact=_is_local_artifact_command(_label)
                     ),
                     # OBS O4 — when ``exc`` is a :class:`RytmRandomizerError`
                     # subclass (one of the arms of the except tuple above),

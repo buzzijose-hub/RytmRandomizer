@@ -3296,6 +3296,9 @@ flowchart TD
     OXI["OXI owns sequencing / triggers / mutes"] -.-> Pair
     Store["revisioned canonical JSON<br/>explicit content-addressed retention"] --- Favorite
     Pack["verified .show-pack<br/>cue order + recovery + checksums<br/>manifest published last"] --- Store
+    Store --> ArtifactErrors["canonical artifact error categories<br/>path-free recovery messages"]
+    ScopeGuard["authoritative current targets / locks<br/>reject stale scope expansion"] --> Forge
+    Queue["existing bounded outbound queues"] --> Health["GET /health<br/>aggregate depth / high-water / drops only"]
 
     style ArmedApply fill:#fee,stroke:#a44
     style A4Candidate fill:#eef,stroke:#448

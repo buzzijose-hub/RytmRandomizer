@@ -48,7 +48,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     INITIAL_EVENT_COUNT,
     WS_SUBPROTOCOL,
 )
-from rytm_randomizer.cockpit.ws.server import APP_VERSION, create_app
+from rytm_randomizer.cockpit.ws.server import APP_VERSION, ConnectionRegistry, create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
 from rytm_randomizer.senders.armed_apply import ArmedApplyError
 
@@ -1013,6 +1013,7 @@ def test_health_endpoint_is_token_free_and_read_only(tmp_path: Path) -> None:
         "version": APP_VERSION,
         "mode": "mock",
         "connection_phase": "disconnected",
+        "outbound_queue": ConnectionRegistry().queue_diagnostics(),
     }
 
 
@@ -1027,6 +1028,7 @@ def test_health_endpoint_reflects_armed_session(tmp_path: Path) -> None:
         "version": APP_VERSION,
         "mode": "live",
         "connection_phase": "armed",
+        "outbound_queue": ConnectionRegistry().queue_diagnostics(),
     }
 
 

@@ -115,7 +115,9 @@ def test_generation_accepts_matching_scope_and_safe_narrowing_with_added_locks(
     assert ack["ok"] is True, ack
     assert workspace.bank(bank.bank_id).revision > bank.revision
     assert locks[0] <= session.pad_locks and locks[1] <= session.a4_track_locks
-    assert session.current_candidate is not None
+    assert session.current_candidate is None
+    assert session.preview_on is False
+    assert session.stage_coordinator.state.rytm.candidate_state == "none"
     assert session.current_send_plan is None and session.armed_apply is None
     if narrow:
         assert session.rytm_pad_targets == {1, 2} and session.a4_track_targets == {1, 2}

@@ -515,7 +515,8 @@ def test_programming_errors_are_not_disguised_as_recoverable_artifact_failures(
     assert ack["message"] == "internal error processing command"
     visible = repr([record.__dict__ for record in caplog.records]) + repr(ack)
     assert "SECRET_TOKEN" not in repr(ack) and "secret-kit" not in repr(ack)
-    assert "SECRET_TOKEN" in visible
+    assert "SECRET_TOKEN" not in visible and "secret-kit" not in visible
+    assert "redacted-local-artifact" in visible
 
 
 def test_expected_artifact_categories_do_not_change_unrelated_handler_classification() -> None:

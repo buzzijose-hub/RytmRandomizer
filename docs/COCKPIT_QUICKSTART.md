@@ -729,6 +729,19 @@ trait set + pad-mapping summary.
 
 ### 5d. Offline Preparation From Original Files
 
+Local import/recall/storage refusals distinguish missing, integrity failure,
+incompatible schema, source mismatch, unsafe location, access failure and an
+existing destination. Restore a complete verified package or original source;
+choose a new destination ID rather than overwriting another bank. Do not treat
+an unsuccessful import as a recovered hardware KIT. Refusal/cancellation leaves
+the previous complete bank and favorite intact. Unexpected programming errors
+remain generic and go to diagnostics instead of exposing exception details.
+Generation refuses requests that omit current locks or expand current targets;
+refresh the authoritative scope before retrying a stale request.
+Generating choices clears the active preview and preparation; it does not
+reactivate an older retained selection. Inspect a candidate and explicitly
+select it or mark it as a local favorite before preparing an audition.
+
 Keep the MIDI-off launcher selected. This procedure is software preparation,
 not a hardware backup, instrument SAVE or rehearsal approval.
 

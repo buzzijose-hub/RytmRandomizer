@@ -689,3 +689,12 @@ endurance, source-bound usable delivery/handoff, no independent software task
 left. First physical gate remains backed-up fresh capture, four-control Pad2 at
 10%, exact approved audition, DISARM, manual KIT reload and fresh comparison.
 Offline acceptance is not show readiness.
+
+Coordinator pre-code observability contract: add aggregate read-only outbound
+queue counts to existing GET /health through ConnectionRegistry, not another
+dashboard or command. Counts include capacity, active connections, queued frames,
+active-connection high-water and drops; never frame contents, paths, tokens or
+connection IDs. Preserve drop-oldest/closing/FIFO and authentication exactly.
+The endurance driver samples this existing health surface and records backend
+restart segments; history reuse is observed without inventing a global history
+eviction policy. Source/store/WS repairs remain in their declared ownership.
