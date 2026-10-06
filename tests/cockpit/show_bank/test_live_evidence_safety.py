@@ -36,7 +36,7 @@ from rytm_randomizer.cockpit.show_bank.export import ShowPackService
 from rytm_randomizer.cockpit.show_bank.readiness import normalize_catalog_import
 from rytm_randomizer.cockpit.show_bank.workspace import ShowKitForgeWorkspace
 from rytm_randomizer.cockpit.ws import handlers
-from rytm_randomizer.cockpit.ws.protocol import ERR_INTERNAL, ERR_VALIDATION
+from rytm_randomizer.cockpit.ws.protocol import ERR_VALIDATION
 from rytm_randomizer.cockpit.ws.session import CockpitSession
 from rytm_randomizer.senders.armed_apply import ArmedApplySession
 
