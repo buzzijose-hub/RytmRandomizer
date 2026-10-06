@@ -711,7 +711,7 @@ class ShowKitForgeWorkspace:
             (rytm_record_id, ANALOG_RYTM_DEVICE_ID),
             (analog_four_record_id, ANALOG_FOUR_DEVICE_ID),
         ):
-            record = library.get(record_id)
+            record = library.get(record_id, strict_original_source=True)
             if record is None or record.device_id != device_id or record.rehearsal is not None:
                 raise ValueError("library source record is missing or belongs to another family")
             frame = library.read_source_frame(
@@ -1094,6 +1094,15 @@ class ShowKitForgeWorkspace:
         candidate = entry.favorite_candidate
         if candidate is None:
             raise ValueError("cue has no retained favorite")
+        return self.candidate_context(bank_id, entry_id, candidate.candidate_id)
+
+    def candidate_context(
+        self, bank_id: str, entry_id: str, candidate_id: str
+    ) -> tuple[Snapshot, ShowKitCandidate, bytes]:
+        """Verify retained source/recipe/frame before any local recall transition."""
+        bank = self.bank(bank_id)
+        entry = bank.entry(entry_id)
+        candidate = entry.candidate_by_id(candidate_id)
         self.original_source_frames(bank_id, entry_id)
         verify_show_bank_frames(
             bank,
@@ -1110,7 +1119,7 @@ class ShowKitForgeWorkspace:
             analog_four_capture_semantic_fingerprint(decoded, candidate.analog_four_candidate)
             != candidate.analog_four_candidate.semantic_fingerprint
         ):
-            raise ValueError("favorite frame semantic fingerprint mismatch")
+            raise ValueError("candidate frame semantic fingerprint mismatch")
         return source, candidate, frame
 
     def mark_favorite(

@@ -202,13 +202,28 @@ describe('ShowKitForgePanel', () => {
     const fake = new FakeCockpitClient();
     mount(fake, { ...showBankState, banks: [{ ...showBankState.banks[0]!, entries: [entry] }] });
     await waitForCommand(fake, 'show_bank_list');
-    act(() => useCockpitStore.setState({ parameterControls: [
+    const matchingCaptures = forgeCaptures.map((capture) => capture.device_id === 'analog_four_mk2'
+      ? { ...capture, fingerprint: entry.analog_four_source.fingerprint } : capture);
+    act(() => useCockpitStore.setState({ kitCaptures: matchingCaptures, parameterControls: [
       scopeControl({ device_id: 'analog_four_mk2', item_id: 1, parameter_key: 'Filter1 Frequency', value: 16256, display_value: '63.50' }),
       scopeControl({ device_id: 'analog_four_mk2', item_id: 2, parameter_key: 'filter2_frequency', value: 0, display_value: '0' }),
     ] }));
     const article = within(screen.getByRole('article', { name: 'Candidate 1' }));
     expect(article.getByText('Track 1 filter1_frequency: source 63.50 to 64.00390625; native 16256 to 16385')).toBeInTheDocument();
     expect(article.getByText('Track 2 filter2_frequency: source 0 to 0.00390625; native 0 to 1')).toBeInTheDocument();
+    act(() => useCockpitStore.setState({ kitCaptures: [] }));
+    expect(article.getByText('Track 2 filter2_frequency: source 0 to 0.00390625; native 0 to 1')).toBeInTheDocument();
+    act(() => useCockpitStore.setState({ kitCaptures: forgeCaptures.map((capture) =>
+      capture.device_id === 'analog_four_mk2' ? { ...capture, fingerprint: 'mismatching-current-kit' } : capture,
+    ) }));
+    expect(article.getByText('Track 2 filter2_frequency: source unavailable to 0.00390625; native unavailable to 1')).toBeInTheDocument();
+    act(() => useCockpitStore.setState({ kitCaptures: matchingCaptures, showBank: {
+      ...showBankState, banks: [{ ...showBankState.banks[0]!, active_entry_id: 'other-cue', entries: [entry] }],
+    } }));
+    expect(article.getByText('Track 2 filter2_frequency: source unavailable to 0.00390625; native unavailable to 1')).toBeInTheDocument();
+    act(() => useCockpitStore.setState({ showBank: {
+      ...showBankState, banks: [{ ...showBankState.banks[0]!, entries: [entry] }],
+    } }));
     expect(article.getByText(/A4 SEND and hardware SAVE remain blocked/)).toBeInTheDocument();
     expect(fake.sent).toEqual([{ type: 'show_bank_list' }]);
     act(() => useCockpitStore.setState({ parameterControls: [] }));
@@ -833,7 +848,7 @@ describe('ShowKitForgePanel', () => {
     const first = screen.getByRole('article', { name: 'Candidate 1' });
     const second = screen.getByRole('article', { name: 'Candidate 2' });
     expect(within(first).getByText('A4 offline saved-KIT-format artifact')).toBeInTheDocument();
-    expect(within(first).getByText('Track 1 filter1_frequency: source 63.50 to 63.50; native 16256 to 16256')).toBeInTheDocument();
+    expect(within(first).getByText('Track 1 filter1_frequency: source unavailable to 63.50; native unavailable to 16256')).toBeInTheDocument();
     expect(within(first).getByText(/Preview-only saved-KIT file\. A4 SEND and hardware SAVE remain blocked/)).toBeInTheDocument();
     expect(within(second).getByText(/Retained as/)).toHaveTextContent('4096 bytes');
     fireEvent.click(

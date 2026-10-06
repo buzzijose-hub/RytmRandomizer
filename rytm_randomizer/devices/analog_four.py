@@ -6,6 +6,7 @@ from abc import abstractmethod
 from collections.abc import Iterable, Sequence
 from typing import Final, Protocol, runtime_checkable
 
+from ..data.analog_four_saved_kit_layout import A4_KIT_SYNTH_TRACK_COUNT
 from ..mock_midi import MidiMessage
 from ..snapshot.envelope import ELEKTRON_MFR_ID
 from ..snapshot.mutation_scope import DEFAULT_MUTATION_SCOPE, MutationScope
@@ -48,7 +49,7 @@ _REPORT_HEADER: Final[str] = "RytmRandomizer Analog Four MK2 Guarded Send"
 _DEVICE_ID: Final[str] = "analog_four_mk2"
 _DISPLAY_NAME: Final[str] = "Elektron Analog Four MKII"
 _DEFAULT_MIDI_CHANNEL: Final[int] = 0
-_TRACK_COUNT: Final[int] = 4
+_TRACK_COUNT: Final[int] = A4_KIT_SYNTH_TRACK_COUNT
 
 
 def _require_analog_four_mutation_plan(

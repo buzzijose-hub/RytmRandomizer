@@ -55,6 +55,12 @@ planner scope, and hardware send plans.
     bytes and current context on every request, and revoke stale UI reports
     after capture, candidate, scope, cue or session changes. Live transport and
     recovery require their own evidence; saved-KIT encoding is not a substitute.
+14. Portable native candidates require an immutable profile/algorithm and exact
+    original-frame replay. Never accept native claims through legacy recipe
+    fallback, normalize unknown source selectors, or promote default-only
+    evidence. Parameter exclusions and OXI/coupled protection remain mandatory.
+    Import uses a new namespace and clears old preparation even when passive;
+    framed originals, semantic favorites and hardware backups are distinct.
 
 See `.claude/skills/learned/targeted-live-kit-mutation/SKILL.md` for the focused
 implementation and verification workflow.

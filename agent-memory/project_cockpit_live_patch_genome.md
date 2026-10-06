@@ -173,15 +173,22 @@ guards, and tests synchronized when this shape changes.
 ## Current continuation seam
 
 The Rytm capture-to-mutation bridge and self-contained installer composition
-are delivered. Continue only with evidence that cannot be produced safely in
-software:
+are delivered at the October 5 receipt. October 6 offline preparation is under
+source/build acceptance on the same PR #254: optional native-field Device
+capability, 106 policy rows / 72 potentially mutable A4 field keys, Library
+schema 3 exact original frames and portable ShowBank v3 replay. Consult the
+source-bound plan receipt before treating this newer source as delivered.
+Independent FIN, OXI AMP, unknown selectors and default-only fields remain
+read-only. No native-file result grants live sending or physical readiness.
+The remaining physical evidence includes:
 
 1. Rehearse physical Rytm capture, one-pad target-minus-lock SEND, untouched-pad
    verification, disarm, and manual reload of the original hardware KIT.
    Cockpit has no persistent restore operation; SAVE is refused.
 2. The August 28 saved captures already establish Filter 1 Frequency's
    offset, exact unsigned Q8.8 encoding, and Track 1-4 stride. Show Kit Forge
-   promotes only offline generation for that field. Do not repeat this
+   retains that renderer as the legacy algorithm; the newer native offline
+   algorithm has separate field-level policy/evidence. Do not repeat this
    mapping capture matrix. Validate the generated four-track scratch file
    by manually loading, listening, saving on the instrument, and recapturing;
    see `docs/hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md`.

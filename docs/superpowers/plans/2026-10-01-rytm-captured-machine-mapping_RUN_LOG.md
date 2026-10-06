@@ -381,3 +381,30 @@ has not been updated by these records.
   source, four-field Pad 2 10% exact audition and manual reload/recapture.
   No MIDI/USB access, arming action, hardware observation, local Rust build,
   merge/protection bypass or general A4/BOTH/paired/restore promotion occurred.
+
+## October 6 Offline Preparation, Source Acceptance In Progress
+
+- Started 16:24:24 UTC with an eight-hour deadline00:24:24 UTC. Preserved the
+  dirty primary checkout and both prior deliveries. Baseline0aaf9f3d still has
+  31 successful hosted checks/three skips; Eddie's October3 eligibility review
+  remains requested changes, no newer human review. No MIDI/USB access.
+- Two bounded disjoint workers merged normally at38b7eade. Integrated native
+  scopes, original framed source retention, portable full-profile recipes,
+  source-only metadata, create-only imported bank copies and disarmed recall
+  atdf03b03a. Worker checkouts were clean and archive requests are queued.
+- Independent review caught three issues: legacy/native recipe bypass,
+  preparation parameter exclusions and valid native no-ops. All repaired;
+  21 retained-fixture journey tests passed6.92s. A dependency cycle was repaired
+  by extracting the shared artifact reader;167 focused/matrix tests pass3.89s.
+  Passive import plan retention was reproduced by a new regression and repaired;
+  source/reader recheck79passes1warning9.48s. Inventory21passes0.69s.
+- UI focused123passes7.56s. Production-sidecar real browser journey passed
+  small/large exact native scopes, retained named favorite, two-cue reorder,
+  separate bank-copy import and exact disarmed restart7.4s. Initial locator
+  mistakes/absent single-candidate option were repaired; earlier failures are
+  not acceptance. Narrow screenshot needs heading-target recheck.
+- First fullfrontend1172tests pass, but2930/2931branches99.96% correctly refuses
+  acceptance. Added the omitted unnamed-Rytm source case; new fullfrontend gate
+  still pending. Wholelint/strict typing/deadcode/version checks pass. Full
+  Python coverage runs backendoff, two workers, no other heavy job. No new
+  package/publication or physical observation is claimed yet.

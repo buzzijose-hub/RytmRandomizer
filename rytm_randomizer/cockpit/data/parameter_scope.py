@@ -3,9 +3,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Final, TypedDict, cast
 
+from ...data.analog_four_sysex_calibration import A4_FILTER1_FREQUENCY_PARAMETER
 from ...guardrails.input_validation import require_int, require_text
+
+A4_NATIVE_PARAMETER_ALIASES: Final[MappingProxyType[str, str]] = MappingProxyType(
+    {"filter1_frequency": A4_FILTER1_FREQUENCY_PARAMETER}
+)
+A4_NATIVE_PARAMETER_KEYS: Final[MappingProxyType[str, str]] = MappingProxyType(
+    {value: key for key, value in A4_NATIVE_PARAMETER_ALIASES.items()}
+)
 
 _MAX_PARAMETER_KEY: Final[int] = 128
 _MAX_PARAMETER_CELLS: Final[int] = 2048
@@ -110,6 +119,8 @@ DEFAULT_PARAMETER_SELECTION: Final[ParameterSelection] = ParameterSelection()
 
 
 __all__ = [
+    "A4_NATIVE_PARAMETER_ALIASES",
+    "A4_NATIVE_PARAMETER_KEYS",
     "DEFAULT_PARAMETER_SELECTION",
     "ParameterCell",
     "ParameterCellDict",

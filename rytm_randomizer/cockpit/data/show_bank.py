@@ -1837,21 +1837,21 @@ class ShowBankEntry:
     def selected_candidate(self) -> ShowKitCandidate | None:
         if self.selected_candidate_id is None:
             return None
-        return next(
-            candidate
-            for candidate in self.candidates
-            if candidate.candidate_id == self.selected_candidate_id
-        )
+        return self.candidate_by_id(self.selected_candidate_id)
 
     @property
     def favorite_candidate(self) -> ShowKitCandidate | None:
         if self.favorite is None:
             return None
-        return next(
-            candidate
-            for candidate in self.candidates
-            if candidate.candidate_id == self.favorite.candidate_id
-        )
+        return self.candidate_by_id(self.favorite.candidate_id)
+
+    def candidate_by_id(self, candidate_id: str) -> ShowKitCandidate:
+        """Resolve one validated candidate without changing local selection."""
+        validate_show_bank_id(candidate_id, "candidate_id")
+        for candidate in self.candidates:
+            if candidate.candidate_id == candidate_id:
+                return candidate
+        raise ValueError("unknown candidate for this show-bank entry")
 
     def to_dict(self) -> ShowBankEntryDict:
         return {

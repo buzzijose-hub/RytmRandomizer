@@ -286,6 +286,15 @@ class MidiMetrics:
     # deliberately path-free — store ids, integers, and codes only.
     persisted_state_migrations: Counter[str] = field(default_factory=lambda: Counter[str]())
     persisted_state_refusals_by_code: Counter[str] = field(default_factory=lambda: Counter[str]())
+    local_artifact_decisions: Counter[str] = field(default_factory=lambda: Counter[str]())
+
+    def record_local_artifact_decision(
+        self,
+        operation: Literal["retain_source", "read_source_frame"],
+        outcome: Literal["retained", "reused", "verified", "reconstructed", "refused"],
+    ) -> None:
+        """Count bounded local file decisions, without IDs, paths or transport meaning."""
+        self.local_artifact_decisions[f"{operation}:{outcome}"] += 1
 
     def record_cc_sent(self, channel: int) -> None:
         """Increment the per-channel CC-sent counter for ``channel``.
@@ -501,7 +510,7 @@ class MidiMetrics:
         was omitted".
         """
 
-        return (
+        summary = (
             "MidiMetrics: "
             f"cc_sent={_format_counter(self.cc_sent_by_channel)}, "
             f"blocked={_format_counter(self.cc_blocked_by_guardrail_by_pad)}, "
@@ -539,6 +548,9 @@ class MidiMetrics:
             f"persisted_state_refusals="
             f"{_format_counter(self.persisted_state_refusals_by_code)}"
         )
+        if self.local_artifact_decisions:
+            summary += f", local_artifact_decisions={_format_counter(self.local_artifact_decisions)}"
+        return summary
 
 
 def _format_counter(counter: Mapping[_CounterKey, int | float]) -> str:
@@ -612,3 +624,4 @@ def reset_metrics() -> None:
     _METRICS.a4_patch_send_duration_ms_total = 0.0
     _METRICS.persisted_state_migrations.clear()
     _METRICS.persisted_state_refusals_by_code.clear()
+    _METRICS.local_artifact_decisions.clear()

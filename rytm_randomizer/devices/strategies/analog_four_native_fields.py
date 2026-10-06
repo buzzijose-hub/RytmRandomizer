@@ -13,6 +13,11 @@ from ...data.analog_four_kit_fields import (
     A4_FIXED_8_8_SCALE,
     A4_MOD_DEPTH_FIELDS,
     A4_NATIVE_CONTINUOUS_U7_FIELDS,
+    A4_NATIVE_EVIDENCELESS_FIELDS,
+    A4_NATIVE_EXTRA_FIELD_EVIDENCE,
+    A4_NATIVE_FIELD_PROTECTIONS,
+    A4_NATIVE_PITCH_FIELDS,
+    A4_NATIVE_REFERENCE_EVIDENCE,
     A4_TRACK_OFFSETS,
     A4_TWO_BYTE_FIELDS,
     format_a4_fixed_8_8,
@@ -20,6 +25,7 @@ from ...data.analog_four_kit_fields import (
 from ...data.analog_four_saved_kit_layout import (
     A4_KIT_OBJECT_TRACK_SOUND_SIZE,
     A4_KIT_OBJECT_TRACKS_OFFSET,
+    A4_KIT_SYNTH_TRACK_COUNT,
 )
 from .analog_four_kit_fields import (
     A4_MOD_DEPTH_ZERO,
@@ -38,24 +44,7 @@ from .analog_four_saved_kit_candidate import (
 )
 from .analog_four_track_domain import AnalogFourTrackDomain
 
-_TRACKS: Final[AnalogFourTrackDomain] = AnalogFourTrackDomain(4)
-_RIO_EVIDENCE: Final[tuple[str, ...]] = (
-    "tests/fixtures/rio145/A4_Test1_Init_Kit.syx",
-    "tests/fixtures/rio145/A4_RIO145_CORE_RETURN_Kit.syx",
-    "specs/rio145/come_to_rio_a4_core.json",
-)
-_PITCH_EVIDENCE: Final[tuple[str, ...]] = (
-    *_RIO_EVIDENCE,
-    "tests/fixtures/rio145/A4_Test2_T1_OSC1_FIN_P1_Kit.syx",
-    "tests/fixtures/rio145/A4_Test3_T1_OSC1_FIN_M1_Kit.syx",
-    "tests/fixtures/rio145/A4_Test6_T1_OSC1_FIN_P2_Kit.syx",
-    "tests/fixtures/rio145/A4_Test7_T1_OSC1_FIN_M2_Kit.syx",
-)
-_DEPTH_EVIDENCE: Final[tuple[str, ...]] = (
-    *_RIO_EVIDENCE,
-    "tests/fixtures/rio145/A4_Test4_T1_ENV2_DEPA_P1_Kit.syx",
-    "tests/fixtures/rio145/A4_Test5_T1_ENV2_DEPA_M1_Kit.syx",
-)
+_TRACKS: Final[AnalogFourTrackDomain] = AnalogFourTrackDomain(A4_KIT_SYNTH_TRACK_COUNT)
 
 
 class AnalogFourNativeEncoding(str, Enum):
@@ -142,37 +131,27 @@ def analog_four_native_fields() -> tuple[AnalogFourNativeField, ...]:
         quantum: str | None = None
         domain: AnalogFourNativeDomain | None = None
         enums: tuple[tuple[int, str], ...] = ()
-        evidence = _RIO_EVIDENCE
+        evidence = A4_NATIVE_REFERENCE_EVIDENCE + A4_NATIVE_EXTRA_FIELD_EVIDENCE.get(parameter, ())
         reason: str | None = None
         if parameter in A4_TWO_BYTE_FIELDS:
             encoding = AnalogFourNativeEncoding.Q8_8
             offsets = (offset, offset + 1)
             quantum = "0.00390625"
             domain = AnalogFourNativeDomain(0, 127 * A4_FIXED_8_8_SCALE)
-            if parameter == "filter1_frequency":
-                evidence = (
-                    *evidence,
-                    "tests/fixtures/analog_four_saved_kit/filter1_freq_127_source.syx",
-                    "tests/fixtures/analog_four_saved_kit/filter1_freq_000_expected.syx",
-                    "tests/fixtures/analog_four_saved_kit/filter1_freq_063_50_expected.syx",
-                )
         elif parameter in A4_MOD_DEPTH_FIELDS:
             encoding = AnalogFourNativeEncoding.MOD_DEPTH
             offsets = (offset, A4_TRACK_OFFSETS[A4_MOD_DEPTH_FIELDS[parameter]])
             quantum = "0.0078125"
             domain = AnalogFourNativeDomain(0, 0x7FFF)
-            evidence = _DEPTH_EVIDENCE
-        elif parameter in ("osc1_tune", "osc2_tune", "osc1_fine", "osc2_fine"):
+        elif parameter in A4_NATIVE_PITCH_FIELDS:
             oscillator = parameter[3]
             offset = A4_TRACK_OFFSETS[f"osc{oscillator}_tune"]
             offsets = (offset, offset + 1)
             quantum = "1"
-            evidence = _PITCH_EVIDENCE
             if parameter.endswith("tune"):
                 encoding = AnalogFourNativeEncoding.TUNE
             else:
                 encoding = AnalogFourNativeEncoding.FINE
-                reason = "independently_unsafe_fine"
         elif parameter in A4_RECIPE_ENUM_FIELDS or "_destination_" in parameter:
             encoding = AnalogFourNativeEncoding.ENUM
             enum_type = A4_RECIPE_ENUM_FIELDS.get(parameter, A4Destination)
@@ -187,12 +166,6 @@ def analog_four_native_fields() -> tuple[AnalogFourNativeField, ...]:
             encoding = AnalogFourNativeEncoding.U7
             quantum = "1"
             domain = AnalogFourNativeDomain(0, 127)
-            if parameter == "filter2_resonance":
-                evidence = (
-                    *evidence,
-                    "tests/fixtures/analog_four_saved_kit/filter2_res_000_source.syx",
-                    "tests/fixtures/analog_four_saved_kit/filter2_res_127_expected.syx",
-                )
         else:
             reason = (
                 "hidden_fraction"
@@ -200,14 +173,9 @@ def analog_four_native_fields() -> tuple[AnalogFourNativeField, ...]:
                 else "native_domain_unestablished"
             )
             evidence = ()
-        if parameter.startswith("amp_"):
-            reason = "oxi_amp_protection"
-        # Portamento has a codec enum but no retained recipe/cross-track evidence.
-        if parameter == "portamento":
-            reason = "native_domain_unestablished"
+        reason = A4_NATIVE_FIELD_PROTECTIONS.get(parameter, reason)
+        if parameter in A4_NATIVE_EVIDENCELESS_FIELDS:
             evidence = ()
-        if parameter in ("lfo1_phase", "osc1_sub", "osc2_sub"):
-            reason = "native_nondefault_evidence_missing"
         fields.append(
             AnalogFourNativeField(
                 parameter, encoding, offsets, quantum, domain, enums, reason, evidence

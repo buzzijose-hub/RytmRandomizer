@@ -172,6 +172,13 @@ and clears preparation, while physical saved-KIT reload remains manual. Test
 the scoped favorite across a real app restart, with MIDI disabled, before
 calling the portable copy usable for offline rehearsal.
 
+Native offline scopes resolve the optional Device capability, not MIDI ordinal
+ranges. Retain original framed sources separately from semantic favorites;
+portable native recipes retain their profile and algorithm for exact replay.
+Canonical field facts/protection live in `data/`; shared file readers and atomic
+writers sit below both stores. Sensitive original-source publication opts into
+redacted writer diagnostics. Prevalidate recall before a revision is published.
+
 The 12-PR sweep against the staff-engineer review introduced four reusable patterns that future cockpit / wire-boundary code is expected to follow. Each pattern is mechanically enforced by an architecture test under `tests/architecture/` so the smell cannot reappear silently. The complete table of prevention tests is in [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md#code_reviewmd-prevention-test-family-strengthens-existing-gates-no-new-gate-count) and [`docs/CODE_REVIEW_HOOK_SETUP.md`](docs/CODE_REVIEW_HOOK_SETUP.md).
 
 ### `narrow_*` Literal-narrowing helpers (wire-boundary)

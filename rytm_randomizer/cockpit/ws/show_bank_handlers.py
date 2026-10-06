@@ -17,9 +17,11 @@ from ...guardrails.input_validation import (
     require_text_tuple,
 )
 from ..capture import decode_kit_capture_frame
+from ..data import ProfileModel
 from ..data.show_bank import (
     A4_NATIVE_MUTATION_ALGORITHM,
     OxiShowMetadata,
+    ShowKitCandidate,
     ShowKitDepthPreset,
     ShowKitDeviceId,
     narrow_show_kit_depth_preset,
@@ -204,6 +206,27 @@ def _sync_source(
     return _source_events(session)
 
 
+def _candidate_profile(session: CockpitSession, candidate: ShowKitCandidate) -> ProfileModel:
+    profile = candidate.recipe.profile or session.profile_registry.get(candidate.recipe.profile_id)
+    if profile is None:
+        raise ValueError("candidate profile is no longer available")
+    return profile
+
+
+def _check_candidate_recall(
+    session: CockpitSession,
+    workspace: ShowKitForgeWorkspace,
+    bank_id: str,
+    entry_id: str,
+    candidate_id: str,
+    expected_revision: int,
+) -> None:
+    bank = workspace.checked_bank(bank_id, expected_revision)
+    candidate = bank.entry(entry_id).candidate_by_id(candidate_id)
+    _candidate_profile(session, candidate)
+    workspace.candidate_context(bank_id, entry_id, candidate_id)
+
+
 def _sync_selected_candidate(
     session: CockpitSession,
     workspace: ShowKitForgeWorkspace,
@@ -215,14 +238,12 @@ def _sync_selected_candidate(
     selected = entry.selected_candidate
     if selected is None:
         raise ValueError("select a candidate before local recall")
-    source = workspace.source_snapshot(bank_id, entry_id)
+    profile = _candidate_profile(session, selected)
+    source, selected, _ = workspace.candidate_context(bank_id, entry_id, selected.candidate_id)
     a4_frame = workspace.original_source_frames(bank_id, entry_id)[ANALOG_FOUR_DEVICE_ID]
     session.offline_a4_capture = decode_kit_capture_frame(ANALOG_FOUR_DEVICE_ID, a4_frame)
     if is_catalog_only_show_bank(bank):
         session.recalled_offline_favorite = True
-    profile = selected.recipe.profile or session.profile_registry.get(selected.recipe.profile_id)
-    if profile is None:
-        raise ValueError("candidate profile is no longer available")
     session.device.adopt_snapshot(source)
     _ensure_history_snapshot(session, source.snapshot_id)
     session.active_profile = profile
@@ -446,6 +467,9 @@ async def _handle_select_candidate(
     bank_id = _show_bank_text(cmd, "bank_id")
     entry_id = _show_bank_text(cmd, "entry_id")
     candidate_id = _show_bank_text(cmd, "candidate_id")
+    _check_candidate_recall(
+        session, workspace, bank_id, entry_id, candidate_id, _integer(cmd, "expected_revision")
+    )
     workspace.select_candidate(
         bank_id,
         entry_id,
@@ -463,6 +487,9 @@ async def _handle_mark_favorite(cmd: dict[str, object], session: CockpitSession)
     bank_id = _show_bank_text(cmd, "bank_id")
     entry_id = _show_bank_text(cmd, "entry_id")
     candidate_id = _show_bank_text(cmd, "candidate_id")
+    _check_candidate_recall(
+        session, workspace, bank_id, entry_id, candidate_id, _integer(cmd, "expected_revision")
+    )
     workspace.mark_favorite(
         bank_id,
         entry_id,

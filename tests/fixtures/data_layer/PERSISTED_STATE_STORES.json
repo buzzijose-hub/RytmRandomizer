@@ -1,7 +1,7 @@
 {
   "library_store": {
     "store_id": "library_store",
-    "schema_version": 2,
+    "schema_version": 3,
     "owner_module": "rytm_randomizer.cockpit.library.store",
     "description": "Captured kits and inert scoped rehearsal favorites under {config}/library.",
     "migrations": [
@@ -9,6 +9,11 @@
         "from_version": 1,
         "migrate": "rytm_randomizer.data.persisted_state._library_record_v1_to_v2",
         "summary": "Add explicit capture record kind."
+      },
+      {
+        "from_version": 2,
+        "migrate": "rytm_randomizer.data.persisted_state._library_record_v2_to_v3",
+        "summary": "Preserve legacy payloads without a retained-frame claim."
       }
     ]
   },

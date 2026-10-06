@@ -11,7 +11,7 @@ Coverage counts (locations/catalog rows, not physical acceptance):
 - rytm_typed_native_machine_layouts: 10
 Native field domains, MIDI addresses, machine compatibility and exact blockers: use --json.
 Rytm: targeted guarded CC7 only when scope, locks, source and complete plan pass.
-A4: typed offline recipes; Cockpit live audition and BOTH output remain blocked.
+A4: scoped native offline candidates and typed recipes; live audition and BOTH output remain blocked.
 Recovery: manual saved-KIT reload and fresh capture; local UNDO does not restore hardware.
 Unsupported/protected categories:
 - both/unknown_reserved_bytes: intentional_protection; Preserved byte-for-byte; no semantic mutation authority.

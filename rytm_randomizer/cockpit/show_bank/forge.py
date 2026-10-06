@@ -1,9 +1,9 @@
 """Pure paired candidate generation for Show Kit Forge.
 
 The module composes the existing Cockpit Rytm mutation engine with the
-narrow, offline-only Analog Four Filter 1 Frequency renderer.  It performs no
-filesystem or MIDI I/O.  Full SysEx bytes stay in the in-process result until
-an explicit retain/export action hands them to :mod:`.store`.
+optional native-field and legacy Filter 1 Frequency renderers. It performs no
+filesystem or MIDI I/O. The workspace retains full framed artifacts atomically
+with the immutable recipe; rendering grants no output authority.
 """
 
 from __future__ import annotations
@@ -32,8 +32,8 @@ from ..capture import (
     cockpit_snapshot_from_rytm_capture,
 )
 from ..data import MutationCandidate, ProfileModel, Snapshot
+from ..data.parameter_scope import A4_NATIVE_PARAMETER_ALIASES, A4_NATIVE_PARAMETER_KEYS
 from ..data.show_bank import (
-    A4_LEGACY_MUTATION_ALGORITHM,
     A4_NATIVE_MUTATION_ALGORITHM,
     A4_SHOW_KIT_DEVICE_ID,
     RYTM_SHOW_KIT_DEVICE_ID,
@@ -341,11 +341,7 @@ def _a4_native_mutation_values(
     selection = recipe.analog_four_scope.parameters
     if selection.cells is not None:
         for cell in selection.cells:
-            key = (
-                "filter1_frequency"
-                if cell.parameter_key == A4_FILTER1_FREQUENCY_PARAMETER
-                else cell.parameter_key
-            )
+            key = A4_NATIVE_PARAMETER_KEYS.get(cell.parameter_key, cell.parameter_key)
             value = source.value(key, cell.item_id)
             if not value.mutable:
                 raise ValueError("A4 scope selects an immutable or unestablished native field")
@@ -355,11 +351,7 @@ def _a4_native_mutation_values(
     changes: list[AnalogFourNativeMutation] = []
     for cell in source.values:
         raw, state = xorshift32(state)
-        key = (
-            A4_FILTER1_FREQUENCY_PARAMETER
-            if cell.parameter == "filter1_frequency"
-            else cell.parameter
-        )
+        key = A4_NATIVE_PARAMETER_ALIASES.get(cell.parameter, cell.parameter)
         if (
             cell.track not in recipe.analog_four_scope.effective_ids
             or not selection.includes(cell.track, key)
@@ -433,7 +425,7 @@ def forge_candidate_pair(  # noqa: PLR0913 - explicit immutable sources, recipe,
             )
             for item in rendered_native.applied_mutations
         )
-    elif recipe.a4_algorithm == A4_LEGACY_MUTATION_ALGORITHM:
+    else:
         rendered_a4 = get_analog_four_filter1_frequency_candidate_capability().render_filter1_frequency_candidate(
             analog_four_source_frame, _a4_mutation_values(analog_four_source_frame, recipe=recipe)
         )
@@ -449,8 +441,6 @@ def forge_candidate_pair(  # noqa: PLR0913 - explicit immutable sources, recipe,
             )
             for item in rendered_a4.applied_mutations
         )
-    else:
-        raise ValueError("unsupported A4 recipe algorithm")
     candidate_id = _deterministic_candidate_id(
         entry,
         recipe,

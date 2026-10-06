@@ -4,14 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from ...data.analog_four_sysex_calibration import (
-    A4_FILTER1_FREQUENCY_PARAMETER,
-)
 from ...data.analog_rytm_midi import ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER
 from ...devices import get_analog_four_native_field_capability
 from ...snapshot.mutation_scope import registered_mutation_ids
 from ..data import Snapshot
 from ..data.parameter_scope import (
+    A4_NATIVE_PARAMETER_ALIASES,
     RYTM_PAD2_REHEARSAL_PARAMETERS,
     ParameterCell,
     ParameterSelection,
@@ -106,11 +104,7 @@ def _a4_controls(capture: KitCaptureResult | None) -> list[PerformanceParameterC
         for metadata in fields:
             cell = None if native is None else native.value(metadata.parameter, track)
             # Retain the established F1 recipe identity; all other IDs are native.
-            key = (
-                A4_FILTER1_FREQUENCY_PARAMETER
-                if metadata.parameter == "filter1_frequency"
-                else metadata.parameter
-            )
+            key = A4_NATIVE_PARAMETER_ALIASES.get(metadata.parameter, metadata.parameter)
             domain = metadata.domain if cell is None else cell.domain
             prefix = metadata.parameter.split("_", 1)[0].upper()
             page = "FILTER" if prefix.startswith("FILTER") else prefix
@@ -136,10 +130,8 @@ def _a4_controls(capture: KitCaptureResult | None) -> list[PerformanceParameterC
                     "machine": "Analog Four synth track",
                     "parameter_key": key,
                     "page": page,
-                    "name": (
-                        A4_FILTER1_FREQUENCY_PARAMETER
-                        if key == A4_FILTER1_FREQUENCY_PARAMETER
-                        else metadata.parameter.replace("_", " ").upper()
+                    "name": A4_NATIVE_PARAMETER_ALIASES.get(
+                        metadata.parameter, metadata.parameter.replace("_", " ").upper()
                     ),
                     "value": None if cell is None else cell.encoded_native,
                     "display_value": None if cell is None else cell.screen_value,

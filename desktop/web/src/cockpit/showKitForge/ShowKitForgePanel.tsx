@@ -1195,12 +1195,14 @@ export function ShowKitForgePanel(): JSX.Element {
                                <p>No mapped A4 parameter changes. Source bytes preserved.</p>
                              ) : <ul>
                                {candidate.analog_four_candidate.values.map((value) => {
-                                 const sourceControl = parameterControls.find((control) =>
+                                 const sourceMatches = activeBank.active_entry_id === activeEntry.entry_id &&
+                                   (a4Capture === undefined || a4Capture.fingerprint === activeEntry.analog_four_source.fingerprint);
+                                 const sourceControl = sourceMatches ? parameterControls.find((control) =>
                                    control.device_id === ANALOG_FOUR_DEVICE_ID &&
                                    control.item_id === value.track_id &&
                                    (control.parameter_key === value.parameter ||
                                     (value.parameter === 'filter1_frequency' && control.parameter_key === 'Filter1 Frequency')),
-                                 );
+                                 ) : undefined;
                                  return (
                                  <li key={`${value.track_id}-${value.parameter}`}>
                                    Track {value.track_id} {value.parameter}: source {sourceControl?.display_value ?? 'unavailable'} to {value.screen_value}; native {sourceControl?.value ?? 'unavailable'} to {'encoded_native' in value ? value.encoded_native : value.encoded_unsigned_8_8}

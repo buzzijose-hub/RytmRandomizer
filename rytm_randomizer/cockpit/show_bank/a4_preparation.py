@@ -33,6 +33,7 @@ from ..data.a4_preparation import (
     A4PreparationChange,
     A4PreparationReport,
 )
+from ..data.parameter_scope import A4_NATIVE_PARAMETER_ALIASES
 from ..data.show_bank import (
     AnalogFourCandidateValue,
     AnalogFourNativeCandidateValue,
@@ -127,8 +128,6 @@ def _candidate_changes(
     ):
         raise ValueError("A4 candidate does not match its source and artifact identities")
     if any(isinstance(value, AnalogFourNativeCandidateValue) for value in a4.values):
-        if not all(isinstance(value, AnalogFourNativeCandidateValue) for value in a4.values):
-            raise ValueError("mixed A4 value encoding claims")
         native_values = tuple(
             value for value in a4.values if isinstance(value, AnalogFourNativeCandidateValue)
         )
@@ -290,11 +289,7 @@ def _review_candidate(
             if any(
                 (
                     change.track_id,
-                    (
-                        A4_FILTER1_FREQUENCY_PARAMETER
-                        if change.parameter == "filter1_frequency"
-                        else change.parameter
-                    ),
+                    A4_NATIVE_PARAMETER_ALIASES.get(change.parameter, change.parameter),
                 )
                 not in allowed
                 for change in changes

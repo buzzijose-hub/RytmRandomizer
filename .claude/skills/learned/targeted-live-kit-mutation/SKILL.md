@@ -104,6 +104,23 @@ kit adoption, or a send plan that could reach an Elektron device.
     can hide incompatibility with the neutral wire wrapper. Recognize public
     CC representations, validate their fields and reconstruct at that boundary;
     never bypass the wrapper or forward an unchecked backend message.
+20. Native offline scope needs its own evidence policy, not the MIDI catalog's
+    integer range. Sample exact canonical native-domain indices. Unknown source
+    codes stay immutable; retain coupled precision and refuse independent word
+    components. A default-only fixture cannot prove nondefault selector meaning.
+    Test against independent retained recipe/return evidence, not only a
+    generated frame decoded by the same implementation.
+21. Portable native candidates must retain the immutable profile and algorithm
+    and replay against the exact original framed source. Shape-only DTOs do not
+    establish encoding/offset claims. Reject native claims under legacy recipes,
+    excluded parameter changes and self-consistently rehashed protected-byte
+    edits. Exact native no-ops are valid, but require full source identity.
+22. Original framed files and semantic favorites are different artifacts.
+    File import grants no live capture freshness. Retain generated frames with
+    the bank transaction, test cache eviction/restart, and use a create-only
+    explicitly named namespace for imported copies. Import must revoke old
+    candidates/plans even in passive sessions; output teardown alone may be a
+    no-op there. Shared readers belong below both stores, without a cycle.
 
 ## Verification
 

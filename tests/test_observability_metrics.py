@@ -40,6 +40,20 @@ from rytm_randomizer.observability.metrics import (
 pytestmark = pytest.mark.fast
 
 
+def test_local_artifact_summary_is_deterministic_and_empty_legacy_text_is_preserved() -> None:
+    metrics = MidiMetrics()
+    empty = metrics.format_summary()
+    assert "local_artifact_decisions" not in empty
+    metrics.record_local_artifact_decision("read_source_frame", "verified")
+    metrics.record_local_artifact_decision("retain_source", "retained")
+    metrics.record_local_artifact_decision("read_source_frame", "verified")
+    assert metrics.format_summary() == (
+        empty + ", local_artifact_decisions={read_source_frame:verified:2, retain_source:retained:1}"
+    )
+    metrics.local_artifact_decisions.clear()
+    assert metrics.format_summary() == empty
+
+
 # ---------------------------------------------------------------------------
 # Fixture: prevent test-to-test state leakage on the module-level singleton.
 # ---------------------------------------------------------------------------
