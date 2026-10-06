@@ -254,7 +254,7 @@ def test_library_favorite_restarts_and_tags_without_losing_scope(
     record = store.retain_rehearsal(favorite, "Pad 2 practice")
     assert record.rehearsal == favorite and record.payload_hex == ""
     assert record.to_dict()["record_kind"] == "rehearsal_favorite"
-    assert json.loads((tmp_path / f"{record.record_id}.json").read_text())["schema_version"] == 2
+    assert json.loads((tmp_path / f"{record.record_id}.json").read_text())["schema_version"] == 3
     reopened = LibraryStore(tmp_path).get(record.record_id)
     assert reopened == record
     assert LibraryStore(tmp_path).retain_rehearsal(favorite, "different name") == record

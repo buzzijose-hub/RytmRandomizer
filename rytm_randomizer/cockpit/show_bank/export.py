@@ -13,7 +13,7 @@ import json
 import re
 import stat
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from time import perf_counter
 from types import MappingProxyType
@@ -34,7 +34,10 @@ from ...observability.tracing import trace
 from ..capture import KitCaptureResult, cockpit_snapshot_from_rytm_capture, decode_kit_capture_frame
 from ..data import Snapshot
 from ..data.show_bank import (
+    A4_LEGACY_MUTATION_ALGORITHM,
     A4_SHOW_KIT_DEVICE_ID,
+    LEGACY_SHOW_BANK_SCHEMA_VERSION,
+    PREVIOUS_SHOW_BANK_SCHEMA_VERSION,
     RetainedSysexArtifact,
     ShowBank,
     ShowBankDict,
@@ -46,6 +49,7 @@ from ..data.show_bank import (
 from ..export.writer import WriteResult, atomic_write_set, guard_atomic_write_tree
 from .forge import (
     analog_four_capture_semantic_fingerprint,
+    forge_candidate_pair,
     rytm_capture_semantic_fingerprint,
     rytm_semantic_fingerprint,
 )
@@ -56,6 +60,7 @@ from .store import (
     canonical_show_bank_json,
     decode_json_rejecting_duplicate_keys,
     read_bounded_show_bank_file,
+    validate_show_bank_capture_frame,
     validate_show_bank_sysex_frame,
 )
 
@@ -438,26 +443,7 @@ def _require_total_size(parts: Sequence[int], *, package_name: str) -> None:
 
 
 def _decoded_capture(capture: ShowKitCapture, frame: bytes) -> KitCaptureResult:
-    try:
-        decoded = decode_kit_capture_frame(capture.device_id, frame)
-    except (DataError, KeyError, IndexError, TypeError, ValueError) as exc:
-        raise DataError(
-            "show-pack capture failed its registered device-family codec",
-            context={"category": "framing", "artifact_name": capture.sysex.artifact_id},
-        ) from exc
-    if decoded.frame != frame or not decoded.round_trip_verified:
-        _raise_show_pack_corruption(
-            "framing",
-            "show-pack capture failed exact codec round trip",
-            artifact_name=capture.sysex.artifact_id,
-        )
-    if decoded.fingerprint != capture.fingerprint or decoded.kit_name != capture.kit_name:
-        _raise_show_pack_corruption(
-            "cross-reference",
-            "show-pack capture metadata disagrees with decoded bytes",
-            artifact_name=capture.sysex.artifact_id,
-        )
-    return decoded
+    return validate_show_bank_capture_frame(capture, frame)
 
 
 def _verify_entry_candidates(
@@ -466,6 +452,61 @@ def _verify_entry_candidates(
     """Reproduce candidate semantics from the decoded immutable source."""
 
     for candidate in entry.candidates:
+        if candidate.recipe.profile is not None:
+            # Until the shared Forge dispatches the native algorithm, do not
+            # reinterpret its marker as the legacy Filter-1 implementation.
+            if candidate.recipe.a4_algorithm != A4_LEGACY_MUTATION_ALGORITHM:
+                _raise_show_pack_corruption(
+                    "cross-reference",
+                    "show-pack candidate algorithm is not available",
+                    artifact_name=candidate.candidate_id,
+                )
+            try:
+                reproduced = forge_candidate_pair(
+                    entry=entry,
+                    rytm_source_snapshot=source_snapshot,
+                    analog_four_source_frame=frames_by_artifact_id[
+                        entry.analog_four_source.sysex.artifact_id
+                    ],
+                    profile=candidate.recipe.profile,
+                    recipe=candidate.recipe,
+                    now=candidate.created_at,
+                )
+            except (DataError, KeyError, IndexError, TypeError, ValueError) as exc:
+                raise DataError(
+                    "show-pack candidate deterministic replay failed",
+                    context={
+                        "category": "cross-reference",
+                        "artifact_name": candidate.candidate_id,
+                    },
+                ) from exc
+            # Duplicating a cue intentionally preserves the retained candidate
+            # identity and evidence. Replay verifies values, not a new cue's ID.
+            regenerated = replace(
+                reproduced.candidate,
+                candidate_id=candidate.candidate_id,
+                rytm_candidate=replace(
+                    reproduced.candidate.rytm_candidate,
+                    candidate_id=candidate.rytm_candidate.candidate_id,
+                ),
+                evidence=candidate.evidence,
+            )
+            expected = replace(
+                candidate,
+                analog_four_candidate=replace(
+                    candidate.analog_four_candidate,
+                    sysex=replace(candidate.analog_four_candidate.sysex, retained=None),
+                ),
+            )
+            supplied = frames_by_artifact_id.get(candidate.analog_four_candidate.sysex.artifact_id)
+            if regenerated != expected or (
+                supplied is not None and supplied != reproduced.analog_four_frame
+            ):
+                _raise_show_pack_corruption(
+                    "cross-reference",
+                    "show-pack candidate differs from deterministic recipe replay",
+                    artifact_name=candidate.candidate_id,
+                )
         try:
             expected_rytm = rytm_semantic_fingerprint(
                 source_snapshot,
@@ -604,6 +645,13 @@ def _verify_package_device_claims(
         try:
             rytm_source = decoded_captures[entry.rytm_source.capture_id]
             source_snapshot = cockpit_snapshot_from_rytm_capture(rytm_source)
+            if entry.rytm_source.snapshot_id is None:
+                raise ValueError("Rytm source snapshot identity is missing")
+            source_snapshot = replace(
+                source_snapshot,
+                snapshot_id=entry.rytm_source.snapshot_id,
+                captured_at=entry.rytm_source.captured_at,
+            )
         except (KeyError, TypeError, ValueError) as exc:
             raise DataError(
                 "show-pack Rytm source cannot reconstruct its mutation snapshot",
@@ -614,6 +662,11 @@ def _verify_package_device_claims(
             ) from exc
         _verify_entry_candidates(entry, source_snapshot, frames_by_artifact_id)
         _verify_entry_recaptures(entry, rytm_source, decoded_captures)
+
+
+def verify_show_bank_frames(bank: ShowBank, frames_by_artifact_id: Mapping[str, bytes]) -> None:
+    """Verify inert retained source/candidate claims through the package's codec path."""
+    _verify_package_device_claims(bank, frames_by_artifact_id)
 
 
 def _show_pack_directory_identity(path: Path) -> tuple[int, int]:
@@ -692,7 +745,14 @@ def _read_show_pack_manifest(package_dir: Path, package_id: str) -> ShowPackMani
             "show-pack id does not match its directory",
             artifact_name=SHOW_PACK_MANIFEST_NAME,
         )
-    if manifest_payload != _canonical_json(cast(Mapping[str, object], manifest.to_dict())):
+    legacy = require_object(manifest_mapping["bank"], "show-pack bank").get("schema_version") in (
+        LEGACY_SHOW_BANK_SCHEMA_VERSION,
+        PREVIOUS_SHOW_BANK_SCHEMA_VERSION,
+    )
+    expected = _canonical_json(
+        cast(Mapping[str, object], (manifest_mapping if legacy else manifest.to_dict()))
+    )
+    if manifest_payload != expected:
         _raise_show_pack_corruption(
             "schema",
             "show-pack manifest is not canonical JSON",
@@ -1035,6 +1095,9 @@ class ShowPackService:
     ) -> ShowPackStoredImportResult:
         """Normalize one verified package and publish its new namespace."""
 
+        # This result type is publicly constructible: its name alone is not
+        # proof that verify() produced it. Recheck source claims before writes.
+        _verify_package_device_claims(result.bank, result.frames_by_artifact_id)
         normalized = normalize_catalog_import(result.bank, clock=self._clock)
         writes = self._store.import_verified(normalized, result.frames_by_artifact_id)
         _logger.info(
@@ -1084,4 +1147,5 @@ __all__ = [
     "ShowPackService",
     "ShowPackStoredImportResult",
     "narrow_show_pack_artifact_kind",
+    "verify_show_bank_frames",
 ]
