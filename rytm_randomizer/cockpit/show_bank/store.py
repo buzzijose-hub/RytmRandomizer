@@ -28,7 +28,10 @@ from ...observability.errors import DataError
 from ...observability.logging import get_logger
 from ...observability.tracing import trace
 from ...snapshot.sysex_file import extract_sysex_payloads
+from ..capture import KitCaptureResult, decode_kit_capture_frame
 from ..data.show_bank import (
+    LEGACY_SHOW_BANK_SCHEMA_VERSION,
+    PREVIOUS_SHOW_BANK_SCHEMA_VERSION,
     SHOW_BANK_ID_MAX_LENGTH,
     SHOW_BANK_REVISION_MAX,
     RetainedSysexArtifact,
@@ -189,6 +192,36 @@ def validate_show_bank_sysex_frame(frame: bytes) -> None:
         raise ValueError("retained bytes must contain exactly one isolated SysEx frame")
 
 
+def validate_show_bank_capture_frame(capture: ShowKitCapture, frame: bytes) -> KitCaptureResult:
+    """Verify exact framed identity and family claims without a physical freshness grant."""
+    validate_show_bank_sysex_frame(frame)
+    if (
+        hashlib.sha256(frame).hexdigest() != capture.sysex.frame_sha256
+        or len(frame) != capture.sysex.frame_bytes
+    ):
+        _raise_show_bank_corruption("hash", "capture frame differs from its declared identity")
+    try:
+        decoded = decode_kit_capture_frame(capture.device_id, frame)
+    except (DataError, KeyError, IndexError, TypeError, ValueError) as exc:
+        raise DataError(
+            "capture failed its registered device-family codec",
+            context={"category": "framing", "artifact_name": capture.sysex.artifact_id},
+        ) from exc
+    if decoded.frame != frame or not decoded.round_trip_verified:
+        _raise_show_bank_corruption(
+            "framing",
+            "capture failed exact codec round trip",
+            artifact_name=capture.sysex.artifact_id,
+        )
+    if decoded.fingerprint != capture.fingerprint or decoded.kit_name != capture.kit_name:
+        _raise_show_bank_corruption(
+            "cross-reference",
+            "capture metadata disagrees with decoded bytes",
+            artifact_name=capture.sysex.artifact_id,
+        )
+    return replace(decoded, captured_at=capture.captured_at)
+
+
 def _show_bank_directory_identity(path: Path) -> tuple[int, int]:
     metadata = path.stat(follow_symlinks=False)
     if not stat.S_ISDIR(metadata.st_mode):
@@ -309,7 +342,15 @@ def _decode_show_bank_manifest(payload: bytes, path: Path, bank_id: str, revisio
             "show-bank manifest identity does not match its filename",
             artifact_name=path.name,
         )
-    if payload != canonical_show_bank_json(bank):
+    # Legacy files must themselves be canonical. Their typed forward
+    # projection is in-memory only; reading never rewrites older evidence.
+    expected = (
+        canonical_json_bytes(cast(Mapping[str, object], decoded))
+        if decoded.get("schema_version")
+        in (LEGACY_SHOW_BANK_SCHEMA_VERSION, PREVIOUS_SHOW_BANK_SCHEMA_VERSION)
+        else canonical_show_bank_json(bank)
+    )
+    if payload != expected:
         _raise_show_bank_corruption(
             "schema",
             "show-bank manifest is not canonical JSON",
@@ -624,6 +665,14 @@ class ShowBankStore:
             ) from exc
         return frame
 
+    def read_capture(self, capture: ShowKitCapture) -> bytes:
+        """Read an exact original with codec/source validation, never a live capture."""
+        if capture.sysex.retained is None:
+            raise ValueError("exact SysEx bytes are not retained; regenerate or recapture")
+        frame = self.read_retained(capture.sysex.retained)
+        validate_show_bank_capture_frame(capture, frame)
+        return frame
+
     def retain_sysex(
         self,
         bank: ShowBank,
@@ -793,4 +842,5 @@ __all__ = [
     "read_bounded_show_bank_file",
     "show_bank_corruption_category",
     "validate_show_bank_sysex_frame",
+    "validate_show_bank_capture_frame",
 ]

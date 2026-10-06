@@ -319,6 +319,14 @@ def _library_record_v1_to_v2(payload: Mapping[str, object]) -> Mapping[str, obje
     return {**payload, "record_kind": "capture", "rehearsal": None}
 
 
+def _library_record_v2_to_v3(payload: Mapping[str, object]) -> Mapping[str, object]:
+    if "record_kind" not in payload or "rehearsal" not in payload:
+        raise ValueError("version 2 library records require explicit record kind")
+    if payload.get("source_frame") is not None or payload.get("source_origin") is not None:
+        raise ValueError("older library records cannot claim retained frame provenance")
+    return {**payload, "source_frame": None, "source_origin": None}
+
+
 _REGISTERED_STORES: Final[tuple[PersistedStateStore, ...]] = (
     PersistedStateStore(
         store_id="profile_registry",
@@ -328,12 +336,17 @@ _REGISTERED_STORES: Final[tuple[PersistedStateStore, ...]] = (
     ),
     PersistedStateStore(
         store_id="library_store",
-        schema_version=2,
+        schema_version=3,
         owner_module="rytm_randomizer.cockpit.library.store",
         description="Captured kits and inert scoped rehearsal favorites under {config}/library.",
         migrations=(
             PersistedStateMigration(
                 1, _library_record_v1_to_v2, "Add explicit capture record kind."
+            ),
+            PersistedStateMigration(
+                2,
+                _library_record_v2_to_v3,
+                "Preserve legacy payloads without a retained-frame claim.",
             ),
         ),
     ),
