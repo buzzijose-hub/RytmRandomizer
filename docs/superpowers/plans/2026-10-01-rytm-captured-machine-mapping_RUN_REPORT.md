@@ -1,7 +1,7 @@
 # Captured Rytm mapping software report
 
-> Status: in-flight — October 5 software candidate packaged and MIDI-off smoke
-> passed; protected review and physical rehearsal remain pending.
+> Status: in-flight — scoped Windows package verified for offline rehearsal.
+> Earlier `fa43` packaging/smoke is historical. Protected review and hardware held.
 
 ## Parameter Scopes And Local Rehearsal
 
@@ -41,10 +41,67 @@ executable scope/restart smoke and source-bound binary hashes follow before
 delivery. Preliminary failed/mid-edit receipts are retained, not acceptance.
 
 Safety, architecture and type reviews confirmed their repaired findings clear.
-Remaining final dimensional confirmations run against the published source.
+Final dimensional confirmations run against the published source.
 No MIDI/USB access, real port enumeration/open/write or physical observation
 occurred. One heavy local verification job at a time, at most two review agents,
 two pytest workers and one browser worker avoid an unbounded local build load.
+
+## Scoped Windows Delivery
+
+Production source `8b6b2ce0a3308d231fdde4e2e5d11ca0c95136aa`, version 1.34.0,
+remote branch `codex/studio-evidence-handoff`, PR #254. The ordinary push gate
+passed 865 architecture tests in 61.15 seconds and 697 not-fast tests in 6.58
+seconds, including all 685 frozen parity cases. Final source-head hosted checks:
+31 successful, three explicit skips, no failure/pending. Windows installer run
+[37397240969](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/37397240969)
+succeeded. Native compilation ran hosted, not on Jose's PC.
+
+New portable folder:
+`C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-studio-8b6b2ce0a330`.
+Both SHA-256 values independently match its source-bound `BUILD-MANIFEST.json`:
+
+- Shell: `f70d3c7378471fc73fb6c38073af5e2de453e2c740e4a624cf7acea18d97c903`.
+- Sidecar: `33d4c9fbef0f5c84bba3dadd510c136e8d4051df306925f61a3c16a45143b92b`.
+
+The actual executable/bundled sidecar/embedded WebView passed startup, zero
+depth, fresh locked candidate, scope invalidation and named local favorite
+retention. Full application restart and owned-sidecar termination/replacement
+with credential rotation reopened the exact source/candidate/cells/locks/seed/
+depth disarmed, requiring new preparation. Its synthetic offline source produced
+a ready inert plan of four Pad 2 packets (CC74/80/81/83), never transmitted.
+No injected memory output, development frontend or newly captured KIT was used.
+Desktop/600px screenshots were visually checked with no horizontal overflow.
+
+The first CDP profile/port did not expose its listener; a fresh isolated profile
+worked. A screenshot locator incorrectly selected a button rather than a page
+tab; corrected native smoke passed without changing production. Those attempts
+are recorded as failed harness attempts, not passing evidence. All owned smoke
+processes/listeners were stopped; QA profiles/credentials were moved outside the
+delivery folder. Previous fa43 shell/sidecar hashes remain unchanged.
+
+The first receipt-only push was correctly refused by isort: its recursive scan
+found temporary third-party schema-validator files under ignored local output.
+The QA validator was moved outside the repository, not reformatted or exempted;
+ordinary publication gates were rerun. Production source/binaries were unchanged.
+
+Eight final source dimensions cleared actionable code findings. Two minor docs
+ambiguities were corrected: historical package banner and completed local
+browser receipt. The pre-merge ten-row reassessment is not a post-merge audit;
+historical Gate 14/16 and Eddie's protected approval remain outstanding.
+
+```powershell
+Set-Location "C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-studio-8b6b2ce0a330"
+.\Launch-Offline.ps1
+```
+
+The launcher verifies both binaries and disables MIDI and updates. The folder's
+`studio-procedure/DELIVERY-RECEIPT.md` includes raw acceptance receipts and the
+inventory; `STUDIO-FIRST-PASS.md` contains one focused physical test: backed-up
+scratch KIT, fresh source capture, four-field Pad 2 preset at 10%, inspect the
+whole plan, separately approved one audition, DISARM, manual KIT reload and exact
+fresh baseline recapture. Local favorites are not hardware saves or recovery.
+**READY for offline rehearsal; NOT READY for shows.** No new MIDI/USB access,
+real port enumeration/open/write, arming action or physical observation occurred.
 
 ## Earlier October 5 Continuation
 

@@ -4,7 +4,7 @@ Last updated: 2026-10-05. This file is a hand-authored snapshot and is meant to 
 
 ## Current Snapshot
 
-October 5 parameter-scope continuation is in software verification on the same
+October 5 parameter-scope continuation is delivered for offline rehearsal on the same
 PR #254, not another PR. Server-validated page/item/control selection precedes
 generation, with exact excluded-value preservation, zero depth, lock/protection
 precedence and independent SEND revalidation. The Pad 2 rehearsal preset selects
@@ -16,8 +16,14 @@ acceptance: 10,209 passed, five skipped, six warnings in 305.67 seconds; all 35
 touched production modules have 100% lines/branches, project pure-branch
 coverage 99.3804607%. Frontend acceptance: 1,135 tests, 100% across four metrics.
 Browser composition: 34 passed, two explicit skips in 59.2 seconds, one worker,
-zero retries. Strict typing, lint, dead-code and version checks pass. Final review confirmations,
-CI, new portable build and actual-binary scope/favorite smoke remain pending.
+zero retries. Strict typing, lint, dead-code and version checks pass. Eight final
+source review dimensions are clear; two minor receipt ambiguities were corrected.
+Production `8b6b2ce0a3308d231fdde4e2e5d11ca0c95136aa` has 31 successful hosted
+checks and three explicit skips; Windows run 37397240969 succeeded. The new
+portable copy passed actual-executable scope/favorite recall, full restart and
+owned-sidecar/fresh-token recovery with MIDI off. Both hashes match its manifest;
+QA processes are stopped and credentials excluded from delivery. See the current
+source-bound run-report receipt.
 The previous `fa43f863` copy below is preserved and does
 not contain these new controls. Physical and show readiness remain pending.
 

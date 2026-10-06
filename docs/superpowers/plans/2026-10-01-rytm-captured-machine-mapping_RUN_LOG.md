@@ -349,3 +349,35 @@ has not been updated by these records.
   checkpoint. Protected review, post-merge maintainability audit
   and bounded operator-present hardware rehearsal remain pending. Issue #256
   tracks the frozen offline `lev` arithmetic/policy separation.
+
+## Parameter-Scope Delivery, October 5 (UTC Receipt October 6)
+
+- Continued existing PR #254 from b0f01dbe. Two isolated disjoint workers,
+  normal merges and owned-worktree cleanup; no primary-checkout changes.
+- Canonical parameter selection runs before mutation, with zero-depth identity,
+  exact excluded/native values, lock/protection precedence and independent
+  whole-plan SEND comparison. Pad 2 four-field preset locks all A4/other pads.
+  Shared DTO, existing atomic library and explicit v2 migrations support exact
+  local favorite recall/restart disarmed, not hardware SAVE or restore.
+- Source-frozen Python: 10,209 passed, five skipped, six warnings, 305.67s;
+  35 touched modules 100% lines/branches, 99.3804607% pure branch. Web 1,135
+  passes/all four metrics 100%; browser 34 passes/two skips in 59.2s. Strict
+  typing, lint/dead-code/version pass. Serializer/drift 241 passes separately.
+- Published 8b6b2ce0a3308d231fdde4e2e5d11ca0c95136aa through ordinary gates:
+  865 architecture and 697 not-fast passes, including 685 frozen parity items.
+  Eight targeted final source review dimensions are clear. Two docs receipt
+  minors corrected; historical Gate 14/16 exceptions remain disclosed.
+- Source CI 31 successes/three explicit skips. Hosted Windows run 37397240969
+  succeeded. Downloaded shell SHA256 f70d3c7378471fc73fb6c38073af5e2de453e2c740e4a624cf7acea18d97c903;
+  sidecar SHA256 33d4c9fbef0f5c84bba3dadd510c136e8d4051df306925f61a3c16a45143b92b.
+  Both match manifest; previous fa43 hashes unchanged.
+- Actual executable/bundled sidecar/WebView passed scopes, zero depth, locks,
+  named local favorite, exact recall, full restart and owned backend recovery
+  with fresh credentials, MIDI off. Ready four-CC Pad 2 synthetic offline plan
+  was never transmitted. Desktop/600px screenshots inspected. CDP/profile and
+  screenshot-tab locator failures corrected in harness only, not acceptance.
+- Stopped all owned smoke processes/listeners and moved QA credentials outside
+  delivery. READY offline only; next physical gate is fresh backed-up scratch
+  source, four-field Pad 2 10% exact audition and manual reload/recapture.
+  No MIDI/USB access, arming action, hardware observation, local Rust build,
+  merge/protection bypass or general A4/BOTH/paired/restore promotion occurred.

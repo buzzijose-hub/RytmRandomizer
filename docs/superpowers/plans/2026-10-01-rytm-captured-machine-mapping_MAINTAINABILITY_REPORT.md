@@ -11,7 +11,32 @@ The historical assessment below describes the uncommitted prototype on
 the delivery checkout starting at `941643c5`. Neither is an assessment of the
 running studio app, and no merge has occurred in this record.
 
-## Historical prototype assessment
+## Scoped Studio Pre-Merge Reassessment
+
+At published `8b6b2ce0`, compared with the continuation's ten-row pre-code
+baseline in the existing plan. This is a pre-merge inspection, not the required
+post-merge audit and not a hardware/show verdict. Historical Gate 14/16 remain
+unchecked. Final package evidence follows in the run report.
+
+| Question | Current evidence / remaining limit |
+| --- | --- |
+| Onboarding | Quickstart, owner table and protocol document per-cell scope/favorite flow; no timed contributor exercise claimed. |
+| Naming | ParameterSelection uses canonical item/key identities, separate from labels and encoded CC values. |
+| Coupling | Thin facade delegates capture metadata and pure engine resolution; architecture 865 passes; documented downward edges. |
+| Constants | Frozen typed cells and catalog-derived preset; no new hardware offsets or hand-written MIDI conversion. |
+| Configuration | Existing runtime configuration and hosted installer lane reused; two pytest workers/one browser worker; no new production env setting. |
+| Tests | 10,209 full-suite passes; 35 touched modules 100% lines/branches; 1,135 frontend tests 100% four metrics; 34 browser passes, two explicit skips. |
+| Build loop | Source-frozen Python 305.67s, ordinary architecture 61.15s, parity 6.58s, browser 59.2s; Windows native build hosted rather than local. |
+| Errors | Specific scope/plan refusal, bounded path-free persistence failure, whole-plan revalidation; no silent packet trimming. |
+| Versioning | Product stays 1.34.0 with source-bound manifest; library v2 explicit migration, ShowBank v2 explicit legacy read; previous fa43 package preserved. |
+| Extension | Existing per-cell engine, canonical metadata, Device strategies and atomic library reused; field evidence and physical readiness stay independent. |
+
+Exact downloaded executable scope/favorite/full-restart and backend-recovery
+proof now passed at the same source, with MIDI disabled and hashes checked.
+Remaining: protected review, operator-present Pad 2 audition/manual recovery
+and eventual post-merge audit.
+
+## Historical Prototype Assessment
 
 | Required question | Before → current | Evidence and remaining work |
 | --- | --- | --- |
