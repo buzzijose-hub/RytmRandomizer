@@ -4,17 +4,30 @@ Last updated: 2026-10-06. This file is a hand-authored snapshot and is meant to 
 
 ## Current Snapshot
 
-October 6 offline-preparation continuation is implemented locally on the same
-PR #254 assembly, with acceptance and a new package still in progress. The
-optional A4 native capability exposes 106 policy rows and 72 potentially mutable
-field keys, subject to the actual known source domain. Original framed sources,
-immutable profiles, algorithm IDs and generated A4 bytes are retained through
-Library schema 3 / Show Bank v3; imports and recall remain disarmed. Native
-scope, protected-byte replay, no-op identity and retained-file regressions pass
-focused checks. The shared artifact reader removes the initial Library/Show Bank
-dependency cycle. Do not substitute these interim results for final full-suite,
-coverage, browser or actual-executable acceptance. The October 5 build remains
-the last delivered candidate; all hardware restrictions below are unchanged.
+October 6 offline preparation is delivered from production
+`6eb5d4c1e3ed103b9870d935c3be2656857de708` in the same PR #254. Original framed
+files, exact native scopes, small/large previews, named local favorites, ordered
+bank copying and disarmed recall/restart passed the actual Windows executable.
+Library3/ShowBank3 retain exact originals, profiles/algorithms and generated A4
+frames for canonical replay. A4 has106policy rows/72potentially mutable keys,
+subject to source-known values; unknown/default-only, independent FIN and OXI
+AMP remain protected. No live output or physical readiness is promoted.
+
+Source verification:10593pass5skip6existingwarnings250.49s plus246affected cases
+after shared-fixture/format cleanup,23fresh metrics and202fresh pinned-annotation
+Library cases. All49touched production modules have100%lines/branches; combined
+99.6666068652%,purebranch99.3951612903%. Frontend1172tests100%allfourmeasures;
+browser35pass2explicit-skips1.1m plusfinalrecall8.2s. Exact pinned Pyright1.1.411,
+whole lint/deadcode/version and ordinary867architecture/697not-fast gates pass.
+Hosted6ebCI has31successes/three skips. Windows37523755117 succeeded; both binary
+hashes match the manifest. Actual package proved source import, scope/locks,
+zero-depth identity, exact favorite/bank copy, full restart and sidecar loss with
+fresh credentials. Bounded failure/cancel checks passed without partial state.
+All owned QA processes/listeners stopped; credentials moved outside delivery.
+Earlier8b/fa43 copies are hash-verified unchanged. Eight scoped reviews found no
+new blocking production issue; docs-only receipt publication remains separate.
+READY for offline preparation only, NOT READY for shows. Protected review and
+the first scoped Pad2 physical audition/manual reload/fresh dump remain pending.
 
 October 5 parameter-scope continuation is delivered for offline rehearsal on the same
 PR #254, not another PR. Server-validated page/item/control selection precedes

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-06T19:22:54Z",
+  "updated_at": "2026-10-06T20:39:00Z",
   "status": "in-flight",
-  "phase": "Oct06-native-offline-preparation-review-repairs-and-source-acceptance-in-progress",
+  "phase": "Oct06-native-offline-Windows-delivery-verified-receipt-publication-and-physical-review-held",
   "prototype_source": "8cfa6f7b6cf9469ffa134598182febb60ecdd1df",
   "prototype_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-tom-mapping/RytmRandomizer",
   "delivery_start_source": "941643c551abfa225f45c70a954b6671d1cbb5f4",
@@ -19,19 +19,26 @@
   "local_budget_scope": "historical-Oct02-only-not-the-current-Oct05-session",
   "oct06_started_at": "2026-10-06T16:24:24Z",
   "oct06_deadline": "2026-10-07T00:24:24Z",
-  "oct06_checkpoint": "5d7c45ab8fe343bf0dcf15a1139e2f116a31b3b1",
+  "oct06_checkpoint": "6eb5d4c1e3ed103b9870d935c3be2656857de708",
   "historical_elapsed_time_recorded": false,
   "work": {
     "mapping_implementation": "Oct05-all8-CY-Ride-SRC-blocked-25of29-new-fallback-rows-documented-only-guardedCC7-eligible-224-descriptive-bindings-retained-Studio-SRC-metadata-published3461f42e",
     "inventory": "registry-driven-29row-canonical-evidence-audit-25eligible-4CYremoved-init328-RIOreturn325-projections",
-    "dimension_reviews": "Eight-source-dimensions-confirmed8b6b2ce0-none; two-doc-minors-corrected; final-receipt-delta-review-pending; protected-human-review-required",
+    "dimension_reviews": "Eight-source-dimensions-confirmed6eb5d4c1-no-new-production-blockers; final-docs-reviewed-and-corrected; nonblocking-original-frame-reread-and-historicalGate14-16-retained; protected-human-review-required",
     "plan_records": "source-bound-learning-and-probe-records-published-seventh-native-readiness-scope-declared-before-isolated-implementation",
     "delivery_integration": "4bc21952-verified-source-published-as-d6e8e164-separate-browser-scope47e43516-before-local-assertion-fix-isolated-runtime4b88-verified-not-activated",
-    "final_delivery_checks": "Source8b6b2ce0:10209pass5skip6warnings305.67s-35touched100coverage-purebranch99.3804607-web1135pass100coverage-browser34pass2skip59.2s-strict35clean-lint-vulture-versionclean-prepush865arch697notfastpass-hosted31success3skip-installer37397240969success; actual-binary-scope-favorite-fullrestart-backendrecovery-pass-MIDIoff; previousfa43preserved; hardware-held",
+    "final_delivery_checks": "Production6eb5d4c1:full10593pass5skip6warnings250.49s-at088f-d253; affected246pass-metrics23Library202fresh100; 49touched100coverage-combined99.6666068652-purebranch99.3951612903; web1172pass100coverage-browser35pass2skip-plusfinalrecall; strictpinned1.1.41149clean-lint-vulture-versionclean; prepush867arch697notfastpass-hosted31success3skip-installer37523755117success; actual-binary-originals-native-scope-favorite-bankcopy-fullrestart-backendloss-lock-zero-cancel-refusal-normal-launcher-pass-MIDIoff; old8b-fa43preserved; hardware-held",
     "protected_review_and_merge": "pending",
     "post_merge_maintainability_audit": "pending"
   },
   "receipts": [
+    {
+      "scope": "Oct06-identified-native-offline-Windows-6eb5d4c1e3ed103b9870d935c3be2656857de708",
+      "result": "Hosted37523755117success; exactsourceCI31success3skip; shellSHA592736462d2fcee0f746c8ef1af4ac4faf5413fee7bce4d6c8c4243c802e0bd9; sidecarSHA950133d3f70c768a524da3246c1912d589e9916fc3dff508f247b33886adff13; actual retained-file/native scope/small-large/favorite/order/bank-copy import/exact disarmed recall/fullrestart/backendloss-tokenrotation/zero-lock-cancel-refusal pass; QAcredentialsoutside-delivery andownedprocessesstopped; old8b-fa43hashesunchanged; READYoffline NOTREADYshows; receipt-onlymetadata publicationstilldue",
+      "passing_verdict": true,
+      "hardware_observation": false,
+      "final_delivery_verdict": false
+    },
     {
       "scope": "Oct06-first-source-frozen-native-original-retention-composition-df03b03a",
       "result": "10403passed3artifactdriftfailures5skipped6warnings351.40s; combined99.50floorpassesbut10touchedfilesbelow100; notacceptance. ArtifactdriftrepairedwithoutV134changes. Nativepolicyfactsrelocated; Libraryredaction/diagnostics andlegacyrecallprepublication repairs pendingnewfullmeasurement. Web1172pass100coverage2936branches100.51s; browser35pass2explicit-skips1.1m, retainedsource/small-large/order/copyimport/disarmedrestart and600pxrenderchecked. No new Windows package or hardware action yet.",
@@ -306,7 +313,7 @@
     }
   ],
   "remaining": [
-    "Publish final receipt-only delta and consolidated review; retain exact production-source CI and protected approval as separate gates",
+    "Publish Oct06 final receipt-only metadata and confirm its exact-head CI; production6eb Windows build and source checks are verified separately",
     "Operator-present fresh backed-up source capture, new-build four-field Pad2 preset at10percent and exact-plan inspection, separately approved audition, DISARM and manual sourceKIT reload/fresh exact fingerprint comparison",
     "Protected new-head human review, hosted checks and merge",
     "Retrospective audit review and actual post-merge reassessment; Gate14 remains unchecked",
@@ -330,7 +337,7 @@
     "Match runner summaries to source checkpoint and rerun affected checks after changes",
     "Preserve original dirty user checkout, running studio checkout and concurrent work"
   ],
-  "local_termination": "Scoped Windows candidate8b6b2ce0 delivered for offline rehearsal; exact executable favorite/fullrestart/backend recovery passed with MIDIoff; protected approval and operator-present physical gates remain separate",
+  "local_termination": "Native offline Windows candidate6eb5d4c1 verified with exact executable source/scope/favorite/bank-copy/restart/recovery/failure checks and MIDIoff; receipt-only publication pending; protected approval and physical/show gates remain separate",
   "plan_termination": "Protected merge and actual post-merge maintainability reassessment recorded",
   "budget_exhaustion_status": "BUDGET_EXCEEDED",
   "user_stop_status": "INTERRUPTED"

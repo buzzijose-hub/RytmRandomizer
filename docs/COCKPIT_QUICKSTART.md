@@ -727,7 +727,7 @@ trait set + pad-mapping summary.
 
 ---
 
-### 5b. Offline Preparation From Original Files
+### 5d. Offline Preparation From Original Files
 
 Keep the MIDI-off launcher selected. This procedure is software preparation,
 not a hardware backup, instrument SAVE or rehearsal approval.
@@ -822,7 +822,7 @@ separate legacy saved-KIT writer remains hardware-write-validated only for
 Filter 2 Resonance.
 
 The newer scoped native algorithm has its own field-level saved-format evidence
-and mandatory protection policy; see section5b and the native evidence table.
+and mandatory protection policy; see [offline preparation](#5d-offline-preparation-from-original-files) and the native evidence table.
 Its additional offline support does not inherit the specific F1/F2 physical
 observations or unlock general A4/BOTH output.
 

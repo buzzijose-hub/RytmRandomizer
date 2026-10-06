@@ -408,3 +408,39 @@ has not been updated by these records.
   still pending. Wholelint/strict typing/deadcode/version checks pass. Full
   Python coverage runs backendoff, two workers, no other heavy job. No new
   package/publication or physical observation is claimed yet.
+
+## October 6 Identified Offline Delivery
+
+- Final production source `6eb5d4c1e3ed103b9870d935c3be2656857de708` is published
+  on the existing direct-base PR #254. Full source acceptance: 10,593 passed,
+  five skipped, six existing warnings, 250.49s. Formatting/shared-denial fixture
+  follow-up: 246 passed; metrics 23 and Library 202 fresh measurements are 100%.
+  Canonical 49 touched modules have 100% lines/branches; combined 99.6666068652%,
+  pure branch 99.3951612903%. Earlier failed checkpoints remain failed evidence.
+- Frontend 1,172 tests passed with all four coverage measures at 100%; browser
+  35 passed/two explicit skips plus final recall check. Pinned Pyright 1.1.411,
+  whole lint/dead-code/version gates pass. Normal source push: 867 architecture
+  and 697 not-fast passes, including 685 frozen parity items. No pins changed.
+- Hosted source checks: 31 successes/three skips. Identified Windows build
+  37523755117 succeeded; shell/sidecar hashes independently match its manifest.
+  The old 5d build completed after a cancellation request returned HTTP 502;
+  it was not cancelled and is not the delivered copy.
+- Actual bundled executable/WebView verified retained original-file import,
+  exact Track 3 native scope, small/large generation, difference inspection,
+  named local favorite, two-cue ordering, export/import separate bank copy,
+  exact disarmed recall/restart and owned-backend recovery with new credentials.
+  Zero depth, locks, cancellation and missing-package refusal preserved state.
+  Normal hash-checked launcher also started its bundled backend with MIDI off.
+  Initial debug/profile/assertion/locator failures were harness-only repairs,
+  not passing acceptance. Desktop and narrow screenshots were inspected.
+- All owned processes/listeners stopped; QA credentials moved outside delivery.
+  Old 8b/fa43 deliveries are hash-unchanged. Both managed implementation
+  worktrees are archived/recoverable; all agents closed. Eight source review
+  dimensions completed, final docs repairs verified. One nonblocking repeated
+  original-frame read and historical Gate 14/16 exceptions remain disclosed.
+- Final receipt-only documentation publication and exact-head CI follow this
+  entry. Production/binaries remain source6eb; human approval, merge and physical
+  rehearsal are not inferred. READY offline preparation, NOT READY for shows.
+  First physical gate remains backed-up scratch source, four-field Pad 2 at
+  10%, exact approved audition, DISARM, manual KIT reload and fresh comparison.
+  No real MIDI/USB enumeration/open/arming/send/device changes occurred.

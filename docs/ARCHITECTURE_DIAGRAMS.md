@@ -3238,8 +3238,8 @@ one lane cannot promote, arm, or corrupt the other lane. Rytm physical
 connection state comes from the armed-output manager; A4 capture/session state
 does not claim continuous hot-plug monitoring. Rytm plans are bound
 to the captured source, effective scope, candidate, and exact plan id. A4
-remains useful for capture, target/lock rehearsal, and narrow offline Filter 1
-Frequency file generation, while its live output authority is structurally
+remains useful for capture, target/lock rehearsal, and scoped evidence-backed
+native offline generation, with the legacy F1 algorithm retained. Its live authority is structurally
 blocked.
 Capture cancellation and stale-result refusal do not adopt or erase a verified
 source. Armed disconnect revokes output evidence; passive browser disconnect
@@ -3250,7 +3250,8 @@ single-CC packets also exist. Parameter selection happens before generation;
 the exact SEND boundary independently rejects out-of-scope proposed values.
 Durable local favorite recall restores reviewed values and scope, not a hardware
 KIT or live output grant. A4 parameter selection remains within its promoted
-saved-KIT offline field only.
+source-known native offline fields; unknown/default-only, OXI AMP and independent
+coupled components stay immutable.
 
 ## 37. Show Kit Forge Evidence and Show-Time Readiness
 

@@ -173,11 +173,16 @@ guards, and tests synchronized when this shape changes.
 ## Current continuation seam
 
 The Rytm capture-to-mutation bridge and self-contained installer composition
-are delivered at the October 5 receipt. October 6 offline preparation is under
-source/build acceptance on the same PR #254: optional native-field Device
-capability, 106 policy rows / 72 potentially mutable A4 field keys, Library
-schema 3 exact original frames and portable ShowBank v3 replay. Consult the
-source-bound plan receipt before treating this newer source as delivered.
+are delivered at the October 5 receipt. October 6 production source
+`6eb5d4c1e3ed103b9870d935c3be2656857de708` is delivered on the same PR #254:
+optional native-field Device capability, 106 policy rows / 72 potentially
+mutable A4 field keys, Library schema 3 exact original frames and portable
+ShowBank v3 replay. The source-bound Windows copy passed actual executable
+offline import, scoped small/large mutation, local favorite, ordered-bank
+export/import, exact disarmed restart and owned-backend-loss recovery. Hosted
+source checks are 31 successful / three skipped. Use the source-bound plan
+receipt and `Launch-Offline.ps1`; older deliveries remain unchanged. This is
+READY for tested offline preparation, NOT READY for shows or general live use.
 Independent FIN, OXI AMP, unknown selectors and default-only fields remain
 read-only. No native-file result grants live sending or physical readiness.
 The remaining physical evidence includes:

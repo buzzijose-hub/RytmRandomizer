@@ -1,9 +1,78 @@
 # Captured Rytm mapping software report
 
-> Status: in-flight — scoped Windows package verified for offline rehearsal.
-> Earlier `fa43` packaging/smoke is historical. Protected review and hardware held.
+> Status: in-flight — October6 native offline package verified and delivered.
+> Earlier8b/fa43 copies preserved. Protected review and physical/show gates held.
 
-## Parameter Scopes And Local Rehearsal
+## October 6 Native Offline Delivery
+
+Production `6eb5d4c1e3ed103b9870d935c3be2656857de708`, version1.34.0, remote
+`codex/studio-evidence-handoff`, same direct-basePR254. The new unsigned Windows
+copy is at `C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-6eb5d4c1e3ed`.
+Use `Launch-Offline.ps1`; its hash-checked launcher disables MIDI/updates and
+isolates persistent user-data from earlier builds. No execution-policy bypass.
+
+Implemented: canonical native scope via optional Device capability, exact
+source-known grids/sparse enums, hidden fine precision, mandatory OXI/FIN/
+unknown/default-only protection; framed originals versus semantic favorites;
+Library3/ShowBank3 immutable profiles/algorithm replay, generated-frame retention,
+source-bound comparison and prepublication recall checks; create-only imported
+bank copies; bounded path-free source/writer diagnostics and outcome telemetry.
+New policy is106rows/72potentially mutable keys, never complete device/MIDI or
+physical coverage. Rytm224SRC descriptive bindings, all8CYRideblocks and25of29
+documented-only fallback eligibility remain as audited. No precision projection.
+
+Actual source receipts: full10593pass5skip6warnings250.49s at088f/d253; final
+format/shared-fixture246passes32.27s, metrics23fresh100%, Library202fresh100%
+(496lines/162branches). Coverage uses the unchanged source measurements plus
+fresh replacements for only formatted metrics and the annotation-adjusted
+Library module. Canonical49touchedfiles100%line/branch; combined99.6666068652%,
+purebranch99.3951612903%. Frontend78files1172tests100%allfourmetrics100.51s;
+browser35pass2explicit-skips1.1m andfinalrecall8.2s. Whole Ruff/Black915/isort,
+Vulture/version and exact pinned Pyright1.1.41149modules0errors0warnings pass.
+Ordinary6ebpush867architecture61.56s and697not-fast6.45s including685frozenparity.
+
+Initial full checkpoints10403/3fail and10589/3fail are retained as failures.
+Artifact-contract corrections did not change frozen V1.34 outputs. AL02blocked
+provenance was regenerated at its original SOURCE_DATE_EPOCH: same18critical
+gaps andnoSYX emitted; no other15kits generated. Hosted typing caught local
+Pyright1.1.407's missed Iterator deprecation; Generator annotation-only repair
+was checked with exact1.1.411 isolated outside the repository. An attempted
+old5d build cancellation returned502 andthe run completed successfully; that
+older artifact is not the delivery.
+
+Final sourceCI31successes/three explicit skips. Identified Windows
+[run37523755117](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/37523755117)
+succeeded. Independent manifest hashes:
+shell `592736462d2fcee0f746c8ef1af4ac4faf5413fee7bce4d6c8c4243c802e0bd9`;
+sidecar `950133d3f70c768a524da3246c1912d589e9916fc3dff508f247b33886adff13`.
+
+Actual new executable/bundled sidecar/embedded WebView verified retained RIO145
+file import, Track3 exact native scope, small/large, before/after values, named
+favorite, two-cue reorder, separate bank-copy export/import, exact disarmed recall
+and full app restart. Owned-sidecar loss retained the shell, restarted the backend
+and rotated credentials; recall stayed disarmed. Locked andzero-depth candidates
+were exact A4source clones; favorite remained intact; cue-removal cancellation
+andmissing-pack refusal produced no partial bank. No dev frontend or synthetic
+source injection substituted for the package. Inputs were retained repository
+frames, not new hardware captures. Initial CDP/profile, stale assertion and
+failure-message locator mistakes were fixed in the ignored QA harness only.
+Desktop/600px screenshots inspected. All owned processes/listeners stopped and
+credentials moved outside delivery. Earlier8b/fa43 binaries remain unchanged.
+
+Eight bounded post-push reviews clear production, abstraction and corrected
+docs. One nonblocking duplicate-original-read cleanup and historical Gate14/16
+exceptions remain explicit. [Consolidated review](https://github.com/buzzijose-hub/RytmRandomizer/pull/254#issuecomment-6024588295)
+was posted; Eddie review requested. Docs-only receipt publication/CI still must
+be recorded separately, with no protected approval/merge inferred.
+
+READY offline; NOT READY shows. First physical gate remains backed-up spare KIT,
+fresh Rytm input capture, Pad2four-field preset10%, exact-plan inspection and
+separately approved isolated audition, DISARM, manual sourceKIT reload and fresh
+exact baseline comparison. No real MIDI/USB access, arming, firmware/device
+write, general A4/BOTH, paired precision, automatic restore, hardwareSAVE or Pi
+promotion occurred in this software session.
+
+## October 5 Parameter Scopes And Local Rehearsal
 
 The current continuation keeps one direct-base PR #254 and preserves the
 identified `fa43f863` portable copy. Canonical server-validated item/page/control
