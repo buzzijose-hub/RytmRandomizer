@@ -268,6 +268,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     "data": frozenset(),
     "devices": frozenset(
         {
+            "data",  # Canonical saved-KIT track count shared by composition and native capability.
             "mock_midi",
             "snapshot",
         }

@@ -42,6 +42,14 @@ from ._support import (
 pytestmark = pytest.mark.fast
 
 
+def test_unknown_candidate_lookup_refuses_without_changing_entry_selection() -> None:
+    entry = source_entry()
+    before = entry.to_dict()
+    with pytest.raises(ValueError, match="unknown candidate"):
+        entry.candidate_by_id("missing-candidate")
+    assert entry.to_dict() == before
+
+
 def _bank(entry=None, *, revision: int = 0) -> ShowBank:
     entries = () if entry is None else (entry,)
     return ShowBank(

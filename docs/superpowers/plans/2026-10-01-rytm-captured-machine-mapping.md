@@ -584,3 +584,27 @@ offline preparation journey, passing source/build receipts and concise handoff.
 Remaining native gaps and all physical/transport restrictions are explicit.
 The first physical gate stays one scoped Pad 2 audition, manual KIT reload and
 fresh exact baseline comparison; no software result grants show readiness.
+
+## October 6 Post-Integration Reassessment
+
+Recorded after source088f3eec integration, before protected merge. This is not
+the historical retrospective baseline or the still-required post-merge audit.
+
+| Dimension | Actual integrated outcome |
+| --- | --- |
+| Onboarding | Existing Studio/Device/store owners retained; one ordered offline file-to-bank guide and separate physical gate. Actual packaged acceptance still required. |
+| Naming | Native encodings, screen values, original framed bytes, semantic favorites and hardware SAVE stay distinct; legacy F1 alias is canonical and shared. |
+| Coupling | Optional Device capabilities and shape-only DTOs; shared reader below both stores; one-way validated Library lookup, shared source/recipe verification before local publication. |
+| Constants | Native protection/evidence/count facts moved to immutable data; no new offsets, enums, tuning or MIDI precision guesses. |
+| Configuration | No new shipped environment reads; writer privacy is an opt-in API. Previous Windows copies/pins/fixtures stay unchanged. |
+| Tests | Retained-fixture journeys, consumer faults, redacted rollback, corruption, source/precision/locks and exact restart; 49 touched modules measured100%, frontend1172 tests100%. Final full-suite receipt remains separate. |
+| Build loop | One bounded heavy acceptance job, two pytest workers/one browser worker. Full source attempts351.40s and369.86s retained as failed checkpoints; focused repairs/coverage do not relabel them green. |
+| Errors | Strict source reads preserve bounded hash/codec/access categories; IDs/paths redacted through Library and sensitive writer rollback; populated success counters exposed deterministically. |
+| Versioning | Existing v1/v2 records read explicitly into v3 without rewriting; immutable profile/algorithm replay; unsigned source-bound1.34.0 package pending, no production release inferred. |
+| Extension | Exact native-domain grids and sparse selectors are justified shapes; original retention/recall reuse existing atomic and package machinery. Default-only or unknown values remain read-only. |
+
+One nonblocking review suggestion remains: generation validates its original
+pair and immediately rereads the frames through existing helpers. Reuse within
+that request could reduce duplicate reads, but no latency measurement or
+behavioral defect was found; avoid coupling this cleanup to acceptance fixes.
+Historical Gate14/16 exceptions, human approval and post-merge review stay open.

@@ -814,12 +814,17 @@ lock, candidate, plan, and armed authority cannot grant A4 authority. Rytm
 connection phases come from its armed-output manager; the A4 lane reflects
 capture/session evidence and is not continuous independent hot-plug telemetry.
 A4 live mutation and Cockpit SEND remain blocked. The 2026-08-28 captured
-saved-KIT evidence promotes only offline Filter 1 Frequency candidate bytes:
+saved-KIT evidence establishes the legacy offline Filter 1 Frequency path:
 unsigned big-endian Q8.8 over `0x0000..0x7F00`, native Track 1 offset 128, and
 350-byte track stride. Do not generalize that local-file capability to another
 field, to destination-slot semantics, or to hardware-send authority. The
 separate legacy saved-KIT writer remains hardware-write-validated only for
 Filter 2 Resonance.
+
+The newer scoped native algorithm has its own field-level saved-format evidence
+and mandatory protection policy; see section5b and the native evidence table.
+Its additional offline support does not inherit the specific F1/F2 physical
+observations or unlock general A4/BOTH output.
 
 OXI One remains beside Cockpit as owner of sequencing, notes, triggers, mutes,
 and pattern motion. Cockpit owns mutation/performance intelligence, target

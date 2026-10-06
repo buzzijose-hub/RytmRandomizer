@@ -231,9 +231,12 @@ def test_rejected_request_logs_are_bounded_without_losing_internal_error_details
             },
         }
     command_type = str(command["type"])
-    with pytest.raises(ValueError, match="unknown") as internal_error:
+    with pytest.raises(ValueError, match="filename-safe" if kind == "candidate_id" else "unknown") as internal_error:
         asyncio.run(SHOW_BANK_HANDLERS[command_type](command, session))
-    assert value in str(internal_error.value)
+    if kind == "candidate_id":
+        assert value not in str(internal_error.value)
+    else:
+        assert value in str(internal_error.value)
     ack = asyncio.run(handle_command({"request_id": "bounded-error", "command": command}, session))
     assert ack == {
         "request_id": "bounded-error",
@@ -248,7 +251,7 @@ def test_rejected_request_logs_are_bounded_without_losing_internal_error_details
     assert len(detail) <= limit
     assert record.__dict__["exception_type"] == "ValueError"
     assert record.__dict__["code"] == "validation_error"
-    if kind == "short_key":
+    if kind in ("short_key", "candidate_id"):
         assert detail == repr(internal_error.value)
     else:
         assert len(detail) == limit

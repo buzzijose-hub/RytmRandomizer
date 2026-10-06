@@ -155,6 +155,7 @@ on one line for an existing module, you probably need a new module instead.
 | `devices/strategies/analog_four_saved_kit_writer.py` | Pure legacy A4 saved-kit mutator/renderer for the hardware-write-validated Filter 2 Resonance path; no filesystem or MIDI I/O. |
 | `devices/strategies/analog_four_saved_kit_candidate.py` | Pure calibrated saved-KIT candidate rendering through the canonical A4 field codec; revalidates calibration/field agreement, exact values, track bounds, roundtrip and byte isolation, with offline-only output authority. |
 | `devices/strategies/analog_four_filter1_frequency_candidate.py` | Typed Filter 1 Frequency adapter for offline captured-KIT evidence; delegates exact calibration/value/byte validation to the shared A4 saved-KIT candidate renderer. Always reports `hardware_send_validated = false`; owns no file or MIDI I/O. |
+| `devices/strategies/analog_four_native_fields.py` | Optional source-bound native domains/readback/mutation capability over canonical field facts and shared renderer; sparse enum sampling, coupled precision and mandatory protection, never live authority. |
 | `devices/strategies/analog_four_kit_fields.py` | Typed copy-on-edit A4 saved-KIT and sound-field views over canonical layout facts; preserves unknown bytes and performs no framing or hardware I/O. |
 | `devices/strategies/analog_four_kit_recipe.py` | Conservative passive A4 semantic recipe compiler that edits only mapped fields in a valid native object and preserves unknown and device-wide data. |
 | `devices/strategies/analog_rytm_saved_kit_codec.py` | Pure initialized Rytm saved-kit frame codec; validates envelope, length, and checksum while providing byte-identical decode/encode. |
@@ -339,6 +340,7 @@ rule, change it here first, then update the test.
     | Importing package | Declared Show Kit Forge dependency edges |
     | --- | --- |
     | `cockpit.data` | `snapshot` (device-neutral mutation scope/domain), `guardrails` (strict input-validation leaf only) |
+    | `devices` | `data` (single canonical saved-KIT synth-track count, reused by composition and native capability) |
     | `cockpit.show_bank` | `cockpit.capture`, `cockpit.data`, `cockpit.engine`, `cockpit.export`, `cockpit.profiles`, `cockpit.library` (validated original-source lookup), `data`, `devices`, `guardrails` (input-validation leaf), `observability`, `snapshot` |
     | `cockpit.ws` | `cockpit.show_bank` (authoritative workspace and lifecycle dispatch), `guardrails` (input-validation leaf) |
     | `cockpit.stage` | `snapshot` (shared registry-derived mutation domain) |
@@ -860,13 +862,14 @@ Local favorite `source_hash` identifies the semantic snapshot, not a raw SysEx
 frame or whole decoded instrument payload. These Rytm rehearsal records retain
 no raw KIT bytes; A4 artifact retention remains the separate Show Forge path.
 
-The library uses its registered schema 2 with an explicit 1-to-2 migration; strict records
-retain source, profile, candidate, seed/depth, target/parameter scopes and locks.
+The library uses registered schema 3 with explicit v1/v2 migration. Strict
+semantic favorites retain source, profile, candidate, seed/depth, scope and locks;
+original framed KIT artifacts retain separate exact bytes/hash/provenance.
 Recall verifies identity and deterministic values, then uses the existing
 output-revocation boundary. It leaves output disarmed and the plan empty; no
 persisted artifact grants hardware authority. Show-bank scope records carry the
-same selections under `show-bank-v2`; the existing strict domain loader accepts
-legacy v1 only as a declared legacy-all scope, without rewriting on read.
+same selections under `show-bank-v3` with immutable profiles and algorithm IDs.
+The strict loader explicitly reads v1/v2 without rewriting their original files.
 
 | Command (UI → engine) | Returns | Notes |
 |---|---|---|
@@ -1583,7 +1586,7 @@ groundwork: non-simulation APPLY is refused and deployment is on hold pending
 focused work. Touch/display operation and packaging remain unvalidated and
 outside this shared Windows Studio boundary.
 
-Forge obtains this renderer through the public
+Forge retains this legacy renderer through the public
 `devices.get_analog_four_filter1_frequency_candidate_capability()` resolver.
 It looks up `analog_four_mk2` in the existing device registry and narrows it
 to the optional `AnalogFourFilter1FrequencyCandidateCapability` Protocol.
@@ -1594,9 +1597,19 @@ in [Architecture Diagrams §3](ARCHITECTURE_DIAGRAMS.md#3-device--strategy-capab
 the source-capture SEND gate and evidence lifecycle appear in
 [§37](ARCHITECTURE_DIAGRAMS.md#37-show-kit-forge-evidence-and-show-time-readiness).
 
+New native recipes resolve `devices.get_analog_four_native_field_capability()`
+and the optional `AnalogFourNativeFieldCapability`, reusing the same codec and
+isolation verifier. Canonical policy has 106 rows / 72 potentially mutable field
+keys, constrained by actual source-known values, OXI AMP and coupled-component
+protection. Neither optional capability widens mandatory Device requirements.
+
 Show-bank persistence writes each revision as new canonical sorted-key JSON.
-Incoming framed SysEx stays in memory until explicit retention; retained bytes
-are named by SHA-256 and transactionally committed with the new manifest. A
+Raw incoming captures remain volatile until adopted/retained. Source adoption
+and generation retain original/generated frames transactionally with the paired
+manifest; older records may still require explicit retention. Retained bytes
+are named by SHA-256. Local recall validates source, frame, profile and recipe
+before publishing selection; sensitive Library writes opt into redacted atomic
+writer diagnostics. A
 `.show-pack` is a flat, self-contained configured-root directory containing
 only explicitly retained evidence, canonical cue order, recovery text,
 checksums, and a final `manifest.json` commit marker. Verification rejects

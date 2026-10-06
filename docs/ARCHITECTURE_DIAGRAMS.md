@@ -535,7 +535,8 @@ classDiagram
 
 - **Protocol vs class.** `Device`, `SnapshotDecoder`, `MutationPlanner`, `MessageRenderer`, `MidiOutbox` are `@runtime_checkable Protocol`s. They're not inherited from — concrete classes match structurally. This is Gate 6 (type-system hygiene) and lets PR #21 / PR #36's `AnalogFourDevice` drop in without inheritance gymnastics.
 - **Composition over inheritance.** `AnalogRytmDevice` and `AnalogFourDevice` construct strategy instances in `__init__` and delegate their convenience methods to them. The Rytm device also exposes the narrow optional `AnalogRytmSavedKitCodecCapability`; both registered families structurally opt into `SavedKitCaptureCapability`, resolved through `devices/saved_kit_capture.py`, without widening the base `Device` Protocol. Cockpit capture therefore imports neither concrete family codec. The strategies don't know about each other except through their shared device-family types (`RytmKitSnapshot`, `RytmMutationPlan`, `RytmPlanEvent`, `AnalogFourKitSnapshot`, and `AnalogFourMutationPlan`).
-- **Optional offline A4 capability.** Forge calls the public `devices.get_analog_four_filter1_frequency_candidate_capability()` resolver, which narrows the existing registered A4 device to `AnalogFourFilter1FrequencyCandidateCapability`. Its pure strategy produces only local Filter 1 Frequency candidate bytes with `hardware_send_validated = false`; it does not widen `Device` or create an A4 SEND path.
+- **Optional offline A4 capabilities.** Forge resolves native-field or legacy Filter 1 Frequency capabilities through the registered Device. Native policy has 106 rows / 72 potentially mutable keys with source-known, OXI AMP, independent FIN and default-only protection. Both reuse the canonical field codec/isolated renderer, keep `hardware_send_validated = false`, and do not widen mandatory `Device` or create A4 SEND.
+  Device composition and native validation both derive the synth-track count from the canonical saved-KIT data constant; no second literal count authority exists.
 - **Import-time registration.** `analog_rytm.py` calls `register_device(AnalogRytmDevice())` at module load. The `devices/__init__.py` imports `analog_rytm` for the side effect; consumers get a non-empty registry on first import.
 - **Adding a new family** = one device class + three strategy modules + register at import. No parallel sibling subpackages allowed (enforced by `test_device_protocol_enforcement.py`).
 
@@ -2256,7 +2257,7 @@ The diagrams DO NOT claim that the project currently has:
 
 - Real MIDI sending in the passive default (an explicit arm is always required)
 - Automatic *output* arming from port discovery (enumeration and input opens are passive; nothing arms itself)
-- A4 Cockpit SEND, destination-slot rewriting, or general captured-A4 saved-KIT mutation. Show Kit Forge's one exception is a local-file-only Filter 1 Frequency candidate renderer with `hardware_send_validated = false`.
+- A4 Cockpit SEND, destination-slot rewriting, or unrestricted captured-A4 mutation. Show Kit Forge supports scoped evidence-backed native offline candidates and the legacy F1 algorithm, always with `hardware_send_validated = false`.
 - Restore-to-device / persistent kit writes (refused at the seam — no capture-before-write or restore path exists)
 - A repo-wide single transmit path (the cockpit routes through the ArmedApply seam; legacy `app.py` still owns allowlisted output paths)
 - `analog_four/` / `rytm/` / `essence/` top-level subpackages (anti-pattern, rejected by arch tests in §10)
@@ -3195,6 +3196,9 @@ flowchart LR
     LocalFavorites --> SourceFiles["file sources via registered codec<br/>no live-capture freshness"]
     SourceFiles --> PortableBank["ShowBank v3<br/>immutable recipe/profile/native algorithm<br/>original + generated frames retained"]
     PortableBank --> BankReplay["export/import exact replay<br/>explicit unused bank ID<br/>catalog-only; disarmed recall"]
+    PortableBank --> RecallCheck["validate source / recipe / profile / frame<br/>before publishing local selection"]
+    RecallCheck --> LocalRecall
+    LocalFavorites --> SensitiveWrite["shared atomic writer<br/>opt-in redacted diagnostics<br/>recovery bytes preserved"]
     ArtifactReader["cockpit.export.reader<br/>bounded stable-identity reads<br/>duplicate-key JSON refusal"] --> LocalFavorites
     ArtifactReader --> PortableBank
     RytmLane --> LocalFavorites
@@ -3264,8 +3268,8 @@ flowchart TD
     ArmedApply --> ManualRestore["DISARM + manually reload source KIT<br/>fresh exact baseline recapture<br/>physical recovery observation"]
     ManualRestore -->|"every later candidate/attempt"| SourceReload
 
-    Forge --> A4Candidate["A4 Filter 1 Frequency<br/>offline saved-KIT bytes only"]
-    Calibration["data calibration record + saved-KIT field schema"] --> FieldCodec["generic A4 field codec + calibrated renderer<br/>exact Q8.8 / canonical byte isolation"]
+    Forge --> A4Candidate["A4 scoped native fields<br/>legacy F1 algorithm retained<br/>offline saved-KIT bytes only"]
+    Calibration["canonical native facts / policy / evidence<br/>saved-KIT field schema"] --> FieldCodec["generic A4 field codec + isolated renderer<br/>exact native grids / protected bytes"]
     FieldCodec --> A4Candidate
     Validation["guardrails/input_validation<br/>shared strict primitives"] -.-> Store
     Domains["snapshot/mutation_scope<br/>registry-derived device domain"] -.-> Forge
