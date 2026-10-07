@@ -721,3 +721,27 @@ after success/refusal. Server locks, generation authority and protections remain
 unchanged. Rebuild the exact reviewed source and rerun actual package setup before
 the full timed rehearsal. The unrelated hosted macOS numba/librosa segmentation
 fault is investigated separately without dependency bumps, skips or retries.
+
+Bounded macOS follow-up (not executed or accepted): preserve1c093, its exact
+librosa0.11.0/Numba0.68.0/llvmlite0.50.0/NumPy2.4.6 environment and canonical
+two-second440Hz mono input. Collect the native crash report and bounded cache
+trace using NUMBA_DEBUG_CACHE=1. Compare two-process shared-cache cold/warm
+execution with two-process individually isolated-cache cold/warm execution;
+eight fixed observations total, no retry-to-green. Compare input SHA, complete
+onset arrays and canonical feature outputs, retaining failed exit statuses.
+Do not alter extractors, dependency pins, parity or required-check semantics
+without causal evidence. A manual diagnostic must not emit required-checks
+success through skipped suites or reuse the installer as an unrelated runner.
+The unchanged environment previously passed on the same macOS image, so a new
+green run cannot by itself prove the native defect repaired. This remains a
+separate platform follow-up, not Windows offline-bank or hardware acceptance.
+
+Containment for the repeated1784 macOS fault: add a bounded diagnostic script
+and fake-process regression tests, with no production extractor edits. Run it
+only after a failed macOS required pytest step, retaining the original failing
+job and aggregate result. It must collect fixed cold/warm shared/isolated cache
+observations and available crash metadata, not retry the suite until green.
+Parent owns the existing workflow post-failure step/docs; one disjoint worker
+owns scripts/diagnose_native_audio_cache.py and its tests. Keep the running
+1784 Windows rehearsal frozen. Only lightweight fake-process tests may overlap
+it; normal publication/architecture gates wait until owned endurance completes.
