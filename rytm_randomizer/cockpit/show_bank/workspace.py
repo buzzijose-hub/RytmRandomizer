@@ -957,16 +957,18 @@ class ShowKitForgeWorkspace:
         if not offline_only:
             self._require_editable_candidate_authority(bank)
         entry = bank.entry(entry_id)
-        prior_ids = dict.fromkeys(
-            prior.candidate_id
-            for prior in (entry.selected_candidate, entry.favorite_candidate)
-            if prior is not None
-        )
-        for prior_id in prior_ids:
-            self.candidate_context(bank_id, entry_id, prior_id)
-        self.original_source_frames(bank_id, entry_id)
-        source_snapshot = self._source_snapshot(bank, entry)
-        analog_four_frame = self._retained_frame(bank, entry.analog_four_source.sysex.artifact_id)
+        prior = entry.selected_candidate or entry.favorite_candidate
+        if prior is None:
+            self.original_source_frames(bank_id, entry_id)
+            source_snapshot = self._source_snapshot(bank, entry)
+            analog_four_frame = self._retained_frame(
+                bank, entry.analog_four_source.sysex.artifact_id
+            )
+        else:
+            # The complete proof includes the other favorite and all unrelated artifacts.
+            context = self._verified_candidate_context(bank, entry_id, prior.candidate_id)
+            source_snapshot = context.source
+            analog_four_frame = context.analog_four_source.frame
         updated = bank
         created: list[ShowKitCandidate] = []
         created_frames: list[tuple[str, bytes]] = []
@@ -1040,6 +1042,8 @@ class ShowKitForgeWorkspace:
             )
         if not created:
             raise ValueError("that deterministic candidate set already exists")
+        if self._checked_bank(bank_id, expected_revision) is not bank:
+            raise ValueError("show bank changed; refresh before retrying")
         updated = self._retain_frames(updated, created_frames)
         self._publish(updated, already_saved=True)
         self._active_entry_ids[bank_id] = entry_id
@@ -1122,16 +1126,15 @@ class ShowKitForgeWorkspace:
         if source_id is None:
             raise ValueError("Rytm source is missing its mutation snapshot identity")
         artifact_id = candidate.analog_four_candidate.sysex.artifact_id
+        frame = self._retained_frame(bank, artifact_id)
         # One fresh complete read/proof; subsequent consumers use these exact bytes.
-        frames = MappingProxyType(
-            {
-                item.artifact_id: self._retained_frame(bank, item.artifact_id)
-                for item in bank.sysex_artifacts()
-                if item.retained is not None or item.artifact_id == artifact_id
-            }
-        )
+        retained_frames = {
+            item.artifact_id: self._store.read_retained(item.retained)
+            for item in bank.sysex_artifacts()
+            if item.retained is not None and item.artifact_id != artifact_id
+        }
+        frames = MappingProxyType({**retained_frames, artifact_id: frame})
         verify_show_bank_frames(bank, frames)
-        frame = frames[artifact_id]
         decoded = decode_kit_capture_frame(ANALOG_FOUR_DEVICE_ID, frame)
         if (
             analog_four_capture_semantic_fingerprint(decoded, candidate.analog_four_candidate)

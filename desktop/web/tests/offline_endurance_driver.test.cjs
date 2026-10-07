@@ -102,6 +102,22 @@ const metadataFailure = () => {
 };
 const privateNameFailure = () => Object.assign(new Error(privateDetails), { name: privateDetails });
 
+test('pending failure evidence is bounded to fixed public command names', () => {
+  const line = source.split('\n').find(value => value.startsWith('const pendingRehearsalCommands ='));
+  assert(line);
+  const context = vm.createContext({});
+  new vm.Script(`${line}\nglobalThis.observe = pendingRehearsalCommands;`).runInContext(context);
+  const pending = new Map(Array.from({ length: 80 }, (_, index) => [index, {
+    command: index === 0 ? 'show_bank_generate_candidates' : privateDetails,
+    token: privateDetails,
+  }]));
+  const result = JSON.parse(JSON.stringify(context.observe(pending)));
+  assert.equal(result.length, 64);
+  assert.equal(result[0], 'show_bank_generate_candidates');
+  assert(result.slice(1).every(value => value === 'other_command'));
+  assert(!JSON.stringify(result).includes(privateDetails));
+});
+
 for (const [label, makeFailure, errorType] of [
   ['assertion values', assertionFailure, 'AssertionError'],
   ['stderr assertion', assertionFailure, 'AssertionError'],

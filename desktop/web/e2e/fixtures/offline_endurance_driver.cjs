@@ -50,6 +50,7 @@ const save = () => fs.writeFileSync(path.join(reportRoot, 'summary.json'), JSON.
 const record = value => fs.appendFileSync(telemetry, JSON.stringify({ at: new Date().toISOString(), ...value }) + '\n');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const errorType = error => ['AssertionError', 'Error', 'TimeoutError', 'TypeError', 'RangeError', 'SyntaxError'].includes(error?.name) ? error.name : 'Error';
+const pendingRehearsalCommands = pending => [...pending.values()].slice(0, 64).map(operation => ['show_bank_generate_candidates', 'show_bank_mark_favorite', 'show_bank_select_candidate', 'show_bank_import', 'show_bank_export', 'set_mutation_parameters', 'show_bank_select', 'show_bank_reorder_entries', 'diagnostics'].includes(operation.command) ? operation.command : 'other_command');
 const rehearsalCueId = (ids, cycle) => ids[cycle % ids.length];
 const orderedCells = cells => cells === null || cells === undefined ? null : [...cells].sort((left, right) => left.item_id - right.item_id || (left.parameter_key < right.parameter_key ? -1 : left.parameter_key > right.parameter_key ? 1 : 0));
 const freshExactScope = (sequence, previous, actual, expected) => sequence > previous && JSON.stringify(orderedCells(actual)) === JSON.stringify(orderedCells(expected));
@@ -175,6 +176,7 @@ function verifyPack(directoryName) {
 
 async function main() {
   let browser;
+  let observePending = () => [];
   try {
     for (let attempt = 0; attempt < 2; attempt++) {
       launch = processOperation('launch');
@@ -197,6 +199,7 @@ async function main() {
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Network.enable'); await cdp.send('Performance.enable');
     const latest = {}, pending = new Map();
+    observePending = () => pendingRehearsalCommands(pending);
     let exported, diagnostics, rawPageErrors = 0, observationFailure = null, parameterSequence = 0;
     page.on('pageerror', () => { rawPageErrors++; });
     cdp.on('Network.webSocketFrameSent', event => {
@@ -266,10 +269,15 @@ async function main() {
     async function generate(seed, size) {
       summary.phase = 'candidate-generation'; save();
       const count = bank().entries.find(entry => entry.entry_id === selectedEntryId).candidates.length;
+      summary.phase = 'candidate-seed-input'; save();
       await forge.getByLabel('Starting seed').fill(String(seed));
+      summary.phase = 'candidate-depth-choice'; save();
       await forge.getByRole('button', { name: new RegExp(size) }).click();
+      summary.phase = 'candidate-submit'; save();
       await forge.getByRole('button', { name: 'Forge 1 candidate pairs', exact: true }).click();
+      summary.phase = 'candidate-count-advance'; save();
       await expect.poll(() => bank()?.entries.find(entry => entry.entry_id === selectedEntryId)?.candidates.length).toBe(count + 1);
+      summary.phase = 'candidate-value-and-scope-check'; save();
       const entry = bank().entries.find(value => value.entry_id === selectedEntryId), candidate = entry.candidates.at(-1);
       const canonicalKeys = a4Fields.map(key => key === 'Filter1 Frequency' ? 'filter1_frequency' : key);
       assert(candidate.analog_four_candidate.values.every(value => value.track_id === a4Track && canonicalKeys.includes(value.parameter)));
@@ -402,6 +410,7 @@ async function main() {
     summary.passed = false;
     summary.stop_reason = 'failure';
     summary.failure = { category: 'offline_rehearsal_operation_failed', error_type: errorType(error) };
+    summary.pending_at_failure = observePending();
     throw error;
   } finally {
     summary.ended_at = new Date().toISOString();
