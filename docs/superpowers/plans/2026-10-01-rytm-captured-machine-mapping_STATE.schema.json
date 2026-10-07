@@ -47,6 +47,9 @@
     "oct06_checkpoint": { "$ref": "#/$defs/sourceSha" },
     "reliability_started_at": { "$ref": "#/$defs/timestamp" },
     "reliability_deadline": { "$ref": "#/$defs/timestamp" },
+    "reliability_resumed_at": { "$ref": "#/$defs/timestamp" },
+    "reliability_resume_deadline": { "$ref": "#/$defs/timestamp" },
+    "reliability_resume_source": { "$ref": "#/$defs/sourceSha" },
     "historical_elapsed_time_recorded": { "type": "boolean" },
     "work": {
       "type": "object",

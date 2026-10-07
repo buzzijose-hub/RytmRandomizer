@@ -28,6 +28,8 @@ assert(args.includes('--bundle') && args.includes('--run-root'));
 assert(path.isAbsolute(python));
 assert(smoke > 0 ? smoke <= 600 : minutes >= 90 && minutes <= 120);
 assert(intervalSeconds >= 10 && intervalSeconds <= 180);
+// Four cues remain below the existing 64-candidate entry limit for 120 minutes.
+assert(smoke > 0 || intervalSeconds >= 30);
 assert(Number.isInteger(a4Track) && a4Track >= 1 && a4Track <= 4);
 assert(a4Fields.length > 0 && a4Fields.length <= 8);
 assert(!runRoot.startsWith(bundle + path.sep), 'QA credentials must be outside delivery');
@@ -48,6 +50,9 @@ const save = () => fs.writeFileSync(path.join(reportRoot, 'summary.json'), JSON.
 const record = value => fs.appendFileSync(telemetry, JSON.stringify({ at: new Date().toISOString(), ...value }) + '\n');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const errorType = error => ['AssertionError', 'Error', 'TimeoutError', 'TypeError', 'RangeError', 'SyntaxError'].includes(error?.name) ? error.name : 'Error';
+const rehearsalCueId = (ids, cycle) => ids[cycle % ids.length];
+const orderedCells = cells => cells === null || cells === undefined ? null : [...cells].sort((left, right) => left.item_id - right.item_id || (left.parameter_key < right.parameter_key ? -1 : left.parameter_key > right.parameter_key ? 1 : 0));
+const freshExactScope = (sequence, previous, actual, expected) => sequence > previous && JSON.stringify(orderedCells(actual)) === JSON.stringify(orderedCells(expected));
 
 const powershell = String.raw`
 $ErrorActionPreference='Stop'
@@ -64,18 +69,35 @@ function Own-Tree {
   $all=@(Get-CimInstance Win32_Process)
   $shell=$all|Where-Object ProcessId -eq $r.shell_pid|Select-Object -First 1
   if($null -eq $shell -or $shell.ExecutablePath -ne (Join-Path $r.bundle 'rytm-randomizer-shell.exe')){throw 'Owned shell missing'}
-  $delta=[math]::Abs(($shell.CreationDate.ToUniversalTime().Ticks-[long]$r.created_ticks)/[TimeSpan]::TicksPerSecond)
-  if($delta -gt 3){throw 'Owned shell identity changed'}
+  $recorded=[long]$r.created_ticks
+  if($shell.CreationDate.ToUniversalTime().Ticks -ne ($recorded-($recorded%10))){throw 'Owned shell identity changed'}
   return @(Descendants-Of $all $shell)
+}
+function Open-OwnedProcess($row){
+  $bound=$null
+  try{
+    $bound=Get-Process -Id $row.ProcessId -ErrorAction Stop
+    # Pin the Windows process object before identity reads or termination.
+    [void]$bound.SafeHandle
+    # CIM timestamps retain microseconds; native process times retain 100ns.
+    $nativeTicks=$bound.StartTime.ToUniversalTime().Ticks
+    if($bound.HasExited-or($nativeTicks-($nativeTicks%10)) -ne $row.CreationDate.ToUniversalTime().Ticks-or$bound.Path -ne $row.ExecutablePath){$bound.Dispose();return $null}
+    return $bound
+  }catch{
+    if($null -ne $bound){$bound.Dispose()}
+    $current=Get-CimInstance Win32_Process -Filter "ProcessId=$($row.ProcessId)"
+    if($null -ne $current-and$current.CreationDate -eq $row.CreationDate-and$current.ExecutablePath -eq $row.ExecutablePath){throw}
+    return $null
+  }
 }
 function Stop-Owned($owned){
   foreach($p in $owned){
-    $current=Get-CimInstance Win32_Process -Filter "ProcessId=$($p.ProcessId)"
-    if($null -ne $current-and$current.ExecutablePath -eq $p.ExecutablePath-and$current.CreationDate -eq $p.CreationDate){
-      try{Stop-Process -Id $p.ProcessId -ErrorAction Stop}catch{
-        $after=Get-CimInstance Win32_Process -Filter "ProcessId=$($p.ProcessId)"
-        if($null -ne $after-and$after.CreationDate -eq $p.CreationDate-and$after.ExecutablePath -eq $p.ExecutablePath){throw}
-      }
+    $bound=Open-OwnedProcess $p
+    if($null -eq $bound){continue}
+    try{
+      if(-not$bound.HasExited){$bound.Kill();if(-not$bound.WaitForExit(5000)){throw 'Owned process did not stop'}}
+    }finally{
+      $bound.Dispose()
     }
   }
 }
@@ -102,8 +124,8 @@ if($r.operation -eq 'launch'){
   @{processes=$rows;free_ram_bytes=($os.FreePhysicalMemory*1024)}|ConvertTo-Json -Depth 4 -Compress
 }elseif($r.operation -eq 'stop'){
   $owned=@(Own-Tree)
-  $main=Get-Process -Id $r.shell_pid
-  [void]$main.CloseMainWindow();[void]$main.WaitForExit(5000)
+  $main=Open-OwnedProcess ($owned|Where-Object ProcessId -eq $r.shell_pid|Select-Object -First 1)
+  if($null -ne $main){try{[void]$main.CloseMainWindow();[void]$main.WaitForExit(5000)}finally{$main.Dispose()}}
   Stop-Owned $owned;@{stopped=$true}|ConvertTo-Json -Compress
 }elseif($r.operation -eq 'restart-backend'){
   $tree=@(Own-Tree);$sidecarPath=Join-Path $r.bundle 'binaries/rytm-sidecar.exe'
@@ -166,7 +188,7 @@ async function main() {
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Network.enable'); await cdp.send('Performance.enable');
     const latest = {}, pending = new Map();
-    let exported, diagnostics, rawPageErrors = 0, observationFailure = null;
+    let exported, diagnostics, rawPageErrors = 0, observationFailure = null, parameterSequence = 0;
     page.on('pageerror', () => { rawPageErrors++; });
     cdp.on('Network.webSocketFrameSent', event => {
       let value; try { value = JSON.parse(event.response.payloadData); } catch { return; }
@@ -179,6 +201,7 @@ async function main() {
     cdp.on('Network.webSocketFrameReceived', event => {
       let value; try { value = JSON.parse(event.response.payloadData); } catch { return; }
       if (value.type) latest[value.type] = value;
+      if (value.type === 'mutation_parameters_changed') parameterSequence++;
       if (value.library_records) latest.library_records = value.library_records;
       if (value.show_pack_export) exported = value.show_pack_export;
       if (value.diagnostics) diagnostics = value.diagnostics;
@@ -255,27 +278,44 @@ async function main() {
       await expect.poll(() => bank()?.entries.find(entry => entry.entry_id === duplicate.entry_id)?.name).toBe(`Endurance cue ${item + 2}`);
     }
     const sourceIdentity = bank().entries.map(entry => [entry.rytm_source.sysex.frame_sha256, entry.analog_four_source.sysex.frame_sha256]);
+    const cueIds = bank().entries.map(entry => entry.entry_id);
+    const expectedScope = a4Fields.map(field => ({ item_id: a4Track, parameter_key: field === 'Filter1 Frequency' ? 'filter1_frequency' : field }));
+    summary.phase = 'missing-package-refusal'; save();
+    const beforeMissing = structuredClone(bank());
+    await forge.getByLabel('Import package ID').fill('missing-endurance-package');
+    await forge.getByLabel('New bank ID (optional)').fill('missing-endurance-copy');
+    await forge.getByRole('button', { name: 'Import local pack', exact: true }).click();
+    await expect(forge.getByText('Import show pack failed: Local artifact is missing. Restore the complete package or retained source, then retry.', { exact: true })).toBeVisible();
+    assert.deepEqual(bank(), beforeMissing);
+    summary.missing_package_refusal_preserved_bank = true;
     const started = performance.now(), duration = smoke > 0 ? smoke * 1000 : minutes * 60000;
     summary.rehearsal_started_at = new Date().toISOString(); save();
     while (performance.now() - started < duration) {
       const cycleStart = performance.now(), cycle = summary.cycles;
       await forge.getByLabel('Server banks').selectOption(workBankId);
       await expect.poll(() => bank()?.bank_id).toBe(workBankId);
-      const entry = bank().entries[cycle % bank().entries.length];
+      const entry = bank().entries.find(value => value.entry_id === rehearsalCueId(cueIds, cycle));
       await forge.getByRole('button', { name: entry.name, exact: true }).first().click();
       selectedEntryId = entry.entry_id;
-      if (entry.candidates.length < 10) await generate(3100 + cycle, cycle % 2 ? 'Large' : 'Small');
-      else {
-        const favoriteIndex = entry.candidates.findIndex(value => value.candidate_id === entry.favorite.candidate_id);
-        const card = forge.getByRole('article', { name: `Candidate ${favoriteIndex + 1}`, exact: true });
-        await card.getByRole('button', { name: 'Select for audition', exact: true }).click();
-        await expect.poll(() => latest.mutation_parameters_changed?.a4_parameters?.length).toBe(a4Fields.length);
-      }
+      summary.phase = 'scope-change-and-generation'; save();
+      await scope.getByLabel('Parameter scope device').selectOption('analog_four_mk2');
+      await scope.getByLabel('Parameter scope item').selectOption(String(a4Track));
+      await scope.getByRole('tab', { name: a4Page, exact: true }).click();
+      const selectedControl = scope.getByTestId(`parameter-row-${a4Track}-${a4Fields[0]}`).getByRole('checkbox');
+      let previousSequence = parameterSequence;
+      await selectedControl.uncheck();
+      await expect.poll(() => freshExactScope(parameterSequence, previousSequence, latest.mutation_parameters_changed?.a4_parameters, expectedScope.slice(1))).toBe(true);
+      previousSequence = parameterSequence;
+      await selectedControl.check();
+      await expect.poll(() => freshExactScope(parameterSequence, previousSequence, latest.mutation_parameters_changed?.a4_parameters, expectedScope)).toBe(true);
+      assert(entry.candidates.length < 64, 'Legal cue candidate bound reached');
+      await generate(3100 + cycle, cycle % 2 ? 'Large' : 'Small');
       const last = bank().entries.at(-1);
       await forge.getByRole('button', { name: `Move ${last.name} earlier`, exact: true }).click();
       await expect.poll(() => bank()?.entries.at(-1)?.entry_id).not.toBe(last.entry_id);
       const expected = structuredClone(stableEntries(bank()));
       const packageId = `endurance-${cycle}`;
+      summary.phase = 'export-and-byte-verification'; save();
       await forge.getByLabel('Export package ID').fill(packageId);
       await forge.getByRole('button', { name: 'Export draft local pack', exact: true }).click();
       await expect.poll(() => exported?.package_id).toBe(packageId);
@@ -284,6 +324,7 @@ async function main() {
       await forge.getByLabel('Import package ID').fill(packageId);
       await forge.getByLabel('New bank ID (optional)').fill(cycle < 8 ? `endurance-copy-${cycle}` : 'endurance-copy-0');
       const before = structuredClone(bank());
+      summary.phase = 'import-or-duplicate-refusal'; save();
       await forge.getByRole('button', { name: 'Import local pack', exact: true }).click();
       if (cycle < 8) {
         await expect(forge.getByLabel('Server banks')).toHaveValue(`endurance-copy-${cycle}`);
@@ -295,6 +336,7 @@ async function main() {
       }
       await expect(page.getByTestId('action-send')).toBeDisabled();
       assert(bank().readiness.show_ready === false);
+      summary.phase = 'resource-measurement'; save();
       await page.getByTestId('doctor-refresh').click();
       await expect.poll(() => diagnostics?.journal !== undefined).toBe(true);
       assert(diagnostics.journal.length <= 50);
@@ -313,6 +355,7 @@ async function main() {
       assert.equal(rawPageErrors, 0);
       assert.equal(observationFailure, null);
       if (cycle === 2 || (!smoke && cycle === 90)) {
+        summary.phase = 'owned-backend-restart-and-recall'; save();
         const restartBankId = bank().bank_id;
         const identity = digest(JSON.stringify(stableEntries(bank())));
         const recovery = processOperation('restart-backend');
@@ -337,6 +380,7 @@ async function main() {
     assert(summary.cycles >= 3);
     assert(smoke > 0 || summary.elapsed_seconds >= minutes * 60);
     summary.passed = true; summary.stop_reason = smoke > 0 ? 'bounded-smoke-completed-not-endurance' : 'declared-endurance-duration-completed';
+    summary.phase = 'completed';
     await page.screenshot({ path: path.join(reportRoot, 'final-desktop.png') });
   } catch (error) {
     summary.passed = false;
@@ -347,7 +391,12 @@ async function main() {
     summary.ended_at = new Date().toISOString();
     if (browser) await browser.close().catch(() => {});
     if (launch) {
-      try { summary.cleanup = processOperation('stop'); } catch (error) { summary.cleanup = { stopped: false, category: 'owned_process_cleanup_failed', error_type: errorType(error) }; summary.passed = false; }
+      try { summary.cleanup = processOperation('stop'); } catch (error) {
+        summary.cleanup = { stopped: false, category: 'owned_process_cleanup_failed', error_type: errorType(error) };
+        summary.passed = false;
+        summary.stop_reason = 'owned-process-cleanup-failed';
+        process.exitCode = 1;
+      }
     }
     save(); console.log(JSON.stringify({ passed: summary.passed, mode: summary.mode, cycles: summary.cycles, stop_reason: summary.stop_reason, report: reportRoot }));
   }

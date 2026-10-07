@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-06T22:17:00Z",
+  "updated_at": "2026-10-07T15:51:10Z",
   "status": "in-flight",
-  "phase": "Oct06-reliability-repairs-integrated-source-verification-and-new-build-endurance-pending",
+  "phase": "Oct07-resumed-reliability-source-frozen-full-checks-running-new-package-and-endurance-pending",
   "prototype_source": "8cfa6f7b6cf9469ffa134598182febb60ecdd1df",
   "prototype_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-tom-mapping/RytmRandomizer",
   "delivery_start_source": "941643c551abfa225f45c70a954b6671d1cbb5f4",
@@ -22,6 +22,9 @@
   "oct06_checkpoint": "6eb5d4c1e3ed103b9870d935c3be2656857de708",
   "reliability_started_at": "2026-10-06T21:41:19Z",
   "reliability_deadline": "2026-10-07T05:41:19Z",
+  "reliability_resumed_at": "2026-10-07T15:37:39Z",
+  "reliability_resume_deadline": "2026-10-07T23:37:39Z",
+  "reliability_resume_source": "1e0d66a8a66a61e713ddb9c7013c97dc9e2eb4ec",
   "historical_elapsed_time_recorded": false,
   "work": {
     "mapping_implementation": "Oct05-all8-CY-Ride-SRC-blocked-25of29-new-fallback-rows-documented-only-guardedCC7-eligible-224-descriptive-bindings-retained-Studio-SRC-metadata-published3461f42e",

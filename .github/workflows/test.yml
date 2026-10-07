@@ -791,6 +791,10 @@ jobs:
         working-directory: desktop/web
         run: npx tsc --noEmit -p tsconfig.native.json
 
+      - name: Verify offline rehearsal process ownership and evidence helpers
+        working-directory: desktop/web
+        run: node --test tests/offline_endurance_driver.test.cjs
+
       - name: Exercise signed updater through real WebView and IPC
         working-directory: desktop/web
         shell: pwsh
