@@ -19,7 +19,10 @@ No MIDI/USB enumeration/open/arming/write occurred. Old deliveries/settings stay
 preserved. See the delivery's studio-procedure/DELIVERY-RECEIPT.md for hashes,
 accounting, limitations and the first backed-up Pad2 physical/recovery test.
 
-Latest source `6e098f85` passes10860tests/5skips/6existingwarnings480.04s and
+Historical source-verification and earlier runtime checkpoints follow; their
+pending/failed statements are not the current remaining-work decision above.
+
+Source `6e098f85` passes10860tests/5skips/6existingwarnings480.04s and
 all51touched modules100%line/branch. The exact84package100minute attempt failed
 after140cycles/~70minutes: generation completed after the five-second UI
 deadline, with its candidate retained atomically and safe cleanup. No bankloss

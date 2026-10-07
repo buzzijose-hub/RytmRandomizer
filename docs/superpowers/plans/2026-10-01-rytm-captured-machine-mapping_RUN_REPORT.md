@@ -1,6 +1,6 @@
 # Captured Rytm mapping software report
 
-> Status: in-flight — October7 final source verified; replacement package/endurance pending.
+> Status: offline package/endurance delivered; human/physical gates pending.
 > Earlier8b/fa43 copies preserved. Protected review and physical/show gates held.
 
 ## October 7 Resumed Reliability Acceptance
@@ -65,8 +65,9 @@ and old settings remain preserved.
 The248-candidate different-selection/favorite benchmark confirms one proof
 instead of two and fewer original reads. Recorded7.793/3.920second timings
 overlapped briefly and are not a controlled comparison; artifact enumeration
-was not the dominant cost. The native packaged failure must be retested rather
-than inferred fixed from helper measurements. All MIDI remains disabled.
+was not the dominant cost. At that checkpoint the native packaged failure still
+required retesting rather than inference from helper measurements. The actual
+affected-case and fresh90minute tests subsequently passed above. MIDI stays off.
 
 Earlier production source `e96b4bc69eaf8b993d17b3d1d5031cfbfa79a3aa` passed
 10,834 tests / 5 skipped / 6 existing warnings in 471.68 seconds. Canonical Gate1
