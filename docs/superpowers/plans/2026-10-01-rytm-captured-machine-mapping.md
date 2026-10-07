@@ -745,3 +745,16 @@ Parent owns the existing workflow post-failure step/docs; one disjoint worker
 owns scripts/diagnose_native_audio_cache.py and its tests. Keep the running
 1784 Windows rehearsal frozen. Only lightweight fake-process tests may overlap
 it; normal publication/architecture gates wait until owned endurance completes.
+
+Measured Windows endurance failed after81cycles/2413seconds, not acceptance.
+The last generation acknowledged successfully, but no final favorite command
+was sent: the QA controller snapshots confirmation visibility immediately.
+Replace that snapshot with an authoritative replacement decision and awaited
+confirmation; preserve deadlines and strict favorite checks. Separately,
+favorite acknowledgements rose to4.818seconds, while a read-only90candidate
+bank context verification measured1.370seconds and the WS action repeats that
+full validation three times. Contained production optimization may reuse one
+verified immutable recall context within that action only, preserving whole-bank
+byte/profile replay before publication, fresh validation on each new action,
+stale-source rejection, cancellation and disarmed recall. No long-lived authority
+cache, skipped unrelated artifacts, packet filtering or timeout increase.
