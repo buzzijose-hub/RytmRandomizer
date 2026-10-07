@@ -3297,6 +3297,9 @@ flowchart TD
     Store["revisioned canonical JSON<br/>explicit content-addressed retention"] --- Favorite
     Pack["verified .show-pack<br/>cue order + recovery + checksums<br/>manifest published last"] --- Store
     Store --> ArtifactErrors["canonical artifact error categories<br/>path-free recovery messages"]
+    Store --> RecallProof["one complete fresh bank proof per recall action<br/>atomic publication"]
+    RecallProof --> RecallContext["frozen CandidateRecallContext<br/>exact verified source / candidate"]
+    RecallContext --> RecallProjection["WS published-selection correspondence check<br/>disarmed local adoption; no filesystem replay"]
     ScopeGuard["authoritative current targets / locks<br/>reject stale scope expansion"] --> Forge
     Queue["existing bounded outbound queues"] --> Health["GET /health<br/>aggregate depth / high-water / drops only"]
 

@@ -172,6 +172,32 @@ test('scope proof requires a fresh event and exact cells, not a matching old len
   assert.equal(context.observe(5, 4, [], []), true);
 });
 
+test('favorite replacement waits for its delayed confirmation instead of a visibility snapshot', async () => {
+  const start = source.indexOf('async function markRehearsalFavorite(');
+  const end = source.indexOf('\nconst powershell', start);
+  assert(start > 0 && end > start, 'The actual favorite helper is required');
+  const events = [];
+  const confirm = { async click() { events.push('replace'); }, isVisible() { assert.fail('An immediate visibility snapshot is not proof'); } };
+  const card = { getByRole(_role, option) {
+    return option.name === 'Mark favorite' ? { async click() { events.push('mark'); } } : confirm;
+  } };
+  let release;
+  const visible = new Promise(resolve => { release = resolve; });
+  const context = vm.createContext({ expect(control) {
+    assert.equal(control, confirm);
+    return { async toBeVisible() { events.push('wait'); await visible; } };
+  } });
+  new vm.Script(source.slice(start, end) + ';globalThis.mark=markRehearsalFavorite;').runInContext(context);
+  const pending = context.mark(card, { favorite: { candidate_id: 'old' } }, { candidate_id: 'new' });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(events, ['mark', 'wait']);
+  release(); await pending;
+  assert.deepEqual(events, ['mark', 'wait', 'replace']);
+  events.length = 0;
+  await context.mark(card, { favorite: null }, { candidate_id: 'first' });
+  assert.deepEqual(events, ['mark']);
+});
+
 const processRows = String.raw`
 $epoch=[DateTime]::new(2026,1,1,0,0,0,[DateTimeKind]::Utc)
 function Process-Row($id,$parent,$seconds,$executable='C:\qa\child.exe'){

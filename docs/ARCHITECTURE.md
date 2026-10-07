@@ -1633,6 +1633,11 @@ Generation validates requested locks/targets against authoritative session
 scope before publication and does not replace operator scope with narrower
 wire data. Public workspace selection/favorite transitions revalidate exact
 retained recipe/source claims before committing a revision.
+One `recall_candidate` action verifies the complete immutable bank once and
+returns a frozen `CandidateRecallContext` containing the exact verified data.
+The WS consumer checks its published bank/entry/selection correspondence before
+adoption and reuses that result without another filesystem replay. Every later
+action reads and verifies afresh; no persistent authority cache is introduced.
 
 The existing token-free GET /health also exposes aggregate outbound-queue
 capacity, active-connection count, current depth, active-connection high-water

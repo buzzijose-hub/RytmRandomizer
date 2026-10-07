@@ -11,17 +11,20 @@ from pathlib import Path
 import pytest
 
 from rytm_randomizer.cockpit.capture import ANALOG_FOUR_DEVICE_ID, decode_kit_capture_frame
-from rytm_randomizer.cockpit.data import MutationCandidate, Snapshot
+from rytm_randomizer.cockpit.data import Snapshot
 from rytm_randomizer.cockpit.data.a4_preparation import A4_PREPARATION_PERMANENT_BLOCKERS
 from rytm_randomizer.cockpit.data.parameter_scope import ParameterSelection
-from rytm_randomizer.cockpit.data.show_bank import ShowBank, ShowBankEntry, ShowKitCandidate
+from rytm_randomizer.cockpit.data.show_bank import ShowBank, ShowKitCandidate
 from rytm_randomizer.cockpit.show_bank import workspace as workspace_module
 from rytm_randomizer.cockpit.show_bank.a4_preparation import (
     A4PreparationContext,
     prepare_a4_audition,
 )
 from rytm_randomizer.cockpit.show_bank.export import verify_show_bank_frames
-from rytm_randomizer.cockpit.show_bank.workspace import ShowKitForgeWorkspace
+from rytm_randomizer.cockpit.show_bank.workspace import (
+    CandidateRecallContext,
+    ShowKitForgeWorkspace,
+)
 from rytm_randomizer.cockpit.ws import handlers
 from rytm_randomizer.cockpit.ws.session import CockpitSession
 from rytm_randomizer.devices import (
@@ -242,8 +245,11 @@ def test_recall_refuses_decoder_drift_after_real_package_verification_without_pu
     assert not workspace.state_dict()["banks"][0]["readiness"]["show_ready"]
 
 
+@pytest.mark.parametrize(
+    "contradiction", ["missing-selection", "different-bank", "different-entry"]
+)
 def test_command_refuses_successful_selection_result_when_store_still_has_no_selection(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, contradiction: str
 ) -> None:
     journey = _journey(tmp_path)
     (candidate,) = _generate(journey, fields=("filter2_resonance",), count=1)
@@ -266,7 +272,7 @@ def test_command_refuses_successful_selection_result_when_store_still_has_no_sel
         expected_revision: int,
         *,
         offline_only: bool = False,
-    ) -> tuple[ShowBankEntry, Snapshot, MutationCandidate]:
+    ) -> CandidateRecallContext:
         assert (bank_id, entry_id, candidate_id, expected_revision, offline_only) == (
             bank.bank_id,
             entry.entry_id,
@@ -275,10 +281,28 @@ def test_command_refuses_successful_selection_result_when_store_still_has_no_sel
             True,
         )
         calls.append(candidate_id)
-        return entry, source, candidate.rytm_candidate
+        return CandidateRecallContext(
+            (
+                replace(unselected, revision=unselected.revision + 1)
+                if contradiction == "different-bank"
+                else unselected
+            ),
+            (
+                replace(entry, name="Not the published entry")
+                if contradiction == "different-entry"
+                else entry
+            ),
+            source,
+            candidate,
+            decode_kit_capture_frame(
+                ANALOG_FOUR_DEVICE_ID,
+                workspace.original_source_frames(bank_id, entry_id)[ANALOG_FOUR_DEVICE_ID],
+            ),
+            frame,
+        )
 
     before = _disk(workspace.store.root)
-    monkeypatch.setattr(workspace, "select_candidate", selection_reports_success)
+    monkeypatch.setattr(workspace, "recall_candidate", selection_reports_success)
     ack = asyncio.run(
         handlers.handle_command(
             {

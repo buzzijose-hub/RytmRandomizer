@@ -9,8 +9,9 @@ Rytm ``ArmedApply`` handler *after* a successful send.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime
+from types import MappingProxyType
 from typing import Final, Literal, cast
 
 from ...observability.logging import get_logger
@@ -99,6 +100,18 @@ MAX_VOLATILE_FRAME_BYTES: Final[int] = 64 * 1024 * 1024
 CaptureKind = Literal["source", "favorite", "candidate"]
 IdFactory = Callable[[str], str]
 _logger = get_logger(__name__)
+
+
+@dataclass(frozen=True)
+class CandidateRecallContext:
+    """Workspace-produced evidence for one local action, never an input grant."""
+
+    bank: ShowBank
+    entry: ShowBankEntry
+    source: Snapshot
+    candidate: ShowKitCandidate
+    analog_four_source: KitCaptureResult
+    analog_four_frame: bytes = field(repr=False)
 
 
 def _new_id(prefix: str) -> str:
@@ -1058,26 +1071,10 @@ class ShowKitForgeWorkspace:
         *,
         offline_only: bool = False,
     ) -> tuple[ShowBankEntry, Snapshot, MutationCandidate]:
-        if type(offline_only) is not bool:
-            raise ValueError("offline_only must be a boolean")
-        bank = self._checked_bank(bank_id, expected_revision)
-        if not offline_only:
-            self._require_editable_candidate_authority(bank)
-        updated = select_candidate(bank, entry_id, candidate_id, clock=self._clock)
-        selected = updated.entry(entry_id)
-        candidate = selected.selected_candidate
-        if candidate is None:
-            raise AssertionError("candidate selection transition lost its selection")
-        source = self._source_snapshot(updated, selected)
-        self.original_source_frames(bank_id, entry_id)
-        artifact = candidate.analog_four_candidate.sysex
-        frame = self._retained_frame(updated, artifact.artifact_id)
-        self.candidate_context(bank_id, entry_id, candidate_id)
-        updated = self._retain_frames(updated, ((artifact.artifact_id, frame),))
-        self._active_entry_ids[bank_id] = entry_id
-        self._current_rytm_auditions.pop((bank_id, entry_id), None)
-        self._publish(updated, already_saved=True)
-        return updated.entry(entry_id), source, candidate.rytm_candidate
+        context = self.recall_candidate(
+            bank_id, entry_id, candidate_id, expected_revision, offline_only=offline_only
+        )
+        return context.entry, context.source, context.candidate.rytm_candidate
 
     def audition_context(
         self, bank_id: str, entry_id: str
@@ -1113,27 +1110,48 @@ class ShowKitForgeWorkspace:
         self, bank_id: str, entry_id: str, candidate_id: str
     ) -> tuple[Snapshot, ShowKitCandidate, bytes]:
         """Verify retained source/recipe/frame before any local recall transition."""
-        bank = self.bank(bank_id)
+        context = self._verified_candidate_context(self.bank(bank_id), entry_id, candidate_id)
+        return context.source, context.candidate, context.analog_four_frame
+
+    def _verified_candidate_context(
+        self, bank: ShowBank, entry_id: str, candidate_id: str
+    ) -> CandidateRecallContext:
         entry = bank.entry(entry_id)
         candidate = entry.candidate_by_id(candidate_id)
-        self.original_source_frames(bank_id, entry_id)
-        verify_show_bank_frames(
-            bank,
+        # One fresh complete read/proof; subsequent consumers use these exact bytes.
+        frames = MappingProxyType(
             {
                 item.artifact_id: self._store.read_retained(item.retained)
                 for item in bank.sysex_artifacts()
                 if item.retained is not None
-            },
+            }
         )
-        source = self._source_snapshot(bank, entry)
-        frame = self._retained_frame(bank, candidate.analog_four_candidate.sysex.artifact_id)
+        verify_show_bank_frames(bank, frames)
+        artifact_id = candidate.analog_four_candidate.sysex.artifact_id
+        frame = frames.get(artifact_id)
+        if frame is None:
+            frame = self._retained_frame(bank, artifact_id)
         decoded = decode_kit_capture_frame(ANALOG_FOUR_DEVICE_ID, frame)
         if (
             analog_four_capture_semantic_fingerprint(decoded, candidate.analog_four_candidate)
             != candidate.analog_four_candidate.semantic_fingerprint
         ):
             raise ValueError("candidate frame semantic fingerprint mismatch")
-        return source, candidate, frame
+        rytm = decode_kit_capture_frame(
+            ANALOG_RYTM_DEVICE_ID, frames[entry.rytm_source.sysex.artifact_id]
+        )
+        source_id = entry.rytm_source.snapshot_id
+        if source_id is None:
+            raise ValueError("Rytm source is missing its mutation snapshot identity")
+        source = replace(
+            cockpit_snapshot_from_rytm_capture(rytm),
+            snapshot_id=source_id,
+            captured_at=entry.rytm_source.captured_at,
+        )
+        analog_four_source = decode_kit_capture_frame(
+            ANALOG_FOUR_DEVICE_ID, frames[entry.analog_four_source.sysex.artifact_id]
+        )
+        return CandidateRecallContext(bank, entry, source, candidate, analog_four_source, frame)
 
     def mark_favorite(
         self,
@@ -1145,32 +1163,69 @@ class ShowKitForgeWorkspace:
         replace_existing: bool = False,
         offline_only: bool = False,
     ) -> ShowBankEntry:
+        return self.recall_candidate(
+            bank_id,
+            entry_id,
+            candidate_id,
+            expected_revision,
+            favorite=True,
+            replace_existing=replace_existing,
+            offline_only=offline_only,
+        ).entry
+
+    @trace("show_kit_forge.recall_candidate")
+    # Explicit action options preserve the select/favorite contracts without proof inputs.
+    def recall_candidate(  # noqa: PLR0913
+        self,
+        bank_id: str,
+        entry_id: str,
+        candidate_id: str,
+        expected_revision: int,
+        *,
+        favorite: bool = False,
+        replace_existing: bool = False,
+        offline_only: bool = False,
+    ) -> CandidateRecallContext:
+        """Verify once, publish atomically, and return inert recall data for this action."""
         if type(offline_only) is not bool:
             raise ValueError("offline_only must be a boolean")
+        if type(favorite) is not bool:
+            raise ValueError("favorite must be a boolean")
         bank = self._checked_bank(bank_id, expected_revision)
         if not offline_only:
             self._require_editable_candidate_authority(bank)
         entry = bank.entry(entry_id)
         updated = bank
-        if entry.selected_candidate_id != candidate_id:
+        if not favorite or entry.selected_candidate_id != candidate_id:
             updated = select_candidate(updated, entry_id, candidate_id, clock=self._clock)
-        updated = mark_favorite(
-            updated,
-            entry_id,
-            replace_existing=replace_existing,
-            clock=self._clock,
+        if favorite:
+            updated = mark_favorite(
+                updated, entry_id, replace_existing=replace_existing, clock=self._clock
+            )
+            if updated.entry(entry_id).favorite_candidate is None:
+                raise AssertionError("favorite transition lost its selected candidate")
+        selected = updated.entry(entry_id).selected_candidate
+        if selected is None:
+            raise AssertionError("candidate selection transition lost its selection")
+        if selected.candidate_id != candidate_id:
+            raise AssertionError("candidate selection transition changed its candidate")
+        context = self._verified_candidate_context(bank, entry_id, candidate_id)
+        if self._checked_bank(bank_id, expected_revision) is not bank:
+            raise ValueError("show bank changed; refresh before retrying")
+        artifact_id = selected.analog_four_candidate.sysex.artifact_id
+        updated = self._retain_frames(updated, ((artifact_id, context.analog_four_frame),))
+        published_entry = updated.entry(entry_id)
+        published_candidate = published_entry.candidate_by_id(candidate_id)
+        context = replace(
+            context, bank=updated, entry=published_entry, candidate=published_candidate
         )
-        favorite = updated.entry(entry_id).favorite_candidate
-        if favorite is None:
-            raise AssertionError("favorite transition lost its selected candidate")
-        artifact = favorite.analog_four_candidate.sysex
-        frame = self._retained_frame(updated, artifact.artifact_id)
-        self.candidate_context(bank_id, entry_id, candidate_id)
-        updated = self._retain_frames(updated, ((artifact.artifact_id, frame),))
-        self._active_entry_ids[bank_id] = entry_id
-        self._current_preflight_grants.pop((bank_id, entry_id), None)
         self._publish(updated, already_saved=True)
-        return updated.entry(entry_id)
+        self._active_entry_ids[bank_id] = entry_id
+        if favorite:
+            self._current_preflight_grants.pop((bank_id, entry_id), None)
+        else:
+            self._current_rytm_auditions.pop((bank_id, entry_id), None)
+        return context
 
     def attest_saved(
         self,
@@ -1609,6 +1664,7 @@ class ShowKitForgeWorkspace:
 
 
 __all__ = [
+    "CandidateRecallContext",
     "CaptureKind",
     "MAX_CANDIDATES_PER_REQUEST",
     "SHOW_BANK_WORKSPACE_SCHEMA_VERSION",

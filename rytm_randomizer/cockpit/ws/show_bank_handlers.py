@@ -45,7 +45,7 @@ from ..library.store import LIBRARY_STORE_ID
 from ..mutation_targets import MutationTargets
 from ..show_bank.readiness import is_catalog_only_show_bank
 from ..show_bank.store import show_bank_corruption_category
-from ..show_bank.workspace import CaptureKind, ShowKitForgeWorkspace
+from ..show_bank.workspace import CandidateRecallContext, CaptureKind, ShowKitForgeWorkspace
 from ..stage.policy import (
     A4_LANE_POLICY,
     ANALOG_FOUR_DEVICE_ID,
@@ -291,29 +291,28 @@ def _check_candidate_recall(
     entry_id: str,
     candidate_id: str,
     expected_revision: int,
-) -> None:
+) -> ProfileModel:
     bank = workspace.checked_bank(bank_id, expected_revision)
     candidate = bank.entry(entry_id).candidate_by_id(candidate_id)
-    _candidate_profile(session, candidate)
-    workspace.candidate_context(bank_id, entry_id, candidate_id)
+    return _candidate_profile(session, candidate)
 
 
 def _sync_selected_candidate(
     session: CockpitSession,
     workspace: ShowKitForgeWorkspace,
-    bank_id: str,
-    entry_id: str,
+    context: CandidateRecallContext,
+    profile: ProfileModel,
 ) -> list[dict[str, object]]:
-    bank = workspace.bank(bank_id)
-    entry = bank.entry(entry_id)
-    selected = entry.selected_candidate
-    if selected is None:
-        raise ValueError("select a candidate before local recall")
-    profile = _candidate_profile(session, selected)
-    source, selected, _ = workspace.candidate_context(bank_id, entry_id, selected.candidate_id)
-    a4_frame = workspace.original_source_frames(bank_id, entry_id)[ANALOG_FOUR_DEVICE_ID]
-    session.offline_a4_capture = decode_kit_capture_frame(ANALOG_FOUR_DEVICE_ID, a4_frame)
-    if is_catalog_only_show_bank(bank):
+    if (
+        workspace.bank(context.bank.bank_id) != context.bank
+        or context.bank.entry(context.entry.entry_id) != context.entry
+        or context.entry.selected_candidate != context.candidate
+    ):
+        raise ValueError("verified recall result differs from the published selection")
+    source = context.source
+    selected = context.candidate
+    session.offline_a4_capture = context.analog_four_source
+    if is_catalog_only_show_bank(context.bank):
         session.recalled_offline_favorite = True
     session.device.adopt_snapshot(source)
     _ensure_history_snapshot(session, source.snapshot_id)
@@ -601,17 +600,17 @@ async def _handle_select_candidate(
     bank_id = _show_bank_text(cmd, "bank_id")
     entry_id = _show_bank_text(cmd, "entry_id")
     candidate_id = _show_bank_text(cmd, "candidate_id")
-    _check_candidate_recall(
+    profile = _check_candidate_recall(
         session, workspace, bank_id, entry_id, candidate_id, _integer(cmd, "expected_revision")
     )
-    workspace.select_candidate(
+    context = workspace.recall_candidate(
         bank_id,
         entry_id,
         candidate_id,
         _integer(cmd, "expected_revision"),
         offline_only=True,
     )
-    events = _sync_selected_candidate(session, workspace, bank_id, entry_id)
+    events = _sync_selected_candidate(session, workspace, context, profile)
     events.append(build_show_bank_changed(session))
     return HandlerResult(ack={"ok": True, "candidate_id": candidate_id}, events=events)
 
@@ -621,14 +620,15 @@ async def _handle_mark_favorite(cmd: dict[str, object], session: CockpitSession)
     bank_id = _show_bank_text(cmd, "bank_id")
     entry_id = _show_bank_text(cmd, "entry_id")
     candidate_id = _show_bank_text(cmd, "candidate_id")
-    _check_candidate_recall(
+    profile = _check_candidate_recall(
         session, workspace, bank_id, entry_id, candidate_id, _integer(cmd, "expected_revision")
     )
-    workspace.mark_favorite(
+    context = workspace.recall_candidate(
         bank_id,
         entry_id,
         candidate_id,
         _integer(cmd, "expected_revision"),
+        favorite=True,
         replace_existing=_optional_boolean(
             cmd,
             "replace_existing",
@@ -636,7 +636,7 @@ async def _handle_mark_favorite(cmd: dict[str, object], session: CockpitSession)
         ),
         offline_only=True,
     )
-    events = _sync_selected_candidate(session, workspace, bank_id, entry_id)
+    events = _sync_selected_candidate(session, workspace, context, profile)
     events.append(build_show_bank_changed(session))
     return HandlerResult(ack={"ok": True, "candidate_id": candidate_id}, events=events)
 

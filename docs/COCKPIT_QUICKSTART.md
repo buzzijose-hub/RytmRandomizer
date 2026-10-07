@@ -738,6 +738,9 @@ the previous complete bank and favorite intact. Unexpected programming errors
 remain generic and go to diagnostics instead of exposing exception details.
 Generation refuses requests that omit current locks or expand current targets;
 refresh the authoritative scope before retrying a stale request.
+While the Pad2 rehearsal preset awaits the backend, device/item selectors are
+temporarily disabled so its delayed response cannot overwrite a newer view.
+After it completes or refuses, normal device/item selection resumes.
 Generating choices clears the active preview and preparation; it does not
 reactivate an older retained selection. Inspect a candidate and explicitly
 select it or mark it as a local favorite before preparing an audition.

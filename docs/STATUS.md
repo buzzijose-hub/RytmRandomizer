@@ -12,6 +12,11 @@ KIT sources with local cue-label fallbacks. New adversarial source/profile/
 migration/rollback cases and read-only health queue statistics are integrated.
 The reproducible packaged-app driver passed a100-second trial, explicitly not
 endurance; the required90-120minute new-build rehearsal remains pending.
+The later1784package passed180seconds/sixcycles but its100minute attempt failed
+after81cycles/~40minutes, with safe cleanup. Its harness now awaits required
+favorite replacement confirmation. Measured near-deadline repeated recall proof
+is replaced with one fresh whole-bank verification per action; later requests
+still revalidate. New full-source/package/endurance acceptance is pending.
 The prior network interruption ended execution without timed acceptance. Fresh
 resume15:37:39UTC, ceiling23:37:39UTC October7. Published db2daf6c Windows build
 37545232133 succeeded but has not been delivered. PR CI37544839205 failed the

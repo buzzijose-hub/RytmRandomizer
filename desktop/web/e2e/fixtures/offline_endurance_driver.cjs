@@ -53,6 +53,15 @@ const errorType = error => ['AssertionError', 'Error', 'TimeoutError', 'TypeErro
 const rehearsalCueId = (ids, cycle) => ids[cycle % ids.length];
 const orderedCells = cells => cells === null || cells === undefined ? null : [...cells].sort((left, right) => left.item_id - right.item_id || (left.parameter_key < right.parameter_key ? -1 : left.parameter_key > right.parameter_key ? 1 : 0));
 const freshExactScope = (sequence, previous, actual, expected) => sequence > previous && JSON.stringify(orderedCells(actual)) === JSON.stringify(orderedCells(expected));
+async function markRehearsalFavorite(card, entry, candidate) {
+  const replacement = entry.favorite !== null && entry.favorite.candidate_id !== candidate.candidate_id;
+  await card.getByRole('button', { name: 'Mark favorite', exact: true }).click();
+  if (replacement) {
+    const confirm = card.getByRole('button', { name: 'Replace favorite', exact: true });
+    await expect(confirm).toBeVisible();
+    await confirm.click();
+  }
+}
 
 const powershell = String.raw`
 $ErrorActionPreference='Stop'
@@ -255,6 +264,7 @@ async function main() {
     let selectedEntryId = bank().active_entry_id;
     const stableEntries = value => value.entries.map(entry => ({ entry_id: entry.entry_id, name: entry.name, candidates: entry.candidates, favorite: entry.favorite, rytm_source: entry.rytm_source, analog_four_source: entry.analog_four_source, oxi: entry.oxi, transition_notes: entry.transition_notes }));
     async function generate(seed, size) {
+      summary.phase = 'candidate-generation'; save();
       const count = bank().entries.find(entry => entry.entry_id === selectedEntryId).candidates.length;
       await forge.getByLabel('Starting seed').fill(String(seed));
       await forge.getByRole('button', { name: new RegExp(size) }).click();
@@ -266,9 +276,8 @@ async function main() {
       assert(candidate.rytm_candidate.pad_deltas.every(delta => delta.changed_keys.length === 0 || (includePad2 && delta.pad_id === 2 && delta.changed_keys.every(key => ['flt', 'amp_decay', 'overdrive', 'reverb'].includes(key)))));
       const card = forge.getByRole('article', { name: `Candidate ${entry.candidates.length}`, exact: true });
       await card.getByText('Compare musical changes', { exact: true }).click();
-      await card.getByRole('button', { name: 'Mark favorite', exact: true }).click();
-      const confirm = card.getByRole('button', { name: 'Replace favorite', exact: true });
-      if (await confirm.isVisible()) await confirm.click();
+      summary.phase = 'favorite-confirmation-and-retention'; save();
+      await markRehearsalFavorite(card, entry, candidate);
       await expect.poll(() => bank()?.entries.find(value => value.entry_id === entry.entry_id)?.favorite?.candidate_id).toBe(candidate.candidate_id);
       return candidate;
     }
