@@ -1,7 +1,64 @@
 # Captured Rytm mapping software report
 
-> Status: in-flight — October6 native offline package verified and delivered.
+> Status: in-flight — October7 resumed source verified; new package/endurance pending.
 > Earlier8b/fa43 copies preserved. Protected review and physical/show gates held.
+
+## October 7 Resumed Reliability Acceptance
+
+Published source `1c09320681e452f814bdea24659f2bfaa7fe7ce3`, same direct-base
+PR254. Resume15:37:39UTC, eight-hour ceiling23:37:39UTC October7. The previous
+transport interruption did not complete endurance; its exact termination time
+is unavailable. Prior6eb delivery and user changes remain untouched.
+
+Specific artifact errors, authoritative scope, stale-generation refusal,
+candidate/source validation and failure-before-publication are verified. Pending
+typed/QA repairs are finished. Scope refusal logs expose only device and counts.
+The QA controller pins owned process handles, excludes older reused-parent-PID
+descendants, preserves fresh exact scope observations and fairly rotates stable
+cue IDs independently of display ordering. Cleanup failure revokes acceptance
+and returns nonzero. Actual self-process binding confirmed CIM microsecond
+truncation of native100ns process times; only that precision difference is
+normalized. The musical/native parameter encodings are unchanged.
+
+Actual source gates:10755passed/5skipped/6existingwarnings634.52s; all51touched
+production modules100%line/branch, combined99.6673032166%, purebranch12844/12922.
+Frontend1178tests/79files,100%allfour metrics89.71s. Native focused19tests and
+explicitNode15QA tests pass; the latter now run in the Windows CI lane. Actual
+source-browser workflows2pass12.3s, oneworker/zero retries. Exact pinned typing,
+lint, Vulture, version/schema and normal870architecture/697notfast gates pass.
+One incorrect version-script path failed; the canonical checker subsequently
+passed. No failure is relabeled acceptance and no safety/coverage gate is weakened.
+
+CI37544839205 timed out waiting for React mount in hydrate_reload;31other cases
+passed. Its retained logs/artifact cannot distinguish initial versus reloaded
+document or establish the original cause. The native fixture now awaits the
+actual App entry before starting its existing assertions; deferred/rejected
+entry and unchanged25second mount refusals are tested. New diagnostic fields
+identify initial/reloaded failures without paths or credentials. This is an
+evidence-backed synchronization contract improvement, not a confirmed original
+root-cause claim. New-head hosted native acceptance is still pending.
+
+Identified Windows run37649053103 builds exact1c093206. Actual new executable
+acceptance and the full90-120minute rehearsal have not started. The controller
+checks the specific missing-package message and unchanged bank, then continually
+cycles exact scopes, generation, favorites, ordering, canonical byte proof,
+export/import/refusal and two owned backend restarts. Four stable cues stay
+below64candidates with interval>=30seconds for at most120minutes. Resource,
+latency, journal/history and queue evidence will be reported only after the run.
+No real MIDI/USB enumeration, opening, arming, writes or hardware evidence.
+
+That Windows run subsequently succeeded and both binary hashes matched its
+manifest. Archive extraction retained one extra directory level; flattening only
+the verified owned artifact corrected the pre-launch path failure. Two actual
+setup trials then failed before the timed clock, at A4 targeting after a delayed
+Pad2 preset. Both stopped owned processes successfully. A delayed-response UI
+regression reproduced enabled device/item selectors while the preset could
+reset their view; a contained two-attribute pending-state repair passes28focused
+tests. Plan scope was committed before that production edit. A replacement
+package and actual acceptance are required;1c093 is retained as diagnostic only.
+Both new-head native jobs passed32scenarios, without retries or deadline changes.
+The push macOS suite separately crashed inside numba/librosa peak picking; its
+lost worker coverage is a failure, not acceptance. Investigation is in progress.
 
 ## October 6 Native Offline Delivery
 
@@ -62,8 +119,10 @@ credentials moved outside delivery. Earlier8b/fa43 binaries remain unchanged.
 Eight bounded post-push reviews clear production, abstraction and corrected
 docs. One nonblocking duplicate-original-read cleanup and historical Gate14/16
 exceptions remain explicit. [Consolidated review](https://github.com/buzzijose-hub/RytmRandomizer/pull/254#issuecomment-6024588295)
-was posted; Eddie review requested. Docs-only receipt publication/CI still must
-be recorded separately, with no protected approval/merge inferred.
+was posted; Eddie review requested. Docs-only receipt af5a2b40 was published
+and its31successful checks/three explicit skips completed. This completed
+October6 baseline is distinct from the pending October7 package/endurance;
+no protected approval or merge was inferred.
 
 READY offline; NOT READY shows. First physical gate remains backed-up spare KIT,
 fresh Rytm input capture, Pad2four-field preset10%, exact-plan inspection and

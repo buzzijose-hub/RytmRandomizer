@@ -107,12 +107,12 @@ export function MutationParametersPanel(): JSX.Element {
         safety_lines: [deviceId === ANALOG_FOUR_DEVICE_ID ? 'A4 offline only; SEND blocked' : 'Protection and pad locks remain mandatory'],
       }} />
       <div className="cockpit-panel-controls parameter-scope-toolbar">
-        <label>Device<select aria-label="Parameter scope device" value={deviceId}
+        <label>Device<select aria-label="Parameter scope device" value={deviceId} disabled={presetPending}
           onChange={(event) => { setDeviceId(event.currentTarget.value as CockpitDeviceId); setItem(1); setPage(''); }}>
           <option value={RYTM_DEVICE_ID}>Analog Rytm</option>
           <option value={ANALOG_FOUR_DEVICE_ID}>Analog Four (offline)</option>
         </select></label>
-        <label>{unit}<select aria-label="Parameter scope item" value={currentItem} disabled={items.length === 0}
+        <label>{unit}<select aria-label="Parameter scope item" value={currentItem} disabled={items.length === 0 || presetPending}
           onChange={(event) => { setItem(Number(event.currentTarget.value)); setPage(''); }}>
           {items.length === 0 ? <option value={1}>Source unavailable</option> : items.map((id) => <option key={id} value={id}>{unit} {id}</option>)}
         </select></label>

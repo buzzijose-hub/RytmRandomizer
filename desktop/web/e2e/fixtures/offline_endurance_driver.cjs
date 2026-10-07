@@ -219,12 +219,14 @@ async function main() {
       await expect(page.getByTestId('safety-rail').getByText('Connected', { exact: true })).toBeVisible({ timeout: 30000 });
       await expect(page.getByTestId('safety-rail').getByText('Hardware Off')).toBeVisible();
     };
+    summary.phase = 'initial-connection'; save();
     await connected();
     await page.getByTestId('profile-chips').getByRole('button').first().click();
     await forge.getByLabel('Bank name', { exact: true }).fill('Bounded endurance rehearsal');
     await forge.getByRole('button', { name: 'Create show bank', exact: true }).click();
     await expect.poll(() => bank()?.bank_id).not.toBeUndefined();
     const workBankId = bank().bank_id;
+    summary.phase = 'retained-source-import'; save();
     await forge.getByRole('button', { name: 'Import captures folder' }).click();
     await forge.getByRole('button', { name: 'Refresh source files' }).click();
     await forge.getByRole('combobox', { name: 'Rytm source file', exact: true }).selectOption({ index: 1 });
@@ -236,13 +238,17 @@ async function main() {
     const slots = forge.getByLabel('Source hardware slot (1–128)'); await slots.nth(0).fill('20'); await slots.nth(1).fill('20');
     await forge.getByRole('button', { name: 'Adopt source files', exact: true }).click();
     await expect(forge.getByRole('heading', { name: 'Forge candidate pairs' })).toBeVisible();
+    summary.phase = 'initial-pad2-scope'; save();
     if (includePad2) await scope.getByRole('button', { name: 'Pad 2 rehearsal', exact: true }).click();
     else await scope.getByRole('button', { name: 'Select none', exact: true }).click();
+    summary.phase = 'initial-a4-device'; save();
     await scope.getByLabel('Parameter scope device').selectOption('analog_four_mk2');
     await scope.getByRole('button', { name: 'Select none', exact: true }).click();
+    summary.phase = 'initial-a4-target-and-lock'; save();
     await scope.getByLabel('Parameter scope item').selectOption(String(a4Track));
     await scope.getByLabel('Explicit target track').check();
     await scope.getByLabel('Lock track').uncheck();
+    summary.phase = 'initial-a4-page-and-controls'; save();
     await scope.getByRole('tab', { name: a4Page, exact: true }).click();
     for (const field of a4Fields) await scope.getByTestId(`parameter-row-${a4Track}-${field}`).getByRole('checkbox').check();
     await forge.getByLabel('Candidate count').selectOption('1');
@@ -266,6 +272,7 @@ async function main() {
       await expect.poll(() => bank()?.entries.find(value => value.entry_id === entry.entry_id)?.favorite?.candidate_id).toBe(candidate.candidate_id);
       return candidate;
     }
+    summary.phase = 'initial-generation-and-favorites'; save();
     await generate(3000, 'Small'); await generate(3001, 'Large');
     for (let item = 0; item < 3; item++) {
       await forge.getByRole('button', { name: 'Duplicate', exact: true }).first().click();

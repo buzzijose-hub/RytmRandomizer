@@ -217,6 +217,22 @@ describe('Studio canonical parameter scope', () => {
     await click('Pad 2 rehearsal');
     expect(screen.getByRole('alert')).toHaveTextContent('offline');
   });
+  it('holds device and item selection while a delayed preset response owns the transition', async () => {
+    ready();
+    const fake = new FakeCockpitClient();
+    let resolvePreset: ((ack: CommandAck) => void) | undefined;
+    fake.responseQueue.push(new Promise<CommandAck>((resolve) => { resolvePreset = resolve; }));
+    mount(fake);
+    fireEvent.click(screen.getByRole('button', { name: 'Pad 2 rehearsal' }));
+    expect(screen.getByLabelText('Parameter scope device')).toBeDisabled();
+    expect(screen.getByLabelText('Parameter scope item')).toBeDisabled();
+    await act(async () => { resolvePreset?.({ request_id: 'delayed-preset', ok: true }); });
+    expect(screen.getByLabelText('Parameter scope device')).toBeEnabled();
+    expect(screen.getByLabelText('Parameter scope item')).toHaveValue('2');
+    fireEvent.change(screen.getByLabelText('Parameter scope device'), { target: { value: 'analog_four_mk2' } });
+    expect(screen.getByLabelText('Parameter scope device')).toHaveValue('analog_four_mk2');
+    expect(screen.getByLabelText('Parameter scope item')).toHaveValue('1');
+  });
   it('closes an exact-plan confirmation immediately when the parameter scope changes', async () => {
     ready();
     useCockpitStore.setState({ previewCandidate: candidate, sendPlan, sessionStatus: sessionLive,
