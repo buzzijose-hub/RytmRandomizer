@@ -758,3 +758,31 @@ verified immutable recall context within that action only, preserving whole-bank
 byte/profile replay before publication, fresh validation on each new action,
 stale-source rejection, cancellation and disarmed recall. No long-lived authority
 cache, skipped unrelated artifacts, packet filtering or timeout increase.
+
+### October 7 Measured Generation Deadline Continuation
+
+The exact84 Windows attempt failed after140cycles/4187.123seconds. Both owned
+backend recoveries passed and cleanup passed; this is not endurance acceptance.
+The last complete export proved148candidates. A subsequent manifest contains
+the149thcandidate with seed3240, published after the five-second UI deadline.
+No bank or source loss is observed. Diagnose actual generation latency and
+publication/response ordering using an isolated copy of the retained failed
+state. Preserve that state as evidence.
+
+Survey and reuse canonical generation, whole-bank verification, action-local
+source contexts, native capabilities and Store publication. Optimize only
+measured redundant proof/decoding/source reads. Every requested source,
+previous selected/favorite candidate, unrelated retained artifact, exclusion,
+lock and new candidate must remain validated before publication. Use immutable
+action-local data; no persistent authorization cache, guessed encoding, skipped
+checks, timeout increase, retries or partial-packet manufacture. Preserve the
+existing public generation return shape and disarmed adoption.
+
+One implementation worker owns workspace/generation tests; parent owns this
+plan, QA diagnostics, verification and packaging. Only one heavy process runs.
+Add meaningful regression coverage for the reproduced late path and fresh
+proof/refusal/publication invariants, then run the frozen source gates and
+review. Rebuild only if production changes. Start a new90-100minute packaged
+attempt from zero; do not combine40/70minute failures or smoke. If the fresh
+eight-hour ceiling23:37:39UTC prevents acceptance, preserve the exact pending
+checkpoint and report the uncompleted gate rather than granting readiness.
