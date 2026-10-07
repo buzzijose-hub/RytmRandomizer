@@ -290,7 +290,15 @@ def test_show_bank_websocket_complete_lifecycle_pack_and_recovery(
     assert session.current_send_plan is None and session.preview_on is False
     with monkeypatch.context() as scoped:
         scoped.setattr(session.profile_registry, "get", lambda _profile_id: None)
-        show_bank_handlers._sync_selected_candidate(session, boundary.workspace, bank_id, entry_id)
+        ack, _ = _command(
+            session,
+            "show_bank_select_candidate",
+            bank_id=bank_id,
+            entry_id=entry_id,
+            candidate_id=candidate_ids[0],
+            expected_revision=_revision(boundary),
+        )
+        assert ack["ok"] is True
         assert session.current_candidate is not None
         assert session.active_profile == profile
         assert session.armed_apply is None and not session.hardware_intent

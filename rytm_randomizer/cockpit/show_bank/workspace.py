@@ -1118,6 +1118,11 @@ class ShowKitForgeWorkspace:
     ) -> CandidateRecallContext:
         entry = bank.entry(entry_id)
         candidate = entry.candidate_by_id(candidate_id)
+        source_id = entry.rytm_source.snapshot_id
+        if source_id is None:
+            raise ValueError("Rytm source is missing its mutation snapshot identity")
+        if candidate.analog_four_candidate.sysex.retained is None:
+            self._retained_frame(bank, candidate.analog_four_candidate.sysex.artifact_id)
         # One fresh complete read/proof; subsequent consumers use these exact bytes.
         frames = MappingProxyType(
             {
@@ -1128,28 +1133,23 @@ class ShowKitForgeWorkspace:
         )
         verify_show_bank_frames(bank, frames)
         artifact_id = candidate.analog_four_candidate.sysex.artifact_id
-        frame = frames.get(artifact_id)
-        if frame is None:
-            frame = self._retained_frame(bank, artifact_id)
+        frame = frames[artifact_id]
         decoded = decode_kit_capture_frame(ANALOG_FOUR_DEVICE_ID, frame)
         if (
             analog_four_capture_semantic_fingerprint(decoded, candidate.analog_four_candidate)
             != candidate.analog_four_candidate.semantic_fingerprint
         ):
             raise ValueError("candidate frame semantic fingerprint mismatch")
-        rytm = decode_kit_capture_frame(
-            ANALOG_RYTM_DEVICE_ID, frames[entry.rytm_source.sysex.artifact_id]
+        rytm = validate_show_bank_capture_frame(
+            entry.rytm_source, frames[entry.rytm_source.sysex.artifact_id]
         )
-        source_id = entry.rytm_source.snapshot_id
-        if source_id is None:
-            raise ValueError("Rytm source is missing its mutation snapshot identity")
         source = replace(
             cockpit_snapshot_from_rytm_capture(rytm),
             snapshot_id=source_id,
             captured_at=entry.rytm_source.captured_at,
         )
-        analog_four_source = decode_kit_capture_frame(
-            ANALOG_FOUR_DEVICE_ID, frames[entry.analog_four_source.sysex.artifact_id]
+        analog_four_source = validate_show_bank_capture_frame(
+            entry.analog_four_source, frames[entry.analog_four_source.sysex.artifact_id]
         )
         return CandidateRecallContext(bank, entry, source, candidate, analog_four_source, frame)
 

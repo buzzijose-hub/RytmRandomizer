@@ -10,10 +10,15 @@ from typing import Final
 
 import pytest
 
-from rytm_randomizer.cockpit.capture import ANALOG_FOUR_DEVICE_ID
+from rytm_randomizer.cockpit.capture import (
+    ANALOG_FOUR_DEVICE_ID,
+    ANALOG_RYTM_DEVICE_ID,
+    KitCaptureResult,
+)
 from rytm_randomizer.cockpit.data.parameter_scope import ParameterSelection
 from rytm_randomizer.cockpit.data.show_bank import RetainedSysexArtifact, ShowBank
 from rytm_randomizer.cockpit.export.writer import WriteError
+from rytm_randomizer.cockpit.show_bank import store as store_module
 from rytm_randomizer.cockpit.show_bank import workspace as workspace_module
 from rytm_randomizer.cockpit.show_bank.export import verify_show_bank_frames
 from rytm_randomizer.cockpit.show_bank.workspace import ShowKitForgeWorkspace
@@ -391,6 +396,139 @@ def test_workspace_recall_refuses_lost_selection_before_publication_or_adoption(
             bank.revision,
             offline_only=True,
         )
+    assert _session_state(session) == before
+    assert workspace.bank(journey.bank_id) == bank
+    assert _disk(workspace.store.root) == disk
+
+
+@pytest.mark.parametrize("command_type", _COMMANDS)
+@pytest.mark.parametrize("device_id", [ANALOG_RYTM_DEVICE_ID, ANALOG_FOUR_DEVICE_ID])
+def test_source_decoder_drift_after_proof_is_refused_before_publication(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, command_type: str, device_id: str
+) -> None:
+    journey = _journey(tmp_path)
+    (candidate,) = _generate(journey, count=1)
+    workspace = journey.workspace
+    session = _session(workspace, journey.bank_id, journey.entry_id, tmp_path)
+    before = _session_state(session)
+    bank = workspace.bank(journey.bank_id)
+    disk = _disk(workspace.store.root)
+    decode = store_module.decode_kit_capture_frame
+
+    def prove_then_drift(verified: ShowBank, frames: Mapping[str, bytes]) -> None:
+        verify_show_bank_frames(verified, frames)
+
+        def contradictory(family: str, frame: bytes) -> KitCaptureResult:
+            result = decode(family, frame)
+            if family == device_id and frame == journey.originals[device_id]:
+                return replace(result, fingerprint="contradictory-source")
+            return result
+
+        monkeypatch.setattr(store_module, "decode_kit_capture_frame", contradictory)
+
+    monkeypatch.setattr(workspace_module, "verify_show_bank_frames", prove_then_drift)
+    ack = _command(journey, session, command_type, candidate.candidate_id)
+    assert not ack["ok"] and ack["code"] == handlers.ERR_VALIDATION
+    assert _session_state(session) == before
+    assert workspace.bank(journey.bank_id) == bank
+    assert _disk(workspace.store.root) == disk
+
+
+def test_recall_requires_explicit_boolean_favorite_before_reading_or_publishing(
+    tmp_path: Path,
+) -> None:
+    journey = _journey(tmp_path)
+    (candidate,) = _generate(journey, count=1)
+    workspace = journey.workspace
+    bank = workspace.bank(journey.bank_id)
+    disk = _disk(workspace.store.root)
+    with pytest.raises(ValueError, match="favorite must be a boolean"):
+        workspace.recall_candidate(
+            journey.bank_id,
+            journey.entry_id,
+            candidate.candidate_id,
+            bank.revision,
+            favorite=1,  # type: ignore[arg-type]
+            offline_only=True,
+        )
+    assert workspace.bank(journey.bank_id) == bank
+    assert _disk(workspace.store.root) == disk
+
+
+def test_recall_refuses_missing_source_identity_before_publication(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    journey = _journey(tmp_path)
+    (candidate,) = _generate(journey, count=1)
+    workspace = journey.workspace
+    bank = workspace.bank(journey.bank_id)
+    entry = bank.entry(journey.entry_id)
+    missing = replace(
+        bank, entries=(replace(entry, rytm_source=replace(entry.rytm_source, snapshot_id=None)),)
+    )
+    disk = _disk(workspace.store.root)
+    monkeypatch.setattr(workspace, "_checked_bank", lambda *_args: missing)
+    with pytest.raises(ValueError, match="missing its mutation snapshot identity"):
+        workspace.recall_candidate(
+            journey.bank_id,
+            journey.entry_id,
+            candidate.candidate_id,
+            missing.revision,
+            offline_only=True,
+        )
+    assert workspace.bank(journey.bank_id) == bank
+    assert _disk(workspace.store.root) == disk
+
+
+def test_recall_refuses_contradictory_favorite_transition_before_publication(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    journey = _journey(tmp_path)
+    (candidate,) = _generate(journey, count=1)
+    workspace = journey.workspace
+    bank = workspace.bank(journey.bank_id)
+    disk = _disk(workspace.store.root)
+    monkeypatch.setattr(workspace_module, "mark_favorite", lambda bank, *_args, **_kwargs: bank)
+    with pytest.raises(AssertionError, match="favorite transition lost"):
+        workspace.recall_candidate(
+            journey.bank_id,
+            journey.entry_id,
+            candidate.candidate_id,
+            bank.revision,
+            favorite=True,
+            offline_only=True,
+        )
+    assert workspace.bank(journey.bank_id) == bank
+    assert _disk(workspace.store.root) == disk
+
+
+@pytest.mark.parametrize("command_type", _COMMANDS)
+def test_recall_rechecks_revision_after_whole_bank_proof(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, command_type: str
+) -> None:
+    journey = _journey(tmp_path)
+    (candidate,) = _generate(journey, count=1)
+    workspace = journey.workspace
+    session = _session(workspace, journey.bank_id, journey.entry_id, tmp_path)
+    bank = workspace.bank(journey.bank_id)
+    before = _session_state(session)
+    disk = _disk(workspace.store.root)
+    checked = workspace._checked_bank
+    changed = False
+
+    def prove_then_change(verified: ShowBank, frames: Mapping[str, bytes]) -> None:
+        nonlocal changed
+        verify_show_bank_frames(verified, frames)
+        changed = True
+
+    def changed_revision(bank_id: str, revision: int) -> ShowBank:
+        original = checked(bank_id, revision)
+        return replace(original, revision=original.revision + 1) if changed else original
+
+    monkeypatch.setattr(workspace_module, "verify_show_bank_frames", prove_then_change)
+    monkeypatch.setattr(workspace, "_checked_bank", changed_revision)
+    ack = _command(journey, session, command_type, candidate.candidate_id)
+    assert not ack["ok"] and ack["code"] == handlers.ERR_VALIDATION
     assert _session_state(session) == before
     assert workspace.bank(journey.bank_id) == bank
     assert _disk(workspace.store.root) == disk
