@@ -1,6 +1,6 @@
 # Captured Rytm mapping software report
 
-> Status: offline package/endurance delivered; human/physical gates pending.
+> Status: in-flight — offline package/endurance delivered; human/physical gates pending.
 > Earlier8b/fa43 copies preserved. Protected review and physical/show gates held.
 
 ## October 7 Resumed Reliability Acceptance
