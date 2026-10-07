@@ -4,8 +4,10 @@ Last updated: 2026-10-07. This file is a hand-authored snapshot and is meant to 
 
 ## Current Snapshot
 
-The resumed October7 reliability continuation is in source verification, not yet
-a new delivery. It fixes the delivered missing-package generic error, rejects
+The resumed October7 reliability source `e96b4bc6` is verified, not yet a new
+delivery. Full10834tests pass with5skips/6existingwarnings471.68s; all51touched
+modules have100%line/branch coverage. Strict pinned typing and whole lint pass.
+It fixes the delivered missing-package generic error, rejects
 generation requests that drop current locks or expand targets, verifies direct
 favorite/selection transitions before publication, and permits unnamed exact
 KIT sources with local cue-label fallbacks. New adversarial source/profile/
@@ -16,15 +18,22 @@ The later1784package passed180seconds/sixcycles but its100minute attempt failed
 after81cycles/~40minutes, with safe cleanup. Its harness now awaits required
 favorite replacement confirmation. Measured near-deadline repeated recall proof
 is replaced with one fresh whole-bank verification per action; later requests
-still revalidate. New full-source/package/endurance acceptance is pending.
+still revalidate. Cache-only legacy recall preserves and validates available
+exact bytes before atomic retention. Final source acceptance passes; replacement
+package and uninterrupted100minute endurance remain pending.
 The prior network interruption ended execution without timed acceptance. Fresh
-resume15:37:39UTC, ceiling23:37:39UTC October7. Published db2daf6c Windows build
-37545232133 succeeded but has not been delivered. PR CI37544839205 failed the
+resume15:37:39UTC, ceiling23:37:39UTC October7. Older db2daf6c Windows build
+37545232133 succeeded but was not delivered. PR CI37544839205 failed the
 native hydrate_reload mount guard while31other native cases passed; push CI
 37544832928 passed. Retained artifacts do not establish the original cause.
 The fixture now orders App evaluation before driver startup and distinguishes
 initial/reloaded mount refusals, without retries or changed deadlines. Pending
 QA repairs use creation-ordered process ownership and categorical errors.
+Both later native jobs pass32scenarios;1784Windows/Linux source suites pass,
+while the separate Mac native-audio crash and required-checks remain failed.
+The new opt-in bounded cache diagnostic observes without algorithm/pin changes
+or clearing failure status. Its generated public reports are sanitized;
+re-export requires trusted, unchanged diagnostic output.
 MIDI stays off; old deliveries and
 the dirty primary checkout are preserved. Human and physical gates stay open.
 

@@ -1,9 +1,49 @@
 # Captured Rytm mapping software report
 
-> Status: in-flight — October7 resumed source verified; new package/endurance pending.
+> Status: in-flight — October7 final source verified; replacement package/endurance pending.
 > Earlier8b/fa43 copies preserved. Protected review and physical/show gates held.
 
 ## October 7 Resumed Reliability Acceptance
+
+Current production source `e96b4bc69eaf8b993d17b3d1d5031cfbfa79a3aa` passed
+10,834 tests / 5 skipped / 6 existing warnings in 471.68 seconds. Canonical Gate1
+passes all 51 touched production modules at 100% line and branch coverage;
+combined coverage is 99.6673925365%, pure branch 12,852/12,930 (99.3967517401%).
+Strict pinned Pyright1.1.411, Ruff, Black928, isort, Vulture and four version
+declarations pass. The earlier measurements below are historical, not final
+binary acceptance. The `1784fb2565eb` Windows package passed a 180-second
+smoke, then failed its timed attempt after 81 cycles / 2,413.486 seconds. Owned
+process cleanup passed. This is not 90-minute acceptance and attempts are never
+combined. The old `6eb5d4c1e3ed` offline delivery remains preserved.
+
+The failure exposed a replacement-confirmation race in the QA driver and
+repeated whole-bank verification in favorite recall. The driver now waits for
+the confirmation required by the authoritative entry. Each recall now obtains
+one fresh whole-bank proof and shares immutable action-local bytes with its
+consumer; there is no persistent proof cache. Canonical source fingerprint
+checks and a fresh revision check precede publication. Excluded fields, scope,
+locks and disarmed adoption remain enforced. The focused integrated regression
+set passed 116 tests / 3 existing warnings in 26.87 seconds. A new exact-source
+Windows package and uninterrupted 100-minute acceptance still remain pending.
+
+The preceding `424723dc` full run passed 10,829 tests / 5 skipped / 6 existing
+warnings in 796.48 seconds, but Gate1 still missed one workspace guard branch.
+The final test review also reproduced a cache-only legacy recall regression:
+available exact bytes were discarded before the proof. The new regression
+first failed both positive commands, then passed after canonical frame lookup
+included the selected volatile artifact in the immutable proof map. Changed
+cached bytes are refused before publication; both successful commands retain
+exact bytes across restart. Six affected cases pass in 1.47 seconds. The new
+full gate above passes; neither the earlier full run nor its coverage shortfall
+is relabeled final acceptance. Eight targeted review dimensions found and closed
+the source validation, legacy cache, documentation and environment findings.
+Historical Gate14/Gate16 exceptions and protected human approval remain open.
+
+The Mac native-audio crash remains unresolved. The bounded diagnostic observes
+cold/warm and shared/isolated caches without changing algorithms or dependency
+pins. Generated public reports exclude raw logs and paths. Re-export of an
+existing report assumes intact, trusted tool-generated JSON; filename selection
+is not content sanitization of externally modified reports.
 
 Published source `1c09320681e452f814bdea24659f2bfaa7fe7ce3`, same direct-base
 PR254. Resume15:37:39UTC, eight-hour ceiling23:37:39UTC October7. The previous
@@ -38,8 +78,8 @@ identify initial/reloaded failures without paths or credentials. This is an
 evidence-backed synchronization contract improvement, not a confirmed original
 root-cause claim. New-head hosted native acceptance is still pending.
 
-Identified Windows run37649053103 builds exact1c093206. Actual new executable
-acceptance and the full90-120minute rehearsal have not started. The controller
+Identified Windows run37649053103 built exact1c093206. At that earlier checkpoint,
+actual executable acceptance and the full90-120minute rehearsal had not started. The controller
 checks the specific missing-package message and unchanged bank, then continually
 cycles exact scopes, generation, favorites, ordering, canonical byte proof,
 export/import/refusal and two owned backend restarts. Four stable cues stay

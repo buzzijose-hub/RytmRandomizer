@@ -269,6 +269,22 @@ that staging directory on failure. The Windows native decoder may still fail
 safely in this test; crash containment and cleanup are verified, but reliable
 Windows decoding is not claimed.
 
+The explicit `scripts/diagnose_native_audio_cache.py --output <new-directory>`
+experiment uses the same one-thread limits in at most two owned children. It
+sets `NUMBA_CACHE_DIR` to a diagnostic-owned shared or per-child cache and reads
+that variable only in its child mode, rejecting caches outside the owned root.
+`NUMBA_DEBUG_CACHE=1` supplies bounded cache-hit categories. `TMPDIR`, `TEMP`
+and `TMP` point to owned temporary directories; inherited `LIBROSA_CACHE_DIR`
+is removed so the experiment cannot read or mutate an external librosa cache.
+`PYTHONPATH` prepends this checkout, `PYTHONDONTWRITEBYTECODE=1` avoids checkout
+bytecode writes, `PYTHONUNBUFFERED=1` flushes child diagnostics, and
+`RYTM_RAND_MIDI_BACKEND=off` is forced.
+These are opt-in diagnostic subprocess overrides, not shipped configuration.
+No JIT disabling, CPU-target override, algorithm change or dependency change is
+used. A diagnostic report is an observation, not CI or hardware acceptance.
+Generated `public-report` files are sanitized; re-export assumes unchanged,
+trusted tool-generated JSON and does not sanitize arbitrary modified contents.
+
 ## 9. Next Project Task
 
 The next project task remains:

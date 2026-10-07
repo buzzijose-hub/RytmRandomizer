@@ -120,7 +120,17 @@ kit adoption, or a send plan that could reach an Elektron device.
     the bank transaction, test cache eviction/restart, and use a create-only
     explicitly named namespace for imported copies. Import must revoke old
     candidates/plans even in passive sessions; output teardown alone may be a
-    no-op there. Shared readers belong below both stores, without a cycle.
+     no-op there. Shared readers belong below both stores, without a cycle.
+23. Optimize measured repeated recall proofs only within one action. Share
+    immutable verified bytes and metadata with consumers, recheck source
+    fingerprints and revision before publication, and prove every new command
+    verifies afresh. Preserve exact cache-only legacy candidates through the
+    canonical byte validator and atomic retention path; never turn proof reuse
+    into a persistent authorization cache or hardware restoration.
+24. A bounded QA supervisor must keep ownership handles through failure and
+    cleanup. Publication, reporting or cleanup faults cannot erase evidence of
+    surviving children or grant acceptance. Separate smoke from the promised
+    timed exercise, keep failed attempts, and never combine their durations.
 
 ## Verification
 

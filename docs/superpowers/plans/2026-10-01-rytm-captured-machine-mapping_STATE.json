@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-07T15:51:10Z",
+  "updated_at": "2026-10-07T19:19:00Z",
   "status": "in-flight",
-  "phase": "Oct07-resumed-reliability-source-frozen-full-checks-running-new-package-and-endurance-pending",
+  "phase": "Oct07-reliability-source-verified-publication-Windows-package-and-endurance-pending",
   "prototype_source": "8cfa6f7b6cf9469ffa134598182febb60ecdd1df",
   "prototype_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-tom-mapping/RytmRandomizer",
   "delivery_start_source": "941643c551abfa225f45c70a954b6671d1cbb5f4",
@@ -24,7 +24,7 @@
   "reliability_deadline": "2026-10-07T05:41:19Z",
   "reliability_resumed_at": "2026-10-07T15:37:39Z",
   "reliability_resume_deadline": "2026-10-07T23:37:39Z",
-  "reliability_resume_source": "1e0d66a8a66a61e713ddb9c7013c97dc9e2eb4ec",
+  "reliability_resume_source": "e96b4bc69eaf8b993d17b3d1d5031cfbfa79a3aa",
   "historical_elapsed_time_recorded": false,
   "work": {
     "mapping_implementation": "Oct05-all8-CY-Ride-SRC-blocked-25of29-new-fallback-rows-documented-only-guardedCC7-eligible-224-descriptive-bindings-retained-Studio-SRC-metadata-published3461f42e",
@@ -37,6 +37,27 @@
     "post_merge_maintainability_audit": "pending"
   },
   "receipts": [
+    {
+      "scope": "Oct07-final-e96b4bc6-source-acceptance",
+      "result": "Full10834passed5skipped6existingwarnings471.68seconds; canonical51touchedproductionmodules100linebranch; combined99.6673925365percent purebranch12852of12930; strictpinnedPyright1.1.411zeroerrorswarnings, Ruff Black928 isort Vulture fourversiondeclarationspass. Eighttargeteddimensions findingsclosed; historical14/16exceptions protectedhumanreview physicalrehearsal remainpending. ExactWindowspackage and fresh100minute acceptance notyetperformed; MIDIoff no realports accessed.",
+      "passing_verdict": true,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "Oct07-424723-full-pass-with-Gate1-shortfall-and-legacy-recall-repair",
+      "result": "Full424723 passed10829tests5skipped6existingwarnings796.48seconds; Gate1 failedoneworkspaceguardbranch. Cache-only legacy positive recall regression reproduced2fail2pass; canonical selected volatile frame included in fresh immutable proof map, then atomic retained publication. Changedcachebytes refusedwithoutstate/diskloss; sixpositive/negative/guardcasespass1.47seconds. Final e96b4bc6 freshfullgate running; package/endurance not accepted.",
+      "passing_verdict": false,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "Oct07-1784-packaged-rehearsal-failure-and-source-repair",
+      "result": "1784 Windows package hashes verified; smoke passed180.0105891seconds6cycles; declared100minute attempt FAILED81cycles2413.4862604seconds with ownedcleanuptrue. No acceptance or combined attempts. Favorite confirmation driver race repaired; whole-bank proof reused once per action with canonical source fingerprint and fresh revision validation before publication. Final424723 source full coverage gate running;116focusedpass3warnings26.87seconds. New exact Windows package and fresh100minute run remain pending; old6ebdelivery preserved; MIDIoff throughout.",
+      "passing_verdict": false,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
     {
       "scope": "Oct06-final-af5a2b40-baseline-and-new-reliability-mission",
       "result": "Prior receipt publication complete31SUCCESS3SKIPPED0failure/pending; production6eb and Windows37523755117 preserved. Newmission21:41:19UTC/eighthourceiling05:41:19UTC. Actual baseline missing-package genericerror reproduced without bank/favorite/revision loss. Parent2 server-lock bypass tests failed then repaired. Two isolated workers merged normally6d7ecc9f/67417c48 into3d1689a1;96composed and4 rapid/restart cases pass;115 health/queue tests pass after fixing3 explicit contract/test setup failures. Short actual driver100s/5cycles/restart/cleanup pass isNOT90-minute endurance. New source acceptance/package/endurance still required; no hardware access.",

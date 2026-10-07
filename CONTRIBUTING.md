@@ -435,6 +435,15 @@ native BLAS/Numba libraries cannot multiply worker threads under pytest-xdist:
 These are test-process controls only. The application does not read or change
 them, and contributors do not need to set them for normal runs.
 
+The opt-in native-audio cache diagnostic also sets `NUMBA_CACHE_DIR` to an owned
+shared or isolated cache, reads it only in its bounded child, and enables
+`NUMBA_DEBUG_CACHE=1`. It isolates `TMPDIR`/`TEMP`/`TMP`, clears inherited
+`LIBROSA_CACHE_DIR`, prepends checkout `PYTHONPATH`, disables MIDI and controls
+child buffering/bytecode writes. These overrides are not shipped application
+configuration. See [the diagnostic subprocess controls](docs/LOCAL_DEV_TOOLING_NOTES.md#native-audio-test-subprocess-controls)
+for ownership, native-thread limits, report privacy and the observation-only
+acceptance boundary. Required CI failure status is never cleared by diagnostics.
+
 **On macOS / Linux**, the bare command is the same. CI runs the same
 invocation on a 4-core GitHub runner in ~30-90s depending on the OS.
 
