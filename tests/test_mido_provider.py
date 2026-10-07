@@ -26,6 +26,7 @@ import logging
 import sys
 import types
 from pathlib import Path
+from threading import Event
 
 import pytest
 
@@ -224,6 +225,7 @@ def _install_fake_rtmidi(
             self.opened_index: int | None = None
             self.closed = False
             self.close_attempts = 0
+            self.message_reads = 0
             self._messages = list(messages)
             instances.append(self)
 
@@ -245,6 +247,7 @@ def _install_fake_rtmidi(
             self.opened_index = port_index
 
         def get_message(self) -> object | None:
+            self.message_reads += 1
             if not self._messages:
                 return None
             return self._messages.pop(0)
@@ -625,6 +628,178 @@ def test_wire_adapter_converts_the_inert_mock_midi_message_dataclass() -> None:
     assert (wire.type, wire.channel, wire.control, wire.value) == ("control_change", 9, 74, 100)
 
 
+def test_wire_adapter_reconstructs_a_mido_shaped_control_change() -> None:
+    """Legacy MIDI I/O's type-only message is validated and rebuilt."""
+
+    from rytm_randomizer.mido_provider import WireOutputPort
+
+    backend_port = _StrictMidoPort()
+    fake_mido = _install_fake_mido()
+    port = WireOutputPort(backend_port, fake_mido)  # type: ignore[arg-type]
+    original = _FakeMidoMessage("control_change", channel=15, control=127, value=127)
+
+    port.send(original)
+
+    assert len(backend_port.sent) == 1
+    wire = backend_port.sent[0]
+    assert wire is not original
+    assert (wire.type, wire.channel, wire.control, wire.value) == (
+        "control_change",
+        15,
+        127,
+        127,
+    )
+
+
+@pytest.mark.parametrize(
+    ("message", "match"),
+    [
+        (
+            types.SimpleNamespace(type="note_on", channel=0, control=74, value=1),
+            "midi_wire_unsupported_message_type",
+        ),
+        (
+            types.SimpleNamespace(type="sysex", channel=0, control=74, value=1),
+            "midi_wire_unsupported_message_type",
+        ),
+        (
+            types.SimpleNamespace(type="control_change", channel=True, control=74, value=1),
+            "midi_wire_field_not_int: channel",
+        ),
+        (
+            types.SimpleNamespace(type="control_change", channel=16, control=74, value=1),
+            "midi_wire_field_out_of_range: channel",
+        ),
+        (
+            types.SimpleNamespace(type="control_change", channel=0, control=True, value=1),
+            "midi_wire_field_not_int: control",
+        ),
+        (
+            types.SimpleNamespace(type="control_change", channel=0, control=128, value=1),
+            "midi_wire_field_out_of_range: control",
+        ),
+        (
+            types.SimpleNamespace(type="control_change", channel=0, control=74, value=True),
+            "midi_wire_field_not_int: value",
+        ),
+        (
+            types.SimpleNamespace(type="control_change", channel=0, control=74, value=-1),
+            "midi_wire_field_out_of_range: value",
+        ),
+        (
+            types.SimpleNamespace(
+                message_type="note_on", type="control_change", channel=0, control=74, value=1
+            ),
+            "midi_wire_unsupported_message_type",
+        ),
+        (
+            types.SimpleNamespace(
+                message_type="", type="control_change", channel=0, control=74, value=1
+            ),
+            "midi_wire_unsupported_message_type",
+        ),
+    ],
+)
+def test_wire_adapter_refuses_invalid_mido_shaped_control_changes(
+    message: object, match: str
+) -> None:
+    """The type spelling grants no pass-through or field-validation bypass."""
+
+    from rytm_randomizer.mido_provider import WireOutputPort
+    from rytm_randomizer.real_midi_adapter import RealMidiSendError
+
+    backend_port = _StrictMidoPort()
+    fake_mido = _install_fake_mido()
+    port = WireOutputPort(backend_port, fake_mido)  # type: ignore[arg-type]
+
+    with pytest.raises(RealMidiSendError, match=match):
+        port.send(message)
+    assert backend_port.sent == []
+
+
+def test_app_a4_one_cc_composes_the_real_provider_and_wire_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    isolated_observability: None,
+) -> None:
+    """The public A4 helper crosses the real wrapper using a fake backend."""
+
+    from rytm_randomizer import app
+    from rytm_randomizer.observability.metrics import get_metrics
+
+    backend_port = _StrictMidoPort("Fake A4 Out")
+    opened: list[str] = []
+
+    def open_backend(port_name: str) -> _StrictMidoPort:
+        opened.append(port_name)
+        return backend_port
+
+    _install_fake_mido(output_names=("Fake A4 Out",), open_factory=open_backend)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-send-param",
+            "--parameter",
+            "OSC1 PWM Depth",
+            "--channel",
+            "0",
+            "--value",
+            "1",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert opened == ["Fake A4 Out"]
+    assert [(wire.type, wire.channel, wire.control, wire.value) for wire in backend_port.sent] == [
+        ("control_change", 0, 74, 1)
+    ]
+    assert backend_port.closed is True
+    assert "Sent exactly one A4 parameter CC message." in captured.out
+    assert captured.err == ""
+    assert get_metrics().cc_sent_by_channel[0] == 1
+
+
+def test_app_a4_nrpn_composes_the_real_provider_and_wire_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    isolated_observability: None,
+) -> None:
+    """All three paced NRPN CCs use the same validated wire conversion."""
+
+    from rytm_randomizer import app
+
+    backend_port = _StrictMidoPort("Fake A4 Out")
+    _install_fake_mido(output_names=("Fake A4 Out",), open_factory=lambda _name: backend_port)
+    monkeypatch.setattr("builtins.input", lambda _prompt="": "0")
+
+    exit_code = app.main(
+        [
+            "--arm",
+            "--a4-send-nrpn-param",
+            "--parameter",
+            "Sync Mode",
+            "--channel",
+            "0",
+            "--value",
+            "2",
+        ]
+    )
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert [(wire.type, wire.channel, wire.control, wire.value) for wire in backend_port.sent] == [
+        ("control_change", 0, 99, 1),
+        ("control_change", 0, 98, 31),
+        ("control_change", 0, 6, 2),
+    ]
+    assert backend_port.closed is True
+    assert "Sent exactly one A4 parameter NRPN sequence." in captured.out
+    assert captured.err == ""
+
+
 def test_wire_adapter_without_a_named_backend_port_reports_no_name() -> None:
     """``name`` is ``None`` when the backend port exposes none."""
 
@@ -767,6 +942,43 @@ def test_open_input_rejects_unknown_port_name() -> None:
         provider.open_input("Missing Input")
 
     assert str(excinfo.value) == "unknown_midi_input_port: Missing Input"
+
+
+@pytest.mark.usefixtures("isolated_observability")
+def test_open_input_refuses_duplicate_selected_names_before_backend_open() -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    _install_fake_mido(
+        input_names=("Fake A4 Input", "Other Input", "Fake A4 Input"),
+        open_input_factory=lambda _name: pytest.fail("ambiguous input was opened"),
+        open_factory=lambda _name: pytest.fail("capture opened an output"),
+    )
+
+    with pytest.raises(RealMidiPortError) as excinfo:
+        MidoMidiPortProvider().open_input("Fake A4 Input")
+
+    assert str(excinfo.value) == "ambiguous_midi_input_port"
+    assert excinfo.value.context == {}
+
+
+def test_open_input_allows_unique_selected_name_among_unrelated_duplicates() -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+
+    fake_port = _FakeInputPort("Fake A4 Input")
+    opened_names: list[str] = []
+
+    def open_selected(name: str) -> _FakeInputPort:
+        opened_names.append(name)
+        return fake_port
+
+    _install_fake_mido(
+        input_names=("Other", "Other", "fake a4 input", " Fake A4 Input ", "Fake A4 Input"),
+        open_input_factory=open_selected,
+    )
+
+    assert MidoMidiPortProvider().open_input("Fake A4 Input") is fake_port
+    assert opened_names == ["Fake A4 Input"]
 
 
 def test_open_input_rejects_port_without_iter_pending_method() -> None:
@@ -935,6 +1147,124 @@ def test_capture_sysex_messages_rejects_unknown_input_name() -> None:
         provider.capture_sysex_messages("Missing Input", timeout_seconds=0.05)
 
     assert str(excinfo.value) == "unknown_midi_input_port: Missing Input"
+
+
+@pytest.mark.usefixtures("isolated_observability")
+@pytest.mark.parametrize("cancellable", [False, True])
+@pytest.mark.parametrize(
+    ("expose_close", "close_raises"),
+    [
+        (True, None),
+        (False, None),
+        (True, OSError("private close failure")),
+        (True, RuntimeError("private close failure")),
+        (True, AttributeError("private close failure")),
+    ],
+)
+def test_capture_sysex_refuses_duplicate_input_without_opening_and_releases_raw_object(
+    cancellable: bool,
+    expose_close: bool,
+    close_raises: BaseException | None,
+) -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    frame = bytes([0xF0, 0x00, 0x20, 0x3C, 0x07, 0x52, 0xF7])
+    fake = _install_fake_rtmidi(
+        input_names=("Fake Rytm Input", "Other Input", "Fake Rytm Input"),
+        messages=((frame, 0.0),),
+        expose_close=expose_close,
+        close_raises=close_raises,
+    )
+    provider = MidoMidiPortProvider()
+
+    with pytest.raises(RealMidiPortError) as excinfo:
+        if cancellable:
+            provider.capture_sysex_messages_cancellable(
+                "Fake Rytm Input", timeout_seconds=0.05, cancel_event=Event()
+            )
+        else:
+            provider.capture_sysex_messages("Fake Rytm Input", timeout_seconds=0.05)
+
+    assert str(excinfo.value) == "ambiguous_midi_input_port"
+    assert excinfo.value.context == {}
+    midi_in = fake.instances[0]  # type: ignore[attr-defined]
+    assert midi_in.ignore_calls == []
+    assert midi_in.opened_index is None
+    assert midi_in.message_reads == 0
+    assert midi_in.close_attempts == int(expose_close)
+    assert midi_in.closed is (expose_close and close_raises is None)
+
+
+@pytest.mark.parametrize("cancellable", [False, True])
+def test_capture_sysex_opens_unique_selected_index_among_unrelated_duplicates(
+    cancellable: bool,
+) -> None:
+    from rytm_randomizer.mido_provider import MidoMidiPortProvider
+
+    frame = bytes([0xF0, 0x00, 0x20, 0x3C, 0x07, 0x52, 0xF7])
+    fake = _install_fake_rtmidi(
+        input_names=(
+            "Other",
+            "Other",
+            "fake rytm input",
+            " Fake Rytm Input ",
+            "Fake Rytm Input",
+        ),
+        messages=((frame, 0.0),),
+    )
+
+    provider = MidoMidiPortProvider()
+    if cancellable:
+        captured = provider.capture_sysex_messages_cancellable(
+            "Fake Rytm Input",
+            timeout_seconds=FAKE_RTMIDI_CAPTURE_TIMEOUT_SECONDS,
+            cancel_event=Event(),
+        )
+    else:
+        captured = provider.capture_sysex_messages(
+            "Fake Rytm Input", timeout_seconds=FAKE_RTMIDI_CAPTURE_TIMEOUT_SECONDS
+        )
+    assert captured == (frame,)
+    midi_in = fake.instances[0]  # type: ignore[attr-defined]
+    assert midi_in.opened_index == 4
+    assert midi_in.close_attempts == 1
+
+
+@pytest.mark.usefixtures("isolated_observability")
+def test_duplicate_input_refusals_record_categories_without_private_names(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    from rytm_randomizer import mido_provider
+    from rytm_randomizer.observability.metrics import get_metrics
+    from rytm_randomizer.real_midi_adapter import RealMidiPortError
+
+    private_name = "Private-input-identity-sentinel"
+    _install_fake_mido(input_names=(private_name, private_name))
+    _install_fake_rtmidi(input_names=(private_name, private_name))
+    caplog.set_level(logging.WARNING, logger=mido_provider.__name__)
+    monkeypatch.setattr(mido_provider._logger, "handlers", [caplog.handler])
+    monkeypatch.setattr(mido_provider._logger, "propagate", False)
+    provider = mido_provider.MidoMidiPortProvider()
+
+    with pytest.raises(RealMidiPortError, match="^ambiguous_midi_input_port$"):
+        provider.open_input(private_name)
+    with pytest.raises(RealMidiPortError, match="^ambiguous_midi_input_port$"):
+        provider.capture_sysex_messages(private_name, timeout_seconds=0.05)
+    with pytest.raises(RealMidiPortError, match="^ambiguous_midi_input_port$"):
+        provider.capture_sysex_messages_cancellable(
+            private_name, timeout_seconds=0.05, cancel_event=Event()
+        )
+
+    records = [record for record in caplog.records if record.name == mido_provider.__name__]
+    assert [record.getMessage() for record in records] == ["ambiguous_midi_input_port"] * 3
+    assert [record.__dict__["match_count"] for record in records] == [2, 2, 2]
+    assert all(record.__dict__["outcome"] == "refused" for record in records)
+    assert all(record.__dict__["fingerprint"] == "midi.input.port_ambiguous" for record in records)
+    assert all(private_name not in str(record.__dict__) for record in caplog.records)
+    assert dict(get_metrics().errors_by_kind) == {"ambiguous_midi_input_port": 3}
+    assert not get_metrics().cc_sent_by_channel
 
 
 def test_capture_sysex_messages_timeout_when_no_sysex_frame_arrives() -> None:

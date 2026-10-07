@@ -34,13 +34,14 @@ export function A4PreparationPanel(props: Props): JSX.Element {
   const targets = useCockpitStore((state) => state.a4TrackTargets);
   const locks = useCockpitStore((state) => state.a4TrackLocks);
   const generation = useCockpitStore((state) => state.sessionGeneration);
+  const mutationRevision = useCockpitStore((state) => state.mutationContextRevision);
   const currentCandidate = useCockpitStore((state) => state.previewCandidate);
   const connection = useCockpitStore((state) => state.connection);
   const stage = useCockpitStore((state) => state.dualMachineStage);
   const key = JSON.stringify([
     props.bank.bank_id, props.bank.revision, props.entry.entry_id,
     props.entry.selected_candidate_id, props.disabled, captures, targets, locks, generation,
-    currentCandidate?.candidate_id, connection, stage,
+    currentCandidate?.candidate_id, connection, stage, mutationRevision,
   ]);
   return <PreparationRequest key={key} {...props} />;
 }
@@ -98,8 +99,9 @@ function PreparationRequest({ bank, entry, disabled }: Props): JSX.Element {
         <p>{report.candidate_bytes_verified ? 'Candidate bytes verified against the immutable source.' : 'Candidate bytes are not verified.'} A4 SEND remains blocked.</p>
         <ul>{report.blocked_reasons.map((reason) => <li key={reason}>{BLOCKER_LABELS[reason]}</li>)}</ul>
         <p>Manual recovery: A4 source slot {report.recovery_slot ?? 'not recorded'}.</p>
-        <ul>{report.changes.map((change) => <li key={change.track_id}>
-          Track {change.track_id} Filter 1 Frequency: {change.before_screen_value} → {change.after_screen_value}
+        <ul>{report.changes.map((change) => <li key={`${change.track_id}:${change.parameter}`}>
+          Track {change.track_id} {change.parameter}: {change.before_screen_value} → {change.after_screen_value}
+          {' '}Native {'before_encoded_native' in change ? change.before_encoded_native : change.before_raw_q8_8} → {'after_encoded_native' in change ? change.after_encoded_native : change.after_raw_q8_8}
         </li>)}</ul>
         <details><summary>Candidate verification details</summary>
           <dl>

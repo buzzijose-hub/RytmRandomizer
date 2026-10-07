@@ -9,6 +9,7 @@ StageDeviceId = Literal["analog_rytm_mk2", "analog_four_mk2"]
 STAGE_DEVICE_IDS: Final[tuple[StageDeviceId, ...]] = ("analog_rytm_mk2", "analog_four_mk2")
 ANALOG_RYTM_DEVICE_ID: Final[StageDeviceId] = STAGE_DEVICE_IDS[0]
 ANALOG_FOUR_DEVICE_ID: Final[StageDeviceId] = STAGE_DEVICE_IDS[1]
+A4_MAPPING_BLOCK_REASON: Final[str] = "a4_hardware_audition_validation_pending"
 StageConnectionState = Literal["unknown", "connected", "disconnected"]
 StageCaptureState = Literal["not_captured", "captured", "failed"]
 StageArtifactState = Literal["none", "ready", "stale", "blocked"]

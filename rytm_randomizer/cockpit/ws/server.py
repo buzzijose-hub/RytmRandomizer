@@ -121,15 +121,20 @@ import contextlib
 import hmac
 import json
 import os
+import time
 from dataclasses import dataclass
-from typing import Final, cast
+from functools import partial
+from typing import Final, TypedDict, cast
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 from ...observability.logging import get_logger
+from ...observability.metrics import get_metrics
 from .handlers import (
     EventEmitter,
+    cancel_pending_capture,
     disarm_session_on_teardown,
+    dispatcher_failure_ack,
     drain_pending_events,
     emit_initial_events,
     handle_command,
@@ -139,6 +144,7 @@ from .handlers import (
 from .protocol import (
     CLOSE_CODE_MESSAGE_TOO_BIG,
     CLOSE_CODE_POLICY_VIOLATION,
+    COMMAND_CAPTURE_CURRENT_KIT,
     HANDSHAKE_AUTH_FAILED,
     HANDSHAKE_AUTH_REQUIRED,
     HELLO_FRAME_TYPE,
@@ -284,6 +290,7 @@ class ConnectionQueue:
         self._loop = asyncio.get_running_loop()
         self._closing = False
         self._dropped = 0
+        self._high_water = 0
 
     @property
     def size(self) -> int:
@@ -296,6 +303,11 @@ class ConnectionQueue:
         """Total frames dropped on this connection (overflow + post-close)."""
 
         return self._dropped
+
+    @property
+    def high_water(self) -> int:
+        """Largest observed depth on this connection, including bootstrap."""
+        return self._high_water
 
     def put_frame(self, frame: dict[str, object], *, close_code: int | None = None) -> None:
         """Enqueue one outbound frame without ever blocking the caller.
@@ -341,6 +353,7 @@ class ConnectionQueue:
                 },
             )
         self._queue.put_nowait(_OutboundItem(frame=frame, close_code=close_code))
+        self._high_water = max(self._high_water, self._queue.qsize())
 
     def put_frame_threadsafe(self, frame: dict[str, object]) -> None:
         """Enqueue an ordinary frame from any thread, never blocking.
@@ -368,6 +381,16 @@ class ConnectionQueue:
         return await self._queue.get()
 
 
+class QueueDiagnostics(TypedDict):
+    """Read-only aggregate health counters; no frame or connection identity."""
+
+    connection_count: int
+    capacity_per_connection: int
+    queued_frames: int
+    high_water_per_connection: int
+    dropped_frames: int
+
+
 class ConnectionRegistry:
     """The server-owned registry of one :class:`ConnectionQueue` per connection.
 
@@ -389,6 +412,17 @@ class ConnectionRegistry:
         """Number of currently registered (live, authenticated) connections."""
 
         return len(self._queues)
+
+    def queue_diagnostics(self) -> QueueDiagnostics:
+        """Aggregate active queue bounds without publishing frames or peer identities."""
+        queues = tuple(self._queues.values())
+        return {
+            "connection_count": len(queues),
+            "capacity_per_connection": self._queue_maxsize,
+            "queued_frames": sum(queue.size for queue in queues),
+            "high_water_per_connection": max((queue.high_water for queue in queues), default=0),
+            "dropped_frames": sum(queue.dropped_count for queue in queues),
+        }
 
     def register(self) -> tuple[int, ConnectionQueue]:
         """Create + track a fresh queue; return ``(connection_id, queue)``.
@@ -598,6 +632,33 @@ async def _writer_loop(websocket: WebSocket, queue: ConnectionQueue) -> None:
         return
 
 
+def _observe_capture_completion(
+    task: asyncio.Task[None],
+    *,
+    queue: ConnectionQueue,
+    request_id: object,
+    acknowledged: asyncio.Event,
+    started_at: float,
+) -> None:
+    """Retrieve detached failures, returning a safe ack only if none was enqueued."""
+
+    if task.cancelled():
+        return
+    error = task.exception()
+    if error is not None:
+        _logger.error("capture_dispatch_failed", extra={"error_type": type(error).__name__})
+        if not acknowledged.is_set():
+            ack = dispatcher_failure_ack(error, request_id)
+            get_metrics().record_ws_command(
+                COMMAND_CAPTURE_CURRENT_KIT,
+                (time.perf_counter() - started_at) * 1000.0,
+                error_code=cast(str, ack["code"]),
+            )
+            queue.put_frame(ack)
+        else:
+            get_metrics().record_error("capture_dispatch_failed")
+
+
 async def _reader_loop(
     websocket: WebSocket,
     *,
@@ -620,32 +681,69 @@ async def _reader_loop(
     spec's ack-first / events-second contract exactly, and (b) the
     shared ``session.pending_events`` hand-off cannot be clobbered by a
     sibling connection's reader.
+
+    Input capture alone runs as an owned task so DISARM stays reachable on
+    this connection. Its reservation refuses concurrent mutations, and
+    teardown cancels only the capture owned by this reader.
     """
 
-    while True:
-        try:
-            raw = await websocket.receive_text()
-        except WebSocketDisconnect:
-            # Client closed the connection — normal teardown path; no log
-            # noise needed (Uvicorn's access log records the disconnect).
-            return False
-        if len(raw.encode("utf-8")) > max_bytes:
-            # Ack + close on a size-cap violation (SX1). Routed through
-            # the queue so the writer stays the only sender; the tagged
-            # close_code makes the writer tear the socket down with
-            # 1009 (message too big) right after the ack flushes.
-            queue.put_frame(
-                {"ok": False, "code": MESSAGE_TOO_LARGE_CODE},
-                close_code=CLOSE_CODE_MESSAGE_TOO_BIG,
-            )
-            return True
-        envelope = _parse_envelope(raw)
+    async def dispatch(
+        envelope: dict[str, object], acknowledged: asyncio.Event | None = None
+    ) -> None:
         ack = await handle_command(envelope, session)
         # ack-first, events-second per spec § "The Three Protocols" —
         # both enter the FIFO queue back-to-back, so the client sees the
         # ack it can correlate to its request before any state update.
         queue.put_frame(ack)
+        if acknowledged is not None:
+            acknowledged.set()
         await drain_pending_events(session, emitter)
+
+    capture_task: asyncio.Task[None] | None = None
+    try:
+        while True:
+            try:
+                raw = await websocket.receive_text()
+            except WebSocketDisconnect:
+                return False
+            if len(raw.encode("utf-8")) > max_bytes:
+                queue.put_frame(
+                    {"ok": False, "code": MESSAGE_TOO_LARGE_CODE},
+                    close_code=CLOSE_CODE_MESSAGE_TOO_BIG,
+                )
+                return True
+            envelope = _parse_envelope(raw)
+            command = envelope.get("command")
+            if (
+                isinstance(command, dict)
+                and cast("dict[str, object]", command).get("type") == COMMAND_CAPTURE_CURRENT_KIT
+                and (capture_task is None or capture_task.done())
+            ):
+                # Input capture is the one long operation allowed off this reader.
+                # Its handler reserves session.capture_cancel before awaiting the
+                # input thread. All other mutations refuse while it is active;
+                # DISARM remains available on this same authenticated connection.
+                acknowledged = asyncio.Event()
+                capture_task = asyncio.create_task(dispatch(envelope, acknowledged))
+                capture_task.add_done_callback(
+                    partial(
+                        _observe_capture_completion,
+                        queue=queue,
+                        request_id=envelope.get("request_id"),
+                        acknowledged=acknowledged,
+                        started_at=time.perf_counter(),
+                    )
+                )
+                await asyncio.sleep(0)
+            else:
+                await dispatch(envelope)
+    finally:
+        if capture_task is not None:
+            if not capture_task.done():
+                cancel_pending_capture(session)
+                capture_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await capture_task
 
 
 def create_app(
@@ -710,6 +808,7 @@ def create_app(
             "version": APP_VERSION,
             "mode": "live" if session_is_armed(session) else "mock",
             "connection_phase": resolve_connection_phase(session),
+            "outbound_queue": registry.queue_diagnostics(),
         }
 
     # Justified suppression: same decorated-route false positive as

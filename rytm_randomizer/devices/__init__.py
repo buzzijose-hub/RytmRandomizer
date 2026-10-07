@@ -24,7 +24,9 @@ from .analog_four import (
     AnalogFourFilter1FrequencyCandidateCapability,
     AnalogFourFilter1FrequencyCandidateMutation,
     AnalogFourFilter1FrequencyCandidateResult,
+    AnalogFourNativeFieldCapability,
     get_analog_four_filter1_frequency_candidate_capability,
+    get_analog_four_native_field_capability,
 )
 from .base import Device, MessageRenderer, MidiOutbox, MutationPlanner, SnapshotDecoder
 from .registry import all_devices, get_device, register_device
@@ -40,6 +42,16 @@ from .strategies import (
     analog_four_snapshot_payload_fingerprint,
     rytm_snapshot_payload_fingerprint,
 )
+from .strategies.analog_four_native_fields import (
+    AnalogFourNativeAppliedMutation,
+    AnalogFourNativeCandidateResult,
+    AnalogFourNativeDomain,
+    AnalogFourNativeEncoding,
+    AnalogFourNativeField,
+    AnalogFourNativeMutation,
+    AnalogFourNativeReadback,
+    AnalogFourNativeValue,
+)
 
 __all__ = [
     "Device",
@@ -47,6 +59,15 @@ __all__ = [
     "AnalogFourFilter1FrequencyCandidateMutation",
     "AnalogFourFilter1FrequencyCandidateResult",
     "AnalogFourKitSnapshot",
+    "AnalogFourNativeAppliedMutation",
+    "AnalogFourNativeCandidateResult",
+    "AnalogFourNativeDomain",
+    "AnalogFourNativeEncoding",
+    "AnalogFourNativeField",
+    "AnalogFourNativeFieldCapability",
+    "AnalogFourNativeMutation",
+    "AnalogFourNativeReadback",
+    "AnalogFourNativeValue",
     "MessageRenderer",
     "MidiOutbox",
     "MutationPlanner",
@@ -59,6 +80,7 @@ __all__ = [
     "analog_four_snapshot_payload_fingerprint",
     "get_device",
     "get_analog_four_filter1_frequency_candidate_capability",
+    "get_analog_four_native_field_capability",
     "register_device",
     "resolve_saved_kit_capture_capability",
     "rytm_snapshot_payload_fingerprint",

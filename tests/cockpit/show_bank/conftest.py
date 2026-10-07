@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import logging
+from collections.abc import Iterator
 from dataclasses import dataclass, replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Final
 
+import pytest
 from cockpit.conftest import MutableClock, capture_fixed_frame
 
 from conftest import (
@@ -26,6 +29,18 @@ from rytm_randomizer.cockpit.show_bank.store import ShowBankStore
 from rytm_randomizer.cockpit.show_bank.workspace import ShowKitForgeWorkspace
 
 SHOW_BANK_BOUNDARY_NOW: Final[datetime] = datetime(2026, 9, 4, 16, 0, tzinfo=timezone.utc)
+
+
+@pytest.fixture
+def package_logs(caplog: pytest.LogCaptureFixture) -> Iterator[pytest.LogCaptureFixture]:
+    """Shared package-level log capture with reversible handler installation."""
+    logger = logging.getLogger("rytm_randomizer")
+    logger.addHandler(caplog.handler)
+    try:
+        with caplog.at_level(logging.DEBUG, logger=logger.name):
+            yield caplog
+    finally:
+        logger.removeHandler(caplog.handler)
 
 
 @dataclass

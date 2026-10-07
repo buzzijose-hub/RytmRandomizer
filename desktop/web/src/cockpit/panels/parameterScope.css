@@ -1,0 +1,48 @@
+.parameter-scope { min-width: 0; }
+.parameter-scope-toolbar, .parameter-scope-actions, .parameter-scope-tabs {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  border: 0; border-radius: 0; background: transparent; padding: 0;
+}
+.parameter-scope-toolbar label { display: grid; gap: 4px; font-size: 12px; }
+.parameter-scope-toolbar select { max-width: 100%; min-height: 32px; }
+.parameter-scope-toolbar .parameter-scope-check { display: flex; align-items: center; min-height: 32px; }
+.parameter-scope input[type="checkbox"] { width: 18px; height: 18px; flex: 0 0 18px; accent-color: var(--accent); }
+.parameter-scope-warning { color: var(--amber); font-size: 12px; }
+.parameter-scope-source { font-size: 12px; overflow-wrap: anywhere; }
+.parameter-scope-tabs { border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.parameter-scope-tabs button { border-bottom: 3px solid transparent; border-radius: 0; min-height: 36px; }
+.parameter-scope-tabs button[aria-selected="true"] { border-bottom-color: var(--accent); }
+.parameter-scope-actions { margin: 8px 0; }
+.parameter-scope-rows { display: grid; }
+.parameter-scope-row {
+  display: grid; grid-template-columns: minmax(190px, 1.2fr) minmax(180px, 1fr) minmax(200px, 1.3fr);
+  gap: 12px; padding: 12px 0; border-top: 1px solid var(--border); font-size: 12px;
+}
+.parameter-scope-selection { display: flex; align-items: flex-start; gap: 8px; }
+.parameter-scope-selection span, .parameter-scope-values, .parameter-scope-evidence { display: grid; gap: 4px; min-width: 0; }
+.parameter-scope code, .parameter-scope-evidence, .parameter-scope-values { overflow-wrap: anywhere; }
+.parameter-scope-selection code { color: var(--text-dim); }
+.parameter-scope button { min-height: 32px; }
+.rehearsal-favorite-controls {
+  display: grid; min-width: 0; border: 0; border-radius: 0; background: transparent; padding: 12px 0;
+}
+.rehearsal-favorite-controls h3 { margin: 0; font-size: 14px; letter-spacing: 0; }
+.rehearsal-favorite-controls p { margin: 0; overflow-wrap: anywhere; }
+.rehearsal-favorite-controls label { flex-wrap: wrap; min-width: 0; }
+.rehearsal-favorite-controls input, .rehearsal-favorite-controls select { min-height: 32px; max-width: 100%; min-width: 0; }
+.rehearsal-favorite-controls button { min-height: 32px; }
+[data-testid="library-panel"] .cockpit-panel-inline-form {
+  max-width: 100%; min-width: 0; flex-wrap: wrap;
+}
+[data-testid="library-panel"] .cockpit-panel-inline-form label {
+  min-width: 0; max-width: 100%; flex-wrap: wrap;
+}
+[data-testid="library-panel"] select { min-width: 0; max-width: 100%; }
+[data-testid="library-panel"] .cockpit-panel-table { table-layout: fixed; }
+[data-testid="library-panel"] .cockpit-panel-table :is(th, td) {
+  overflow-wrap: anywhere; white-space: normal;
+}
+@media (max-width: 760px) {
+  .parameter-scope-row { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .parameter-scope-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

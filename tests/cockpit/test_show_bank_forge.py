@@ -523,7 +523,7 @@ def test_workspace_complete_local_favorite_and_show_preflight_journey(
     assert ShowKitForgeWorkspace(store).bank(bank.bank_id) == workspace.bank(bank.bank_id)
 
 
-def test_mock_ws_forge_journey_reuses_exact_rytm_plan_and_never_claims_save(
+def test_mock_ws_forge_journey_refuses_paired_plan_and_never_claims_save(
     tmp_path: Path,
 ) -> None:
     rytm, analog_four, snapshot, _entry = _sources()
@@ -597,7 +597,7 @@ def test_mock_ws_forge_journey_reuses_exact_rytm_plan_and_never_claims_save(
         depth_preset="medium",
         depth=0.5,
         candidate_count=3,
-        seed=10,
+        seed=7,
         profile_id=profile.profile_id,
         rytm_targets=[1, 2],
         rytm_locks=[2],
@@ -606,8 +606,20 @@ def test_mock_ws_forge_journey_reuses_exact_rytm_plan_and_never_claims_save(
     )
     assert ack["ok"] is True
     assert len(cast(list[str], ack["candidate_ids"])) == 3
+    assert session.current_candidate is None and session.current_send_plan is None
+    ack, _ = command(
+        "show_bank_select_candidate",
+        bank_id=bank.bank_id,
+        entry_id=entry.entry_id,
+        candidate_id=cast(list[str], ack["candidate_ids"])[0],
+        expected_revision=workspace.bank(bank.bank_id).revision,
+    )
+    assert ack["ok"] is True
     assert session.current_candidate is not None
     assert {delta.pad_id for delta in session.current_candidate.pad_deltas} == {1}
+    delta = session.current_candidate.pad_deltas[0]
+    assert "lfo_depth" in delta.changed_keys
+    assert delta.proposed_params["lfo_depth"] != snapshot.pads[0].params["lfo_depth"]
     state_event = cast(
         dict[str, object],
         next(event for event in events if event["type"] == "show_bank_changed"),
@@ -621,11 +633,18 @@ def test_mock_ws_forge_journey_reuses_exact_rytm_plan_and_never_claims_save(
     assert session.current_send_plan.target_pad_ids == frozenset({1, 2})
     assert session.current_send_plan.locked_pad_ids == frozenset({2})
     assert {packet.pad_id for packet in session.current_send_plan.packets} == {1}
+    assert session.current_send_plan.ready is False
+    assert "paired_control_precision_unverified" in session.current_send_plan.blocked_reasons
+    assert all(packet.parameter != "lfo_depth" for packet in session.current_send_plan.packets)
     plan_id = session.current_send_plan.plan_id
     selected_id = session.current_send_plan.candidate_id
+    before_snapshot = session.device.capture_snapshot()
+    before_history = session.history_store.current
     ack, _events = command("send", send_plan_id=plan_id)
-    assert ack["ok"] is True
-    # Mock SEND is an in-memory projection, not a live unsaved hardware state.
+    assert ack["ok"] is False
+    assert session.device.capture_snapshot() == before_snapshot
+    assert session.history_store.current == before_history
+    # A blocked generated plan cannot change even the local mock audition.
     assert workspace.bank(bank.bank_id).entry(entry.entry_id).rytm_live_auditioned_at is None
 
     ack, _events = command(

@@ -172,6 +172,7 @@ something to set to make a red gate go green.
 | `PARITY_CAPTURE_MODE` | unset | `1` rewrites **every** V1.34 parity golden under `tests/fixtures/v134_parity/` from current engine output. A hard stop: it requires explicit maintainer go-ahead and its own isolated PR. See [`.claude/rules/parity-fixture-discipline.md`](../.claude/rules/parity-fixture-discipline.md). |
 | `SOURCE_DATE_EPOCH` | unset | Optional Unix epoch used by the passive AL16 Rytm kit exporter to freeze manifest timestamps for reproducible evidence. When unset, the exporter uses Unix epoch 0 for deterministic evidence. It never enables MIDI or hardware access. |
 | `RYTM_TEST_REFERENCE` | unset | Optional path to a private local initialized Analog Rytm saved-kit SysEx dump used only by the opt-in codec integration test. When unset, the test skips. Never commit the referenced dump; this variable does not enable MIDI or hardware access. |
+| `RYTM_TEST_BEACON_CLIENT_STARTUP` | unset | Test-only Rust subprocess marker owned by the beacon client regression. Unset runs the parent test; its harness selects `unset` or `installed` in isolated children to verify provider initialization and preservation. It is not a runtime knob and builds requests without sending or enabling MIDI. |
 
 ### Desktop update and release configuration
 
@@ -267,6 +268,22 @@ an abnormal child exit into a bounded `inference_failed` result, and removes
 that staging directory on failure. The Windows native decoder may still fail
 safely in this test; crash containment and cleanup are verified, but reliable
 Windows decoding is not claimed.
+
+The explicit `scripts/diagnose_native_audio_cache.py --output <new-directory>`
+experiment uses the same one-thread limits in at most two owned children. It
+sets `NUMBA_CACHE_DIR` to a diagnostic-owned shared or per-child cache and reads
+that variable only in its child mode, rejecting caches outside the owned root.
+`NUMBA_DEBUG_CACHE=1` supplies bounded cache-hit categories. `TMPDIR`, `TEMP`
+and `TMP` point to owned temporary directories; inherited `LIBROSA_CACHE_DIR`
+is removed so the experiment cannot read or mutate an external librosa cache.
+`PYTHONPATH` prepends this checkout, `PYTHONDONTWRITEBYTECODE=1` avoids checkout
+bytecode writes, `PYTHONUNBUFFERED=1` flushes child diagnostics, and
+`RYTM_RAND_MIDI_BACKEND=off` is forced.
+These are opt-in diagnostic subprocess overrides, not shipped configuration.
+No JIT disabling, CPU-target override, algorithm change or dependency change is
+used. A diagnostic report is an observation, not CI or hardware acceptance.
+Generated `public-report` files are sanitized; re-export assumes unchanged,
+trusted tool-generated JSON and does not sanitize arbitrary modified contents.
 
 ## 9. Next Project Task
 

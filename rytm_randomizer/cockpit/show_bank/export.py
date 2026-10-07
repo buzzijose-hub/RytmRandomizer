@@ -13,7 +13,7 @@ import json
 import re
 import stat
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from time import perf_counter
 from types import MappingProxyType
@@ -34,7 +34,10 @@ from ...observability.tracing import trace
 from ..capture import KitCaptureResult, cockpit_snapshot_from_rytm_capture, decode_kit_capture_frame
 from ..data import Snapshot
 from ..data.show_bank import (
+    A4_NATIVE_MUTATION_ALGORITHM,
     A4_SHOW_KIT_DEVICE_ID,
+    LEGACY_SHOW_BANK_SCHEMA_VERSION,
+    PREVIOUS_SHOW_BANK_SCHEMA_VERSION,
     RetainedSysexArtifact,
     ShowBank,
     ShowBankDict,
@@ -46,6 +49,7 @@ from ..data.show_bank import (
 from ..export.writer import WriteResult, atomic_write_set, guard_atomic_write_tree
 from .forge import (
     analog_four_capture_semantic_fingerprint,
+    forge_candidate_pair,
     rytm_capture_semantic_fingerprint,
     rytm_semantic_fingerprint,
 )
@@ -56,6 +60,7 @@ from .store import (
     canonical_show_bank_json,
     decode_json_rejecting_duplicate_keys,
     read_bounded_show_bank_file,
+    validate_show_bank_capture_frame,
     validate_show_bank_sysex_frame,
 )
 
@@ -419,6 +424,11 @@ def _required_retained_ids(bank: ShowBank) -> frozenset[str]:
         favorite = entry.favorite_candidate
         if favorite is not None:
             required.add(favorite.analog_four_candidate.sysex.artifact_id)
+        required.update(
+            candidate.analog_four_candidate.sysex.artifact_id
+            for candidate in entry.candidates
+            if candidate.recipe.a4_algorithm == A4_NATIVE_MUTATION_ALGORITHM
+        )
         for recapture in (entry.rytm_recapture, entry.analog_four_recapture):
             if recapture is not None:
                 required.add(recapture.capture.sysex.artifact_id)
@@ -438,26 +448,7 @@ def _require_total_size(parts: Sequence[int], *, package_name: str) -> None:
 
 
 def _decoded_capture(capture: ShowKitCapture, frame: bytes) -> KitCaptureResult:
-    try:
-        decoded = decode_kit_capture_frame(capture.device_id, frame)
-    except (DataError, KeyError, IndexError, TypeError, ValueError) as exc:
-        raise DataError(
-            "show-pack capture failed its registered device-family codec",
-            context={"category": "framing", "artifact_name": capture.sysex.artifact_id},
-        ) from exc
-    if decoded.frame != frame or not decoded.round_trip_verified:
-        _raise_show_pack_corruption(
-            "framing",
-            "show-pack capture failed exact codec round trip",
-            artifact_name=capture.sysex.artifact_id,
-        )
-    if decoded.fingerprint != capture.fingerprint or decoded.kit_name != capture.kit_name:
-        _raise_show_pack_corruption(
-            "cross-reference",
-            "show-pack capture metadata disagrees with decoded bytes",
-            artifact_name=capture.sysex.artifact_id,
-        )
-    return decoded
+    return validate_show_bank_capture_frame(capture, frame)
 
 
 def _verify_entry_candidates(
@@ -466,6 +457,53 @@ def _verify_entry_candidates(
     """Reproduce candidate semantics from the decoded immutable source."""
 
     for candidate in entry.candidates:
+        if candidate.recipe.profile is not None:
+            try:
+                reproduced = forge_candidate_pair(
+                    entry=entry,
+                    rytm_source_snapshot=source_snapshot,
+                    analog_four_source_frame=frames_by_artifact_id[
+                        entry.analog_four_source.sysex.artifact_id
+                    ],
+                    profile=candidate.recipe.profile,
+                    recipe=candidate.recipe,
+                    now=candidate.created_at,
+                )
+            except (DataError, KeyError, IndexError, TypeError, ValueError) as exc:
+                raise DataError(
+                    "show-pack candidate deterministic replay failed",
+                    context={
+                        "category": "cross-reference",
+                        "artifact_name": candidate.candidate_id,
+                    },
+                ) from exc
+            # Duplicating a cue intentionally preserves the retained candidate
+            # identity and evidence. Replay verifies values, not a new cue's ID.
+            regenerated = replace(
+                reproduced.candidate,
+                candidate_id=candidate.candidate_id,
+                rytm_candidate=replace(
+                    reproduced.candidate.rytm_candidate,
+                    candidate_id=candidate.rytm_candidate.candidate_id,
+                ),
+                evidence=candidate.evidence,
+            )
+            expected = replace(
+                candidate,
+                analog_four_candidate=replace(
+                    candidate.analog_four_candidate,
+                    sysex=replace(candidate.analog_four_candidate.sysex, retained=None),
+                ),
+            )
+            supplied = frames_by_artifact_id.get(candidate.analog_four_candidate.sysex.artifact_id)
+            if regenerated != expected or (
+                supplied is not None and supplied != reproduced.analog_four_frame
+            ):
+                _raise_show_pack_corruption(
+                    "cross-reference",
+                    "show-pack candidate differs from deterministic recipe replay",
+                    artifact_name=candidate.candidate_id,
+                )
         try:
             expected_rytm = rytm_semantic_fingerprint(
                 source_snapshot,
@@ -604,6 +642,13 @@ def _verify_package_device_claims(
         try:
             rytm_source = decoded_captures[entry.rytm_source.capture_id]
             source_snapshot = cockpit_snapshot_from_rytm_capture(rytm_source)
+            if entry.rytm_source.snapshot_id is None:
+                raise ValueError("Rytm source snapshot identity is missing")
+            source_snapshot = replace(
+                source_snapshot,
+                snapshot_id=entry.rytm_source.snapshot_id,
+                captured_at=entry.rytm_source.captured_at,
+            )
         except (KeyError, TypeError, ValueError) as exc:
             raise DataError(
                 "show-pack Rytm source cannot reconstruct its mutation snapshot",
@@ -616,9 +661,19 @@ def _verify_package_device_claims(
         _verify_entry_recaptures(entry, rytm_source, decoded_captures)
 
 
+def verify_show_bank_frames(bank: ShowBank, frames_by_artifact_id: Mapping[str, bytes]) -> None:
+    """Verify inert retained source/candidate claims through the package's codec path."""
+    _verify_package_device_claims(bank, frames_by_artifact_id)
+
+
 def _show_pack_directory_identity(path: Path) -> tuple[int, int]:
     try:
         metadata = path.stat(follow_symlinks=False)
+    except FileNotFoundError as exc:
+        raise DataError(
+            "show-pack directory cannot be inspected: package is missing",
+            context={"category": "missing", "artifact_name": path.name},
+        ) from exc
     except OSError as exc:
         raise DataError(
             "show-pack directory cannot be inspected",
@@ -692,7 +747,14 @@ def _read_show_pack_manifest(package_dir: Path, package_id: str) -> ShowPackMani
             "show-pack id does not match its directory",
             artifact_name=SHOW_PACK_MANIFEST_NAME,
         )
-    if manifest_payload != _canonical_json(cast(Mapping[str, object], manifest.to_dict())):
+    legacy = require_object(manifest_mapping["bank"], "show-pack bank").get("schema_version") in (
+        LEGACY_SHOW_BANK_SCHEMA_VERSION,
+        PREVIOUS_SHOW_BANK_SCHEMA_VERSION,
+    )
+    expected = _canonical_json(
+        cast(Mapping[str, object], (manifest_mapping if legacy else manifest.to_dict()))
+    )
+    if manifest_payload != expected:
         _raise_show_pack_corruption(
             "schema",
             "show-pack manifest is not canonical JSON",
@@ -736,7 +798,7 @@ def _read_verified_pack_payloads(package_dir: Path, manifest: ShowPackManifest) 
     actual_names = {path.name for path in paths}
     if actual_names != expected_names:
         _raise_show_pack_corruption(
-            "cross-reference",
+            "missing" if expected_names - actual_names else "cross-reference",
             "show-pack file set differs from its manifest",
             artifact_name=package_dir.name,
         )
@@ -943,7 +1005,7 @@ class ShowPackService:
         published = False
         try:
             with guard_atomic_write_tree(package_dir, identity):
-                writes = atomic_write_set(artifacts, overwrite=False)
+                writes = atomic_write_set(artifacts, overwrite=False, redact_diagnostics=True)
             published = True
         finally:
             if not published:
@@ -976,12 +1038,6 @@ class ShowPackService:
                     "path",
                     "show-pack root cannot be a symlink",
                     artifact_name=self._package_root.name,
-                )
-            if package_dir.is_symlink() or not package_dir.is_dir():
-                _raise_show_pack_corruption(
-                    "missing",
-                    "show-pack package directory is missing",
-                    artifact_name=package_dir.name,
                 )
         except OSError as exc:
             raise DataError(
@@ -1032,10 +1088,18 @@ class ShowPackService:
     def store_verified_import(
         self,
         result: ShowPackImportResult,
+        *,
+        destination_bank_id: str | None = None,
     ) -> ShowPackStoredImportResult:
         """Normalize one verified package and publish its new namespace."""
 
+        # This result type is publicly constructible: its name alone is not
+        # proof that verify() produced it. Recheck source claims before writes.
+        _verify_package_device_claims(result.bank, result.frames_by_artifact_id)
         normalized = normalize_catalog_import(result.bank, clock=self._clock)
+        if destination_bank_id is not None:
+            validate_show_bank_id(destination_bank_id, "destination_bank_id")
+            normalized = replace(normalized, bank_id=destination_bank_id)
         writes = self._store.import_verified(normalized, result.frames_by_artifact_id)
         _logger.info(
             "show_pack_imported",
@@ -1052,10 +1116,14 @@ class ShowPackService:
             writes=writes,
         )
 
-    def import_into_store(self, package_id: str) -> ShowPackStoredImportResult:
+    def import_into_store(
+        self, package_id: str, *, destination_bank_id: str | None = None
+    ) -> ShowPackStoredImportResult:
         """Verify a package completely, then atomically publish it to the store."""
 
-        return self.store_verified_import(self.verify(package_id))
+        return self.store_verified_import(
+            self.verify(package_id), destination_bank_id=destination_bank_id
+        )
 
 
 __all__ = [
@@ -1084,4 +1152,5 @@ __all__ = [
     "ShowPackService",
     "ShowPackStoredImportResult",
     "narrow_show_pack_artifact_kind",
+    "verify_show_bank_frames",
 ]

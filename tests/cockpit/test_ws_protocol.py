@@ -45,6 +45,7 @@ def test_event_types_frozenset_lists_every_event_constant() -> None:
         protocol.EVENT_KIT_CAPTURES_CHANGED,
         protocol.EVENT_MUTATION_TARGETS_CHANGED,
         protocol.EVENT_MUTATION_LOCKS_CHANGED,
+        protocol.EVENT_MUTATION_PARAMETERS_CHANGED,
         protocol.EVENT_DUAL_MACHINE_STAGE_CHANGED,
         protocol.EVENT_PROFILE_CHANGED,
         protocol.EVENT_PATCH_GENOME_CHANGED,
@@ -59,7 +60,7 @@ def test_event_types_frozenset_lists_every_event_constant() -> None:
     assert individual <= protocol.EVENT_TYPES
     assert isinstance(protocol.EVENT_TYPES, frozenset)
     # 17 cockpit events + 3 wizard events (folded in from wizard_protocol)
-    assert len(protocol.EVENT_TYPES) == 20
+    assert len(protocol.EVENT_TYPES) == 21
 
 
 def test_command_types_frozenset_lists_every_command_constant() -> None:
@@ -80,6 +81,11 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
         protocol.COMMAND_SET_PAD_LOCK,
         protocol.COMMAND_SET_A4_TRACK_LOCK,
         protocol.COMMAND_SET_MUTATION_TARGETS,
+        protocol.COMMAND_GET_MUTATION_PARAMETERS,
+        protocol.COMMAND_SET_MUTATION_PARAMETERS,
+        protocol.COMMAND_SET_REHEARSAL_PRESET,
+        protocol.COMMAND_RETAIN_REHEARSAL_FAVORITE,
+        protocol.COMMAND_RECALL_REHEARSAL_FAVORITE,
         protocol.COMMAND_CLEAR_MUTATION_TARGETS,
         protocol.COMMAND_TOGGLE_PREVIEW,
         protocol.COMMAND_PREPARE_SEND_PLAN,
@@ -107,6 +113,7 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
         protocol.COMMAND_SHOW_BANK_SELECT,
         protocol.COMMAND_SHOW_BANK_UPDATE,
         protocol.COMMAND_SHOW_BANK_ADOPT_SOURCES,
+        protocol.COMMAND_SHOW_BANK_ADOPT_LIBRARY_SOURCES,
         protocol.COMMAND_SHOW_BANK_GENERATE_CANDIDATES,
         protocol.COMMAND_SHOW_BANK_SELECT_CANDIDATE,
         protocol.COMMAND_SHOW_BANK_MARK_FAVORITE,
@@ -124,8 +131,8 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
     }
     assert individual <= protocol.COMMAND_TYPES
     assert isinstance(protocol.COMMAND_TYPES, frozenset)
-    # 49 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
-    assert len(protocol.COMMAND_TYPES) == 57
+    # 55 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
+    assert len(protocol.COMMAND_TYPES) == 63
 
 
 def test_event_and_command_constants_match_spec_strings() -> None:

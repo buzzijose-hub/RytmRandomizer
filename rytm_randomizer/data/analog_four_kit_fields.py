@@ -208,6 +208,96 @@ A4_MOD_DEPTH_FIELDS: Final[MappingProxyType[str, str]] = MappingProxyType(
     }
 )
 
+# Continuous native-byte domains established by the retained RIO145 recipe.
+# Other u7-accessible fields may be selectors; accessor width is not a domain.
+A4_NATIVE_CONTINUOUS_U7_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "osc1_level",
+        "osc2_level",
+        "osc1_pwm_speed",
+        "osc2_pwm_speed",
+        "osc1_pwm_depth",
+        "osc2_pwm_depth",
+        "noise_sample_hold",
+        "noise_level",
+        "sync_amount",
+        "slide_time",
+        "vibrato_speed",
+        "vibrato_depth",
+        "filter1_resonance",
+        "filter2_resonance",
+        "envf_attack",
+        "env2_attack",
+        "envf_decay",
+        "env2_decay",
+        "envf_sustain",
+        "env2_sustain",
+        "envf_release",
+        "env2_release",
+        "lfo1_phase",
+        "lfo2_phase",
+        "amp_chorus_send",
+        "amp_delay_send",
+        "amp_reverb_send",
+        "amp_volume",
+        "amp_attack",
+        "amp_decay",
+        "amp_sustain",
+        "amp_release",
+    }
+)
+
+A4_NATIVE_PITCH_FIELDS: Final[frozenset[str]] = frozenset(
+    ("osc1_tune", "osc2_tune", "osc1_fine", "osc2_fine")
+)
+A4_NATIVE_REFERENCE_EVIDENCE: Final[tuple[str, ...]] = (
+    "tests/fixtures/rio145/A4_Test1_Init_Kit.syx",
+    "tests/fixtures/rio145/A4_RIO145_CORE_RETURN_Kit.syx",
+    "specs/rio145/come_to_rio_a4_core.json",
+)
+_PITCH_EVIDENCE: Final[tuple[str, ...]] = (
+    "tests/fixtures/rio145/A4_Test2_T1_OSC1_FIN_P1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test3_T1_OSC1_FIN_M1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test6_T1_OSC1_FIN_P2_Kit.syx",
+    "tests/fixtures/rio145/A4_Test7_T1_OSC1_FIN_M2_Kit.syx",
+)
+_DEPTH_EVIDENCE: Final[tuple[str, ...]] = (
+    "tests/fixtures/rio145/A4_Test4_T1_ENV2_DEPA_P1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test5_T1_ENV2_DEPA_M1_Kit.syx",
+)
+A4_NATIVE_EXTRA_FIELD_EVIDENCE: Final[MappingProxyType[str, tuple[str, ...]]] = MappingProxyType(
+    {
+        **dict.fromkeys(A4_NATIVE_PITCH_FIELDS, _PITCH_EVIDENCE),
+        **dict.fromkeys(A4_MOD_DEPTH_FIELDS, _DEPTH_EVIDENCE),
+        "filter1_frequency": (
+            "tests/fixtures/analog_four_saved_kit/filter1_freq_127_source.syx",
+            "tests/fixtures/analog_four_saved_kit/filter1_freq_000_expected.syx",
+            "tests/fixtures/analog_four_saved_kit/filter1_freq_063_50_expected.syx",
+        ),
+        "filter2_resonance": (
+            "tests/fixtures/analog_four_saved_kit/filter2_res_000_source.syx",
+            "tests/fixtures/analog_four_saved_kit/filter2_res_127_expected.syx",
+        ),
+    }
+)
+# These exclusions constrain Studio native mutation, not separate recipe codecs.
+A4_NATIVE_FIELD_PROTECTIONS: Final[MappingProxyType[str, str]] = MappingProxyType(
+    {
+        **{
+            parameter: "oxi_amp_protection"
+            for parameter in A4_TRACK_OFFSETS
+            if parameter.startswith("amp_")
+        },
+        "osc1_fine": "independently_unsafe_fine",
+        "osc2_fine": "independently_unsafe_fine",
+        "portamento": "native_domain_unestablished",
+        "lfo1_phase": "native_nondefault_evidence_missing",
+        "osc1_sub": "native_nondefault_evidence_missing",
+        "osc2_sub": "native_nondefault_evidence_missing",
+    }
+)
+A4_NATIVE_EVIDENCELESS_FIELDS: Final[frozenset[str]] = frozenset(("portamento",))
+
 __all__ = [
     "A4_BIPOLAR_FIELDS",
     "A4_FIXED_8_8_ENCODING",
@@ -215,6 +305,12 @@ __all__ = [
     "A4_FIXED_8_8_SCALE",
     "A4_FIXED_8_8_WIDTH",
     "A4_MOD_DEPTH_FIELDS",
+    "A4_NATIVE_CONTINUOUS_U7_FIELDS",
+    "A4_NATIVE_PITCH_FIELDS",
+    "A4_NATIVE_REFERENCE_EVIDENCE",
+    "A4_NATIVE_EXTRA_FIELD_EVIDENCE",
+    "A4_NATIVE_FIELD_PROTECTIONS",
+    "A4_NATIVE_EVIDENCELESS_FIELDS",
     "A4_SOUND_NAME_LENGTH",
     "A4_SOUND_NAME_OFFSET",
     "A4_SOUND_SIGNATURE",

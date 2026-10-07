@@ -146,6 +146,7 @@ cargo clippy --all-targets -- -D warnings  # required for CI
 - **The sidecar port is configurable.** `RYTM_RAND_WS_PORT=4318 python -m rytm_randomizer.cockpit` overrides the default `4317`. The web frontend reads the port from the same env var (mirrored by the Tauri shell when it spawns the sidecar). Default is safe on every OS this project supports.
 - **Mock-first; armed on purpose.** The cockpit defaults to `MockDeviceAdapter` (no MIDI port opened). The real-MIDI path constructs `RealMidiDeviceAdapter`, which wraps the existing `mido_provider` and only opens a port behind an explicit arm step. This matches the rest of the project's passive-default discipline (Strict rule 8) — running the cockpit never touches your Rytm until you ask it to.
 - **Wrapped passive report JSON is an allowed read-only input pattern.** A passive report that composes another passive report may accept the wrapped upstream JSON object and peel out its inner payload, but it must cover both raw-input and wrapped-report paths in focused tests.
+- **Support inventories are evidence, not authority.** `device-support-inventory-report --json` separates canonical catalogs, native codec domains, recipe bindings, guarded live support and physical blockers. New mappings must retain those distinctions; a storage accessor or software fixture cannot grant mutation, MIDI conversion or hardware readiness. See [`docs/DEVICE_SUPPORT_INVENTORY.md`](docs/DEVICE_SUPPORT_INVENTORY.md).
 - **Run the conformance fixtures when touching the engine.** Changes to `cockpit/engine/mutate.py` or `cockpit/engine/prng.py` must keep `tests/cockpit/fixtures/engine_conformance/*.json` byte-identical. Those fixtures lock the algorithm so the future C-portable implementation produces matching output.
 - **Web frontend tests are fast.** `cd desktop/web && npm test -- --run` runs the full Vitest suite in under 2s on a modern laptop. The Vitest watch mode (`npm test`) is good for tight iteration.
 - **Rust build is the slowest piece; cache it.** First `cargo build` is multi-minute on a cold cache; subsequent rebuilds are seconds. Keep `desktop/shell/target/` between runs (it's already in `.gitignore`).
@@ -161,6 +162,22 @@ cargo clippy --all-targets -- -D warnings  # required for CI
 - **Wrapped-readiness-JSON pattern for passive reports.** Passive reports that consume cockpit data may accept EITHER the inner data JSON (a bare `CockpitSendPlan` / `ProfileModel` mapping) OR the wrapped report JSON (a top-level document with the inner data nested under a known key), peeling out the inner key automatically. PR #104's `cockpit_send_plan_rehearsal_surface.py::_readiness_from_mapping` introduced the pattern; Phase 3's `reports/cockpit_export_rehearsal.py::_profile_from_mapping` follows the same shape for `--profile-id` resolution. New rehearsal-surface-style reports should reuse this peeling helper rather than reinventing it — operators end up passing whichever JSON they already had on hand (the inner data or the previous report's output) and both paths work without a separate flag.
 
 ## Patterns introduced by the CODE_REVIEW.md sweep (2026-05-25)
+
+Studio field scopes compose `cockpit/data/parameter_scope.py`, the pure engine
+cell validator, canonical parameter catalogs and the existing session/plan
+boundary. Keep scope validation server-side and before proposals; never trim
+a blocked send plan. Local rehearsal favorites reuse the versioned library's
+atomic storage and deterministic verification. Recall revokes output grants
+and clears preparation, while physical saved-KIT reload remains manual. Test
+the scoped favorite across a real app restart, with MIDI disabled, before
+calling the portable copy usable for offline rehearsal.
+
+Native offline scopes resolve the optional Device capability, not MIDI ordinal
+ranges. Retain original framed sources separately from semantic favorites;
+portable native recipes retain their profile and algorithm for exact replay.
+Canonical field facts/protection live in `data/`; shared file readers and atomic
+writers sit below both stores. Sensitive original-source publication opts into
+redacted writer diagnostics. Prevalidate recall before a revision is published.
 
 The 12-PR sweep against the staff-engineer review introduced four reusable patterns that future cockpit / wire-boundary code is expected to follow. Each pattern is mechanically enforced by an architecture test under `tests/architecture/` so the smell cannot reappear silently. The complete table of prevention tests is in [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md#code_reviewmd-prevention-test-family-strengthens-existing-gates-no-new-gate-count) and [`docs/CODE_REVIEW_HOOK_SETUP.md`](docs/CODE_REVIEW_HOOK_SETUP.md).
 
@@ -418,6 +435,15 @@ native BLAS/Numba libraries cannot multiply worker threads under pytest-xdist:
 These are test-process controls only. The application does not read or change
 them, and contributors do not need to set them for normal runs.
 
+The opt-in native-audio cache diagnostic also sets `NUMBA_CACHE_DIR` to an owned
+shared or isolated cache, reads it only in its bounded child, and enables
+`NUMBA_DEBUG_CACHE=1`. It isolates `TMPDIR`/`TEMP`/`TMP`, clears inherited
+`LIBROSA_CACHE_DIR`, prepends checkout `PYTHONPATH`, disables MIDI and controls
+child buffering/bytecode writes. These overrides are not shipped application
+configuration. See [the diagnostic subprocess controls](docs/LOCAL_DEV_TOOLING_NOTES.md#native-audio-test-subprocess-controls)
+for ownership, native-thread limits, report privacy and the observation-only
+acceptance boundary. Required CI failure status is never cleared by diagnostics.
+
 **On macOS / Linux**, the bare command is the same. CI runs the same
 invocation on a 4-core GitHub runner in ~30-90s depending on the OS.
 
@@ -556,6 +582,11 @@ initialized Analog Rytm saved-kit SysEx dump for the opt-in codec integration
 test. When unset, that integration test skips with a precise reason. Never
 commit the referenced dump; the variable is test-only and does not enumerate,
 open, or write a MIDI port.
+
+`RYTM_TEST_BEACON_CLIENT_STARTUP` is owned by the Rust beacon regression's
+child-process harness. Unset runs the parent test; the harness selects `unset`
+or `installed` for fresh-provider and preinstalled-provider child cases. It is
+test-only, is not a runtime setting, and constructs requests without sending.
 
 ## Plan requirements — the 18 gates every PR must satisfy
 

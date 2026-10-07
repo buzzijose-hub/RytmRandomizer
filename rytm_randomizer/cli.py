@@ -134,6 +134,10 @@ def _registered_command_exit_code(args: Sequence[str]) -> int | None:
             "rytm_randomizer.reports.analog_rytm_midi_catalog",
             "ANALOG_RYTM_MIDI_CATALOG_CLI_COMMAND",
         ),
+        "device-support-inventory-report": (
+            "rytm_randomizer.reports.device_support_inventory",
+            "DEVICE_SUPPORT_INVENTORY_CLI_COMMAND",
+        ),
         "scoped-randomization-preview": (
             "rytm_randomizer.reports.scoped_randomization_preview",
             "SCOPED_RANDOMIZATION_PREVIEW_CLI_COMMAND",

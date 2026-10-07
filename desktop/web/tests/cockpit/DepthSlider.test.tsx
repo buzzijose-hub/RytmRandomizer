@@ -2,14 +2,15 @@
  * Tests for DepthSlider.
  */
 
-import { describe, expect, it } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 
 import { CockpitClientProvider } from '../../src/cockpit/context';
 import { DepthSlider } from '../../src/cockpit/DepthSlider';
+import { useCockpitStore } from '../../src/state';
 import { runAxe } from '../a11y/__helpers__/axe';
 
-import { FakeCockpitClient } from './_fixtures';
+import { candidate, FakeCockpitClient } from './_fixtures';
 
 function renderWith(initial?: number): FakeCockpitClient {
   const fake = new FakeCockpitClient();
@@ -22,6 +23,16 @@ function renderWith(initial?: number): FakeCockpitClient {
 }
 
 describe('DepthSlider', () => {
+  beforeEach(() => useCockpitStore.getState().reset());
+  afterEach(() => useCockpitStore.getState().reset());
+  it('supports zero-depth identity and hydrates a recalled candidate depth', () => {
+    const fake = renderWith();
+    fireEvent.change(screen.getByRole('slider'), { target: { value: '0' } });
+    expect(screen.getByRole('slider')).toHaveAttribute('min', '0');
+    expect(fake.sent).toEqual([{ type: 'set_depth', depth: 0 }]);
+    act(() => useCockpitStore.getState().setPreviewCandidate({ ...candidate, depth: 0.1 }));
+    expect(screen.getByRole('slider')).toHaveValue('0.1');
+  });
   it('renders with the default initial value (45%)', () => {
     renderWith();
     expect(screen.getByTestId('depth-slider-value')).toHaveTextContent('45%');

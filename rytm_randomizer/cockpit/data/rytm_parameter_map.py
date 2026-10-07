@@ -16,7 +16,13 @@ from typing import Final
 from ...data.analog_rytm_midi import (
     ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER,
     ANALOG_RYTM_MACHINE_SRC_BY_MACHINE,
+    RYTM_COCKPIT_ADDITIONAL_SRC_PITCH_PARAMETERS,
+    RYTM_COCKPIT_PENDING_SRC_PARAMETERS,
     AnalogRytmCcMapping,
+)
+from ...data.rytm_machine_catalog import (
+    allowed_machine_profiles_for_pad,
+    is_machine_allowed_on_pad,
 )
 
 _PAD_ID_MIN: Final[int] = 1
@@ -353,6 +359,7 @@ _MACHINE_ALIASES: Final[Mapping[str, str]] = MappingProxyType(
         "cp classic": "cp_classic",
         "sy": "sy_raw",
         "sy raw": "sy_raw",
+        "sy dual vco": "dual_vco",
     }
 )
 
@@ -365,12 +372,30 @@ def cockpit_pad_channel(pad_id: int) -> int:
     return pad_id - 1
 
 
+def cockpit_machine_is_allowed_on_pad(machine: str, pad_id: int) -> bool:
+    """Resolve a Cockpit label/key against canonical physical pad ownership."""
+
+    machine_key = _machine_key(machine)
+    return (
+        type(pad_id) is int
+        and _PAD_ID_MIN <= pad_id <= _PAD_ID_MAX
+        and machine_key in ANALOG_RYTM_MACHINE_SRC_BY_MACHINE
+        and is_machine_allowed_on_pad(pad_id, machine_key)
+    )
+
+
+def cockpit_default_machine_label(pad_id: int) -> str:
+    """Derive the mock starter identity from the pad's canonical primary family."""
+
+    return allowed_machine_profiles_for_pad(pad_id)[0].label
+
+
 def cockpit_parameter_control(machine: str, parameter: str) -> int | None:
     """Return the real Rytm CC for ``parameter`` on ``machine``.
 
-    ``None`` means the cockpit does not have a safe compact-key mapping for
-    that machine/key pair yet; callers should omit the packet instead of
-    falling back to a synthetic CC.
+    Compact and catalog fallback keys resolve descriptive addresses only.
+    Callers must also consult ``cockpit_parameter_live_blockers`` before live
+    projection or planning. ``None`` means no binding; never synthesize a CC.
     """
 
     mapping = cockpit_parameter_mapping(machine, parameter)
@@ -392,6 +417,13 @@ def cockpit_parameter_mapping(machine: str, parameter: str) -> AnalogRytmCcMappi
                 f"missing Analog Rytm catalog row for {machine_key}:{catalog_parameter}"
             )
 
+    for mapping in ANALOG_RYTM_MACHINE_SRC_BY_MACHINE.get(machine_key, ()):
+        if (
+            parameter == _catalog_src_key(mapping)
+            and cockpit_parameter_key(machine_key, "SRC", mapping.parameter) == parameter
+        ):
+            return mapping
+
     catalog_key = _COMMON_ALIASES.get(parameter)
     if catalog_key is None:
         return None
@@ -407,22 +439,61 @@ def cockpit_machine_is_known(machine: str) -> bool:
 def cockpit_parameter_key(machine: str, section: str, parameter: str) -> str | None:
     """Project a promoted snapshot row back to a compact Cockpit key.
 
-    The bridge only returns keys already present in this module's manual-backed
-    aliases. Unknown catalog rows remain absent instead of acquiring guessed
-    names or offsets.
+    Existing compact keys take precedence. Missing names use an exact canonical
+    machine/NRPN-slot key. Both feed the shared live policy used by capture,
+    mutation, planning and inventory; a binding alone is not an eligibility grant.
     """
 
     catalog_pair = (section, parameter)
     for compact_key, common_pair in _COMMON_ALIASES.items():
         if common_pair == catalog_pair:
             return compact_key
-    aliases = _MACHINE_PARAMETER_ALIASES.get(_machine_key(machine))
-    if aliases is None or section != "SRC":
+    machine_key = _machine_key(machine)
+    aliases = _MACHINE_PARAMETER_ALIASES.get(machine_key)
+    # Canonical machine rows use their owning machine key as the section;
+    # manually requested SRC rows use the generic page name.
+    if section not in ("SRC", machine_key):
         return None
-    for compact_key, catalog_parameter in aliases.items():
+    for compact_key, catalog_parameter in (() if aliases is None else aliases.items()):
         if catalog_parameter == parameter:
             return compact_key
+    for mapping in ANALOG_RYTM_MACHINE_SRC_BY_MACHINE.get(machine_key, ()):
+        if mapping.parameter == parameter:
+            return _catalog_src_key(mapping)
     return None
+
+
+def _catalog_src_key(mapping: AnalogRytmCcMapping) -> str:
+    return f"src_{mapping.machine_key}_{mapping.nrpn_lsb}"
+
+
+def cockpit_parameter_live_blockers(machine: str, parameter: str) -> tuple[str, ...]:
+    """Return the shared conservative refusals for a descriptive SRC binding.
+
+    Legacy pitch/selector behavior is preserved alongside global exclusions.
+    Newly exposed catalog keys freeze pitch, level and selector rows. All CY
+    Ride SRC slots are unverified, including compact aliases, before narrower
+    pending checks. Other semantic/guarded gaps remain refused regardless of
+    spelling. Paired precision has its existing separate whole-plan check.
+    """
+
+    mapping = cockpit_parameter_mapping(machine, parameter)
+    if mapping is None or mapping.machine_key is None:
+        return ()
+    if mapping.machine_key == "cy_ride":
+        return ("src_cy_ride_slot_unverified",)
+    pending = RYTM_COCKPIT_PENDING_SRC_PARAMETERS.get((mapping.machine_key, mapping.parameter))
+    if pending is not None:
+        return (pending,)
+    if mapping.parameter == "Level":
+        return ("src_level_protected",)
+    if parameter != _catalog_src_key(mapping):
+        return ()
+    if mapping.parameter in RYTM_COCKPIT_ADDITIONAL_SRC_PITCH_PARAMETERS:
+        return ("src_pitch_protected",)
+    if mapping.value_kind == "selector":
+        return ("src_selector_protected",)
+    return ()
 
 
 def _machine_key(machine: str) -> str:
@@ -438,9 +509,12 @@ def _normalize_label(label: str) -> str:
 
 
 __all__ = [
+    "cockpit_default_machine_label",
+    "cockpit_machine_is_allowed_on_pad",
     "cockpit_machine_is_known",
     "cockpit_pad_channel",
     "cockpit_parameter_control",
     "cockpit_parameter_key",
+    "cockpit_parameter_live_blockers",
     "cockpit_parameter_mapping",
 ]

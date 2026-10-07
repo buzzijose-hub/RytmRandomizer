@@ -494,6 +494,36 @@ def elektron_syx_message(payload: bytes) -> bytes:
     return bytes([0xF0]) + payload + bytes([0xF7])
 
 
+@pytest.fixture
+def rytm_rio_return_frame() -> bytes:
+    """Load the retained OS 1.72 target-unit RIO KIT return without MIDI I/O."""
+
+    return (
+        Path(__file__).parent / "fixtures" / "rio145" / "RYTM_RIO145_AR_CORE_RETURN_Kit.syx"
+    ).read_bytes()
+
+
+def rytm_frame_with_machine_values(frame: bytes, machine_values: Mapping[int, int]) -> bytes:
+    """Alter only declared machine bytes through the canonical offline KIT codec."""
+
+    from rytm_randomizer.data.analog_rytm_kit_layout import (
+        RYTM_SOUND_MACHINE_TYPE_OFFSET,
+        analog_rytm_track_sound_offset,
+    )
+    from rytm_randomizer.devices.strategies.analog_rytm_saved_kit_codec import (
+        decode_analog_rytm_saved_kit_frame,
+        encode_analog_rytm_saved_kit_frame,
+    )
+
+    saved_kit = decode_analog_rytm_saved_kit_frame(frame)
+    unpacked = bytearray(saved_kit.unpacked)
+    for pad, machine_value in machine_values.items():
+        unpacked[analog_rytm_track_sound_offset(pad, RYTM_SOUND_MACHINE_TYPE_OFFSET)] = (
+            machine_value
+        )
+    return encode_analog_rytm_saved_kit_frame(saved_kit.header, bytes(unpacked))
+
+
 def analog_four_minimal_kit_payload(name: bytes = b"A4 KIT") -> bytes:
     """Build the minimal Analog Four kit payload shape used by passive reports."""
 

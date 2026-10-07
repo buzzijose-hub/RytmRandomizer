@@ -1,6 +1,25 @@
 import { useCockpitStore } from '../state';
+import type { SendPlanReadinessReason } from '../ws/protocol';
 
 import { OperatorLogList } from './OperatorLogList';
+
+const SEND_PLAN_BLOCKER_TEXT: Readonly<Record<SendPlanReadinessReason, string>> = {
+  ready: 'Ready after prepare',
+  candidate_high_risk:
+    'High-risk or protected changes are blocked. A lower-depth candidate with protected values unchanged is required.',
+  profile_mismatch:
+    'The candidate belongs to another profile. A candidate from the current profile is required.',
+  source_snapshot_mismatch:
+    'The candidate belongs to another source. A candidate from the current captured source is required.',
+  paired_control_precision_unverified:
+    'Paired-control precision is unverified. No part of this plan will be sent. Choose a candidate without changed paired controls.',
+  parameter_scope_mismatch:
+    'Parameter scope changed. Regenerate the candidate and prepare a new exact plan for the current selection.',
+  unsupported_control_changed:
+    'An unsupported or protected control changed. No part of this plan will be sent. Regenerate with that control excluded.',
+  no_sendable_changes:
+    'No supported changes remain in the selected, unlocked pads. A supported nonempty plan is required.',
+};
 
 export function SafetyRail(): JSX.Element {
   const session = useCockpitStore((s) => s.sessionStatus);
@@ -48,6 +67,9 @@ export function SafetyRail(): JSX.Element {
           <span>Readiness</span>
           <strong>{readyLabel}</strong>
         </div>
+        {sendPlan?.blocked_reasons.filter((reason) => reason !== 'ready').map((reason) => (
+          <p key={reason} role="status">{SEND_PLAN_BLOCKER_TEXT[reason]}</p>
+        ))}
       </section>
 
       <section className="safety-card">

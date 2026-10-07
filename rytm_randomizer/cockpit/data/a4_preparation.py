@@ -73,6 +73,41 @@ class A4PreparationChange:
         }
 
 
+class A4NativePreparationChangeDict(TypedDict):
+    track_id: int
+    parameter: str
+    before_encoded_native: int
+    after_encoded_native: int
+    native_encoding: str
+    before_screen_value: str
+    after_screen_value: str
+    unpacked_offsets: list[int]
+
+
+@dataclass(frozen=True)
+class A4NativePreparationChange:
+    track_id: int
+    parameter: str
+    before_encoded_native: int
+    after_encoded_native: int
+    native_encoding: str
+    before_screen_value: str
+    after_screen_value: str
+    unpacked_offsets: tuple[int, ...]
+
+    def to_dict(self) -> A4NativePreparationChangeDict:
+        return {
+            "track_id": self.track_id,
+            "parameter": self.parameter,
+            "before_encoded_native": self.before_encoded_native,
+            "after_encoded_native": self.after_encoded_native,
+            "native_encoding": self.native_encoding,
+            "before_screen_value": self.before_screen_value,
+            "after_screen_value": self.after_screen_value,
+            "unpacked_offsets": list(self.unpacked_offsets),
+        }
+
+
 class A4PreparationReportDict(TypedDict):
     schema_version: Literal["a4-preparation-v1"]
     preparation_id: str
@@ -96,7 +131,7 @@ class A4PreparationReportDict(TypedDict):
     candidate_is_local: bool
     candidate_bytes_verified: bool
     current_source_verified: bool
-    changes: list[A4PreparationChangeDict]
+    changes: list[A4PreparationChangeDict | A4NativePreparationChangeDict]
     blocked_reasons: list[A4PreparationBlocker]
     ready: Literal[False]
     hardware_send_validated: Literal[False]
@@ -131,7 +166,7 @@ class A4PreparationReport:
     candidate_is_local: bool
     candidate_bytes_verified: bool
     current_source_verified: bool
-    changes: tuple[A4PreparationChange, ...]
+    changes: tuple[A4PreparationChange | A4NativePreparationChange, ...]
     blocked_reasons: tuple[A4PreparationBlocker, ...]
     preparation_id: str = field(default="", init=False)
     ready: Literal[False] = field(default=False, init=False)

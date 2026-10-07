@@ -105,6 +105,9 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "devices",
             "engines",
             "observability",
+            # Canonical display metadata resolves the same registry-backed
+            # item domain as mutation; this is a neutral read-only primitive.
+            "snapshot",
         }
     ),
     "cockpit.data": frozenset(
@@ -164,6 +167,10 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     ),
     "cockpit.library": frozenset(
         {
+            # Scoped local recall verifies immutable DTOs through the pure
+            # engine; this grants no session, capture or output dependency.
+            "cockpit.data",
+            "cockpit.engine",
             "cockpit.export",
             "cockpit.profiles",
             # Auto-update spec §11 Contract A: the store declares its
@@ -179,6 +186,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             # payloads via snapshot/sysex_file.
             "devices",
             "snapshot",
+            "cockpit.capture",  # Canonical input-only framed KIT identity validation.
         }
     ),
     "cockpit.profiles": frozenset(
@@ -200,6 +208,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
             "cockpit.engine",
             "cockpit.export",
             "cockpit.profiles",
+            "cockpit.library",  # Retained-source lookup; library never imports this layer.
             "data",
             # Forge resolves family-neutral codec/candidate capabilities from
             # the device registry; it never imports a concrete family module.
@@ -259,6 +268,7 @@ ALLOWED: Final[Mapping[str, frozenset[str]]] = {
     "data": frozenset(),
     "devices": frozenset(
         {
+            "data",  # Canonical saved-KIT track count shared by composition and native capability.
             "mock_midi",
             "snapshot",
         }

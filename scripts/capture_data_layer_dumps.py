@@ -27,8 +27,9 @@ Serializer contract (shared with the drift test, which imports this module):
 * bytes               -> hex string
 * Enum                -> its ``value`` (serialized)
 * int / float / str / bool / None -> as-is
-* callables / types / modules -> skipped at export level; an error anywhere
-  nested (they have no deterministic value identity)
+* routines -> qualified module/name when nested (migration function identity)
+* callables / types / modules -> skipped at export level; non-routine callable
+  objects, types and modules are errors when nested
 """
 
 from __future__ import annotations
@@ -76,6 +77,9 @@ def serialize(value: object) -> JsonValue:
         return value
     if isinstance(value, bytes):
         return value.hex()
+    if inspect.isroutine(value):
+        # Migration functions are immutable facts; never serialize addresses.
+        return f"{value.__module__}.{value.__qualname__}"
     if dataclasses.is_dataclass(value) and not isinstance(value, type):
         return {
             field.name: serialize(getattr(value, field.name)) for field in dataclasses.fields(value)

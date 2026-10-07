@@ -490,7 +490,7 @@ def test_workspace_metadata_order_duplicate_remove_and_retention_edges(
 
     selected = entry.selected_candidate
     assert selected is not None
-    assert selected.analog_four_candidate.sysex.retained is None
+    assert selected.analog_four_candidate.sysex.retained is not None
     candidate_retained = workspace.retain_capture(
         harness.bank_id,
         harness.entry_id,

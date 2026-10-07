@@ -1,0 +1,74 @@
+[
+  [
+    "both",
+    "unknown_reserved_bytes",
+    "intentional_protection",
+    "Preserved byte-for-byte; no semantic mutation authority."
+  ],
+  [
+    "both",
+    "patterns_songs_chains_projects",
+    "outside_kit_workflow",
+    "Kit capture/mutation is not pattern or project editing."
+  ],
+  [
+    "both",
+    "unsaved_front_panel_state",
+    "hardware_evidence_missing",
+    "A saved-KIT dump cannot certify unsaved working-state synchronization."
+  ],
+  [
+    "both",
+    "hardware_save_reload_restore",
+    "intentional_protection",
+    "Local favorite persistence is not hardware saving; source reload and fresh capture are manual."
+  ],
+  [
+    "both",
+    "general_dual_machine_send",
+    "hardware_evidence_missing",
+    "BOTH is not an output grant; A4 remains blocked by stage policy."
+  ],
+  [
+    "a4",
+    "fx_cv_polyphony_performance_routing",
+    "missing_semantic_mapping",
+    "Saved-object bytes are preserved; track-field coverage does not cover these sections."
+  ],
+  [
+    "a4",
+    "paired_cc_nrpn_native_precision",
+    "hardware_evidence_missing",
+    "Native fixed-point evidence cannot establish live MIDI conversion or restoration."
+  ],
+  [
+    "rytm",
+    "samples_upload_scenes_performances_retrig_choke_routing",
+    "intentional_protection",
+    "Outside the targeted sound workflow; preserve existing state and sample identity."
+  ],
+  [
+    "rytm",
+    "machine_specific_note_tuning",
+    "hardware_evidence_missing",
+    "A raw Tune value is not a universal note lookup; require machine-specific approved evidence."
+  ],
+  [
+    "rytm",
+    "cy_ride_source_slots",
+    "hardware_evidence_missing",
+    "All CY Ride SRC controls are blocked: src_cy_ride_slot_unverified; addresses do not verify saved-slot semantics."
+  ],
+  [
+    "rytm",
+    "paired_control_live_send",
+    "hardware_evidence_missing",
+    "Any changed in-scope paired control blocks the whole Cockpit plan, including supported packets."
+  ],
+  [
+    "both",
+    "pi_standalone_appliance",
+    "physical_validation_pending",
+    "Native Pi boot, deployment and physical operation require separate acceptance evidence."
+  ]
+]

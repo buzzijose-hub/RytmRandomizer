@@ -17,10 +17,34 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from types import MappingProxyType
-from typing import Final, Self, TypedDict
+from typing import Final, NotRequired, Self, TypedDict, cast
+
+from ...data.analog_rytm_midi import ANALOG_RYTM_MACHINE_SRC_BY_MACHINE, MutationStatus
+from .rytm_parameter_map import (
+    cockpit_machine_is_allowed_on_pad,
+    cockpit_pad_channel,
+    cockpit_parameter_key,
+    cockpit_parameter_live_blockers,
+)
 
 _PAD_ID_MIN: Final[int] = 1
 _PAD_ID_MAX: Final[int] = 12
+
+
+class SrcParameterDict(TypedDict):
+    """Canonical SRC display facts, not a send plan or hardware grant."""
+
+    key: str
+    parameter: str
+    machine_key: str
+    channel: int
+    cc_msb: int
+    cc_lsb: int | None
+    nrpn_msb: int | None
+    nrpn_lsb: int | None
+    mutation_status: MutationStatus
+    pad_compatible: bool
+    live_blockers: list[str]
 
 
 class PadStateDict(TypedDict):
@@ -29,6 +53,7 @@ class PadStateDict(TypedDict):
     pad_id: int
     machine: str
     params: Mapping[str, int]
+    src_parameters: NotRequired[list[SrcParameterDict]]
 
 
 class SnapshotDict(TypedDict):
@@ -60,6 +85,37 @@ def _freeze_params(params: Mapping[str, int]) -> Mapping[str, int]:
     return MappingProxyType(dict(params))
 
 
+def _src_parameters(machine: str, pad_id: int) -> list[SrcParameterDict]:
+    """Project the owning catalog through the public Cockpit aliases/policy.
+
+    Include absent/protected slots without adding them to mutation values.
+    Imported display metadata is never trusted: serialization derives it anew.
+    """
+
+    parameters: list[SrcParameterDict] = []
+    for machine_key, rows in ANALOG_RYTM_MACHINE_SRC_BY_MACHINE.items():
+        for row in rows:
+            key = cockpit_parameter_key(machine, machine_key, row.parameter)
+            if key is None:
+                continue
+            parameters.append(
+                {
+                    "key": key,
+                    "parameter": row.parameter,
+                    "machine_key": machine_key,
+                    "channel": cockpit_pad_channel(pad_id),
+                    "cc_msb": row.cc_msb,
+                    "cc_lsb": row.cc_lsb,
+                    "nrpn_msb": row.nrpn_msb,
+                    "nrpn_lsb": row.nrpn_lsb,
+                    "mutation_status": row.mutation_status,
+                    "pad_compatible": cockpit_machine_is_allowed_on_pad(machine, pad_id),
+                    "live_blockers": list(cockpit_parameter_live_blockers(machine, key)),
+                }
+            )
+    return parameters
+
+
 @dataclass(frozen=True)
 class PadState:
     """The full parameter state of one pad on the device.
@@ -70,7 +126,7 @@ class PadState:
 
     pad_id: int
     machine: str
-    params: Mapping[str, int] = field(default_factory=dict)
+    params: Mapping[str, int] = field(default_factory=dict[str, int])
 
     def __post_init__(self) -> None:
         if not (_PAD_ID_MIN <= self.pad_id <= _PAD_ID_MAX):
@@ -81,13 +137,14 @@ class PadState:
         # ``frozen=True`` blocks direct assignment, so we use object.__setattr__.
         object.__setattr__(self, "params", _freeze_params(self.params))
 
-    def to_dict(self) -> dict[str, object]:
+    def to_dict(self) -> PadStateDict:
         """Serialize to a plain dict suitable for JSON / MessagePack."""
 
         return {
             "pad_id": self.pad_id,
             "machine": self.machine,
             "params": dict(self.params),
+            "src_parameters": _src_parameters(self.machine, self.pad_id),
         }
 
     @classmethod
@@ -95,7 +152,7 @@ class PadState:
         """Restore from a dict produced by :meth:`to_dict` (or a JSON load)."""
 
         params_obj = data["params"]
-        if not isinstance(params_obj, Mapping):
+        if not isinstance(cast(object, params_obj), Mapping):
             raise TypeError(f"params must be a Mapping; got {type(params_obj).__name__}")
         return cls(
             pad_id=data["pad_id"],
@@ -135,7 +192,7 @@ class Snapshot:
                 raise ValueError("pads must be sorted ascending by pad_id")
             prev = pad.pad_id
 
-    def to_dict(self) -> dict[str, object]:
+    def to_dict(self) -> SnapshotDict:
         """Serialize to a plain dict (timestamps go to ISO 8601 strings)."""
 
         return {
@@ -152,7 +209,7 @@ class Snapshot:
         """Restore from a dict produced by :meth:`to_dict`."""
 
         pads_obj = data["pads"]
-        if not isinstance(pads_obj, (list, tuple)):
+        if not isinstance(cast(object, pads_obj), (list, tuple)):
             raise TypeError(f"pads must be a list/tuple; got {type(pads_obj).__name__}")
         pads = tuple(PadState.from_dict(p) for p in pads_obj)
         scene_slot_obj = data["scene_slot"]
@@ -167,4 +224,4 @@ class Snapshot:
         )
 
 
-__all__ = ["PadState", "PadStateDict", "Snapshot", "SnapshotDict"]
+__all__ = ["PadState", "PadStateDict", "Snapshot", "SnapshotDict", "SrcParameterDict"]

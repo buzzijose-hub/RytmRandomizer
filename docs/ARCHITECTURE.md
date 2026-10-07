@@ -140,7 +140,7 @@ on one line for an existing module, you probably need a new module instead.
 | `behavior/scope.py`          | Passive scoped-randomization masks + intensity scoping anchored on the current kit. Pure + deterministic. |
 | `mock_midi.py`               | In-memory `MockMidiSender` and `MidiMessage` for tests + passive paths.     |
 | `real_midi_adapter.py`       | Protocol boundary: `RealMidiPortProvider`, neutral armed-output `RealMidiOutputProvider`, and `RealMidiSender`. NO `mido`. |
-| `mido_provider.py`           | Concrete `mido`-backed input/output provider. `mido` imported lazily INSIDE methods. |
+| `mido_provider.py`           | Concrete `mido`-backed input/output provider. `mido` imported lazily INSIDE methods. `WireOutputPort` validates neutral triples, inert CC messages and the legacy helper's public `type='control_change'` shape, then reconstructs a backend CC; unsupported kinds and invalid fields never reach backend send. |
 | `engines/pad1..4.py`         | Per-pad interactive engines. Dependencies injected, no module globals.      |
 | `engines/analog_rytm_12_pad_shell.py` | All-12-pad style/mutation shell. Consumes rendered style events; sends only through injected sender. |
 | `engines/analog_rytm_snapshot_shell.py` | All-12-pad current-kit snapshot shell. Extracts live-safe CC events from a decoded Rytm kit snapshot; sends only through injected sender. |
@@ -155,6 +155,7 @@ on one line for an existing module, you probably need a new module instead.
 | `devices/strategies/analog_four_saved_kit_writer.py` | Pure legacy A4 saved-kit mutator/renderer for the hardware-write-validated Filter 2 Resonance path; no filesystem or MIDI I/O. |
 | `devices/strategies/analog_four_saved_kit_candidate.py` | Pure calibrated saved-KIT candidate rendering through the canonical A4 field codec; revalidates calibration/field agreement, exact values, track bounds, roundtrip and byte isolation, with offline-only output authority. |
 | `devices/strategies/analog_four_filter1_frequency_candidate.py` | Typed Filter 1 Frequency adapter for offline captured-KIT evidence; delegates exact calibration/value/byte validation to the shared A4 saved-KIT candidate renderer. Always reports `hardware_send_validated = false`; owns no file or MIDI I/O. |
+| `devices/strategies/analog_four_native_fields.py` | Optional source-bound native domains/readback/mutation capability over canonical field facts and shared renderer; sparse enum sampling, coupled precision and mandatory protection, never live authority. |
 | `devices/strategies/analog_four_kit_fields.py` | Typed copy-on-edit A4 saved-KIT and sound-field views over canonical layout facts; preserves unknown bytes and performs no framing or hardware I/O. |
 | `devices/strategies/analog_four_kit_recipe.py` | Conservative passive A4 semantic recipe compiler that edits only mapped fields in a valid native object and preserves unknown and device-wide data. |
 | `devices/strategies/analog_rytm_saved_kit_codec.py` | Pure initialized Rytm saved-kit frame codec; validates envelope, length, and checksum while providing byte-identical decode/encode. |
@@ -190,6 +191,7 @@ on one line for an existing module, you probably need a new module instead.
 | --------------------- | ------------------------------------------------------------------------------- |
 | `shell.py`            | Interactive command loop. Owns the V1.34 command alphabet. Injected deps.       |
 | `cli.py`              | **Passive** report-only CLI. NEVER imports `mido`, `mido_provider`, or engines. |
+| `reports/device_support_inventory.py` | Passive text summary/full JSON evidence inventory derived from canonical Rytm/A4 catalogs, typed saved-KIT fields, calibration and current transport policy. Enumerates `devices.all_devices()` for the registry-wide summary; unevidenced registrations remain explicit. No port discovery, mutation or readiness grant. |
 | `app.py`              | Top-of-stack entry point. `--arm` wires output to `shell`; `--arm --rytm-12-pad-shell --confirm-rytm-12-pad-send` runs the all-12-pad Rytm style shell; `--arm --rytm-snapshot-shell <file.syx> --confirm-rytm-snapshot-shell-send` runs the all-12-pad current-kit snapshot shell; `--arm --rytm-kit-style --confirm-rytm-kit-send` sends one curated Rytm full-kit recipe; `--arm --rytm-cc-observe` opens only Rytm input and may read or receive a snapshot for labels; `--arm --a4-soft-capture` opens only A4 input and reconstructs CC/NRPN state; `--arm --a4-send-param` sends one manual-backed A4 CC; `--arm --a4-kit-recipe` sends one manual-backed A4 recipe; `--arm --a4-patch-send-plan --batch-manifest "<path>" --batch-manifest-sha256 "<reviewed digest>" --candidate N --confirm-a4-patch-send-plan --a4-output-port "<exact configured name>"` verifies the reviewed manifest and sends one committed generated A4 patch candidate. |
 | `reports/`            | Passive in-memory report package + shared formatter/helper layer, including the manual feedback packet report, the reference-style blueprint and bounded reference-audio atlas reports, the Analog Four initialized-baseline, patch genome, patch learning, patch corpus, and patch send-plan reports, the Analog Four OXI macro set planner report, the controller-brain mapping catalog and rehearsal/export reports, the style-performance arc chain through the live render bundle, live cue sheet, live runbook, reference match, snapshot preview, stage packet, stage snapshot-routing handoff, stage rehearsal-state packet, live set cockpit dashboard, live show export packet, live transition timeline, live command deck, live state packet, live analyzer handoff/targets, GUI readiness/session, capture queue/review, sidecar session packets, GUI screen-contract packets, GUI render-tree packets, GUI analyzer-overlay packets, GUI analyzer-frame packets, GUI interaction-script packets, GUI action-reducer packets, GUI controller-state packets, GUI playback-transcript packets, GUI playback-validation packets, GUI test-harness contract/readiness packets, GUI implementation-bridge/desktop-blueprint/desktop-app-plan/desktop-component-contract/desktop-view-model/desktop-render-contract/desktop-render-harness/cockpit-boundary-readiness packets, cockpit send-plan operator-readiness packets, cockpit send-plan rehearsal-surface packets, and the live GUI performance-console chain through live-kit capture workbench, package audition, and operator package, operator review ledger, and payload helpers under `reports/performance_console/`. Static manual feedback facts stay in `data/manual_feedback_packet.py`; static A4 patch-template facts stay in `data/analog_four_patch_templates.py`; static A4 patch-corpus facts stay in `data/analog_four_patch_corpus.py`; static A4 learning facts stay in `data/analog_four_learning.py`; static A4 SysEx calibration facts stay in `data/analog_four_sysex_calibration.py`; static GUI contract facts stay in `data/live_gui_contracts.py`; static controller-brain profiles stay in `data/controller_mapping_profiles.py`; static controller-brain rehearsal scenarios stay in `data/controller_rehearsal_scenarios.py`; repeated report CLI helpers stay in `reports/live_gui_common.py`. |
 | `inspection.py`       | Consolidated passive command-metadata inspection + preview + audit.             |
@@ -210,11 +212,12 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/stage/{coordinator,policy}.py` | Hardware-inert lane orchestration plus registry-derived device domains/authority policy; no codec or port ownership. |
 | `cockpit/data/a4_preparation.py` | Frozen candidate-bound A4 preparation report and closed blockers; output authority is always offline-only and cannot be imported as a grant. |
 | `cockpit/show_bank/a4_preparation.py` | Pure review of exact source/candidate bytes, current capture, scope, recovery and port intent through registered capabilities; never creates packets, enumerates or opens MIDI. |
-| `cockpit/show_bank/forge.py` | Pure deterministic paired candidate generation. Rytm reuses captured-anchor mutation planning; A4 calls only the offline Filter 1 Frequency renderer and cannot create A4 output authority. |
+| `cockpit/show_bank/forge.py` | Pure deterministic paired candidate generation. Rytm reuses captured-anchor mutation planning; A4 resolves optional native-field rendering through Device capabilities, preserves protected bytes and cannot create output authority. |
 | `cockpit/show_bank/readiness.py` | Pure lifecycle transitions, semantic favorite-recapture comparison, exact full-capture show-time preflight, cue-order readiness, and non-destructive source return. |
 | `cockpit/show_bank/workspace.py` | Authoritative session orchestration for paired sources, candidates, favorites, retained evidence, and fresh preflight. Composes capture/history/stage and the existing Rytm exact-plan ArmedApply boundary; invalidates stale live state and never grants A4 SEND or persistent SAVE authority. |
 | `cockpit/show_bank/store.py` | Revisioned canonical-JSON store and explicit content-addressed SysEx retention using the shared atomic writer; validates bounds, framing, hashes, paths, and corruption categories. |
 | `cockpit/show_bank/export.py` | Self-contained `.show-pack` publication/verification/import beneath configured roots. Publishes the manifest last and rejects missing, extra, noncanonical, malformed, or hash-mismatched artifacts before import. |
+| `cockpit/export/reader.py` | Shared bounded, regular-file and stable-identity artifact reads plus duplicate-key JSON rejection; independent of Library and Show Bank stores. |
 | `cockpit/data/rytm_parameter_map.py` | Canonical cockpit-facing Analog Rytm machine aliases and parameter bindings; delegates CC/NRPN facts to the shared device data layer instead of duplicating controls or offsets. |
 | `style_analysis/analog_four_patch_inference.py` | Typed, single-decode audio evidence and audio-dependent four-column A4 patch-genome inference with direct RED metrics. |
 | `style_analysis/runtime_types.py` | Shared runtime type-validation helper used by extractor and A4 inference boundaries. |
@@ -303,6 +306,18 @@ rule, change it here first, then update the test.
    `real_midi_adapter`, any `engines/*`, `shell`, `app`, `scene_runner`,
    `group_runner`, `midi_io`, or `randomization`.
 
+   `device-support-inventory-report` is an evidence-view branch, not a new
+   hardware entry point. Its report derives facts from existing canonical
+   catalogs, typed field codecs, layouts, calibration and passive policy; it
+   cannot import a provider, enumerate/open MIDI, construct an armed session or promote a
+   field. Catalog presence, native saved-file support, live transport/precision
+   and physical validation remain separate dimensions. JSON/text output is
+   reproducible review evidence, never PREPARE, SEND or show-ready authority.
+   The report's declared `reports -> devices` edge enumerates
+   `devices.all_devices()`; it does not resolve an output adapter. Evidence
+   tables remain pure `data/` facts, and missing evidence never hides a
+   registered device or grants capabilities.
+
 8. **The retired V1.34 monolith stays buried.**
    No module inside the `rytm_randomizer` package -- and no test helper --
    may import `rytm_hybrid_randomizer_v134`. The monolith was retired and
@@ -325,9 +340,12 @@ rule, change it here first, then update the test.
     | Importing package | Declared Show Kit Forge dependency edges |
     | --- | --- |
     | `cockpit.data` | `snapshot` (device-neutral mutation scope/domain), `guardrails` (strict input-validation leaf only) |
-    | `cockpit.show_bank` | `cockpit.capture`, `cockpit.data`, `cockpit.engine`, `cockpit.export`, `cockpit.profiles`, `data`, `devices`, `guardrails` (input-validation leaf), `observability`, `snapshot` |
+    | `devices` | `data` (single canonical saved-KIT synth-track count, reused by composition and native capability) |
+    | `cockpit.show_bank` | `cockpit.capture`, `cockpit.data`, `cockpit.engine`, `cockpit.export`, `cockpit.profiles`, `cockpit.library` (validated original-source lookup), `data`, `devices`, `guardrails` (input-validation leaf), `observability`, `snapshot` |
     | `cockpit.ws` | `cockpit.show_bank` (authoritative workspace and lifecycle dispatch), `guardrails` (input-validation leaf) |
     | `cockpit.stage` | `snapshot` (shared registry-derived mutation domain) |
+    | `cockpit.capture` | `snapshot` (neutral registered item domain used by source-backed parameter metadata) |
+    | `cockpit.library` | `cockpit.data` (strict favorite DTOs), `cockpit.engine` (pure deterministic candidate verification), `cockpit.capture` (registered framed identity), `cockpit.export` (shared bounded readers and atomic writers) |
 
     Adding another edge is a separate architecture decision. The workflow and
     optional offline A4 capability are described in
@@ -430,6 +448,20 @@ paths, device families, MIDI renderers, hardware adapters, or snapshot mutation
 flows; those still route through the `Device`, strategy, sender, guardrail, and
 snapshot seams.
 
+The support-inventory report follows the ordinary `reports/` + `CliCommand`
+path. `python -m rytm_randomizer.cli device-support-inventory-report` renders
+a text summary; `--json` renders the full canonical inventory for inspection.
+Native locations, semantic fields and synth MIDI controls are independent
+totals; the A4 MIDI union also includes track/performance and NRPN-only rows.
+The report does not replace Device capabilities, codecs, transport validators
+or hardware observations with a parallel support registry. A mapped saved-KIT
+field is not necessarily live-sendable, and a manual CC address does not
+establish a native offset, fractional value conversion or device-specific
+recovery contract. The passive report boundary is shown in
+[Architecture Diagrams §14](ARCHITECTURE_DIAGRAMS.md#14-passive-cli-command-flow).
+See [Device Support Inventory](DEVICE_SUPPORT_INVENTORY.md) for reproduction
+commands, evidence dimensions and explicit gaps.
+
 ---
 
 ## 6.1 Device Protocol + Strategy seam (WS-S5 + Strategy)
@@ -439,7 +471,7 @@ boundary. Every Elektron device family - Rytm and Analog Four today -
 exposes exactly one registered `Device` instance and routes its behavior
 through three Strategy sub-Protocols.
 
-**Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md) has six mermaid diagrams that illustrate this section in detail — [§3 Device + Strategy Capability Stack](ARCHITECTURE_DIAGRAMS.md#3-device--strategy-capability-stack-ws-s5--strategy) (class diagram), [§4 Snapshot → Plan → Render Lifecycle](ARCHITECTURE_DIAGRAMS.md#4-snapshot--plan--render-lifecycle-one-rytm-cc) (sequence), [§5 Composition vs Stub](ARCHITECTURE_DIAGRAMS.md#5-device--strategy-composition-vs-old-stub-shape) (before/after), [§9 Snapshot Subpackage](ARCHITECTURE_DIAGRAMS.md#9-snapshot-subpackage-ws-s6-envelope--protocols) (WS-S6 helpers), [§18 Future Codex PR Shape](ARCHITECTURE_DIAGRAMS.md#18-future-codex-pr-shape-post-pr-43-dual-machine-redo) (where the next dual-machine work plugs in), and [§19 Registry Fan-Out](ARCHITECTURE_DIAGRAMS.md#19-registry-fan-out-dual-machine-orchestration-via-mappingstr-device).
+**Visual reference:** [`docs/ARCHITECTURE_DIAGRAMS.md`](ARCHITECTURE_DIAGRAMS.md) has six mermaid diagrams that illustrate this section in detail — [§3 Device + Strategy Capability Stack](ARCHITECTURE_DIAGRAMS.md#3-device--strategy-capability-stack-ws-s5--strategy) (class diagram), [§4 Snapshot → Plan → Render Lifecycle](ARCHITECTURE_DIAGRAMS.md#4-snapshot--plan--render-lifecycle-one-rytm-cc) (sequence), [§5 Composition vs Stub](ARCHITECTURE_DIAGRAMS.md#5-device--strategy-composition-vs-old-stub-shape) (before/after), [§9 Snapshot Subpackage](ARCHITECTURE_DIAGRAMS.md#9-snapshot-subpackage-ws-s6-envelope--protocols) (WS-S6 helpers), [§18 Landed Dual-Machine Shape](ARCHITECTURE_DIAGRAMS.md#18-dual-machine-shape-the-pr-36-redo-as-landed) (the integrated dual-machine boundary), and [§19 Registry Fan-Out](ARCHITECTURE_DIAGRAMS.md#19-registry-fan-out-dual-machine-orchestration-via-mappingstr-device).
 
 **Protocol shape:**
 
@@ -666,6 +698,33 @@ as a snapshot mutation, move it through the `Device` strategies instead.
 
 ## 6.2 Cockpit & Profile-Model layer (Phase 1)
 
+Rytm input-only capture projects an immutable canonical KIT through the registered
+snapshot strategy and existing snapshot-shell anchor. Machine SRC rows may carry
+their owning machine key as the section; the Cockpit reverse lookup accepts that
+exact owner or `SRC`, then rechecks the catalog CC. The capture bridge additionally
+requires a promoted matching machine fact, exact raw identity and catalog pad
+compatibility before exposing SRC mutation values. Existing aliases take
+precedence over reversible catalog-derived keys for the remaining SRC names.
+A shared conservative policy omits protected/disputed values from capture,
+freezes them in canonical-device mutation, refuses changed protected proposals
+at planning and reports the same blockers in the passive inventory. Historical
+offline `lev` arithmetic remains byte-frozen but cannot grant live output.
+Common-page projection keeps its existing rules. Exact XT Classic ID 8 on pads
+6–8 has retained initialized and returned KIT evidence; other tom facts remain
+pending. Descriptive alias closure and remaining semantic/precision blockers are listed in
+[RYTM_MAPPING_STATUS.md](RYTM_MAPPING_STATUS.md). This projection grants no new
+restore authority. Continuous documented-only SRC rows can be guarded-CC7
+eligible under the same policy as legacy aliases; eligibility is not physical
+validation. Every CY Ride SRC key is refused until its native saved-slot
+associations are resolved. The exact audited rows and blockers are reproducible
+in the support inventory.
+
+The passive support report enumerates `devices.all_devices()` for its
+`registered_devices` summary. A canonical data mapping associates known registry
+IDs with existing family evidence rows. Unmapped IDs remain visible with zero
+rows and `no_support_evidence`; no registration implies parameter or transport
+support. JSON/text registry-set regressions cover future registrations.
+
 The `rytm_randomizer.cockpit` subpackage is the live-performance GUI surface
 and the home of the portable mutation engine. It hosts the actual
 WebSocket Protocol the desktop shell drives. (The live `live_gui_*_model`
@@ -731,8 +790,10 @@ rytm_randomizer/cockpit/
 
 The desktop shell (`desktop/shell/` — Rust + Tauri 2) and the web frontend
 (`desktop/web/` — Vite + React + TypeScript) live **outside** the Python
-package: they are bundled by `cargo build --release` into a single binary
-that spawns the Python sidecar via the explicit input-only composition
+package: the Tauri build embeds the web frontend, and identified studio
+packaging places the matching sidecar beside the shell. A bare Cargo release
+build is not that self-contained artifact. The shell spawns the sidecar via
+the explicit input-only composition
 `python -m rytm_randomizer.app --arm --cockpit-kit-capture-sidecar` (or its
 equivalent bundled entry stub). This grants no output authority.
 
@@ -762,6 +823,7 @@ UI drives the engine with **typed commands** that ack synchronously.
 | `kit_captures_changed` | `{ captures: KitCaptureResult[] }` | On connect and after a verified input-only current-KIT capture |
 | `mutation_targets_changed` | `{ rytm_pad_targets, a4_track_targets }` | On connect and after whole-state target replacement/clear |
 | `mutation_locks_changed` | `{ rytm_pad_locks, a4_track_locks }` | On connect and after either independent deny-list changes |
+| `mutation_parameters_changed` | `{ rytm_parameters, a4_parameters, controls }` | On connect, metadata refresh and selection/recall. Canonical item/key cells and evidence; no output grant. |
 | `dual_machine_stage_changed` | `{ stage: DualMachineStageState }` | On connect and every capture/scope/candidate/plan/authority/recovery transition |
 | `history_updated` | `{ history: History }` | After capture adoption, SEND, LOAD, or UNDO; refused SAVE emits no event |
 | `profile_changed` | `{ profile: ProfileModel \| null }` | After `select_profile` |
@@ -770,12 +832,44 @@ UI drives the engine with **typed commands** that ack synchronously.
 | `performance_console_changed` | `{ performance_console: LiveGuiPerformanceConsoleModel \| null }` | On connect, when the passive performance-console packet refreshes |
 | `session_status` | `{ armed, midi_port, mode, unsaved_sends, connection_phase, capture_enabled }` | On connect and authority/connection changes; `capture_enabled` reflects the injected input-only capture service |
 
-After authentication, bootstrap emits exactly these eleven events in order:
+After authentication, bootstrap emits exactly these twelve events in order:
 `session_status`, `snapshot_changed`, `profile_changed`,
 `profile_catalog_changed`, `history_updated`, `patch_genome_changed`,
 `kit_captures_changed`, `mutation_targets_changed`, `mutation_locks_changed`,
-`dual_machine_stage_changed`, and `performance_console_changed`. When a
-connection manager is injected, `connection_changed` may follow as event 12.
+`mutation_parameters_changed`, `dual_machine_stage_changed`, and
+`performance_console_changed`. When a connection manager is injected,
+`connection_changed` may follow as event 13.
+
+Studio parameter scopes reuse the appliance engine's per-cell effective-depth
+seam. `cockpit/data/parameter_scope.py` owns immutable include cells;
+`cockpit/capture/parameter_scope.py` resolves canonical controls and validates them
+against current source values. Null keeps the legacy all-control scope; an
+empty array selects no fields. Page selection is a UI grouping of those cells,
+not another parameter catalog. Source precision and unknown values are preserved
+before proposals, and locks/mandatory protection win. SEND independently checks
+the proposed values against the current selection and revalidates the exact
+plan. Unsupported or paired changes refuse the whole plan, never a trimmed subset.
+
+The root `cockpit/parameter_scope.py` is only a public facade. Capture metadata
+consumes the Device registry and neutral snapshot item-domain primitive; local
+library verification consumes `cockpit.data` and the pure `cockpit.engine`,
+never WS/session or hardware providers. These downward edges are declared in
+the architecture matrix and represented by the scoped recall diagram.
+
+Local rehearsal favorites extend `LibraryStore`, not hardware SAVE.
+
+Local favorite `source_hash` identifies the semantic snapshot, not a raw SysEx
+frame or whole decoded instrument payload. These Rytm rehearsal records retain
+no raw KIT bytes; A4 artifact retention remains the separate Show Forge path.
+
+The library uses registered schema 3 with explicit v1/v2 migration. Strict
+semantic favorites retain source, profile, candidate, seed/depth, scope and locks;
+original framed KIT artifacts retain separate exact bytes/hash/provenance.
+Recall verifies identity and deterministic values, then uses the existing
+output-revocation boundary. It leaves output disarmed and the plan empty; no
+persisted artifact grants hardware authority. Show-bank scope records carry the
+same selections under `show-bank-v3` with immutable profiles and algorithm IDs.
+The strict loader explicitly reads v1/v2 without rewriting their original files.
 
 | Command (UI → engine) | Returns | Notes |
 |---|---|---|
@@ -784,6 +878,9 @@ connection manager is injected, `connection_changed` may follow as event 12.
 | `set_pad_lock` | `{ ok }` | Locked pads are skipped on SEND |
 | `set_a4_track_lock` | `{ ok }` | Updates the A4 deny-list; grants no A4 output authority |
 | `set_mutation_targets` / `clear_mutation_targets` | `{ ok }` | Replaces one device include-list; empty means all, then locks are subtracted |
+| `get_mutation_parameters` / `set_mutation_parameters` | `{ ok }` plus whole-state scope event | Canonical controls and null/all or explicit item/key cells. Invalid or protected cells refuse before state changes. Scope changes invalidate candidate/plan/confirmation contexts. |
+| `set_rehearsal_preset` | `{ ok, depth, physical_validation_required }` | Four canonical Pad 2 common fields only; other pads and A4 locked. Physical validation of this build remains pending. |
+| `retain_rehearsal_favorite` / `recall_rehearsal_favorite` | `{ ok, ... }` | Existing local library persistence. Recall disarms and requires fresh preparation; it is neither a hardware save nor a hardware reload. |
 | `list_capture_inputs` / `capture_current_kit` | `{ ok, ... }` | Available only in the explicitly armed input composition; never transmits |
 | `toggle_preview` | `{ ok, candidate? }` | Ghost overlay on/off |
 | `regen` | `{ ok, candidate }` | New seed, same depth |
@@ -808,6 +905,28 @@ failure or stale transition cannot grant authority to its sibling. A4
 authority is independently blocked while its semantic mapping manifest is
 incomplete. Target or lock changes revoke plans and invalidate candidates
 derived from the old effective scope.
+
+Capture selection is exact and fail-closed: the selected input name must
+occur once in a fresh backend listing at open time. Duplicate names are
+ambiguous, not permission to use the first match. Pending capture work carries
+cancellation and session-generation guards; teardown cancels input polling,
+and a late result from a disconnected/cancelled capture cannot adopt a source.
+Invalid, cancelled or stale capture leaves the prior verified source intact.
+The optional `CancellableSysexCaptureProvider` extends `SysexCaptureProvider`
+with cooperative polling cancellation. Providers without that capability keep
+the existing bounded receive method; cancellation still rejects their late
+results. The capture reservation remains held through decode and source
+adoption, not merely until the input reader returns. This prevents replacement
+capture from interrupting the accepted adoption transaction.
+
+The seven-bit Cockpit planner refuses the **whole** candidate if any effective
+row requires unverified paired-control precision
+(`paired_control_precision_unverified`). Safe single-CC rows do not rescue that
+plan. The blocked plan and reasons remain inspectable; no fractional value is
+rounded or silently projected to MIDI. Armed teardown revokes output evidence
+and never re-arms, while passive browser disconnect and rejected DISARM preserve
+offline candidate/plan/source identity within the same running sidecar session,
+not a durable save or hardware-write grant.
 
 ### Mutation engine — two reference implementations, identical output
 
@@ -1429,14 +1548,22 @@ plan id, exact selected output port, per-action confirmation, and
 `senders/armed_apply.py` boundary. Before every live audition, the operator
 manually reloads the immutable source KIT and captures its current KIT. This
 capture clears the current candidate and prepared plan, so the operator must
-then select the candidate again, preview it, and prepare its exact plan before
-arming and confirming SEND. The server requires a matching source capture
+then select the candidate again, preview it, arm the exact Rytm output, prepare
+its exact plan and confirm SEND. The server requires a matching source capture
 newer than the preceding hardware attempt or disconnect, plus explicit manual
 reload acknowledgment; a saved-KIT dump alone cannot prove restored RAM state.
 The path is implemented, but automated tests do not establish that a physical
 one-pad audition and restoration occurred. Persistent SAVE is never issued by
 Cockpit. The operator saves the favorite on the instrument, then requests a
 fresh input-only capture.
+
+The initial physical handoff is deliberately bounded: one Pad 2 candidate at
+10% with Pad 1 protected and all A4 tracks locked, one ready-plan confirmation,
+then DISARM, manual source reload and fresh baseline recapture. Record actual
+selected/untargeted-pad and listening observations, not only packet delivery
+or saved-state equality. A paired-control blocker ends the attempt; it cannot
+be bypassed by filtering packets or using the legacy app helper. Local bank or
+candidate save and source reset do not save or reload either instrument.
 
 The A4 lane has a narrower authority boundary. August 28 captured-KIT evidence
 permits the distinct Filter 1 Frequency renderer to produce local candidate
@@ -1446,7 +1573,20 @@ hardware-write-validated writer, always returns
 `hardware_send_validated = false`, and cannot send or save. A4 SEND,
 destination-slot rewriting, and every unpromoted A4 field remain blocked.
 
-Forge obtains this renderer through the public
+This Show Kit Forge restriction is distinct from the existing legacy
+`app.py --arm --a4-send-param` probe: that operator-present helper sends one
+named manual-backed CC MSB, closes its output and exits. The studio handoff
+limits it to one integer, non-paired control on one configured spare-kit track,
+with independent observation and manual reload; it is not A4/BOTH general
+SEND, a saved-KIT writer or fractional MIDI. The already generated four-track
+Filter 1 Frequency scratch return is a separate manual file-transfer/save/
+recapture test, not a request for exhaustive mapping captures. Even a passing
+scratch return grants no live transport authority. Pi #252 is touch UI/packaging
+groundwork: non-simulation APPLY is refused and deployment is on hold pending
+focused work. Touch/display operation and packaging remain unvalidated and
+outside this shared Windows Studio boundary.
+
+Forge retains this legacy renderer through the public
 `devices.get_analog_four_filter1_frequency_candidate_capability()` resolver.
 It looks up `analog_four_mk2` in the existing device registry and narrows it
 to the optional `AnalogFourFilter1FrequencyCandidateCapability` Protocol.
@@ -1457,9 +1597,19 @@ in [Architecture Diagrams §3](ARCHITECTURE_DIAGRAMS.md#3-device--strategy-capab
 the source-capture SEND gate and evidence lifecycle appear in
 [§37](ARCHITECTURE_DIAGRAMS.md#37-show-kit-forge-evidence-and-show-time-readiness).
 
+New native recipes resolve `devices.get_analog_four_native_field_capability()`
+and the optional `AnalogFourNativeFieldCapability`, reusing the same codec and
+isolation verifier. Canonical policy has 106 rows / 72 potentially mutable field
+keys, constrained by actual source-known values, OXI AMP and coupled-component
+protection. Neither optional capability widens mandatory Device requirements.
+
 Show-bank persistence writes each revision as new canonical sorted-key JSON.
-Incoming framed SysEx stays in memory until explicit retention; retained bytes
-are named by SHA-256 and transactionally committed with the new manifest. A
+Raw incoming captures remain volatile until adopted/retained. Source adoption
+and generation retain original/generated frames transactionally with the paired
+manifest; older records may still require explicit retention. Retained bytes
+are named by SHA-256. Local recall validates source, frame, profile and recipe
+before publishing selection; sensitive Library writes opt into redacted atomic
+writer diagnostics. A
 `.show-pack` is a flat, self-contained configured-root directory containing
 only explicitly retained evidence, canonical cue order, recovery text,
 checksums, and a final `manifest.json` commit marker. Verification rejects
@@ -1474,6 +1624,26 @@ error journal. Pure DTO validation, readiness transforms, and mutation math
 remain deterministic and logger-free; their callers own the observable
 decision. Decision payloads exclude raw frames, kit names, operator notes,
 and absolute local paths.
+
+Known local artifact refusals project existing store/source/file-export error
+categories into fixed actionable messages, without echoing exception text,
+paths or artifact names. Other programming failures keep the generic dispatcher
+contract. Package writes opt into the shared writer's redacted diagnostics.
+Generation validates requested locks/targets against authoritative session
+scope before publication and does not replace operator scope with narrower
+wire data. Public workspace selection/favorite transitions revalidate exact
+retained recipe/source claims before committing a revision.
+One `recall_candidate` action verifies the complete immutable bank once and
+returns a frozen `CandidateRecallContext` containing the exact verified data.
+The WS consumer checks its published bank/entry/selection correspondence before
+adoption and reuses that result without another filesystem replay. Every later
+action reads and verifies afresh; no persistent authority cache is introduced.
+
+The existing token-free GET /health also exposes aggregate outbound-queue
+capacity, active-connection count, current depth, active-connection high-water
+and drops. These read-only counts reveal no frames or peer identities and do
+not enumerate MIDI or add authority. ConnectionRegistry remains the owner;
+FIFO/drop-oldest/close behavior and authenticated command dispatch are unchanged.
 
 OXI project/pattern/chapter/cue fields are descriptive metadata. Show Kit Forge
 does not issue OXI commands; OXI remains responsible for sequencing, notes,
@@ -1504,6 +1674,12 @@ SemVer precedence. The transport retains the checked artifact's version, URL
 and signature, then retains the verified bytes through a consented install.
 Installation follows confirmed backend exit. Consent and skipped-version
 state are process-local; the diagnostic journal does not restore them.
+
+The optional beacon builds its client independently of updater checks.
+`build_beacon_client` preserves an installed process crypto provider; otherwise
+it attempts installation of the already locked rustls ring provider and tolerates
+a concurrent installation winner. TLS verification, redirect policy and the
+ten-second timeout remain unchanged.
 
 React subscribes before requesting `update_snapshot`, then refreshes after
 state events. The snapshot contains native channel/freeze posture and at most

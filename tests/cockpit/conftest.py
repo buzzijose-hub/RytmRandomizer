@@ -43,6 +43,7 @@ not from sibling test files, per Gate 11 (fixture deduplication).
 
 from __future__ import annotations
 
+import builtins
 import hashlib
 import logging
 from collections.abc import Generator, Iterator
@@ -67,6 +68,21 @@ from rytm_randomizer.cockpit.ws.protocol import (
 )
 from rytm_randomizer.cockpit.ws.server import create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
+
+
+@pytest.fixture
+def offline_hardware_denied(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Opt-in guard for original-file tests; reject every hardware backend import."""
+    monkeypatch.setenv("RYTM_RAND_MIDI_BACKEND", "off")
+    original_import = builtins.__import__
+
+    def checked_import(name, *args, **kwargs):
+        if name.split(".")[0] in ("mido", "rtmidi"):
+            pytest.fail("offline preparation must not import a hardware backend")
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", checked_import)
+
 
 TEST_WS_TOKEN: Final[str] = "test-token-only-for-pytest-do-not-use-in-prod"
 """The fixed handshake token every cockpit test fixture passes to ``create_app``.
@@ -126,10 +142,12 @@ def capture_fixed_frame(
 @pytest.fixture
 def ws_handler_caplog(
     caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[pytest.LogCaptureFixture]:
     """Capture handler records despite package-level propagation being disabled."""
 
     logger = logging.getLogger("rytm_randomizer.cockpit.ws.handlers")
+    monkeypatch.setattr(logger, "propagate", False)
     logger.addHandler(caplog.handler)
     try:
         yield caplog
@@ -148,12 +166,11 @@ _FIXED_TIMESTAMP = datetime(2026, 5, 23, 12, 0, 0, tzinfo=timezone.utc)
 """Frozen captured_at so to_dict round-trips are reproducible across runs."""
 
 
-def _make_default_snapshot() -> Snapshot:
+def make_default_snapshot() -> Snapshot:
     """Build the 12-pad reference Rytm snapshot every integration test starts with.
 
-    Pad layout matches the v10 cockpit mockup and the built-in scenes:
-    the first four pads carry the current scene defaults, and pads 5-12
-    represent the remaining Rytm tracks. Three CC params per pad ensures
+    Every machine is compatible with its physical pad. Three unprotected,
+    catalog-backed CC params per pad ensures
     the mutation engine produces a non-empty ``pad_deltas`` for every pad
     in every test.
     """
@@ -163,18 +180,26 @@ def _make_default_snapshot() -> Snapshot:
         device="analog_rytm_mk2",
         captured_at=_FIXED_TIMESTAMP,
         pads=(
-            PadState(pad_id=1, machine="BD Hard", params={"tun": 32, "dec": 80, "lev": 110}),
-            PadState(pad_id=2, machine="SD Classic", params={"tun": 40, "dec": 60, "lev": 100}),
-            PadState(pad_id=3, machine="CH Closed", params={"tun": 50, "dec": 70, "lev": 95}),
-            PadState(pad_id=4, machine="OH Open", params={"tun": 64, "dec": 90, "lev": 85}),
-            PadState(pad_id=5, machine="BT Rim", params={"tun": 58, "dec": 72, "lev": 90}),
-            PadState(pad_id=6, machine="LT Low", params={"tun": 45, "dec": 74, "lev": 92}),
-            PadState(pad_id=7, machine="MT Mid", params={"tun": 52, "dec": 68, "lev": 88}),
-            PadState(pad_id=8, machine="HT High", params={"tun": 71, "dec": 55, "lev": 84}),
-            PadState(pad_id=9, machine="CP Clap", params={"tun": 62, "dec": 67, "lev": 96}),
-            PadState(pad_id=10, machine="RS Riser", params={"tun": 75, "dec": 88, "lev": 76}),
-            PadState(pad_id=11, machine="SY Raw", params={"tun": 81, "dec": 38, "lev": 82}),
-            PadState(pad_id=12, machine="BD Acoustic", params={"tun": 36, "dec": 86, "lev": 104}),
+            PadState(pad_id=1, machine="BD Hard", params={"tun": 32, "dec": 80, "flt": 110}),
+            PadState(pad_id=2, machine="SD Classic", params={"tun": 40, "dec": 60, "flt": 100}),
+            PadState(pad_id=3, machine="RS Hard", params={"tun": 50, "dec": 70, "flt": 95}),
+            PadState(pad_id=4, machine="CP Classic", params={"tun": 64, "dec": 90, "flt": 85}),
+            PadState(pad_id=5, machine="BT Rim", params={"tun": 58, "dec": 72, "flt": 90}),
+            PadState(pad_id=6, machine="LT Low", params={"tun": 45, "dec": 74, "flt": 92}),
+            PadState(pad_id=7, machine="MT Mid", params={"tun": 52, "dec": 68, "flt": 88}),
+            PadState(pad_id=8, machine="HT High", params={"tun": 71, "dec": 55, "flt": 84}),
+            PadState(pad_id=9, machine="CH Closed", params={"tun": 62, "dec": 67, "flt": 96}),
+            PadState(pad_id=10, machine="OH Open", params={"tun": 75, "dec": 88, "flt": 76}),
+            PadState(
+                pad_id=11,
+                machine="CY Classic",
+                params={"src_cy_classic_2": 38, "src_cy_classic_3": 81, "flt": 82},
+            ),
+            PadState(
+                pad_id=12,
+                machine="CB Classic",
+                params={"src_cb_classic_2": 86, "filter_resonance": 36, "flt": 104},
+            ),
         ),
         scene_slot="A01",
         bpm=124.0,
@@ -224,7 +249,7 @@ def cockpit_client(
     :class:`CockpitSession`, then ``create_app`` and yield a TestClient.
     """
 
-    initial = _make_default_snapshot()
+    initial = make_default_snapshot()
     session = CockpitSession(
         profile_registry=ProfileRegistry(tmp_path),
         history_store=HistoryStore(),

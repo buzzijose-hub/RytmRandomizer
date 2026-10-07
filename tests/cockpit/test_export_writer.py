@@ -559,7 +559,10 @@ def test_atomic_write_fsync_failure_raises_write_error(
 # ---------------------------------------------------------------------------
 
 
-def test_atomic_write_set_publishes_all_bytes_in_mapping_order(tmp_path: Path) -> None:
+@pytest.mark.parametrize("redact_diagnostics", [False, True])
+def test_atomic_write_set_publishes_all_bytes_in_mapping_order(
+    tmp_path: Path, redact_diagnostics: bool
+) -> None:
     first = tmp_path / "first.json"
     second = tmp_path / "second.md"
     first.write_bytes(b"old-first")
@@ -567,6 +570,7 @@ def test_atomic_write_set_publishes_all_bytes_in_mapping_order(tmp_path: Path) -
     results = atomic_write_set(
         {first: b"new-first", second: b"new-second"},
         overwrite=True,
+        redact_diagnostics=redact_diagnostics,
     )
 
     assert first.read_bytes() == b"new-first"
@@ -623,9 +627,11 @@ def test_atomic_write_set_rejects_destinations_with_different_parents(
         )
 
 
+@pytest.mark.parametrize("redact_diagnostics", [False, True])
 def test_atomic_write_set_wraps_parent_creation_failure(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    redact_diagnostics: bool,
 ) -> None:
     destination = tmp_path / "blocked" / "artifact.json"
     real_mkdir = Path.mkdir
@@ -642,27 +648,37 @@ def test_atomic_write_set_wraps_parent_creation_failure(
     monkeypatch.setattr(Path, "mkdir", fail_target_mkdir)
 
     with pytest.raises(WriteSetError) as exc_info:
-        atomic_write_set({destination: b"payload"})
+        atomic_write_set({destination: b"payload"}, redact_diagnostics=redact_diagnostics)
 
     assert exc_info.value.failure_context.phase == "staging"
-    assert exc_info.value.failure_context.artifact_name == "artifact.json"
+    assert exc_info.value.failure_context.artifact_name == (
+        "artifact" if redact_diagnostics else "artifact.json"
+    )
     assert isinstance(exc_info.value.__cause__, PermissionError)
 
 
+@pytest.mark.parametrize("redact_diagnostics", [False, True])
 def test_atomic_write_set_refuses_existing_destination_without_overwrite(
     tmp_path: Path,
+    redact_diagnostics: bool,
 ) -> None:
     destination = tmp_path / "artifact.json"
     destination.write_bytes(b"existing")
 
-    with pytest.raises(FileExistsError, match="artifact.json"):
-        atomic_write_set({destination: b"replacement"})
+    with pytest.raises(FileExistsError) as exc_info:
+        atomic_write_set({destination: b"replacement"}, redact_diagnostics=redact_diagnostics)
 
+    assert str(exc_info.value) == (
+        "refusing to overwrite existing artifact: "
+        + ("artifact" if redact_diagnostics else "artifact.json")
+    )
     assert destination.read_bytes() == b"existing"
 
 
+@pytest.mark.parametrize("redact_diagnostics", [False, True])
 def test_atomic_write_set_refuses_directory_destination_with_overwrite(
     tmp_path: Path,
+    redact_diagnostics: bool,
 ) -> None:
     destination = tmp_path / "artifact.json"
     destination.mkdir()
@@ -670,11 +686,15 @@ def test_atomic_write_set_refuses_directory_destination_with_overwrite(
     marker.write_bytes(b"keep")
 
     with pytest.raises(WriteSetError) as exc_info:
-        atomic_write_set({destination: b"replacement"}, overwrite=True)
+        atomic_write_set(
+            {destination: b"replacement"},
+            overwrite=True,
+            redact_diagnostics=redact_diagnostics,
+        )
 
     assert exc_info.value.failure_context == WriteSetFailureContext(
         phase="backup",
-        artifact_name="artifact.json",
+        artifact_name="artifact" if redact_diagnostics else "artifact.json",
     )
     assert destination.is_dir()
     assert marker.read_bytes() == b"keep"
@@ -718,9 +738,11 @@ def test_publication_inference_handles_defensive_filesystem_states(
     )
 
 
+@pytest.mark.parametrize("redact_diagnostics", [False, True])
 def test_atomic_write_set_refuses_concurrent_destination_without_overwrite(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    redact_diagnostics: bool,
 ) -> None:
     first = tmp_path / "first.json"
     second = tmp_path / "second.md"
@@ -746,9 +768,15 @@ def test_atomic_write_set_refuses_concurrent_destination_without_overwrite(
         collide_on_second_publication,
     )
 
-    with pytest.raises(FileExistsError, match="second.md"):
-        atomic_write_set({first: b"first", second: b"second"})
+    with pytest.raises(FileExistsError) as exc_info:
+        atomic_write_set(
+            {first: b"first", second: b"second"}, redact_diagnostics=redact_diagnostics
+        )
 
+    assert str(exc_info.value) == (
+        "refusing to overwrite existing artifact: "
+        + ("artifact" if redact_diagnostics else "second.md")
+    )
     assert not first.exists()
     assert second.read_bytes() == b"concurrent"
     assert sorted(path.name for path in tmp_path.iterdir()) == ["second.md"]
@@ -812,9 +840,11 @@ def test_atomic_write_set_interrupt_after_replace_restores_prior_file(
     assert sorted(path.name for path in tmp_path.iterdir()) == ["artifact.json"]
 
 
+@pytest.mark.parametrize("redact_diagnostics", [False, True])
 def test_atomic_write_set_wraps_transaction_directory_creation_failure(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    redact_diagnostics: bool,
 ) -> None:
     destination = tmp_path / "artifact.json"
 
@@ -824,16 +854,20 @@ def test_atomic_write_set_wraps_transaction_directory_creation_failure(
     monkeypatch.setattr(writer_module.tempfile, "mkdtemp", fail_mkdtemp)
 
     with pytest.raises(WriteSetError) as exc_info:
-        atomic_write_set({destination: b"payload"})
+        atomic_write_set({destination: b"payload"}, redact_diagnostics=redact_diagnostics)
 
     assert exc_info.value.failure_context.phase == "staging"
-    assert exc_info.value.failure_context.artifact_name == "artifact.json"
+    assert exc_info.value.failure_context.artifact_name == (
+        "artifact" if redact_diagnostics else "artifact.json"
+    )
     assert isinstance(exc_info.value.__cause__, PermissionError)
 
 
-def test_atomic_write_set_staging_failure_names_actual_artifact(
+@pytest.mark.parametrize("redact_diagnostics", [False, True])
+def test_atomic_write_set_staging_failure_reports_selected_diagnostics(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    redact_diagnostics: bool,
 ) -> None:
     first = tmp_path / "first.json"
     second = tmp_path / "second.md"
@@ -855,21 +889,32 @@ def test_atomic_write_set_staging_failure_names_actual_artifact(
     monkeypatch.setattr(writer_module, "atomic_write", fail_second_stage)
 
     with pytest.raises(WriteSetError) as exc_info:
-        atomic_write_set({first: b"first", second: b"second"}, overwrite=True)
+        atomic_write_set(
+            {first: b"first", second: b"second"},
+            overwrite=True,
+            redact_diagnostics=redact_diagnostics,
+        )
 
     assert exc_info.value.failure_context.phase == "staging"
-    assert exc_info.value.failure_context.artifact_name == "second.md"
+    assert exc_info.value.failure_context.artifact_name == (
+        "artifact" if redact_diagnostics else "second.md"
+    )
     assert str(tmp_path) not in str(exc_info.value)
     assert not first.exists()
     assert not second.exists()
     assert list(tmp_path.iterdir()) == []
 
 
-def test_atomic_write_set_keyboard_interrupt_rolls_back_staged_artifacts(
+@pytest.mark.parametrize("redact_diagnostics", [False, True])
+@pytest.mark.parametrize("interruption_type", [KeyboardInterrupt, SystemExit])
+def test_atomic_write_set_interruption_rolls_back_staged_artifacts(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    redact_diagnostics: bool,
+    interruption_type: type[KeyboardInterrupt] | type[SystemExit],
 ) -> None:
-    first = tmp_path / "first.json"
+    first = tmp_path / "PRIVATE_RECORD_ID.json"
+    interruption = interruption_type("operator interrupted write set")
 
     def interrupt_stage(
         _path: Path,
@@ -878,21 +923,27 @@ def test_atomic_write_set_keyboard_interrupt_rolls_back_staged_artifacts(
         overwrite: bool = False,
     ) -> WriteResult:
         del overwrite
-        raise KeyboardInterrupt("operator interrupted write set")
+        raise interruption
 
     monkeypatch.setattr(writer_module, "atomic_write", interrupt_stage)
 
-    with pytest.raises(KeyboardInterrupt, match="operator interrupted write set") as exc_info:
-        atomic_write_set({first: b"first"}, overwrite=True)
+    with pytest.raises(interruption_type, match="operator interrupted write set") as exc_info:
+        atomic_write_set({first: b"first"}, overwrite=True, redact_diagnostics=redact_diagnostics)
 
-    assert any("staging for first.json" in note for note in exc_info.value.__notes__)
+    assert exc_info.value is interruption
+    artifact_name = "artifact" if redact_diagnostics else first.name
+    assert exc_info.value.__notes__ == [
+        f"Atomic write-set failure context: staging for {artifact_name}."
+    ]
     assert not first.exists()
     assert list(tmp_path.iterdir()) == []
 
 
+@pytest.mark.parametrize("redact_diagnostics", [False, True])
 def test_atomic_write_set_backup_failure_restores_prior_files_and_names_artifact(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    redact_diagnostics: bool,
 ) -> None:
     first = tmp_path / "first.json"
     second = tmp_path / "second.md"
@@ -911,19 +962,24 @@ def test_atomic_write_set_backup_failure_restores_prior_files_and_names_artifact
         atomic_write_set(
             {first: b"new-first", second: b"new-second"},
             overwrite=True,
+            redact_diagnostics=redact_diagnostics,
         )
 
     assert exc_info.value.failure_context.phase == "backup"
-    assert exc_info.value.failure_context.artifact_name == "second.md"
+    assert exc_info.value.failure_context.artifact_name == (
+        "artifact" if redact_diagnostics else "second.md"
+    )
     assert str(tmp_path) not in str(exc_info.value)
     assert first.read_bytes() == b"old-first"
     assert second.read_bytes() == b"old-second"
     assert sorted(path.name for path in tmp_path.iterdir()) == ["first.json", "second.md"]
 
 
+@pytest.mark.parametrize("redact_diagnostics", [False, True])
 def test_atomic_write_set_publication_failure_restores_all_prior_files(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    redact_diagnostics: bool,
 ) -> None:
     first = tmp_path / "first.json"
     second = tmp_path / "second.md"
@@ -942,10 +998,13 @@ def test_atomic_write_set_publication_failure_restores_all_prior_files(
         atomic_write_set(
             {first: b"new-first", second: b"new-second"},
             overwrite=True,
+            redact_diagnostics=redact_diagnostics,
         )
 
     assert exc_info.value.failure_context.phase == "publication"
-    assert exc_info.value.failure_context.artifact_name == "second.md"
+    assert exc_info.value.failure_context.artifact_name == (
+        "artifact" if redact_diagnostics else "second.md"
+    )
     assert str(tmp_path) not in str(exc_info.value)
     assert isinstance(exc_info.value.__cause__, OSError)
     assert "publication failed" in str(exc_info.value.__cause__)
@@ -1035,6 +1094,121 @@ def test_atomic_write_set_rollback_failure_preserves_original_error_and_backup(
     assert second.read_bytes() == b"old-second"
 
 
+@pytest.mark.parametrize("redact_diagnostics", [None, False, True])
+@pytest.mark.parametrize("populated", [False, True])
+def test_atomic_write_set_diagnostic_redaction_preserves_partial_rollback_recovery(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    redact_diagnostics: bool | None,
+    populated: bool,
+) -> None:
+    parent = tmp_path / "PRIVATE_SOURCE_PATH"
+    parent.mkdir()
+    first = parent / "PRIVATE_RECORD_ID.json"
+    second = parent / ("a1" * 32 + ".syx")
+    third = parent / "restored.json"
+    if populated:
+        first.write_bytes(b"old-first")
+        second.write_bytes(b"old-second")
+        third.write_bytes(b"old-third")
+    primary_error = OSError(f"publication failed for {second}")
+    rollback_error = PermissionError(f"rollback failed for {first}")
+    errors: list[tuple[str, dict[str, object]]] = []
+    recorded_errors: list[str] = []
+    real_replace = os.replace
+    real_unlink = os.unlink
+
+    class FakeMetrics:
+        def record_error(self, kind: str) -> None:
+            recorded_errors.append(kind)
+
+        def format_summary(self) -> dict[str, int]:
+            return {"recorded_errors": len(recorded_errors)}
+
+    def fail_publication_and_restore(source: str | Path, destination: str | Path) -> None:
+        if Path(source).suffix == ".stage" and Path(destination) == second:
+            raise primary_error
+        if Path(source).suffix == ".backup" and Path(destination) == first:
+            raise rollback_error
+        real_replace(source, destination)
+
+    def fail_new_file_removal(path: str | Path, *args: object, **kwargs: object) -> None:
+        if Path(path) == first:
+            raise rollback_error
+        real_unlink(path, *args, **kwargs)
+
+    def capture_error(message: str, *, extra: dict[str, object]) -> None:
+        errors.append((message, extra))
+
+    monkeypatch.setattr(os, "replace", fail_publication_and_restore)
+    monkeypatch.setattr(os, "unlink", fail_new_file_removal)
+    monkeypatch.setattr(writer_module, "get_metrics", FakeMetrics)
+    monkeypatch.setattr(writer_module._logger, "error", capture_error)
+    kwargs = {} if redact_diagnostics is None else {"redact_diagnostics": redact_diagnostics}
+
+    with pytest.raises(WriteSetError) as exc_info:
+        atomic_write_set(
+            {first: b"new-first", second: b"new-second", third: b"new-third"},
+            overwrite=True,
+            **kwargs,
+        )
+
+    error = exc_info.value
+    context = error.failure_context
+    assert error.__cause__ is primary_error
+    assert context.phase == "publication"
+    assert context.artifact_name == ("artifact" if redact_diagnostics else second.name)
+    assert context.rollback_failures == (
+        writer_module.WriteSetRollbackFailure(
+            artifact_name="artifact" if redact_diagnostics else first.name,
+            operation="restore_backup" if populated else "remove_new_file",
+            error_type="PermissionError",
+        ),
+    )
+    assert context.recovery_directory_name is not None
+    recovery_dir = parent / context.recovery_directory_name
+    assert recovery_dir.is_dir()
+    assert first.read_bytes() == b"new-first"
+    assert (recovery_dir / "0001.stage").read_bytes() == b"new-second"
+    assert (recovery_dir / "0002.stage").read_bytes() == b"new-third"
+    if populated:
+        assert (recovery_dir / "0000.backup").read_bytes() == b"old-first"
+        assert second.read_bytes() == b"old-second"
+        assert third.read_bytes() == b"old-third"
+    else:
+        assert not second.exists()
+        assert not third.exists()
+        assert not tuple(recovery_dir.glob("*.backup"))
+
+    assert recorded_errors == ["atomic_write_set_rollback"]
+    assert len(errors) == 1
+    message, payload = errors[0]
+    assert message == "Atomic write-set rollback incomplete"
+    assert payload == {
+        "operation": "atomic_write_set_rollback",
+        "outcome": "recovery_data_retained",
+        "error_code": "rollback_incomplete",
+        "fingerprint": "export.write_set.rollback_incomplete",
+        "transaction_name": "transaction" if redact_diagnostics else recovery_dir.name,
+        "artifacts": tuple(failure.artifact_name for failure in context.rollback_failures),
+        "operations": tuple(failure.operation for failure in context.rollback_failures),
+        "error_types": ("PermissionError",),
+        "metrics_summary": {"recorded_errors": 1},
+    }
+    diagnostics = repr((error, context, error.__notes__, primary_error.__notes__, errors))
+    assert "PRIVATE_SOURCE_PATH" not in diagnostics
+    assert "Rollback was incomplete" in repr(error.__notes__)
+    assert "recovery data was retained" in repr(primary_error.__notes__)
+    if redact_diagnostics:
+        assert first.name not in diagnostics
+        assert second.name not in diagnostics
+        assert "PRIVATE_RECORD_ID" not in diagnostics
+        assert "a1" * 32 not in diagnostics
+    else:
+        assert first.name in diagnostics
+        assert second.name in diagnostics
+
+
 def test_atomic_write_set_records_new_file_removal_rollback_failure(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1078,10 +1252,12 @@ def test_atomic_write_set_cleanup_ignores_missing_transaction_directory(
 
 
 @pytest.mark.parametrize("with_active_exception", [False, True])
+@pytest.mark.parametrize("redact_diagnostics", [False, True])
 def test_atomic_write_set_cleanup_failure_is_observable_without_masking_outcome(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     with_active_exception: bool,
+    redact_diagnostics: bool,
 ) -> None:
     recorded_errors: list[str] = []
     warnings: list[tuple[str, dict[str, object]]] = []
@@ -1107,15 +1283,86 @@ def test_atomic_write_set_cleanup_failure_is_observable_without_masking_outcome(
     writer_module._cleanup_write_set_directory(
         tmp_path / ".write-set-residue",
         active_exception=active_exception,
+        redact_diagnostics=redact_diagnostics,
     )
 
     assert recorded_errors == ["atomic_write_set_cleanup"]
     assert warnings[0][0] == "Atomic write-set cleanup failed"
     assert warnings[0][1]["error_code"] == "transaction_cleanup_failed"
-    assert warnings[0][1]["transaction_name"] == ".write-set-residue"
+    assert warnings[0][1]["transaction_name"] == (
+        "transaction" if redact_diagnostics else ".write-set-residue"
+    )
     if active_exception is None:
         return
     assert any("transaction residue may remain" in note for note in active_exception.__notes__)
+
+
+@pytest.mark.parametrize("redact_diagnostics", [False, True])
+@pytest.mark.parametrize("publication_fails", [False, True])
+def test_atomic_write_set_redacts_cleanup_logs_without_changing_publication_outcome(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    redact_diagnostics: bool,
+    publication_fails: bool,
+) -> None:
+    first = tmp_path / "PRIVATE_RECORD_ID.json"
+    second = tmp_path / ("a1" * 32 + ".syx")
+    primary_error = OSError(f"publication failed for {second}")
+    warnings: list[tuple[str, dict[str, object]]] = []
+    real_replace = os.replace
+
+    def fail_second_publication(source: str | Path, destination: str | Path) -> None:
+        if publication_fails and Path(source).suffix == ".stage" and Path(destination) == second:
+            raise primary_error
+        real_replace(source, destination)
+
+    def fail_cleanup(_path: Path) -> None:
+        raise PermissionError(f"cleanup denied for {first}")
+
+    def capture_warning(message: str, *, extra: dict[str, object]) -> None:
+        warnings.append((message, extra))
+
+    monkeypatch.setattr(os, "replace", fail_second_publication)
+    monkeypatch.setattr(writer_module.shutil, "rmtree", fail_cleanup)
+    monkeypatch.setattr(writer_module._logger, "warning", capture_warning)
+    artifacts = {first: b"first", second: b"second"}
+    if publication_fails:
+        with pytest.raises(WriteSetError) as exc_info:
+            atomic_write_set(artifacts, overwrite=True, redact_diagnostics=redact_diagnostics)
+        assert exc_info.value.__cause__ is primary_error
+        assert exc_info.value.failure_context == WriteSetFailureContext(
+            phase="publication",
+            artifact_name="artifact" if redact_diagnostics else second.name,
+        )
+        assert primary_error.__notes__ == [
+            "Atomic write-set cleanup also failed; transaction residue may remain."
+        ]
+        assert not first.exists()
+        assert not second.exists()
+    else:
+        results = atomic_write_set(artifacts, overwrite=True, redact_diagnostics=redact_diagnostics)
+        assert tuple(result.path for result in results) == (first.resolve(), second.resolve())
+        assert first.read_bytes() == b"first"
+        assert second.read_bytes() == b"second"
+
+    (recovery_dir,) = tmp_path.glob(".write-set-*")
+    assert {path.name: path.read_bytes() for path in recovery_dir.iterdir()} == (
+        {"0001.stage": b"second"} if publication_fails else {}
+    )
+    assert len(warnings) == 1
+    message, payload = warnings[0]
+    assert message == "Atomic write-set cleanup failed"
+    assert payload["transaction_name"] == (
+        "transaction" if redact_diagnostics else recovery_dir.name
+    )
+    assert payload["operation"] == "atomic_write_set_cleanup"
+    assert payload["outcome"] == "residue_retained"
+    assert payload["error_code"] == "transaction_cleanup_failed"
+    assert payload["fingerprint"] == "export.write_set.cleanup_failed"
+    assert payload["error_type"] == "PermissionError"
+    assert str(tmp_path) not in repr(warnings)
+    assert first.name not in repr(warnings)
+    assert second.name not in repr(warnings)
 
 
 # ---------------------------------------------------------------------------

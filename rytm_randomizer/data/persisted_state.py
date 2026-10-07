@@ -308,11 +308,24 @@ class PersistedStateDecision:
 # appears here exactly once. Adding a config-dir writer without a row
 # turns ``tests/architecture/test_persisted_state_registry.py`` red.
 #
-# Both current stores write their first envelope in this change, so each
-# declares version 1 with an empty migration chain and an on-disk format
-# that is byte-identical to what shipped before (rule 3: a file lacking
-# the field IS version 1). Neither store is rewritten on read, so an
-# operator who downgrades keeps files this build can still parse.
+# A missing envelope remains version 1. Library version 2 adds an explicit
+# kind and optional scoped rehearsal DTO; old capture bytes are never rewritten
+# merely by reading them.
+
+
+def _library_record_v1_to_v2(payload: Mapping[str, object]) -> Mapping[str, object]:
+    if payload.get("record_kind", "capture") != "capture" or payload.get("rehearsal") is not None:
+        raise ValueError("version 1 library records cannot contain rehearsal favorites")
+    return {**payload, "record_kind": "capture", "rehearsal": None}
+
+
+def _library_record_v2_to_v3(payload: Mapping[str, object]) -> Mapping[str, object]:
+    if "record_kind" not in payload or "rehearsal" not in payload:
+        raise ValueError("version 2 library records require explicit record kind")
+    if payload.get("source_frame") is not None or payload.get("source_origin") is not None:
+        raise ValueError("older library records cannot claim retained frame provenance")
+    return {**payload, "source_frame": None, "source_origin": None}
+
 
 _REGISTERED_STORES: Final[tuple[PersistedStateStore, ...]] = (
     PersistedStateStore(
@@ -323,9 +336,19 @@ _REGISTERED_STORES: Final[tuple[PersistedStateStore, ...]] = (
     ),
     PersistedStateStore(
         store_id="library_store",
-        schema_version=1,
+        schema_version=3,
         owner_module="rytm_randomizer.cockpit.library.store",
-        description="Captured kit/sound records under {config}/library.",
+        description="Captured kits and inert scoped rehearsal favorites under {config}/library.",
+        migrations=(
+            PersistedStateMigration(
+                1, _library_record_v1_to_v2, "Add explicit capture record kind."
+            ),
+            PersistedStateMigration(
+                2,
+                _library_record_v2_to_v3,
+                "Preserve legacy payloads without a retained-frame claim.",
+            ),
+        ),
     ),
 )
 """Declaration order. Collapsed into the read-only mapping below."""

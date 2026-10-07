@@ -16,6 +16,36 @@ MutationStatus: TypeAlias = Literal[
 ParameterValueKind: TypeAlias = Literal["continuous", "selector"]
 ParameterValueOrientation: TypeAlias = Literal["zero_based", "centered"]
 
+# These are projection refusals, not missing MIDI addresses or calibration facts.
+RYTM_COCKPIT_PENDING_SRC_PARAMETERS: Final[Mapping[tuple[str, str], str]] = MappingProxyType(
+    {
+        ("ut_impulse", "Polarity"): "src_selector_encoding_unverified",
+        ("cy_ride", "Hit Decay"): "src_native_slot_semantics_unverified",
+        ("cy_ride", "Cymbal Type"): "src_native_slot_semantics_unverified",
+        ("dual_vco", "Osc 2 Detune"): "src_requires_guarded_detune_window",
+        ("sy_chip", "Waveform"): "src_selector_encoding_unverified",
+        ("sy_chip", "Speed"): "src_mode_encoding_unverified",
+        ("sy_raw", "Noise Level"): "src_snapshot_projection_omitted",
+    }
+)
+RYTM_COCKPIT_ADDITIONAL_SRC_PITCH_PARAMETERS: Final[frozenset[str]] = frozenset(
+    {
+        "Tune",
+        "Detune",
+        "Osc 1 Tune",
+        "Bend",
+        "Offset 2",
+        "Offset 3",
+        "Offset 4",
+        "Tune 1",
+        "Tune 2",
+        "Tune 3",
+        "Tune 4",
+        "Tune 5",
+        "Tune 6",
+    }
+)
+
 
 @dataclass(frozen=True)
 class AnalogRytmCcMapping:
@@ -820,6 +850,8 @@ __all__ = [
     "ParameterValueKind",
     "ParameterValueOrientation",
     "RiskTier",
+    "RYTM_COCKPIT_ADDITIONAL_SRC_PITCH_PARAMETERS",
+    "RYTM_COCKPIT_PENDING_SRC_PARAMETERS",
     "get_analog_rytm_catalog_summary",
     "get_machine_src_mappings",
 ]

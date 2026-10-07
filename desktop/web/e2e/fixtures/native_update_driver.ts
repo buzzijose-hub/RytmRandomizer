@@ -50,7 +50,7 @@ const nativeControl = (action: string): Promise<Stats> => invoke('control', { ac
 const element = (id: string): HTMLElement | null => document.querySelector(`[data-testid="${id}"]`);
 
 async function connected(): Promise<void> {
-  await until('actual sidecar authenticated session', () =>
+  await until('sidecar connection and session projection', () =>
     useCockpitStore.getState().connectionStatus === 'connected' && useCockpitStore.getState().sessionStatus !== null);
   check(useCockpitStore.getState().sessionStatus?.armed === false, 'passive sidecar stays disarmed');
 }
@@ -72,17 +72,40 @@ async function clickConfirm(choice: string, waitForConsent = true): Promise<void
   if (waitForConsent) await until('consent reached native journal', async () => (await snapshot()).journal.some((row) => row.event === 'consent_granted'));
 }
 
-async function staleHandshakeRejected(token: string): Promise<boolean> {
-  const port = window.localStorage.getItem('rytm-rand-ws-port');
+export type HandshakeOutcome = 'rejected' | 'accepted' | 'unreachable' | 'no_verdict';
+
+// Reuse #240's socket-level verdict: credential rotation can precede listening.
+export function staleHandshakeOutcome(
+  token: string,
+  port: string | null = window.localStorage.getItem('rytm-rand-ws-port'),
+  timeoutMs = 5000,
+): Promise<HandshakeOutcome> {
   return new Promise((resolve) => {
+    let opened = false;
+    let settled = false;
     const ws = new WebSocket(`ws://127.0.0.1:${port}/ws`, WS_SUBPROTOCOL);
-    const deadline = setTimeout(() => { ws.close(); resolve(false); }, 5000);
-    ws.onopen = () => ws.send(JSON.stringify({ type: 'hello', token }));
+    const finish = (outcome: HandshakeOutcome): void => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(deadline);
+      ws.close();
+      resolve(outcome);
+    };
+    const deadline = setTimeout(() => finish('no_verdict'), timeoutMs);
+    ws.onopen = () => {
+      opened = true;
+      ws.send(JSON.stringify({ type: 'hello', token }));
+    };
     ws.onmessage = (message) => {
       const payload = JSON.parse(String(message.data)) as { code?: string };
-      if (payload.code === 'auth_failed') { clearTimeout(deadline); ws.close(); resolve(true); }
+      if (payload.code === 'auth_failed') finish('rejected');
+      else if (payload.code !== undefined) finish('no_verdict');
+      else finish('accepted');
     };
-    ws.onclose = (event) => { clearTimeout(deadline); resolve(event.code === 1008); };
+    ws.onclose = (event) => {
+      if (event.code === 1008) finish('rejected');
+      else finish(opened ? 'no_verdict' : 'unreachable');
+    };
   });
 }
 
@@ -236,7 +259,12 @@ export async function run(scenario: string, origin: string): Promise<void> {
         await until('native bridge rotates both credentials', () =>
           Boolean(window.__RYTM_RAND_WS_TOKEN__ && window.__RYTM_RAND_WS_TOKEN__ !== oldToken &&
             window.__RYTM_RAND_ARM_SECRET__ && window.__RYTM_RAND_ARM_SECRET__ !== oldSecret));
-        check(await staleHandshakeRejected(oldToken), 'old token rejected by restarted backend');
+        let outcome = 'unreachable' as HandshakeOutcome;
+        await until('restarted backend answers the stale token', async () => {
+          outcome = await staleHandshakeOutcome(oldToken);
+          return outcome !== 'unreachable';
+        });
+        check(outcome === 'rejected', `old token rejected by restarted backend (got ${outcome})`);
         await connected();
         check(await requestUpdateCheck(), 'same page still invokes native after backend restart');
       }
@@ -249,6 +277,14 @@ export async function run(scenario: string, origin: string): Promise<void> {
     await invoke('report', { passed: true, detail: `${assertions} native/DOM assertions` });
   } catch (error) {
     stop();
-    await invoke('report', { passed: false, detail: error instanceof Error ? error.message : 'native assertion failed' });
+    const message = error instanceof Error ? error.message : 'native assertion failed';
+    const startup = message === 'Timed out: React cockpit mounted' ? JSON.stringify({
+      document_phase: window.sessionStorage.getItem(`native-${scenario}`) === 'reloaded' ? 'reloaded' : 'initial',
+      ready_state: document.readyState,
+      app_root_present: document.getElementById('root') !== null,
+      app_root_child_count: document.getElementById('root')?.childElementCount ?? 0,
+      main_script_present: document.querySelector('script[src="/src/main.tsx"]') !== null,
+    }) : null;
+    await invoke('report', { passed: false, detail: startup === null ? message : `${message}; ${startup}` });
   }
 }

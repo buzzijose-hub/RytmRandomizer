@@ -67,9 +67,11 @@ export function bindClientToStore(
     client.on('send_plan_changed', (ev) => {
       store.getState().setSendPlan(ev.send_plan);
       announce(
-        ev.send_plan !== null
-          ? `Send plan ready, ${ev.send_plan.pad_count} pads, ${ev.send_plan.estimated_midi_msgs} parameters`
-          : 'Send plan cleared',
+        ev.send_plan === null
+          ? 'Send plan cleared'
+          : ev.send_plan.ready
+            ? `Send plan ready, ${ev.send_plan.pad_count} pads, ${ev.send_plan.estimated_midi_msgs} parameters`
+            : 'Send plan blocked. No part of this plan will be sent. Review readiness before preparing again.',
       );
     }),
     client.on('history_updated', (ev) => store.getState().setHistory(ev.history)),
@@ -96,6 +98,10 @@ export function bindClientToStore(
       announce(
         `Mutation targets updated, ${ev.rytm_pad_targets.length || 12} Rytm pads and ${ev.a4_track_targets.length || 4} Analog Four tracks in scope`,
       );
+    }),
+    client.on('mutation_parameters_changed', (ev) => {
+      store.getState().setMutationParameters(ev);
+      announce('Parameter scope updated. Prepare a new candidate before auditioning.');
     }),
     client.on('mutation_locks_changed', (ev) => {
       store.getState().setMutationLocks(ev.rytm_pad_locks, ev.a4_track_locks);

@@ -1,0 +1,391 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-10-07T23:03:00Z",
+  "status": "in-flight",
+  "phase": "Oct07-exact-Windows-offline-delivered-90minute-and-normal-restart-pass-physical-human-gates-pending",
+  "prototype_source": "8cfa6f7b6cf9469ffa134598182febb60ecdd1df",
+  "prototype_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-tom-mapping/RytmRandomizer",
+  "delivery_start_source": "941643c551abfa225f45c70a954b6671d1cbb5f4",
+  "delivery_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-studio-mapping/RytmRandomizer",
+  "delivery_pr": 254,
+  "delivery_branch": "codex/studio-evidence-handoff",
+  "delivery_assembly_branch": "codex/studio-rytm-mapping",
+  "delivery_base": "modularize-v1.34",
+  "auto_merge": false,
+  "scheduled_jobs": [],
+  "local_budget_minutes": 90,
+  "local_budget_checkpoint": "2026-10-02T01:13:47Z",
+  "local_budget_deadline": "2026-10-02T02:43:47Z",
+  "local_budget_scope": "historical-Oct02-only-not-the-current-Oct05-session",
+  "oct06_started_at": "2026-10-06T16:24:24Z",
+  "oct06_deadline": "2026-10-07T00:24:24Z",
+  "oct06_checkpoint": "6eb5d4c1e3ed103b9870d935c3be2656857de708",
+  "reliability_started_at": "2026-10-06T21:41:19Z",
+  "reliability_deadline": "2026-10-07T05:41:19Z",
+  "reliability_resumed_at": "2026-10-07T15:37:39Z",
+  "reliability_resume_deadline": "2026-10-07T23:37:39Z",
+  "reliability_resume_source": "6e098f85ddeb48d9beb97f732f22e2f2152d86eb",
+  "historical_elapsed_time_recorded": false,
+  "work": {
+    "mapping_implementation": "Oct05-all8-CY-Ride-SRC-blocked-25of29-new-fallback-rows-documented-only-guardedCC7-eligible-224-descriptive-bindings-retained-Studio-SRC-metadata-published3461f42e",
+    "inventory": "registry-driven-29row-canonical-evidence-audit-25eligible-4CYremoved-init328-RIOreturn325-projections",
+    "dimension_reviews": "Eight-source-dimensions-confirmed6eb5d4c1-no-new-production-blockers; final-docs-reviewed-and-corrected; nonblocking-original-frame-reread-and-historicalGate14-16-retained; protected-human-review-required",
+    "plan_records": "source-bound-learning-and-probe-records-published-seventh-native-readiness-scope-declared-before-isolated-implementation",
+    "delivery_integration": "4bc21952-verified-source-published-as-d6e8e164-separate-browser-scope47e43516-before-local-assertion-fix-isolated-runtime4b88-verified-not-activated",
+    "final_delivery_checks": "Production6eb5d4c1:full10593pass5skip6warnings250.49s-at088f-d253; affected246pass-metrics23Library202fresh100; 49touched100coverage-combined99.6666068652-purebranch99.3951612903; web1172pass100coverage-browser35pass2skip-plusfinalrecall; strictpinned1.1.41149clean-lint-vulture-versionclean; prepush867arch697notfastpass-hosted31success3skip-installer37523755117success; actual-binary-originals-native-scope-favorite-bankcopy-fullrestart-backendloss-lock-zero-cancel-refusal-normal-launcher-pass-MIDIoff; old8b-fa43preserved; hardware-held",
+    "protected_review_and_merge": "pending",
+    "post_merge_maintainability_audit": "pending"
+  },
+  "receipts": [
+    {
+      "scope": "Oct07-exact-6e098f85-Windows-offline-delivery",
+      "result": "Windows37688652919SUCCESS6e098f85 source/binaryhashesverified. Fresh90minutes5400.0028376seconds180cycles21:30:45.793Z-23:00:45.993Z passed4cues188candidates180canonicalexports182GEN182favorites;8copyimports173deliberatemissingduplicaterefusals preserveexisting. Recoveries2/90sameShellnewtokensdisarmedexactrecall andcleanuptrue. 149->150deadlineprobe2.844seconds unchanged5secondlimit;separatesmoke60.008s3cycles;actualnormal-launcher2fullappstarts exactcandidate/sourceSYX/scope/locks/disarmed passedcleanup/listenersclosed. Private425.23-586.18MiB10processes3938-4032handlesminimumfree14.59GiBqueue13of256drops0pendingmax4journalmax1history2; no claimedglobalhistoryring/nativecacheoccupancy. OneQAstartupdebuglistenerretrybeforeclock;40/70minfailedattemptsnotcombined. CI33SUCCESS1skip; full10860/51touched100 verified; READYofflineNOTREADYshows. NoMIDI/USBaccess;old6ebunchanged;QAcredentialsoutsidebundle;human/physical/historical14/16remainpending.",
+      "passing_verdict": true,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "Oct07-84-timed-failure-and-6e098-generation-repair",
+      "result": "Exact84 package FAILED140cycles4187.123seconds candidate-generation after5secondUIdeadline;149thcandidate retainedatomically, no bankloss, bothcontrolledbackendrestarts andcleanuptrue. Attemptsnevercombined. New6e098sourcefull10860pass5skip6warnings480.04seconds,51touched100linebranch,combined99.6674272590percent,pure12854of12932,strictpinnedtypinglintVulture/Node17/hooksparitypass. Onefreshgenerationwholeproof/canonicalsourcectx/directguardedreads/revisioncheckbeforepub; allprotection/pins/timeouts held. Windows37688652919exact6ebuilding; actualdeadlinecase andfresh90minimumacceptancepending. Older6eb5d4lastverified preserved.",
+      "passing_verdict": false,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "Oct07-final-e96b4bc6-source-acceptance",
+      "result": "Full10834passed5skipped6existingwarnings471.68seconds; canonical51touchedproductionmodules100linebranch; combined99.6673925365percent purebranch12852of12930; strictpinnedPyright1.1.411zeroerrorswarnings, Ruff Black928 isort Vulture fourversiondeclarationspass. Eighttargeteddimensions findingsclosed; historical14/16exceptions protectedhumanreview physicalrehearsal remainpending. ExactWindowspackage and fresh100minute acceptance notyetperformed; MIDIoff no realports accessed.",
+      "passing_verdict": true,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "Oct07-424723-full-pass-with-Gate1-shortfall-and-legacy-recall-repair",
+      "result": "Full424723 passed10829tests5skipped6existingwarnings796.48seconds; Gate1 failedoneworkspaceguardbranch. Cache-only legacy positive recall regression reproduced2fail2pass; canonical selected volatile frame included in fresh immutable proof map, then atomic retained publication. Changedcachebytes refusedwithoutstate/diskloss; sixpositive/negative/guardcasespass1.47seconds. Final e96b4bc6 freshfullgate running; package/endurance not accepted.",
+      "passing_verdict": false,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "Oct07-1784-packaged-rehearsal-failure-and-source-repair",
+      "result": "1784 Windows package hashes verified; smoke passed180.0105891seconds6cycles; declared100minute attempt FAILED81cycles2413.4862604seconds with ownedcleanuptrue. No acceptance or combined attempts. Favorite confirmation driver race repaired; whole-bank proof reused once per action with canonical source fingerprint and fresh revision validation before publication. Final424723 source full coverage gate running;116focusedpass3warnings26.87seconds. New exact Windows package and fresh100minute run remain pending; old6ebdelivery preserved; MIDIoff throughout.",
+      "passing_verdict": false,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "Oct06-final-af5a2b40-baseline-and-new-reliability-mission",
+      "result": "Prior receipt publication complete31SUCCESS3SKIPPED0failure/pending; production6eb and Windows37523755117 preserved. Newmission21:41:19UTC/eighthourceiling05:41:19UTC. Actual baseline missing-package genericerror reproduced without bank/favorite/revision loss. Parent2 server-lock bypass tests failed then repaired. Two isolated workers merged normally6d7ecc9f/67417c48 into3d1689a1;96composed and4 rapid/restart cases pass;115 health/queue tests pass after fixing3 explicit contract/test setup failures. Short actual driver100s/5cycles/restart/cleanup pass isNOT90-minute endurance. New source acceptance/package/endurance still required; no hardware access.",
+      "passing_verdict": true,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "Oct06-identified-native-offline-Windows-6eb5d4c1e3ed103b9870d935c3be2656857de708",
+      "result": "Hosted37523755117success; exactsourceCI31success3skip; shellSHA592736462d2fcee0f746c8ef1af4ac4faf5413fee7bce4d6c8c4243c802e0bd9; sidecarSHA950133d3f70c768a524da3246c1912d589e9916fc3dff508f247b33886adff13; actual retained-file/native scope/small-large/favorite/order/bank-copy import/exact disarmed recall/fullrestart/backendloss-tokenrotation/zero-lock-cancel-refusal pass; QAcredentialsoutside-delivery andownedprocessesstopped; old8b-fa43hashesunchanged; READYoffline NOTREADYshows; receipt-onlymetadata publicationstilldue",
+      "passing_verdict": true,
+      "hardware_observation": false,
+      "final_delivery_verdict": false
+    },
+    {
+      "scope": "Oct06-first-source-frozen-native-original-retention-composition-df03b03a",
+      "result": "10403passed3artifactdriftfailures5skipped6warnings351.40s; combined99.50floorpassesbut10touchedfilesbelow100; notacceptance. ArtifactdriftrepairedwithoutV134changes. Nativepolicyfactsrelocated; Libraryredaction/diagnostics andlegacyrecallprepublication repairs pendingnewfullmeasurement. Web1172pass100coverage2936branches100.51s; browser35pass2explicit-skips1.1m, retainedsource/small-large/order/copyimport/disarmedrestart and600pxrenderchecked. No new Windows package or hardware action yet.",
+      "passing_verdict": false,
+      "hardware_observation": false,
+      "final_delivery_verdict": false
+    },
+    {
+      "scope": "scoped-Windows-offline-delivery8b6b2ce0a3308d231fdde4e2e5d11ca0c95136aa",
+      "result": "Hosted37397240969success; shellSHA256f70d3c7378471fc73fb6c38073af5e2de453e2c740e4a624cf7acea18d97c903; sidecarSHA25633d4c9fbef0f5c84bba3dadd510c136e8d4051df306925f61a3c16a45143b92b; exact local scoped favorite survives full restart and owned backend recovery disarmed; ready inert fourCC Pad2 plan never transmitted; all QA processes stopped and credentials excluded; READY offline only NOT READY shows",
+      "passing_verdict": true,
+      "hardware_observation": false,
+      "final_delivery_verdict": false
+    },
+    {
+      "scope": "Oct05-identified-Windows-portable-fa43f86399394bd44ae97e2d48510f8b85a9fe7a",
+      "result": "Hosted Windows run37341458245 succeeded; shellSHA256 ffb1f9c0030bf620e539223e9bbf122dbe6453a49554e45be9a2d2c3b746dee3; sidecarSHA256 8c32b273f0aa4357e89b088f3bcb6ed78e08dccec2b9bf5a4940c42db9f58916; actual MIDI-off startup, targeting, locks, small/large preview, paired/high-risk refusal, unavailable capture/export refusal, local bank metadata persistence, owned-backend recovery and full restart disarmed passed. No actual KIT capture, hardware audition/recovery, or favorite recapture performed; software READY offline only, NOT READY shows. All owned processes/listeners stopped and QA credentials retained outside delivery.",
+      "passing_verdict": true,
+      "hardware_observation": false,
+      "final_delivery_verdict": false
+    },
+    {
+      "scope": "Oct05-review-repair-source-frozen-composition",
+      "result": "10044passed5skipped6warnings338.60seconds-web1070passed100coverage-strict22clean-lint-vulture-versionclean-browser33pass2skip-1.2minutes-binary-smoke-pending",
+      "combined_coverage": "99.6557048%",
+      "pure_branch_coverage": "99.3693402%",
+      "touched_production_modules": 22,
+      "touched_line_branch_coverage": "100%",
+      "hardware_observation": false,
+      "final_delivery_verdict": false
+    },
+    {
+      "scope": "first-prototype-full-suite",
+      "result": "5 failed, 10670 passed, 5 skipped in 204.98 seconds",
+      "passing_verdict": false
+    },
+    {
+      "scope": "three-seed-assumption-repairs-focused-recheck",
+      "result": "22 passed",
+      "final_delivery_verdict": false
+    },
+    {
+      "scope": "mapping-focused-prototype",
+      "result": "306 passed",
+      "final_delivery_verdict": false
+    },
+    {
+      "scope": "retained-original-Oct1-source-and-RIO-return-and-init-public-decode-bridge",
+      "result": "Each: 324 keys, 60 SRC keys, XT Classic ready; no MIDI opened",
+      "hardware_observation": false
+    },
+    {
+      "scope": "first-composed-Studio-full-suite",
+      "result": "1 failed, 9819 passed, 5 skipped in 286.42 seconds; plan marker corrected",
+      "passing_verdict": false
+    },
+    {
+      "scope": "plan-lifecycle-index-recheck",
+      "result": "8 passed"
+    },
+    {
+      "scope": "prior-combined-Studio-full-suite-published-source-2f0f5be0",
+      "result": "9823 passed, 5 skipped, 6 warnings in 269.56 seconds",
+      "combined_coverage": "99.65%",
+      "pure_branch_coverage": "99.37%",
+      "touched_production_modules": 18,
+      "touched_line_branch_coverage": "100%",
+      "hardware_observation": false
+    },
+    {
+      "scope": "local-mapping-runtime-2a19b0941d9810a67d262a0a21a8d7ca6469b40a-versus-8cfa6f7b",
+      "result": "10678 passed, 5 skipped, 6 warnings in 305.83 seconds; strict typing and lint passed; backend started healthy with unchanged hash-verified 8c frontend, outputs disarmed, no capture started",
+      "combined_coverage": "99.66%",
+      "pure_branch_coverage": "99.39%",
+      "touched_production_modules": 3,
+      "touched_line_branch_coverage": "100%",
+      "hardware_observation": false
+    },
+    {
+      "scope": "Gate15-repository-only-document-snapshot-onboarding",
+      "result": "Five questions answered; exact copied in-repo inputs and citation paths verified; skill addition scored 4/5 on all five documented dimensions; learning artifacts published at 2f0f5be0; no installation/test/hardware/schema-validation job performed",
+      "hardware_observation": false
+    },
+    {
+      "scope": "PR254-publication-2f0f5be021079bfb78922a6d20b66d0bb5b44825",
+      "result": "Mapping and learning increment published in existing direct-base PR254; actual pre-push lint, strict typing, 860 architecture and 697 not-fast checks passed, including 685 frozen parity cases; canonical touched coverage confirms 18 production modules at 100% lines and branches. These historical receipts certify 2f0f5be0, not the later wire/native fix or final documentation head.",
+      "passing_verdict": true,
+      "touched_production_modules": 18,
+      "touched_line_branch_coverage": "100%",
+      "hardware_observation": false
+    },
+    {
+      "scope": "eight-targeted-postpush-reviews-2f0f5be021079bfb78922a6d20b66d0bb5b44825",
+      "result": "All eight dimensions completed; no new production Critical or Important findings. Important process exceptions remain: new retrospective Gate14 acknowledgment and historical Gate16 isolation/timing. Prior off-reader exception timing and private browser-factory import remain minor follow-ups. Consolidated PR comment and final-head checks/review/publication remain pending.",
+      "hardware_observation": false
+    },
+    {
+      "scope": "local-runtime-2a19b094-operator-input-only-saved-KIT01-capture",
+      "result": "Fresh operator login and saved KIT01 input capture observed. Backend log timestamp 2026-10-01 20:21:39,544 has no zone; fingerprint 5f75b9fb4856e8c7, 324 promoted parameters across 12 pads, 10 omitted. UI XT Classic TUN/SWT/DEC: pad6 42/99/39, pad7 58/66/0, pad8 60/83/10. No new raw-frame SHA retained; saved-state projection only, no SRC transmit or unsaved-RAM proof.",
+      "hardware_observation": true
+    },
+    {
+      "scope": "separately-approved-A4-single-CC74-channel1-OSC1-PWM-Depth-0-to-1-attempt",
+      "result": "Historical pre-repair app-helper attempt on 2a19b094 selected A4 MKII 4 output but failed at wire boundary: midi_wire_unsupported_message: Message; 0/1 messages sent. Operator observed the physical value still at 0. Later repaired-helper checks and separately authorized probe results are recorded in their own receipts; this failed attempt remains failed evidence.",
+      "passing_verdict": false,
+      "hardware_observation": true
+    },
+    {
+      "scope": "local-Studio-full-suite-0130f5c5841f6e9fb830ee8e3d395fc5bb2c89af",
+      "result": "9836 passed, 5 skipped, 6 existing warnings in 270.32 seconds; canonical touched check confirms all 18 production modules at 100% lines and branches. Pure branch is 99.3669858789%, rounded to 99.37%; strict typing on all 18 modules reports zero errors/warnings. Whole-tree Ruff, Black py311, isort and Vulture pass. Software source includes wire repair 648ae888 and native changes d698d62e plus 0130f5c5 formatting; final documentation receipt/push/postpush confirmation and new-head hosted checks remain pending. No hardware dependency pins or frozen parity fixtures changed.",
+      "passing_verdict": true,
+      "combined_coverage": "99.65%",
+      "pure_branch_coverage": "99.37%",
+      "touched_production_modules": 18,
+      "touched_line_branch_coverage": "100%",
+      "hardware_observation": false
+    },
+    {
+      "scope": "separate-local-runtime-76634665a719eed661724dfa31cca004a5cbe75a",
+      "result": "10691 passed, 5 skipped, 6 existing warnings in 286.21 seconds; four touched production modules at 100% lines and branches, strict typing on all four and lint pass. Fresh standalone legacy helpers use this source. Running studio server process remains on 2a19b094 with the unchanged 8cfa6f7b frontend; no server restart or frontend rebuild is claimed.",
+      "passing_verdict": true,
+      "combined_coverage": "99.66%",
+      "pure_branch_coverage": "99.39%",
+      "touched_production_modules": 4,
+      "touched_line_branch_coverage": "100%",
+      "hardware_observation": false
+    },
+    {
+      "scope": "first-authorized-repaired-A4-helper-probe-2026-10-02T00:40:09Z",
+      "result": "Fresh helper from 76634665 sent exactly one CC74, zero-based channel0 (configured MIDI channel1), value1 and exited 0. User separately reported physical OSC1 PWM Depth at1, then manual source reload restored0. No hardware SAVE or new raw capture/frame SHA was performed; observation applies only to this bounded non-paired control in this setup.",
+      "passing_verdict": true,
+      "hardware_observation": true
+    },
+    {
+      "scope": "user-requested-repeat-repaired-A4-helper-probe-2026-10-02T00:42:47Z",
+      "result": "User explicitly requested a repeat; fresh NO+KIT manual reload read0 beforehand. Fresh helper sent exactly one CC74, zero-based channel0, value1 and exited0. In separate answers, user confirmed physical1 and then manual NO+KIT reload of saved KIT01 read0. This is a second authorized one-message action with observed manual recovery, not an automatic retry or general A4/BOTH authority. Private probe JSON receipt is retained locally; no hardware SAVE or new raw frame.",
+      "passing_verdict": true,
+      "hardware_observation": true
+    },
+    {
+      "scope": "native-source-validation-boundary-0130f5c5",
+      "result": "Cargo is absent locally: no rustfmt, native test, Clippy or native executable run is claimed. All 504 locked package versions and checksums remain unchanged. Historical CI at 2f0f5be0 had one passing and one failing result, the failure reporting a missing TLS provider. New-head hosted native checks remain pending. RYTM_TEST_BEACON_CLIENT_STARTUP is a new test-child environment switch, not a production setting; coordinator recorded Gate13 documentation in CONTRIBUTING and LOCAL_DEV_TOOLING_NOTES.",
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "followup-review-and-learning-at-0130f5c5",
+      "result": "Six source review dimensions are clean with the prior observability minor retained; final Docs and Maintainability confirmation await receipt metadata. Lesson19 received reviewer rubric scores 4/5/4/4/4 in the run report. The earlier five-question exercise copied 13 documents and evaluated only the capture lesson; it was not replayed for these follow-ups. Gate14/16 Important process exceptions remain unchecked pending human acknowledgment and actual post-merge assessment. Final publication/postpush confirmation and consolidated PR comment remain pending.",
+      "hardware_observation": false
+    },
+    {
+      "scope": "coordinator-documentation-lifecycle-and-leaf-cleanup-checkpoint",
+      "result": "Coordinator reports eight plan/index checks passed in 0.20 seconds after documentation updates; both new implementation leaf worktrees are app-confirmed archived with recoverable snapshots. Final delivery and runtime checkouts remain active. Final receipt commit/publication and postpush confirmation are still pending.",
+      "hardware_observation": false
+    },
+    {
+      "scope": "final-published-1d59-prepush-and-postpush-review",
+      "result": "860 architecture and 697 not-fast tests passed including685 parity; eight dimensions synthesized in comment5943575627; Gate14/16 retained",
+      "passing_verdict": true
+    },
+    {
+      "scope": "hosted-1d59-native-push36948067512",
+      "result": "191 Rust tests, rustfmt, Clippy,32 WebView scenarios and2 Windows installer handoffs passed; all Python/browser lanes passed",
+      "passing_verdict": true
+    },
+    {
+      "scope": "hosted-1d59-native-PR36948073016",
+      "result": "31of32 WebView scenarios; backend_restart old-token assertion failed before listener-readiness; close code not retained; installer handoffs skipped; readiness diagnosis is inference",
+      "passing_verdict": false
+    },
+    {
+      "scope": "isolated-native-restart-readiness-leaf07c261a6-local-integration0db50bac",
+      "result": "Five focused Vitest tests pass; old-order negative control fails expected early-probe assertion; web/native TS and targeted ESLint pass. No real native run, install, hardware or push. Local deadline reached before publication/review/hosted revalidation.",
+      "passing_verdict": true,
+      "final_delivery_verdict": false
+    },
+    {
+      "scope": "user-resumed-next-best-move-2026-10-02T01:13:47Z",
+      "result": "Refreshed clean local7040b6c5, unchanged remote1d59, directbase modularize-v1.34 and native PR red. Resume normal prepush/publication then eight postpush confirmations and exact-head CI; remaining mapping audit runs read-only in parallel. Prior90-minute BUDGET_EXCEEDED is retained; new90-minute checkpoint ends02:43:47Z. No new hardware output authorization.",
+      "final_delivery_verdict": false
+    },
+    {
+      "scope": "published-2a3789-native-readiness-prepush-and-postpush-review",
+      "result": "Normal non-force push passed lint, strict typing on18 modules,860 architecture and697 not-fast checks including685 frozen parity cases. Root independently reran five native-driver Vitest tests at2a3789. Eight targeted postpush dimensions completed; existing comment5943575627 updated With fixes retaining Gate14/16.",
+      "passing_verdict": true,
+      "hardware_observation": false
+    },
+    {
+      "scope": "hosted-exact2a3789-PR36950161113-and-push36950157872",
+      "result": "Both runs completed success. Each passed191 Rust tests, rustfmt, Clippy,32 native WebView scenarios including backend_restart and two actual Windows installer handoff/restart tests. Python/browser lanes passed. This certifies2a3789 only, not later mapping source.",
+      "passing_verdict": true,
+      "hardware_observation": false
+    },
+    {
+      "scope": "alias-closure-leaf9603d20d-and-integration-dbdfbf93",
+      "result": "541 focused passes across9files; agent runner summary retained, not a full raw integration log. 224 descriptive SRC bindings and29 additional conservative primary-byte projections; no physical output or native association authority.",
+      "hardware_observation": false
+    },
+    {
+      "scope": "first-full-alias-composition-dbdfbf93",
+      "result": "29 failed,9885 passed,5 skipped,9 warnings in731.31 seconds. Import-direction violation and incompatible demo/test pad identities blocked positive protocol paths. Three blocked-path workers stopped and were automatically replaced; partial combined coverage is not a valid Gate1 receipt. No root interruption or passing verdict.",
+      "passing_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "predeclared-alias-integration-correction-fc1edb8e-9b12421b-66be7d46-root-e62bf18a",
+      "result": "272 focused tests passed across13files; strict pad-ID followup140passes. Raw logs copied to root. Independent scoped review has no remaining findings. Data facade derives compatible demo labels and refuses bool/float pad identities; protocol tests assert successful preparation/send before waiting. No catalog, safety guard, architecture allowlist or frozen fixture changed. Root strict typing on21 touched modules passes; new full composition/coverage remains running.",
+      "hardware_observation": false
+    },
+    {
+      "scope": "operator-CY-Ride-input-only-CC-address-observation-2026-10-01-New-York",
+      "result": "Pad11 isolated TYP C→D→C produced CC20 values3→2 on MIDI11; HIT48→49→50→49→48 produced CC19 values49→50→49→48. Initial ambiguous trial had zero observations. All receivers closed; operator manually reloaded savedKIT01 without saving and confirmed TYP C/HIT48. Raw logs plus structured private receipt retained. Both semantic rows stay blocked: no new native frame/offset association, output, NRPN, full domain or automatic recovery proof.",
+      "hardware_observation": true
+    },
+    {
+      "scope": "frontend-relevance-read-only-audit",
+      "result": "Appliance SRC rows already render backend labels/values/blockers and need repaired backend plus fresh capture. Studio fixed Synth pad-card definitions omit new namespaced keys; performance mini knobs do not display snapshot values. No frontend completion or runtime rollout claimed.",
+      "hardware_observation": false
+    },
+    {
+      "scope": "final-alias-composed-source-4bc21952",
+      "result": "9927 passed,5 skipped,6 existing warnings in280.92s. Canonical touched-coverage gate confirms all21 production files at100%lines/branches. Combined99.66%, purebranch99.37% above99floor. Strict21 and whole-tree lint/Vulture/version passed; unknownmachine API refusal10focusedpassed and finaldocsplanchecks3passed0.14s. Actual raw full/coverage/typing/lint receipts retained. No pins, frozen parity fixtures, configs or architecture/transmit allowlists changed. Normal publication/eight postpush confirmations/new-head hosted acceptance remain pending.",
+      "passing_verdict": true,
+      "touched_production_modules": 21,
+      "touched_line_branch_coverage": "100%",
+      "combined_coverage": "99.66%",
+      "pure_branch_coverage": "99.37%",
+      "hardware_observation": false
+    },
+    {
+      "scope": "isolated-local-appliance-alias-backport-scope-ed19dd04",
+      "result": "Scope/baseline committed before source in new studio-alias-runtime leaf from76634665. Preserve appliance depth/bounds API/arithmetic, A4/Pi exports and unchanged8cfrontend; capability rows must consume same blockers as planner. Source/focused tests/independent review/fullcoverage pending. No live runtime edit/restart, credentials, port, output or SAVE action.",
+      "hardware_observation": false
+    },
+    {
+      "scope": "published-d6e8e164dbafe7b7b37bc8edff7bc561d173d7bd-prepush-and-eight-postpush-reviews",
+      "result": "Normal publication through hooks passed lint, strict typing on21 modules,860 architecture and697 not-fast tests including685 frozen parity cases. All eight postpush dimensions completed with no new production Critical or Important findings. Historical Gate14/16 process exceptions remain; no protected approval or merge is inferred.",
+      "passing_verdict": true,
+      "hardware_observation": false
+    },
+    {
+      "scope": "hosted-exact-d6e8e164-native-success-browser-failed-checkpoint",
+      "result": "Both hosted PR/push desktop-shell native jobs completed SUCCESS. Their browser lanes each recorded32 passed,2 skipped,1 failure: the screen-reader boot assertion still expected incompatible BD Acoustic on pad12, while the corrected canonical demo supplies CB Classic. Failed hosted receipts remain failed; native success does not certify browser acceptance or any later fix head.",
+      "passing_verdict": false,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "browser-canonical-demo-assertion-fix-precode-scope47e435161bc36acf43db466840d2d44899d56d7b-local-working-tree",
+      "result": "The scope was committed before source. The local fix changes only the strict pad12 expected label to canonical CB Classic. The actual three-checkpoint screen-reader journey passed3 tests in9.1s with MIDI disabled; targeted ESLint and TypeScript report zero issues. No production UI, timeout, retry, skip, accessibility contract, pin or guard change. Fix publication and fresh exact-head hosted acceptance remain pending.",
+      "passing_verdict": true,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "isolated-appliance-runtime-source4b88-software-validation-not-activation",
+      "result": "Full runtime composition passed10793 tests,5 skips,6 existing warnings in319.58s. Combined coverage99.66%, purebranch99.39%;8 newly touched modules and10 union modules have100%lines/branches. Strict typing on8 modules and lint passed. The isolated checkout is clean and was not activated. The existing studio server remains loaded from2a19b094; no restart, capture, output or SAVE occurred.",
+      "passing_verdict": true,
+      "final_delivery_verdict": false,
+      "combined_coverage": "99.66%",
+      "pure_branch_coverage": "99.39%",
+      "touched_production_modules": 8,
+      "touched_line_branch_coverage": "100%",
+      "hardware_observation": false
+    },
+    {
+      "scope": "original-source-backup-readiness-stopped-both_original_captures_required",
+      "result": "Backup readiness stopped at both_original_captures_required. No backup command, fresh capture, MIDI send, hardware SAVE or server restart was performed. Both original captures remain required before dependent activation or physical work; elapsed time supplies no approval or evidence.",
+      "passing_verdict": false,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    }
+  ],
+  "remaining": [
+    "Complete final receipt publication/check verification and retain scoped review verdict; software source, exact Windows delivery,90minute endurance and handoff completed",
+    "Operator-present fresh backed-up source capture, new-build four-field Pad2 preset at10percent and exact-plan inspection, separately approved audition, DISARM and manual sourceKIT reload/fresh exact fingerprint comparison",
+    "Protected new-head human review, hosted checks and merge",
+    "Retrospective audit review and actual post-merge reassessment; Gate14 remains unchecked",
+    "Preserve historical Gate16 isolation/timing limitation; frozen legacy offline lev arithmetic remains tracked in issue256"
+  ],
+  "limits": [
+    "Historical October1 mapping-only local studio backend ran2a19b094 with hash-verified8cfa6f7b frontend; this is not the October5 identified portable build",
+    "New capture has no retained raw-frame SHA and proves saved-state projection only, not SRC send, unsaved-RAM synchronization or recovery",
+    "Historical A4 attempt failed with 0/1 messages; two later individually authorized fresh helpers each sent one CC74/channel0/value1 with operator-reported physical1 and manual reload0",
+    "Historical runtime checkout/helper76634665 checks did not imply activation; October5 packaged acceptance uses an isolated MIDI-off state and no hardware observation",
+    "No local Cargo execution; historical2a3789 native runs passed191 Rust tests,32 WebView scenarios and2 Windows handoffs each. Both d6e8 desktop-shell jobs completed SUCCESS, while browser lanes failed the stale pad12 label assertion. Later browser fix source still needs exact-head hosted acceptance. All504 locked package identities/versions/checksums unchanged",
+    "All224 SRC rows retain descriptive aliases and Studio pad cards now expose canonical namespaced SRC metadata. All8CYRideSRC, guarded semantic discrepancies, new pitch/selectors and unverified live precision remain blocked; appliance runtime is separate.",
+    "No general A4/BOTH, paired/fractional, native-offset, automatic-restore, Pi or touring readiness promotion; bounded probes performed no hardware SAVE or new raw capture",
+    "Isolated runtime4b88 has source-specific passing software receipts and remains unactivated; both_original_captures_required stops dependent hardware/activation work, with no new command, capture, send, SAVE or restart",
+    "Baseline audit and execution records were recorded after implementation began",
+    "Writing phases used disjoint scopes in one prototype checkout; separate per-phase worktrees were not retrospectively created"
+  ],
+  "recovery": [
+    "Read state, RUN_LOG and plan; inspect actual delivery/runtime checkout statuses and attached archived prototype metadata; restore only if prototype evidence is needed",
+    "Refresh PR254 head, base, checks and review state without assuming protected approval",
+    "Match runner summaries to source checkpoint and rerun affected checks after changes",
+    "Preserve original dirty user checkout, running studio checkout and concurrent work"
+  ],
+  "local_termination": "Independent software reliability and exact6eWindows90minute/restart acceptance completed; final receipt publication closeout follows; older deliveries/settings preserved; protected human approval and physical/show gates remain separate",
+  "plan_termination": "Protected merge and actual post-merge maintainability reassessment recorded",
+  "budget_exhaustion_status": "BUDGET_EXCEEDED",
+  "user_stop_status": "INTERRUPTED"
+}

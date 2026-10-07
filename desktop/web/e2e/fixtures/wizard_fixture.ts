@@ -231,6 +231,8 @@ export interface SidecarHandle {
 }
 
 export interface SidecarLaunchOptions {
+  /** Test-only Python harness path; absent means the production sidecar module. */
+  entrypoint?: string;
   /** Extra environment layered over the isolation defaults. */
   env?: Record<string, string>;
   /**
@@ -320,7 +322,8 @@ async function launchSidecarOnce(
     ...options.env,
   };
 
-  const child = spawn(python, ['-m', 'rytm_randomizer.cockpit'], {
+  const args = options.entrypoint ? [options.entrypoint] : ['-m', 'rytm_randomizer.cockpit'];
+  const child = spawn(python, args, {
     cwd,
     env: childEnv,
     stdio: ['ignore', 'pipe', 'pipe'],

@@ -28,6 +28,10 @@ kit adoption, or a send plan that could reach an Elektron device.
 5. Promote a captured kit only after the canonical codec proves exact
    decode/re-encode round-trip stability. Project only fields already backed by
    the semantic map; retain but never guess unknown fields.
+   Exercise retained hardware-return fixtures through the actual anchor consumer,
+   not only the decoder. Catalog SRC sections may use canonical machine keys;
+   normalize only the exact owning section and retain exact reverse CC matching.
+   Require promoted machine facts before exposing machine SRC mutation values.
 6. If saved-kit offsets, typed encodings, track stride, and fixture evidence are
    incomplete, return a blocked zero-event plan. A manual-backed live CC map is
    not evidence for saved-kit byte offsets.
@@ -69,8 +73,75 @@ kit adoption, or a send plan that could reach an Elektron device.
     both displayed and pending results when any context changes. Saved-KIT
     Q8.8 evidence cannot establish live paired-CC or NRPN conversion, output
     destination semantics, or a physical restore contract.
+15. Refuse the entire Cockpit plan when any effective candidate row needs
+    unverified paired-control precision (`paired_control_precision_unverified`).
+    Do not silently drop that row, send the safe subset, round a fractional
+    value or keep only its MSB. Retain the blocked plan/reasons for inspection;
+    saved-file precision and manual CC addresses are not live-conversion proof.
+16. At input open, require exactly one occurrence of the selected exact port
+    name in a fresh backend listing. Reject duplicates before opening instead
+    of selecting the first. Bind capture work to cancellation and the current
+    session generation; teardown stops polling, and a late cancelled/stale
+    result cannot adopt a source. Keep the previous verified source intact.
+17. Separate output revocation from offline evidence destruction. Armed
+    disconnect must revoke live authority and require fresh reload/capture/
+    preparation before a later send. Passive browser disconnect and rejected
+    DISARM must preserve offline candidate, plan and source identity within the
+    same running sidecar session. This is not durable local retention. Neither
+    path may auto-re-arm or treat retained work as a hardware-write grant.
+18. Keep studio handoffs bounded and evidence-specific. The first Show Kit
+    Forge physical gate is one scoped Rytm RAM audition followed by manual
+    source reload, physical recovery observation and fresh baseline capture.
+    A separately approved legacy `--arm --a4-send-param` probe is one integer,
+    non-paired CC on one configured spare-kit track, not general A4/BOTH SEND
+    or a bypass for blocked candidates. The existing A4 four-track scratch
+    return tests offline bytes after manual hardware save; do not repeat a
+    completed offset/stride matrix or generalize a pass to fractional MIDI.
+    Local candidate/bank save is not hardware save or reload. Passive support
+    inventory reports describe canonical evidence, never unlock authority.
+19. Compose legacy hardware helpers through the actual lazy output provider in
+    fake-backend tests. A raw fake port or a fake message with extra attributes
+    can hide incompatibility with the neutral wire wrapper. Recognize public
+    CC representations, validate their fields and reconstruct at that boundary;
+    never bypass the wrapper or forward an unchecked backend message.
+20. Native offline scope needs its own evidence policy, not the MIDI catalog's
+    integer range. Sample exact canonical native-domain indices. Unknown source
+    codes stay immutable; retain coupled precision and refuse independent word
+    components. A default-only fixture cannot prove nondefault selector meaning.
+    Test against independent retained recipe/return evidence, not only a
+    generated frame decoded by the same implementation.
+21. Portable native candidates must retain the immutable profile and algorithm
+    and replay against the exact original framed source. Shape-only DTOs do not
+    establish encoding/offset claims. Reject native claims under legacy recipes,
+    excluded parameter changes and self-consistently rehashed protected-byte
+    edits. Exact native no-ops are valid, but require full source identity.
+22. Original framed files and semantic favorites are different artifacts.
+    File import grants no live capture freshness. Retain generated frames with
+    the bank transaction, test cache eviction/restart, and use a create-only
+    explicitly named namespace for imported copies. Import must revoke old
+    candidates/plans even in passive sessions; output teardown alone may be a
+     no-op there. Shared readers belong below both stores, without a cycle.
+23. Optimize measured repeated recall proofs only within one action. Share
+    immutable verified bytes and metadata with consumers, recheck source
+    fingerprints and revision before publication, and prove every new command
+    verifies afresh. Preserve exact cache-only legacy candidates through the
+    canonical byte validator and atomic retention path; never turn proof reuse
+    into a persistent authorization cache or hardware restoration.
+24. A bounded QA supervisor must keep ownership handles through failure and
+    cleanup. Publication, reporting or cleanup faults cannot erase evidence of
+    surviving children or grant acceptance. Separate smoke from the promised
+    timed exercise, keep failed attempts, and never combine their durations.
 
 ## Verification
+
+When a machine family's saved-slot association is disputed, refuse every SRC
+row in that family before alias-specific level/pitch/selector checks. A known
+live CC address or a neighbouring slot does not establish native semantics.
+Test every canonical row through capture omission, mutation freezing and a
+constructed mixed SEND plan; the whole plan must remain non-executable.
+Keep documented-only eligibility explicit and audit it against the same policy
+used by capture and planning. Frontend labels/addresses/blockers must derive
+from that Python catalog, not a separately maintained TypeScript table.
 
 - Test empty/default scope, explicit targets, targets plus locks, invalid
   identifiers, stale-plan rejection, and contradictory packet rejection.
@@ -78,11 +149,33 @@ kit adoption, or a send plan that could reach an Elektron device.
 - Exercise stale source/recapture/preflight reuse, restart/import authority
   revocation, paired-retention failure rollback, and family-codec import
   rejection.
+- Cover mixed safe/paired whole-plan refusal, duplicate exact input names,
+  cooperative capture cancellation, late-result rejection, blocked-plan
+  retention, passive-disconnect retention and rejected-DISARM identity.
 - Run passive-boundary tests and the frozen V1.34 parity tests without capture
   mode; the parity fixtures must remain untouched.
 - Update the Cockpit protocol table and diagrams whenever target events or
   capture/adoption boundaries change.
 
+Keep software verification and physical observations separate. A handoff that
+prohibits tests/builds or hardware access must report them as not run, leave
+unobserved results blank, and stay within its assigned files. Shared Studio
+safety work does not validate Pi #252 touch/display UI or packaging; that PR is
+groundwork with non-simulation APPLY refused and deployment on hold pending
+focused work. Use
+`docs/COCKPIT_QUICKSTART.md` section 6a and the existing
+`docs/hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md` for the
+ordered operator-present gates and evidence-specific unlock limits.
+
+For Studio parameter scopes, distinguish null/all eligible from an explicit
+empty selection. Resolve cells through canonical source-backed metadata before
+proposals, preserve excluded native values before any clamp, and enforce actual
+proposed-value differences at SEND even when changed_keys claims fewer rows.
+Local favorites use the existing schema-versioned library and deterministic
+verification; recall revokes output and preparation but never restores hardware.
+Disarmed Show Forge reselection follows a fresh manual-reload capture: it must
+not advance that capture's recovery cutoff, and must publish restored scope
+before the candidate even when the source identity is unchanged.
 The mandatory project rule is
 `.claude/rules/targeted-mutation-safety.md`. The canonical code surfaces are
 `rytm_randomizer/snapshot/mutation_scope.py`,

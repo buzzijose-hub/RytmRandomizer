@@ -17,10 +17,12 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Callable, Iterable
+from threading import Event
 from time import monotonic, sleep
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, Final, Protocol, cast
 
 from .observability.logging import get_logger
+from .observability.metrics import get_metrics
 from .observability.tracing import operation
 from .real_midi_adapter import RealMidiDependencyError, RealMidiPortError, RealMidiSendError
 
@@ -35,6 +37,7 @@ __all__ = [
 ]
 
 _logger = get_logger(__name__)
+_AMBIGUOUS_INPUT_ERROR: Final[str] = "ambiguous_midi_input_port"
 
 
 class RealMidiInputPort(Protocol):
@@ -193,6 +196,34 @@ def _require_mido_port_name(value: object, *, direction: str) -> str:
     return value
 
 
+def _require_unambiguous_input_port(port_name: str, available: tuple[str, ...]) -> None:
+    """Refuse duplicate exact matches before either input backend opens."""
+
+    matches = available.count(port_name)
+    if matches > 1:
+        get_metrics().record_error(_AMBIGUOUS_INPUT_ERROR)
+        _logger.warning(
+            _AMBIGUOUS_INPUT_ERROR,
+            extra={
+                "match_count": matches,
+                "outcome": "refused",
+                "fingerprint": "midi.input.port_ambiguous",
+            },
+        )
+        raise RealMidiPortError(_AMBIGUOUS_INPUT_ERROR)
+
+
+def _close_raw_input(port: _RtMidiInput) -> None:
+    """Release a raw input after capture or a duplicate-name refusal."""
+
+    close_port = getattr(port, "close_port", None)
+    if callable(close_port):
+        try:
+            close_port()
+        except (OSError, RuntimeError, AttributeError):
+            _logger.debug("rtmidi_sysex_capture_close_failed_best_effort")
+
+
 def _require_7bit(value: object, *, field: str) -> int:
     """Coerce one wire field to a 7-bit int, or refuse (fail closed)."""
 
@@ -214,10 +245,9 @@ def _require_channel(value: object) -> int:
 
 
 def neutral_cc_fields(message: object) -> tuple[int, int, int]:
-    """Normalise one neutral CC message to ``(channel, control, value)``.
+    """Normalise one CC message to validated ``(channel, control, value)``.
 
-    The armed path carries device-neutral messages in exactly two shapes,
-    and **neither is acceptable to a real ``mido`` output port**:
+    The armed path carries device-neutral messages in two shapes:
 
     * a ``(channel, control, value)`` triple — what
       :meth:`rytm_randomizer.devices.Device.to_cc_messages` renders, and
@@ -225,9 +255,11 @@ def neutral_cc_fields(message: object) -> tuple[int, int, int]:
     * a :class:`~rytm_randomizer.mock_midi.MidiMessage` — the inert
       dataclass the cockpit adapters build via ``build_cc_message``.
 
-    Both are normalised here, at the lazy real-MIDI boundary, so the
-    conversion to :class:`mido.Message` happens in exactly one place
-    (:class:`WireOutputPort`). Anything else fails closed with
+    Legacy :func:`rytm_randomizer.midi_io.send_cc` also supplies an already
+    rendered ``mido.Message``, whose kind is exposed as ``type`` rather than
+    ``message_type``. All three shapes are validated and reconstructed here
+    by :class:`WireOutputPort`; none passes straight through to the backend.
+    Unsupported kinds or invalid fields fail closed with
     :exc:`~rytm_randomizer.real_midi_adapter.RealMidiSendError`.
     """
 
@@ -243,6 +275,8 @@ def neutral_cc_fields(message: object) -> tuple[int, int, int]:
 
     message_type = getattr(message, "message_type", None)
     if message_type is None:
+        message_type = getattr(message, "type", None)
+    if message_type is None:
         raise RealMidiSendError(f"midi_wire_unsupported_message: {type(message).__name__}")
     if message_type not in ("cc", "control_change"):
         raise RealMidiSendError(f"midi_wire_unsupported_message_type: {message_type!s}")
@@ -254,15 +288,15 @@ def neutral_cc_fields(message: object) -> tuple[int, int, int]:
 
 
 class WireOutputPort:
-    """The one place a neutral message becomes a real ``mido.Message``.
+    """Validate and reconstruct every CC as a real ``mido.Message``.
 
     A real ``mido`` output port rejects anything that is not a
     :class:`mido.Message`; the armed path upstream deliberately speaks in
     device-neutral triples / inert :class:`~rytm_randomizer.mock_midi.MidiMessage`
     dataclasses so no engine, runner, or cockpit adapter has to know about
-    ``mido``. This wrapper closes that gap at the lazy real-MIDI boundary —
-    the same shape :func:`rytm_randomizer.midi_io.send_cc` already uses for
-    its real branch (build ``mido.Message`` immediately before ``send``).
+    ``mido``. This wrapper closes that gap at the lazy real-MIDI boundary and
+    also validates the messages that legacy
+    :func:`rytm_randomizer.midi_io.send_cc` already renders.
 
     Wrapping (rather than converting at each call site) means the armed
     seam holds a port that *is* the conversion, so a future message kind
@@ -355,11 +389,10 @@ class MidoMidiPortProvider:
         """Open a hardware MIDI output port by name (lazy ``mido``).
 
         The returned port is a :class:`WireOutputPort` wrapper, not the raw
-        backend port: every armed caller upstream speaks in device-neutral
-        triples / inert ``MidiMessage`` dataclasses, and a real ``mido`` port
-        accepts only :class:`mido.Message`. The wrapper performs that
-        conversion here, at the single lazy real-MIDI boundary, so no caller
-        can hand a real port an object it rejects.
+        backend port: armed callers supply device-neutral triples, inert
+        ``MidiMessage`` dataclasses or legacy ``mido.Message`` objects. The
+        wrapper validates all three and reconstructs the backend message
+        here, at the lazy real-MIDI boundary, so no caller bypasses validation.
 
         Wrapped in an :func:`~rytm_randomizer.observability.tracing.operation`
         span so a ``--debug`` log records when the backend opened the selected
@@ -407,6 +440,7 @@ class MidoMidiPortProvider:
             available = self.list_input_names()
             if checked_port_name not in available:
                 raise RealMidiPortError(f"unknown_midi_input_port: {checked_port_name}")
+            _require_unambiguous_input_port(checked_port_name, available)
             try:
                 port = mido.open_input(checked_port_name)
             except (
@@ -431,6 +465,7 @@ class MidoMidiPortProvider:
         port_name: str,
         *,
         timeout_seconds: float,
+        cancel_event: Event | None = None,
     ) -> tuple[bytes, ...]:
         """Capture the first complete SysEx frame from a hardware input.
 
@@ -441,6 +476,8 @@ class MidoMidiPortProvider:
         checked_port_name = _require_mido_port_name(port_name, direction="input")
         if timeout_seconds <= 0:
             raise RealMidiPortError("midi_sysex_capture_timeout_seconds_required")
+        if cancel_event is not None and cancel_event.is_set():
+            raise RealMidiPortError("midi_sysex_capture_cancelled")
 
         with operation("capture_sysex_messages"):
             rtmidi = _import_rtmidi()
@@ -465,11 +502,19 @@ class MidoMidiPortProvider:
                 raise RealMidiPortError(f"unknown_midi_input_port: {checked_port_name}")
 
             try:
+                _require_unambiguous_input_port(checked_port_name, available)
+            except RealMidiPortError:
+                _close_raw_input(midi_in)
+                raise
+
+            try:
                 midi_in.ignore_types(sysex=False, timing=True, active_sense=True)
                 midi_in.open_port(available.index(checked_port_name))
                 deadline = monotonic() + timeout_seconds
                 sysex_buffer = bytearray()
                 while monotonic() < deadline:
+                    if cancel_event is not None and cancel_event.is_set():
+                        raise RealMidiPortError("midi_sysex_capture_cancelled")
                     message = midi_in.get_message()
                     frame = _coerce_sysex_frame(message)
                     if frame is None:
@@ -477,8 +522,13 @@ class MidoMidiPortProvider:
                         if data is not None:
                             frame = _append_sysex_chunk(sysex_buffer, data)
                     if frame is not None:
+                        if cancel_event is not None and cancel_event.is_set():
+                            raise RealMidiPortError("midi_sysex_capture_cancelled")
                         return (frame,)
-                    sleep(0.01)
+                    if cancel_event is None:
+                        sleep(0.01)
+                    else:
+                        cancel_event.wait(0.01)
             except (
                 OSError,
                 RuntimeError,
@@ -490,14 +540,17 @@ class MidoMidiPortProvider:
                     context={"underlying": repr(exc)},
                 ) from exc
             finally:
-                close_port = getattr(midi_in, "close_port", None)
-                if callable(close_port):
-                    try:
-                        close_port()
-                    except (OSError, RuntimeError, AttributeError):  # pragma: no cover
-                        _logger.debug("rtmidi_sysex_capture_close_failed_best_effort")
+                _close_raw_input(midi_in)
 
         raise RealMidiPortError("midi_sysex_capture_timeout")
+
+    def capture_sysex_messages_cancellable(
+        self, port_name: str, *, timeout_seconds: float, cancel_event: Event
+    ) -> tuple[bytes, ...]:
+        """Reuse the guarded input loop with an interruptible polling wait."""
+        return self.capture_sysex_messages(
+            port_name, timeout_seconds=timeout_seconds, cancel_event=cancel_event
+        )
 
 
 def build_mido_midi_port_provider() -> MidoMidiPortProvider:

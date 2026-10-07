@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from enum import IntEnum
 from types import MappingProxyType
-from typing import ClassVar
+from typing import ClassVar, Final
 
 from ...data.analog_four_saved_kit_layout import (
     A4_FAMILY_BYTE,
@@ -54,7 +54,7 @@ class A4RecipeError(ElektronKitRecipeError):
     fingerprint: ClassVar[str] = "data.rio145.a4_recipe"
 
 
-_ENUM_FIELDS: Mapping[str, type[IntEnum]] = MappingProxyType(
+A4_RECIPE_ENUM_FIELDS: Final[Mapping[str, type[IntEnum]]] = MappingProxyType(
     {
         "osc1_waveform": A4Waveform,
         "osc2_waveform": A4Waveform,
@@ -95,7 +95,7 @@ def _a4_float_value(value: object, label: str) -> float:
 
 
 def _a4_enum_value(field: str, value: object) -> int:
-    enum_type = _ENUM_FIELDS.get(field)
+    enum_type = A4_RECIPE_ENUM_FIELDS.get(field)
     if enum_type is None:
         raise A4RecipeError(f"{field!r} is not a supported enum field")
     return require_enum(field, value, enum_type, A4RecipeError)
@@ -167,7 +167,7 @@ def apply_a4_sound_recipe(sound: A4Sound, recipe: Mapping[str, object]) -> A4Sou
             field in A4_BIPOLAR_FIELDS
             or field in A4_TWO_BYTE_FIELDS
             or field in A4_MOD_DEPTH_FIELDS
-            or field in _ENUM_FIELDS
+            or field in A4_RECIPE_ENUM_FIELDS
             or "destination" in field
             or field in {"osc1_tune", "osc1_fine", "osc2_tune", "osc2_fine"}
         ):

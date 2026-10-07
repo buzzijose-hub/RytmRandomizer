@@ -12,7 +12,6 @@ Prior revisions and content-addressed captures are never overwritten.
 from __future__ import annotations
 
 import hashlib
-import json
 import os
 import re
 import stat
@@ -28,7 +27,10 @@ from ...observability.errors import DataError
 from ...observability.logging import get_logger
 from ...observability.tracing import trace
 from ...snapshot.sysex_file import extract_sysex_payloads
+from ..capture import KitCaptureResult, decode_kit_capture_frame
 from ..data.show_bank import (
+    LEGACY_SHOW_BANK_SCHEMA_VERSION,
+    PREVIOUS_SHOW_BANK_SCHEMA_VERSION,
     SHOW_BANK_ID_MAX_LENGTH,
     SHOW_BANK_REVISION_MAX,
     RetainedSysexArtifact,
@@ -36,6 +38,7 @@ from ..data.show_bank import (
     ShowKitCapture,
     validate_show_bank_id,
 )
+from ..export.reader import decode_json_rejecting_duplicate_keys, read_bounded_artifact
 from ..export.writer import WriteResult, atomic_write_set, guard_atomic_write_tree
 from ..profiles.paths import default_profiles_dir
 from .readiness import Clock, attach_retained_sysex, utc_now
@@ -149,24 +152,6 @@ def canonical_show_bank_json(bank: ShowBank) -> bytes:
     return payload
 
 
-def _unique_json_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
-    result: dict[str, object] = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError(f"duplicate JSON object key: {key}")
-        result[key] = value
-    return result
-
-
-def decode_json_rejecting_duplicate_keys(payload: bytes) -> object:
-    """Decode UTF-8 JSON while rejecting every duplicate object key."""
-
-    return json.loads(
-        payload.decode("utf-8"),
-        object_pairs_hook=_unique_json_object,
-    )
-
-
 def _manifest_name(bank_id: str, revision: int) -> str:
     validate_show_bank_id(bank_id, "bank_id")
     if isinstance(revision, bool) or not 0 <= revision <= SHOW_BANK_REVISION_MAX:
@@ -189,6 +174,36 @@ def validate_show_bank_sysex_frame(frame: bytes) -> None:
         raise ValueError("retained bytes must contain exactly one isolated SysEx frame")
 
 
+def validate_show_bank_capture_frame(capture: ShowKitCapture, frame: bytes) -> KitCaptureResult:
+    """Verify exact framed identity and family claims without a physical freshness grant."""
+    validate_show_bank_sysex_frame(frame)
+    if (
+        hashlib.sha256(frame).hexdigest() != capture.sysex.frame_sha256
+        or len(frame) != capture.sysex.frame_bytes
+    ):
+        _raise_show_bank_corruption("hash", "capture frame differs from its declared identity")
+    try:
+        decoded = decode_kit_capture_frame(capture.device_id, frame)
+    except (DataError, KeyError, IndexError, TypeError, ValueError) as exc:
+        raise DataError(
+            "capture failed its registered device-family codec",
+            context={"category": "framing", "artifact_name": capture.sysex.artifact_id},
+        ) from exc
+    if decoded.frame != frame or not decoded.round_trip_verified:
+        _raise_show_bank_corruption(
+            "framing",
+            "capture failed exact codec round trip",
+            artifact_name=capture.sysex.artifact_id,
+        )
+    if decoded.fingerprint != capture.fingerprint or decoded.kit_name != capture.kit_name:
+        _raise_show_bank_corruption(
+            "cross-reference",
+            "capture metadata disagrees with decoded bytes",
+            artifact_name=capture.sysex.artifact_id,
+        )
+    return replace(decoded, captured_at=capture.captured_at)
+
+
 def _show_bank_directory_identity(path: Path) -> tuple[int, int]:
     metadata = path.stat(follow_symlinks=False)
     if not stat.S_ISDIR(metadata.st_mode):
@@ -199,63 +214,7 @@ def _show_bank_directory_identity(path: Path) -> tuple[int, int]:
 
 
 def read_bounded_show_bank_file(path: Path, *, maximum: int) -> bytes:
-    try:
-        before = path.stat(follow_symlinks=False)
-    except FileNotFoundError:
-        _raise_show_bank_corruption(
-            "missing", "show-bank artifact is missing", artifact_name=path.name
-        )
-    except OSError as exc:
-        raise DataError(
-            "show-bank artifact cannot be inspected",
-            context={"category": "access", "artifact_name": path.name},
-        ) from exc
-    if not stat.S_ISREG(before.st_mode):
-        _raise_show_bank_corruption(
-            "path", "show-bank artifact is not a regular file", artifact_name=path.name
-        )
-    if before.st_size < 1 or before.st_size > maximum:
-        _raise_show_bank_corruption(
-            "size",
-            "show-bank artifact size is outside the supported bound",
-            artifact_name=path.name,
-        )
-    try:
-        flags = (
-            os.O_RDONLY
-            | getattr(os, "O_BINARY", 0)
-            | getattr(os, "O_NOINHERIT", 0)
-            | getattr(os, "O_NOFOLLOW", 0)
-            | getattr(os, "O_NONBLOCK", 0)
-        )
-        descriptor = os.open(path, flags)
-        with os.fdopen(descriptor, "rb") as handle:
-            opened = os.fstat(handle.fileno())
-            if not stat.S_ISREG(opened.st_mode) or (opened.st_dev, opened.st_ino) != (
-                before.st_dev,
-                before.st_ino,
-            ):
-                _raise_show_bank_corruption(
-                    "access", "show-bank artifact changed during open", artifact_name=path.name
-                )
-            payload = handle.read(maximum + 1)
-        after = path.stat(follow_symlinks=False)
-    except OSError as exc:
-        raise DataError(
-            "show-bank artifact cannot be read",
-            context={"category": "access", "artifact_name": path.name},
-        ) from exc
-    if len(payload) > maximum:
-        _raise_show_bank_corruption(
-            "size", "show-bank artifact exceeds the supported bound", artifact_name=path.name
-        )
-    before_identity = (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns)
-    after_identity = (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns)
-    if before_identity != after_identity:
-        _raise_show_bank_corruption(
-            "access", "show-bank artifact changed while it was read", artifact_name=path.name
-        )
-    return payload
+    return read_bounded_artifact(path, maximum=maximum, label="show-bank artifact")
 
 
 def _capture_source_anchor(capture: ShowKitCapture) -> ShowKitCapture:
@@ -309,7 +268,15 @@ def _decode_show_bank_manifest(payload: bytes, path: Path, bank_id: str, revisio
             "show-bank manifest identity does not match its filename",
             artifact_name=path.name,
         )
-    if payload != canonical_show_bank_json(bank):
+    # Legacy files must themselves be canonical. Their typed forward
+    # projection is in-memory only; reading never rewrites older evidence.
+    expected = (
+        canonical_json_bytes(cast(Mapping[str, object], decoded))
+        if cast(Mapping[str, object], decoded).get("schema_version")
+        in (LEGACY_SHOW_BANK_SCHEMA_VERSION, PREVIOUS_SHOW_BANK_SCHEMA_VERSION)
+        else canonical_show_bank_json(bank)
+    )
+    if payload != expected:
         _raise_show_bank_corruption(
             "schema",
             "show-bank manifest is not canonical JSON",
@@ -624,6 +591,14 @@ class ShowBankStore:
             ) from exc
         return frame
 
+    def read_capture(self, capture: ShowKitCapture) -> bytes:
+        """Read an exact original with codec/source validation, never a live capture."""
+        if capture.sysex.retained is None:
+            raise ValueError("exact SysEx bytes are not retained; regenerate or recapture")
+        frame = self.read_retained(capture.sysex.retained)
+        validate_show_bank_capture_frame(capture, frame)
+        return frame
+
     def retain_sysex(
         self,
         bank: ShowBank,
@@ -793,4 +768,5 @@ __all__ = [
     "read_bounded_show_bank_file",
     "show_bank_corruption_category",
     "validate_show_bank_sysex_frame",
+    "validate_show_bank_capture_frame",
 ]

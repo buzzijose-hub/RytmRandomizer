@@ -38,6 +38,7 @@ from ...data.analog_rytm_kit_layout import (
     RYTM_SYSEX_PRODUCT_ID,
     analog_rytm_track_sound_offset,
 )
+from ...data.rytm_machine_catalog import RYTM_MACHINE_PROFILES_BY_KEY
 from ...snapshot.elektron_packed_payload import split_elektron_packed_payload_body
 from ...snapshot.envelope import (
     ELEKTRON_MFR_ID,
@@ -128,6 +129,9 @@ _KIT_NAME_OFFSET: Final[int] = RYTM_KIT_NAME_OFFSET
 _KIT_NAME_LENGTH: Final[int] = RYTM_KIT_NAME_LENGTH
 
 _CANDIDATE_ONLY_PADS: Final[frozenset[int]] = frozenset({6, 7, 8})
+# The retained OS 1.72 RIO target-return KIT verifies XT Classic on all three
+# tom tracks. Other machine IDs on those tracks retain their candidate gate.
+_VERIFIED_TOM_MACHINE_VALUE: Final[int] = RYTM_MACHINE_PROFILES_BY_KEY["xt_classic"].machine_value
 _FULL_KIT_DUMP_IDS: Final[frozenset[int]] = frozenset(
     {RYTM_KIT_DUMP_ID, RYTM_KIT_WORK_BUFFER_DUMP_ID}
 )
@@ -148,7 +152,7 @@ def _extract_machine_facts(unpacked: bytes) -> RytmSnapshotMachineFacts:
         else:
             raw_value = unpacked[offset]
             decoded_value = raw_value & 0x7F
-            promoted = pad not in _CANDIDATE_ONLY_PADS
+            promoted = pad not in _CANDIDATE_ONLY_PADS or raw_value == _VERIFIED_TOM_MACHINE_VALUE
             fact = RytmSnapshotMachineFact(
                 pad=pad,
                 raw_machine_value=raw_value,

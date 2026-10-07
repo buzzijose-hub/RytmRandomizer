@@ -7,7 +7,11 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Final, Literal, TypeGuard, cast
 
-from ...data.analog_four_saved_kit_layout import A4_SAVED_KIT_LENGTH_ADJUSTMENT
+from ...data.analog_four_saved_kit_layout import (
+    A4_PACKED_PAYLOAD_OFFSET,
+    A4_SAVED_KIT_LENGTH_ADJUSTMENT,
+    A4_SAVED_KIT_TRAILER_SIZE,
+)
 from ...data.analog_four_sysex_calibration import (
     A4_SYSEX_CALIBRATION_STATUS_OFFLINE_CAPTURED_KIT_MUTATION_VALIDATED,
     AnalogFourSysexFieldCalibration,
@@ -76,7 +80,8 @@ class AnalogFourSavedKitCandidateResult:
     hardware_send_validated: Literal[False] = field(default=False, init=False)
 
 
-def _validated_candidate_source(source_sysex: bytes) -> AnalogFourSavedKitPayload:
+def validate_analog_four_candidate_source(source_sysex: bytes) -> AnalogFourSavedKitPayload:
+    """Require one exact framed source through the canonical saved-KIT codec."""
     if not source_sysex or source_sysex[0] != _SYSEX_START or source_sysex[-1] != _SYSEX_END:
         raise ValueError("Analog Four saved kit must be supplied as a framed F0/F7 SysEx file")
     payloads = extract_sysex_payloads(source_sysex)
@@ -92,6 +97,59 @@ def _validated_candidate_source(source_sysex: bytes) -> AnalogFourSavedKitPayloa
     if reencoded.payload != payload:
         raise ValueError("Analog Four candidate source must round-trip byte-identically")
     return decoded
+
+
+@dataclass(frozen=True)
+class AnalogFourCandidateEncoding:
+    """Canonical encoding with a proved selected-native-byte footprint."""
+
+    framed_sysex: bytes
+    decoded: AnalogFourSavedKitPayload
+    changed_unpacked_offsets: tuple[int, ...]
+    changed_wire_offsets: tuple[int, ...]
+    intended_wire_offsets: tuple[int, ...]
+
+
+def encode_analog_four_candidate_patch(
+    source_sysex: bytes,
+    source: AnalogFourSavedKitPayload,
+    rendered_native: bytes,
+    approved_offsets: tuple[int, ...],
+) -> AnalogFourCandidateEncoding:
+    """Fail closed on unselected bytes or an inexact canonical round trip."""
+
+    changed = tuple(
+        index
+        for index, (before, after) in enumerate(zip(source.unpacked, rendered_native, strict=True))
+        if before != after
+    )
+    if not set(changed).issubset(approved_offsets):
+        raise ValueError("Analog Four candidate changed bytes outside selected native fields")
+    encoded = encode_analog_four_saved_kit_payload(source.prefix, rendered_native)
+    redecoded = decode_analog_four_saved_kit_payload(encoded.payload, require_trailer=True)
+    if redecoded.unpacked != rendered_native or redecoded.prefix != source.prefix:
+        raise ValueError("Analog Four candidate failed exact native round trip")
+    frame = bytes((_SYSEX_START,)) + encoded.payload + bytes((_SYSEX_END,))
+    wire_changed = tuple(
+        index
+        for index, (before, after) in enumerate(zip(source_sysex, frame, strict=True))
+        if before != after
+    )
+    approved_wire: set[int] = set()
+    for offset in approved_offsets:
+        group, member = divmod(offset, 7)
+        mask = 1 + A4_PACKED_PAYLOAD_OFFSET + group * 8
+        approved_wire.update((mask, mask + member + 1))
+    if approved_offsets:
+        trailer_start = len(frame) - A4_SAVED_KIT_TRAILER_SIZE - 1
+        approved_wire.update((trailer_start, trailer_start + 1))
+    if not set(wire_changed).issubset(approved_wire):
+        raise ValueError(
+            "Analog Four candidate changed wire bytes outside selected native footprint"
+        )
+    return AnalogFourCandidateEncoding(
+        frame, redecoded, changed, wire_changed, tuple(sorted(approved_wire))
+    )
 
 
 @dataclass(frozen=True)
@@ -167,7 +225,7 @@ def render_analog_four_saved_kit_candidate(
 ) -> AnalogFourSavedKitCandidateResult:
     """Render only offline-promoted fields through the shared copy-on-edit KIT view."""
 
-    source = _validated_candidate_source(source_sysex)
+    source = validate_analog_four_candidate_source(source_sysex)
     pending = _prepare_candidate_mutations(mutations)
     kit = A4Kit.from_bytes(source.unpacked)
     for item in pending:
@@ -175,20 +233,10 @@ def render_analog_four_saved_kit_candidate(
         sound.set_fixed_8_8_raw(item.field_name, item.raw)
         kit.replace_sound(item.mutation.track - 1, sound)
     rendered_native = kit.to_bytes()
-    encoded = encode_analog_four_saved_kit_payload(source.prefix, rendered_native)
-    redecoded = decode_analog_four_saved_kit_payload(encoded.payload, require_trailer=True)
-    framed_sysex = bytes((_SYSEX_START,)) + encoded.payload + bytes((_SYSEX_END,))
     intended = tuple(sorted({offset for item in pending for offset in item.offsets}))
-    changed = tuple(
-        index
-        for index, (before, after) in enumerate(zip(source.unpacked, rendered_native, strict=True))
-        if before != after
-    )
-    wire_changed = tuple(
-        index
-        for index, (before, after) in enumerate(zip(source_sysex, framed_sysex, strict=True))
-        if before != after
-    )
+    checked = encode_analog_four_candidate_patch(source_sysex, source, rendered_native, intended)
+    redecoded = checked.decoded
+    framed_sysex = checked.framed_sysex
     redecoded_kit = A4Kit.from_bytes(redecoded.unpacked)
     return AnalogFourSavedKitCandidateResult(
         kit_name=source.kit_name,
@@ -198,22 +246,25 @@ def render_analog_four_saved_kit_candidate(
             for item in pending
         ),
         source_checksum=source.checksum,
-        rendered_checksum=encoded.checksum,
-        packed_length=len(encoded.packed),
-        encoded_length=len(encoded.packed) + A4_SAVED_KIT_LENGTH_ADJUSTMENT,
+        rendered_checksum=redecoded.checksum,
+        packed_length=len(redecoded.packed),
+        encoded_length=len(redecoded.packed) + A4_SAVED_KIT_LENGTH_ADJUSTMENT,
         source_sha256=hashlib.sha256(source_sysex).hexdigest(),
         sha256=hashlib.sha256(framed_sysex).hexdigest(),
         intended_unpacked_offsets=intended,
-        changed_unpacked_offsets=changed,
-        changed_wire_offsets=wire_changed,
+        changed_unpacked_offsets=checked.changed_unpacked_offsets,
+        changed_wire_offsets=checked.changed_wire_offsets,
         roundtrip_redecoded=redecoded.unpacked == rendered_native,
-        native_byte_isolation_validated=set(changed).issubset(intended),
+        native_byte_isolation_validated=True,
     )
 
 
 __all__ = [
+    "AnalogFourCandidateEncoding",
     "AnalogFourSavedKitCandidateAppliedMutation",
     "AnalogFourSavedKitCandidateMutation",
     "AnalogFourSavedKitCandidateResult",
     "render_analog_four_saved_kit_candidate",
+    "validate_analog_four_candidate_source",
+    "encode_analog_four_candidate_patch",
 ]

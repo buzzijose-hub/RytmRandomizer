@@ -9,8 +9,9 @@ Rytm ``ArmedApply`` handler *after* a successful send.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime
+from types import MappingProxyType
 from typing import Final, Literal, cast
 
 from ...observability.logging import get_logger
@@ -26,7 +27,9 @@ from ..capture import (
 )
 from ..data import MutationCandidate, ProfileModel, Snapshot, new_ulid
 from ..data.a4_preparation import A4PreparationReport
+from ..data.parameter_scope import DEFAULT_PARAMETER_SELECTION, ParameterSelection
 from ..data.show_bank import (
+    A4_LEGACY_MUTATION_ALGORITHM,
     A4_SHOW_KIT_DEVICE_ID,
     RYTM_SHOW_KIT_DEVICE_ID,
     SHOW_KIT_DEPTH_PRESETS,
@@ -44,13 +47,16 @@ from ..data.show_bank import (
     ShowKitDepthPreset,
     ShowKitDepthPresetsDict,
     ShowKitDeviceId,
+    ShowKitEvidence,
     ShowKitLifecycleStatus,
     ShowKitReadinessProjectionDict,
     ShowKitRecipe,
     ShowKitRytmAuditionStatus,
     ShowKitScope,
 )
+from ..library import LibraryStore
 from .a4_preparation import A4PreparationContext, prepare_a4_audition
+from .export import verify_show_bank_frames
 from .forge import (
     analog_four_capture_semantic_fingerprint,
     build_source_entry,
@@ -61,6 +67,7 @@ from .forge import (
     rytm_capture_semantic_fingerprint,
 )
 from .readiness import (
+    CATALOG_ONLY_EVIDENCE_ID,
     Clock,
     add_candidate,
     add_entry,
@@ -69,6 +76,7 @@ from .readiness import (
     duplicate_entry,
     is_catalog_only_show_bank,
     mark_favorite,
+    normalize_catalog_import,
     record_recapture,
     record_rytm_live_audition,
     record_show_time_preflight,
@@ -81,7 +89,7 @@ from .readiness import (
     update_entry_metadata,
     utc_now,
 )
-from .store import ShowBankStore
+from .store import ShowBankStore, validate_show_bank_capture_frame
 
 SHOW_BANK_WORKSPACE_SCHEMA_VERSION: Final[Literal["show-bank-workspace-v1"]] = (
     "show-bank-workspace-v1"
@@ -92,6 +100,18 @@ MAX_VOLATILE_FRAME_BYTES: Final[int] = 64 * 1024 * 1024
 CaptureKind = Literal["source", "favorite", "candidate"]
 IdFactory = Callable[[str], str]
 _logger = get_logger(__name__)
+
+
+@dataclass(frozen=True)
+class CandidateRecallContext:
+    """Workspace-produced evidence for one local action, never an input grant."""
+
+    bank: ShowBank
+    entry: ShowBankEntry
+    source: Snapshot
+    candidate: ShowKitCandidate
+    analog_four_source: KitCaptureResult
+    analog_four_frame: bytes = field(repr=False)
 
 
 def _new_id(prefix: str) -> str:
@@ -653,7 +673,10 @@ class ShowKitForgeWorkspace:
         entry = build_source_entry(
             entry_id=resolved_entry_id,
             cue_index=len(bank.entries) + 1,
-            name=f"{rytm.kit_name} + {analog_four.kit_name}",
+            name=(
+                f"{rytm.kit_name or 'Unnamed Rytm KIT'} + "
+                f"{analog_four.kit_name or 'Unnamed Analog Four KIT'}"
+            ),
             description="Paired immutable source anchors",
             rytm_capture=rytm,
             analog_four_capture=analog_four,
@@ -667,6 +690,8 @@ class ShowKitForgeWorkspace:
             rytm_source=self._share_declared_sysex(bank, entry.rytm_source),
             analog_four_source=self._share_declared_sysex(bank, entry.analog_four_source),
         )
+        validate_show_bank_capture_frame(entry.rytm_source, rytm.frame)
+        validate_show_bank_capture_frame(entry.analog_four_source, analog_four.frame)
         updated = add_entry(bank, entry, clock=self._clock)
         updated = self._retain_frames(
             updated,
@@ -676,18 +701,144 @@ class ShowKitForgeWorkspace:
             ),
         )
         self._source_snapshots[(bank_id, resolved_entry_id)] = snapshot
+        while len(self._source_snapshots) > MAX_VOLATILE_FRAMES:
+            self._source_snapshots.pop(next(iter(self._source_snapshots)))
         self._active_entry_ids[bank_id] = resolved_entry_id
         self._publish(updated, already_saved=True)
         return updated.entry(resolved_entry_id)
 
+    def adopt_retained_sources(  # noqa: PLR0913 - explicit library identities and declared slots
+        self,
+        bank_id: str,
+        expected_revision: int,
+        *,
+        library: LibraryStore,
+        rytm_record_id: str,
+        analog_four_record_id: str,
+        rytm_slot: int,
+        analog_four_slot: int,
+        entry_id: str | None = None,
+        allow_legacy_reconstruction: bool = False,
+    ) -> ShowBankEntry:
+        """Adopt Library file evidence, never populate the session's live captures."""
+        bank = self._checked_bank(bank_id, expected_revision)
+        results: list[KitCaptureResult] = []
+        for record_id, device_id in (
+            (rytm_record_id, ANALOG_RYTM_DEVICE_ID),
+            (analog_four_record_id, ANALOG_FOUR_DEVICE_ID),
+        ):
+            record = library.get(record_id, strict_original_source=True)
+            if record is None or record.device_id != device_id or record.rehearsal is not None:
+                raise ValueError("library source record is missing or belongs to another family")
+            frame = library.read_source_frame(
+                record_id, allow_legacy_reconstruction=allow_legacy_reconstruction
+            )
+            results.append(
+                replace(
+                    decode_kit_capture_frame(device_id, frame),
+                    captured_at=datetime.fromisoformat(record.captured_at),
+                )
+            )
+        rytm, analog_four = results
+        snapshot = cockpit_snapshot_from_rytm_capture(rytm)
+        resolved_id = entry_id or self._id_factory("cue")
+        entry = build_source_entry(
+            entry_id=resolved_id,
+            cue_index=len(bank.entries) + 1,
+            name=(
+                f"{rytm.kit_name or 'Unnamed Rytm KIT'} + "
+                f"{analog_four.kit_name or 'Unnamed Analog Four KIT'}"
+            ),
+            description="Paired Library file sources; offline evidence only",
+            rytm_capture=rytm,
+            analog_four_capture=analog_four,
+            rytm_slot=rytm_slot,
+            analog_four_slot=analog_four_slot,
+            rytm_snapshot_id=snapshot.snapshot_id,
+            now=self._clock(),
+        )
+        sources: list[ShowKitCapture] = []
+        for capture, record_id in (
+            (entry.rytm_source, rytm_record_id),
+            (entry.analog_four_source, analog_four_record_id),
+        ):
+            source = replace(
+                self._share_declared_sysex(bank, capture),
+                capture_id=f"file-{capture.capture_id}",
+                evidence=(
+                    ShowKitEvidence(
+                        evidence_id=f"library-{record_id}"[:128],
+                        status="round-trip-verified",
+                        source="Library file source (not a fresh physical capture)",
+                        observed_at=capture.captured_at,
+                        notes=(f"Library record: {record_id}",),
+                    ),
+                ),
+            )
+            previous = next(
+                (item for item in bank.captures() if item.capture_id == source.capture_id), None
+            )
+            if previous is not None:
+                source = replace(source, snapshot_id=previous.snapshot_id)
+                if source != previous:
+                    raise ValueError("Library source association conflicts with an existing cue")
+            sources.append(source)
+        entry = replace(entry, rytm_source=sources[0], analog_four_source=sources[1])
+        updated = add_entry(bank, entry, clock=self._clock)
+        # Reuse the canonical persistent catalog marker, preserving this
+        # namespace's revision lineage rather than importing into revision 0.
+        updated = replace(
+            normalize_catalog_import(updated, clock=self._clock), revision=updated.revision
+        )
+        updated = replace(
+            updated,
+            evidence=tuple(
+                (
+                    replace(
+                        item,
+                        source="Library file source adoption",
+                        notes=(
+                            "File sources are offline catalog evidence, not fresh physical captures.",
+                            "Live audition remains blocked until an actual fresh-source protocol exists.",
+                        ),
+                    )
+                    if item.evidence_id == CATALOG_ONLY_EVIDENCE_ID
+                    else item
+                )
+                for item in updated.evidence
+            ),
+        )
+        updated = self._retain_frames(
+            updated,
+            (
+                (entry.rytm_source.sysex.artifact_id, rytm.frame),
+                (entry.analog_four_source.sysex.artifact_id, analog_four.frame),
+            ),
+        )
+        self._publish(updated, already_saved=True)
+        self._active_entry_ids[bank_id] = resolved_id
+        self._current_rytm_auditions.clear()
+        self._current_preflight_grants.clear()
+        return updated.entry(resolved_id)
+
+    def original_source_frames(
+        self, bank_id: str, entry_id: str
+    ) -> dict[KitCaptureDeviceId, bytes]:
+        """Exact paired originals for local recall/export, with no live freshness."""
+        entry = self.bank(bank_id).entry(entry_id)
+        return {
+            ANALOG_RYTM_DEVICE_ID: self._store.read_capture(entry.rytm_source),
+            ANALOG_FOUR_DEVICE_ID: self._store.read_capture(entry.analog_four_source),
+        }
+
     def _available_artifact_frame(self, bank: ShowBank, artifact_id: str) -> bytes | None:
+        artifact = bank.sysex_artifact(artifact_id)
+        if artifact.retained is not None:
+            return self._store.read_retained(artifact.retained)
         volatile = self._volatile_frames.get(artifact_id)
         if volatile is not None:
             return volatile
-        artifact = bank.sysex_artifact(artifact_id)
-        if artifact.retained is None:
-            return None
-        return self._store.read_retained(artifact.retained)
+        return None
 
     def _retained_frame(self, bank: ShowBank, artifact_id: str) -> bytes:
         frame = self._available_artifact_frame(bank, artifact_id)
@@ -751,11 +902,11 @@ class ShowKitForgeWorkspace:
         return report
 
     def _source_snapshot(self, bank: ShowBank, entry: ShowBankEntry) -> Snapshot:
+        frame = self._store.read_capture(entry.rytm_source)
         key = (bank.bank_id, entry.entry_id)
         cached = self._source_snapshots.get(key)
         if cached is not None:
             return cached
-        frame = self._retained_frame(bank, entry.rytm_source.sysex.artifact_id)
         decoded = decode_kit_capture_frame(ANALOG_RYTM_DEVICE_ID, frame)
         if decoded.fingerprint != entry.rytm_source.fingerprint:
             raise ValueError("retained Rytm source fingerprint does not match the cue")
@@ -769,6 +920,8 @@ class ShowKitForgeWorkspace:
             captured_at=entry.rytm_source.captured_at,
         )
         self._source_snapshots[key] = snapshot
+        while len(self._source_snapshots) > MAX_VOLATILE_FRAMES:
+            self._source_snapshots.pop(next(iter(self._source_snapshots)))
         return snapshot
 
     @trace("show_kit_forge.generate_candidates")
@@ -788,23 +941,43 @@ class ShowKitForgeWorkspace:
         rytm_locks: Sequence[int],
         analog_four_targets: Sequence[int],
         analog_four_locks: Sequence[int],
+        rytm_parameters: ParameterSelection = DEFAULT_PARAMETER_SELECTION,
+        analog_four_parameters: ParameterSelection = DEFAULT_PARAMETER_SELECTION,
+        offline_only: bool = False,
+        a4_algorithm: str = A4_LEGACY_MUTATION_ALGORITHM,
     ) -> tuple[ShowKitCandidate, ...]:
+        if type(offline_only) is not bool:
+            raise ValueError("offline_only must be a boolean")
         if (
             isinstance(candidate_count, bool)
             or not 1 <= candidate_count <= MAX_CANDIDATES_PER_REQUEST
         ):
             raise ValueError(f"candidate_count must be in 1..{MAX_CANDIDATES_PER_REQUEST}")
         bank = self._checked_bank(bank_id, expected_revision)
-        self._require_editable_candidate_authority(bank)
+        if not offline_only:
+            self._require_editable_candidate_authority(bank)
         entry = bank.entry(entry_id)
-        source_snapshot = self._source_snapshot(bank, entry)
-        analog_four_frame = self._retained_frame(bank, entry.analog_four_source.sysex.artifact_id)
+        prior = entry.selected_candidate or entry.favorite_candidate
+        if prior is None:
+            self.original_source_frames(bank_id, entry_id)
+            source_snapshot = self._source_snapshot(bank, entry)
+            analog_four_frame = self._retained_frame(
+                bank, entry.analog_four_source.sysex.artifact_id
+            )
+        else:
+            # The complete proof includes the other favorite and all unrelated artifacts.
+            context = self._verified_candidate_context(bank, entry_id, prior.candidate_id)
+            source_snapshot = context.source
+            analog_four_frame = context.analog_four_source.frame
         updated = bank
         created: list[ShowKitCandidate] = []
+        created_frames: list[tuple[str, bytes]] = []
         existing_ids = {candidate.candidate_id for candidate in entry.candidates}
         for index in range(candidate_count):
             recipe = ShowKitRecipe(
                 profile_id=profile.profile_id,
+                profile=profile,
+                a4_algorithm=a4_algorithm,
                 depth_preset=depth_preset,
                 depth=depth,
                 seed=(seed + index) & 0xFFFFFFFF,
@@ -812,11 +985,13 @@ class ShowKitForgeWorkspace:
                     device_id=RYTM_SHOW_KIT_DEVICE_ID,
                     target_ids=tuple(rytm_targets),
                     locked_ids=tuple(rytm_locks),
+                    parameters=rytm_parameters,
                 ),
                 analog_four_scope=ShowKitScope(
                     device_id=A4_SHOW_KIT_DEVICE_ID,
                     target_ids=tuple(analog_four_targets),
                     locked_ids=tuple(analog_four_locks),
+                    parameters=analog_four_parameters,
                 ),
             )
             forged = forge_candidate_pair(
@@ -827,12 +1002,32 @@ class ShowKitForgeWorkspace:
                 recipe=recipe,
                 now=self._clock(),
             )
-            self._cache_frame(
-                forged.candidate.analog_four_candidate.sysex.artifact_id,
-                forged.analog_four_frame,
-            )
             if forged.candidate.candidate_id in existing_ids:
                 continue
+            artifact = forged.candidate.analog_four_candidate.sysex
+            previous_artifact = next(
+                (
+                    item
+                    for item in updated.sysex_artifacts()
+                    if item.artifact_id == artifact.artifact_id
+                ),
+                None,
+            )
+            if previous_artifact is not None:
+                if (previous_artifact.frame_sha256, previous_artifact.frame_bytes) != (
+                    artifact.frame_sha256,
+                    artifact.frame_bytes,
+                ):
+                    raise ValueError("candidate artifact identity collision")
+                forged = replace(
+                    forged,
+                    candidate=replace(
+                        forged.candidate,
+                        analog_four_candidate=replace(
+                            forged.candidate.analog_four_candidate, sysex=previous_artifact
+                        ),
+                    ),
+                )
             updated = add_candidate(
                 updated,
                 entry_id,
@@ -842,12 +1037,18 @@ class ShowKitForgeWorkspace:
             )
             existing_ids.add(forged.candidate.candidate_id)
             created.append(forged.candidate)
+            created_frames.append(
+                (forged.candidate.analog_four_candidate.sysex.artifact_id, forged.analog_four_frame)
+            )
         if not created:
             raise ValueError("that deterministic candidate set already exists")
+        if self._checked_bank(bank_id, expected_revision) is not bank:
+            raise ValueError("show bank changed; refresh before retrying")
+        updated = self._retain_frames(updated, created_frames)
+        self._publish(updated, already_saved=True)
         self._active_entry_ids[bank_id] = entry_id
         self._current_rytm_auditions.pop((bank_id, entry_id), None)
         self._current_preflight_grants.pop((bank_id, entry_id), None)
-        self._publish(updated)
         _logger.info(
             "show_kit_candidates_generated",
             extra={
@@ -861,7 +1062,9 @@ class ShowKitForgeWorkspace:
                 "outcome": "published",
             },
         )
-        return tuple(created)
+        retained_candidates = updated.entry(entry_id).candidates
+        created_ids = {candidate.candidate_id for candidate in created}
+        return tuple(item for item in retained_candidates if item.candidate_id in created_ids)
 
     def select_candidate(
         self,
@@ -869,19 +1072,13 @@ class ShowKitForgeWorkspace:
         entry_id: str,
         candidate_id: str,
         expected_revision: int,
+        *,
+        offline_only: bool = False,
     ) -> tuple[ShowBankEntry, Snapshot, MutationCandidate]:
-        bank = self._checked_bank(bank_id, expected_revision)
-        self._require_editable_candidate_authority(bank)
-        updated = select_candidate(bank, entry_id, candidate_id, clock=self._clock)
-        selected = updated.entry(entry_id)
-        candidate = selected.selected_candidate
-        if candidate is None:
-            raise AssertionError("candidate selection transition lost its selection")
-        source = self._source_snapshot(updated, selected)
-        self._active_entry_ids[bank_id] = entry_id
-        self._current_rytm_auditions.pop((bank_id, entry_id), None)
-        self._publish(updated)
-        return selected, source, candidate.rytm_candidate
+        context = self.recall_candidate(
+            bank_id, entry_id, candidate_id, expected_revision, offline_only=offline_only
+        )
+        return context.entry, context.source, context.candidate.rytm_candidate
 
     def audition_context(
         self, bank_id: str, entry_id: str
@@ -902,6 +1099,61 @@ class ShowKitForgeWorkspace:
         bank = self.bank(bank_id)
         return self._source_snapshot(bank, bank.entry(entry_id))
 
+    def favorite_context(
+        self, bank_id: str, entry_id: str
+    ) -> tuple[Snapshot, ShowKitCandidate, bytes]:
+        """Read inert semantic favorite and exact A4 frame; do not select or send."""
+        bank = self.bank(bank_id)
+        entry = bank.entry(entry_id)
+        candidate = entry.favorite_candidate
+        if candidate is None:
+            raise ValueError("cue has no retained favorite")
+        return self.candidate_context(bank_id, entry_id, candidate.candidate_id)
+
+    def candidate_context(
+        self, bank_id: str, entry_id: str, candidate_id: str
+    ) -> tuple[Snapshot, ShowKitCandidate, bytes]:
+        """Verify retained source/recipe/frame before any local recall transition."""
+        context = self._verified_candidate_context(self.bank(bank_id), entry_id, candidate_id)
+        return context.source, context.candidate, context.analog_four_frame
+
+    def _verified_candidate_context(
+        self, bank: ShowBank, entry_id: str, candidate_id: str
+    ) -> CandidateRecallContext:
+        entry = bank.entry(entry_id)
+        candidate = entry.candidate_by_id(candidate_id)
+        source_id = entry.rytm_source.snapshot_id
+        if source_id is None:
+            raise ValueError("Rytm source is missing its mutation snapshot identity")
+        artifact_id = candidate.analog_four_candidate.sysex.artifact_id
+        frame = self._retained_frame(bank, artifact_id)
+        # One fresh complete read/proof; subsequent consumers use these exact bytes.
+        retained_frames = {
+            item.artifact_id: self._store.read_retained(item.retained)
+            for item in bank.sysex_artifacts()
+            if item.retained is not None and item.artifact_id != artifact_id
+        }
+        frames = MappingProxyType({**retained_frames, artifact_id: frame})
+        verify_show_bank_frames(bank, frames)
+        decoded = decode_kit_capture_frame(ANALOG_FOUR_DEVICE_ID, frame)
+        if (
+            analog_four_capture_semantic_fingerprint(decoded, candidate.analog_four_candidate)
+            != candidate.analog_four_candidate.semantic_fingerprint
+        ):
+            raise ValueError("candidate frame semantic fingerprint mismatch")
+        rytm = validate_show_bank_capture_frame(
+            entry.rytm_source, frames[entry.rytm_source.sysex.artifact_id]
+        )
+        source = replace(
+            cockpit_snapshot_from_rytm_capture(rytm),
+            snapshot_id=source_id,
+            captured_at=entry.rytm_source.captured_at,
+        )
+        analog_four_source = validate_show_bank_capture_frame(
+            entry.analog_four_source, frames[entry.analog_four_source.sysex.artifact_id]
+        )
+        return CandidateRecallContext(bank, entry, source, candidate, analog_four_source, frame)
+
     def mark_favorite(
         self,
         bank_id: str,
@@ -910,29 +1162,71 @@ class ShowKitForgeWorkspace:
         expected_revision: int,
         *,
         replace_existing: bool = False,
+        offline_only: bool = False,
     ) -> ShowBankEntry:
+        return self.recall_candidate(
+            bank_id,
+            entry_id,
+            candidate_id,
+            expected_revision,
+            favorite=True,
+            replace_existing=replace_existing,
+            offline_only=offline_only,
+        ).entry
+
+    @trace("show_kit_forge.recall_candidate")
+    # Explicit action options preserve the select/favorite contracts without proof inputs.
+    def recall_candidate(  # noqa: PLR0913
+        self,
+        bank_id: str,
+        entry_id: str,
+        candidate_id: str,
+        expected_revision: int,
+        *,
+        favorite: bool = False,
+        replace_existing: bool = False,
+        offline_only: bool = False,
+    ) -> CandidateRecallContext:
+        """Verify once, publish atomically, and return inert recall data for this action."""
+        if type(offline_only) is not bool:
+            raise ValueError("offline_only must be a boolean")
+        if type(favorite) is not bool:
+            raise ValueError("favorite must be a boolean")
         bank = self._checked_bank(bank_id, expected_revision)
-        self._require_editable_candidate_authority(bank)
+        if not offline_only:
+            self._require_editable_candidate_authority(bank)
         entry = bank.entry(entry_id)
         updated = bank
-        if entry.selected_candidate_id != candidate_id:
+        if not favorite or entry.selected_candidate_id != candidate_id:
             updated = select_candidate(updated, entry_id, candidate_id, clock=self._clock)
-        updated = mark_favorite(
-            updated,
-            entry_id,
-            replace_existing=replace_existing,
-            clock=self._clock,
+        if favorite:
+            updated = mark_favorite(
+                updated, entry_id, replace_existing=replace_existing, clock=self._clock
+            )
+            if updated.entry(entry_id).favorite_candidate is None:
+                raise AssertionError("favorite transition lost its selected candidate")
+        selected = updated.entry(entry_id).selected_candidate
+        if selected is None:
+            raise AssertionError("candidate selection transition lost its selection")
+        if selected.candidate_id != candidate_id:
+            raise AssertionError("candidate selection transition changed its candidate")
+        context = self._verified_candidate_context(bank, entry_id, candidate_id)
+        if self._checked_bank(bank_id, expected_revision) is not bank:
+            raise ValueError("show bank changed; refresh before retrying")
+        artifact_id = selected.analog_four_candidate.sysex.artifact_id
+        updated = self._retain_frames(updated, ((artifact_id, context.analog_four_frame),))
+        published_entry = updated.entry(entry_id)
+        published_candidate = published_entry.candidate_by_id(candidate_id)
+        context = replace(
+            context, bank=updated, entry=published_entry, candidate=published_candidate
         )
-        favorite = updated.entry(entry_id).favorite_candidate
-        if favorite is None:
-            raise AssertionError("favorite transition lost its selected candidate")
-        artifact = favorite.analog_four_candidate.sysex
-        frame = self._retained_frame(updated, artifact.artifact_id)
-        updated = self._retain_frames(updated, ((artifact.artifact_id, frame),))
-        self._active_entry_ids[bank_id] = entry_id
-        self._current_preflight_grants.pop((bank_id, entry_id), None)
         self._publish(updated, already_saved=True)
-        return updated.entry(entry_id)
+        self._active_entry_ids[bank_id] = entry_id
+        if favorite:
+            self._current_preflight_grants.pop((bank_id, entry_id), None)
+        else:
+            self._current_rytm_auditions.pop((bank_id, entry_id), None)
+        return context
 
     def attest_saved(
         self,
@@ -1371,6 +1665,7 @@ class ShowKitForgeWorkspace:
 
 
 __all__ = [
+    "CandidateRecallContext",
     "CaptureKind",
     "MAX_CANDIDATES_PER_REQUEST",
     "SHOW_BANK_WORKSPACE_SCHEMA_VERSION",

@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import secrets
 from dataclasses import dataclass, field
+from threading import Event
 from typing import TYPE_CHECKING, Final
 
 from ...observability.logging import get_logger
@@ -46,6 +47,7 @@ from ...senders.armed_apply import ArmedApplySession
 from ...senders.hardware import OutputOpeningProvider
 from ..capture import KitCaptureDeviceId, KitCaptureResult, KitCaptureService
 from ..data import CockpitSendPlan, MutationCandidate, ProfileModel
+from ..data.parameter_scope import ParameterSelection
 from ..device import DeviceAdapter
 from ..diagnostics import ErrorJournal
 from ..history import HistoryStore
@@ -106,6 +108,12 @@ class CockpitSession:
     kit_captures: dict[KitCaptureDeviceId, KitCaptureResult] = field(
         default_factory=dict[KitCaptureDeviceId, KitCaptureResult]
     )
+    offline_a4_capture: KitCaptureResult | None = None
+    """Retained-file metadata source, never a live/fresh input capture."""
+    capture_cancel: Event | None = None
+    """Cancellation signal for the one owned input capture, never output authority."""
+    capture_generation: int = 0
+    """Incremented on context loss so a late input result cannot restore revoked state."""
     active_profile: ProfileModel | None = None
     depth: float = DEFAULT_DEPTH
     seed: int = field(default_factory=fresh_seed)
@@ -113,6 +121,10 @@ class CockpitSession:
     rytm_pad_targets: set[int] = field(default_factory=set[int])
     a4_track_targets: set[int] = field(default_factory=set[int])
     a4_track_locks: set[int] = field(default_factory=set[int])
+    rytm_parameters: ParameterSelection = field(default_factory=ParameterSelection)
+    a4_parameters: ParameterSelection = field(default_factory=ParameterSelection)
+    recalled_offline_favorite: bool = False
+    """Retained local state never substitutes for a fresh hardware source capture."""
     stage_coordinator: DualMachineStageCoordinator = field(
         default_factory=DualMachineStageCoordinator
     )

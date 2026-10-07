@@ -16,16 +16,44 @@ from ...guardrails.input_validation import (
     require_text,
     require_text_tuple,
 )
+from ...observability.errors import DataError, PersistedStateVersionError
+from ...observability.logging import get_logger
+from ..capture import decode_kit_capture_frame
+from ..data import (
+    LOCAL_ARTIFACT_RECOVERY_MESSAGES,
+    LOCAL_EXPORT_RECOVERY_MESSAGES,
+    LOCAL_SOURCE_RECOVERY_MESSAGES,
+    ProfileModel,
+)
 from ..data.show_bank import (
+    A4_NATIVE_MUTATION_ALGORITHM,
     OxiShowMetadata,
+    ShowKitCandidate,
     ShowKitDepthPreset,
     ShowKitDeviceId,
     narrow_show_kit_depth_preset,
     narrow_show_kit_device_id,
+    validate_show_pack_id,
 )
-from ..show_bank.workspace import CaptureKind, ShowKitForgeWorkspace
-from ..stage.policy import ANALOG_FOUR_DEVICE_ID, ANALOG_RYTM_DEVICE_ID
+from ..export.file_export_contracts import (
+    attach_local_file_export_error_context,
+    classify_local_file_export_error,
+    local_file_export_error_context,
+)
+from ..export.writer import WriteError
+from ..library.store import LIBRARY_STORE_ID
+from ..mutation_targets import MutationTargets
+from ..show_bank.readiness import is_catalog_only_show_bank
+from ..show_bank.store import show_bank_corruption_category
+from ..show_bank.workspace import CandidateRecallContext, CaptureKind, ShowKitForgeWorkspace
+from ..stage.policy import (
+    A4_LANE_POLICY,
+    ANALOG_FOUR_DEVICE_ID,
+    ANALOG_RYTM_DEVICE_ID,
+    RYTM_LANE_POLICY,
+)
 from .protocol import (
+    COMMAND_SHOW_BANK_ADOPT_LIBRARY_SOURCES,
     COMMAND_SHOW_BANK_ADOPT_SOURCES,
     COMMAND_SHOW_BANK_ATTEST_HARDWARE_SAVED,
     COMMAND_SHOW_BANK_CREATE,
@@ -45,6 +73,7 @@ from .protocol import (
     COMMAND_SHOW_BANK_UPDATE,
     COMMAND_SHOW_BANK_UPDATE_ENTRY,
     COMMAND_SHOW_BANK_VERIFY_RECAPTURE,
+    ERR_VALIDATION,
     EVENT_DUAL_MACHINE_STAGE_CHANGED,
     EVENT_HISTORY_UPDATED,
     EVENT_MUTATION_LOCKS_CHANGED,
@@ -63,6 +92,42 @@ from .result import HandlerResult
 from .session import CockpitSession
 
 A4_HARDWARE_BLOCK_REASON: Final[str] = "a4_hardware_audition_validation_pending"
+_logger = get_logger(__name__)
+_GENERATION_LOCKS_MESSAGE: Final[str] = (
+    "Generation request omits current operator locks. Refresh the mutation scope and retry."
+)
+_GENERATION_TARGETS_MESSAGE: Final[str] = (
+    "Generation request expands current operator targets. Refresh the mutation scope and retry."
+)
+_GENERATION_LOCKS_REASON: Final[str] = "operator_locks_omitted"
+_GENERATION_TARGETS_REASON: Final[str] = "operator_targets_expanded"
+
+
+def local_artifact_failure_message(exc: BaseException) -> str | None:
+    """Project existing public failure metadata without exception text or artifact names."""
+
+    if isinstance(exc, PersistedStateVersionError):
+        return LOCAL_ARTIFACT_RECOVERY_MESSAGES["schema"]
+    if isinstance(exc, DataError):
+        category = show_bank_corruption_category(exc)
+        if category is not None:
+            return LOCAL_ARTIFACT_RECOVERY_MESSAGES[category]
+        reason = exc.context.get("reason")
+        if (
+            exc.context.get("store_id") == LIBRARY_STORE_ID
+            and isinstance(reason, str)
+            and reason in LOCAL_SOURCE_RECOVERY_MESSAGES
+        ):
+            return LOCAL_SOURCE_RECOVERY_MESSAGES[reason]
+    context = local_file_export_error_context(exc)
+    if context is not None:
+        return LOCAL_EXPORT_RECOVERY_MESSAGES[context.error_code]
+    if isinstance(exc, WriteError):
+        return LOCAL_EXPORT_RECOVERY_MESSAGES["write_failed"]
+    if isinstance(exc, (FileNotFoundError, FileExistsError, PermissionError)):
+        code = classify_local_file_export_error(exc, phase="source_read")
+        return LOCAL_EXPORT_RECOVERY_MESSAGES[code]
+    return None
 
 
 def _workspace(session: CockpitSession) -> ShowKitForgeWorkspace:
@@ -104,6 +169,18 @@ def _show_bank_text(
 
 def _integer(values: Mapping[str, object], key: str) -> int:
     return require_int(values.get(key), key, ValueError)
+
+
+def _show_pack_name(values: Mapping[str, object], key: str) -> str:
+    try:
+        package_id = _show_bank_text(values, key)
+        validate_show_pack_id(package_id, "package_id")
+    except ValueError as exc:
+        attach_local_file_export_error_context(
+            exc, error_code="validation", phase="validation", artifact_name="package"
+        )
+        raise
+    return package_id
 
 
 def _optional_integer(values: Mapping[str, object], key: str) -> int | None:
@@ -186,6 +263,8 @@ def _sync_source(
 ) -> list[dict[str, object]]:
     source = workspace.source_snapshot(bank_id, entry_id)
     session.device.adopt_snapshot(source)
+    a4_frame = workspace.original_source_frames(bank_id, entry_id)[ANALOG_FOUR_DEVICE_ID]
+    session.offline_a4_capture = decode_kit_capture_frame(ANALOG_FOUR_DEVICE_ID, a4_frame)
     _ensure_history_snapshot(session, source.snapshot_id)
     session.current_candidate = None
     session.current_send_plan = None
@@ -198,16 +277,43 @@ def _sync_source(
     return _source_events(session)
 
 
-def _sync_selected_candidate(
+def _candidate_profile(session: CockpitSession, candidate: ShowKitCandidate) -> ProfileModel:
+    profile = candidate.recipe.profile or session.profile_registry.get(candidate.recipe.profile_id)
+    if profile is None:
+        raise ValueError("candidate profile is no longer available")
+    return profile
+
+
+def _check_candidate_recall(
     session: CockpitSession,
     workspace: ShowKitForgeWorkspace,
     bank_id: str,
     entry_id: str,
+    candidate_id: str,
+    expected_revision: int,
+) -> ProfileModel:
+    bank = workspace.checked_bank(bank_id, expected_revision)
+    candidate = bank.entry(entry_id).candidate_by_id(candidate_id)
+    return _candidate_profile(session, candidate)
+
+
+def _sync_selected_candidate(
+    session: CockpitSession,
+    workspace: ShowKitForgeWorkspace,
+    context: CandidateRecallContext,
+    profile: ProfileModel,
 ) -> list[dict[str, object]]:
-    _, source, selected = workspace.audition_context(bank_id, entry_id)
-    profile = session.profile_registry.get(selected.recipe.profile_id)
-    if profile is None:
-        raise ValueError("candidate profile is no longer available")
+    if (
+        workspace.bank(context.bank.bank_id) != context.bank
+        or context.bank.entry(context.entry.entry_id) != context.entry
+        or context.entry.selected_candidate != context.candidate
+    ):
+        raise ValueError("verified recall result differs from the published selection")
+    source = context.source
+    selected = context.candidate
+    session.offline_a4_capture = context.analog_four_source
+    if is_catalog_only_show_bank(context.bank):
+        session.recalled_offline_favorite = True
     session.device.adopt_snapshot(source)
     _ensure_history_snapshot(session, source.snapshot_id)
     session.active_profile = profile
@@ -217,20 +323,30 @@ def _sync_selected_candidate(
     session.pad_locks = set(selected.recipe.rytm_scope.locked_ids)
     session.a4_track_targets = set(selected.recipe.analog_four_scope.target_ids)
     session.a4_track_locks = set(selected.recipe.analog_four_scope.locked_ids)
+    session.rytm_parameters = selected.recipe.rytm_scope.parameters
+    session.a4_parameters = selected.recipe.analog_four_scope.parameters
+    # Recall is local preparation, never an output grant or hardware restore.
+    from .handlers import build_mutation_parameters_changed, revoke_session_output
+
+    passive_status = revoke_session_output(session, preserve_source_capture=True)
     session.current_candidate = selected.rytm_candidate
     session.current_send_plan = None
     session.preview_on = True
+    operator_targets = MutationTargets(
+        rytm_pad_targets=frozenset(session.rytm_pad_targets),
+        a4_track_targets=frozenset(session.a4_track_targets),
+    )
     session.stage_coordinator.record_scope(
         ANALOG_RYTM_DEVICE_ID,
         target_ids=frozenset(session.rytm_pad_targets),
         locked_ids=frozenset(session.pad_locks),
-        effective_ids=frozenset(selected.recipe.rytm_scope.effective_ids),
+        effective_ids=operator_targets.effective_rytm_pads(locked_pad_ids=session.pad_locks),
     )
     session.stage_coordinator.record_scope(
         ANALOG_FOUR_DEVICE_ID,
         target_ids=frozenset(session.a4_track_targets),
         locked_ids=frozenset(session.a4_track_locks),
-        effective_ids=frozenset(selected.recipe.analog_four_scope.effective_ids),
+        effective_ids=operator_targets.effective_a4_tracks(locked_track_ids=session.a4_track_locks),
     )
     session.stage_coordinator.record_candidate(ANALOG_RYTM_DEVICE_ID, ready=True)
     session.stage_coordinator.record_candidate(
@@ -239,6 +355,7 @@ def _sync_selected_candidate(
         blocked_reason=A4_HARDWARE_BLOCK_REASON,
     )
     return [
+        passive_status,
         {"type": EVENT_SNAPSHOT_CHANGED, "snapshot": source.to_dict()},
         {"type": EVENT_HISTORY_UPDATED, "history": session.history_store.current.to_dict()},
         {"type": EVENT_PROFILE_CHANGED, "profile": profile.to_dict()},
@@ -252,6 +369,7 @@ def _sync_selected_candidate(
             "rytm_pad_locks": sorted(session.pad_locks),
             "a4_track_locks": sorted(session.a4_track_locks),
         },
+        build_mutation_parameters_changed(session),
         {
             "type": EVENT_MUTATION_PREVIEWED,
             "candidate": selected.rytm_candidate.to_dict(),
@@ -343,10 +461,94 @@ async def _handle_adopt_sources(cmd: dict[str, object], session: CockpitSession)
     return HandlerResult(ack={"ok": True, "show_bank_entry_id": entry.entry_id}, events=events)
 
 
+async def _handle_adopt_library_sources(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    workspace = _workspace(session)
+    if session.library_store is None:
+        raise ValueError("source library is not configured")
+    bank_id = _show_bank_text(cmd, "bank_id")
+    entry = workspace.adopt_retained_sources(
+        bank_id,
+        _integer(cmd, "expected_revision"),
+        library=session.library_store,
+        rytm_record_id=_show_bank_text(cmd, "rytm_record_id"),
+        analog_four_record_id=_show_bank_text(cmd, "a4_record_id"),
+        rytm_slot=_integer(cmd, "rytm_slot"),
+        analog_four_slot=_integer(cmd, "a4_slot"),
+        allow_legacy_reconstruction=_optional_boolean(
+            cmd, "allow_legacy_reconstruction", default=False
+        ),
+    )
+    from .handlers import build_mutation_parameters_changed, revoke_session_output
+
+    status = revoke_session_output(session)
+    session.recalled_offline_favorite = True
+    events = [
+        status,
+        *_sync_source(session, workspace, bank_id, entry.entry_id),
+        build_mutation_parameters_changed(session),
+        build_show_bank_changed(session),
+    ]
+    return HandlerResult(ack={"ok": True, "show_bank_entry_id": entry.entry_id}, events=events)
+
+
 async def _handle_generate(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     workspace = _workspace(session)
+    requested = MutationTargets(
+        rytm_pad_targets=frozenset(_integer_list(cmd, "rytm_targets")),
+        a4_track_targets=frozenset(_integer_list(cmd, "a4_targets")),
+    )
+    rytm_scope = requested.rytm_scope(_integer_list(cmd, "rytm_locks"))
+    a4_scope = requested.a4_scope(_integer_list(cmd, "a4_locks"))
+    authoritative = MutationTargets(
+        rytm_pad_targets=frozenset(session.rytm_pad_targets),
+        a4_track_targets=frozenset(session.a4_track_targets),
+    )
+    scopes = (
+        (
+            ANALOG_RYTM_DEVICE_ID,
+            rytm_scope,
+            authoritative.rytm_scope(session.pad_locks),
+            RYTM_LANE_POLICY.available_ids,
+        ),
+        (
+            ANALOG_FOUR_DEVICE_ID,
+            a4_scope,
+            authoritative.a4_scope(session.a4_track_locks),
+            A4_LANE_POLICY.available_ids,
+        ),
+    )
+    for device_id, request_scope, session_scope, available in scopes:
+        message: str | None = None
+        reason: str | None = None
+        if not session_scope.locked_ids <= request_scope.locked_ids:
+            message = _GENERATION_LOCKS_MESSAGE
+            reason = _GENERATION_LOCKS_REASON
+        elif not (request_scope.target_ids or available) <= (session_scope.target_ids or available):
+            message = _GENERATION_TARGETS_MESSAGE
+            reason = _GENERATION_TARGETS_REASON
+        if message is not None:
+            _logger.info(
+                "show_bank_generation_scope_refused",
+                extra={
+                    "decision": "generation_scope",
+                    "reason": reason,
+                    "outcome": "refused",
+                    "device_id": device_id,
+                    "requested_target_count": len(request_scope.target_ids or available),
+                    "current_target_count": len(session_scope.target_ids or available),
+                    "requested_lock_count": len(request_scope.locked_ids),
+                    "current_lock_count": len(session_scope.locked_ids),
+                },
+            )
+            return HandlerResult(ack={"ok": False, "code": ERR_VALIDATION, "message": message})
     profile_id = _show_bank_text(cmd, "profile_id")
-    profile = session.profile_registry.get(profile_id)
+    profile = (
+        session.active_profile
+        if session.active_profile is not None and session.active_profile.profile_id == profile_id
+        else session.profile_registry.get(profile_id)
+    )
     if profile is None:
         raise ValueError("unknown candidate profile")
     bank_id = _show_bank_text(cmd, "bank_id")
@@ -363,12 +565,27 @@ async def _handle_generate(cmd: dict[str, object], session: CockpitSession) -> H
         depth=_number(cmd, "depth"),
         seed=_integer(cmd, "seed"),
         candidate_count=_integer(cmd, "candidate_count"),
-        rytm_targets=_integer_list(cmd, "rytm_targets"),
-        rytm_locks=_integer_list(cmd, "rytm_locks"),
-        analog_four_targets=_integer_list(cmd, "a4_targets"),
-        analog_four_locks=_integer_list(cmd, "a4_locks"),
+        rytm_targets=tuple(sorted(rytm_scope.target_ids)),
+        rytm_locks=tuple(sorted(rytm_scope.locked_ids)),
+        analog_four_targets=tuple(sorted(a4_scope.target_ids)),
+        analog_four_locks=tuple(sorted(a4_scope.locked_ids)),
+        rytm_parameters=session.rytm_parameters,
+        analog_four_parameters=session.a4_parameters,
+        offline_only=True,
+        a4_algorithm=A4_NATIVE_MUTATION_ALGORITHM,
     )
-    events = _sync_selected_candidate(session, workspace, bank_id, entry_id)
+    # Generation adds reviewable choices; only explicit recall/favorite selects one.
+    from .handlers import revoke_session_output
+
+    status = revoke_session_output(session)
+    session.current_candidate = None
+    session.current_send_plan = None
+    session.preview_on = False
+    session.stage_coordinator.record_candidate(ANALOG_RYTM_DEVICE_ID, ready=None)
+    session.stage_coordinator.record_candidate(
+        ANALOG_FOUR_DEVICE_ID, ready=None, blocked_reason=A4_HARDWARE_BLOCK_REASON
+    )
+    events = [status, *_source_events(session)]
     events.append(build_show_bank_changed(session))
     return HandlerResult(
         ack={"ok": True, "candidate_ids": [item.candidate_id for item in created]},
@@ -383,13 +600,17 @@ async def _handle_select_candidate(
     bank_id = _show_bank_text(cmd, "bank_id")
     entry_id = _show_bank_text(cmd, "entry_id")
     candidate_id = _show_bank_text(cmd, "candidate_id")
-    workspace.select_candidate(
+    profile = _check_candidate_recall(
+        session, workspace, bank_id, entry_id, candidate_id, _integer(cmd, "expected_revision")
+    )
+    context = workspace.recall_candidate(
         bank_id,
         entry_id,
         candidate_id,
         _integer(cmd, "expected_revision"),
+        offline_only=True,
     )
-    events = _sync_selected_candidate(session, workspace, bank_id, entry_id)
+    events = _sync_selected_candidate(session, workspace, context, profile)
     events.append(build_show_bank_changed(session))
     return HandlerResult(ack={"ok": True, "candidate_id": candidate_id}, events=events)
 
@@ -399,18 +620,23 @@ async def _handle_mark_favorite(cmd: dict[str, object], session: CockpitSession)
     bank_id = _show_bank_text(cmd, "bank_id")
     entry_id = _show_bank_text(cmd, "entry_id")
     candidate_id = _show_bank_text(cmd, "candidate_id")
-    workspace.mark_favorite(
+    profile = _check_candidate_recall(
+        session, workspace, bank_id, entry_id, candidate_id, _integer(cmd, "expected_revision")
+    )
+    context = workspace.recall_candidate(
         bank_id,
         entry_id,
         candidate_id,
         _integer(cmd, "expected_revision"),
+        favorite=True,
         replace_existing=_optional_boolean(
             cmd,
             "replace_existing",
             default=False,
         ),
+        offline_only=True,
     )
-    events = _sync_selected_candidate(session, workspace, bank_id, entry_id)
+    events = _sync_selected_candidate(session, workspace, context, profile)
     events.append(build_show_bank_changed(session))
     return HandlerResult(ack={"ok": True, "candidate_id": candidate_id}, events=events)
 
@@ -581,7 +807,7 @@ async def _handle_export(cmd: dict[str, object], session: CockpitSession) -> Han
     )
     result = pack_service.export(
         bank,
-        package_id=_show_bank_text(cmd, "artifact_name"),
+        package_id=_show_pack_name(cmd, "artifact_name"),
     )
     export_ack: ShowPackExportAck = {
         "package_id": result.package_id,
@@ -601,24 +827,40 @@ async def _handle_import(cmd: dict[str, object], session: CockpitSession) -> Han
     pack_service = session.show_pack_service
     if pack_service is None:
         raise ValueError("show-pack import is not configured")
-    package_id = _show_bank_text(cmd, "pack_name")
+    package_id = _show_pack_name(cmd, "pack_name")
     verified = pack_service.verify(package_id)
+    destination_id = (
+        _show_bank_text(cmd, "destination_bank_id")
+        if "destination_bank_id" in cmd
+        else verified.bank.bank_id
+    )
     # Check the in-memory collision before writing. The store independently
     # refuses every existing revision, so a concurrent collision also fails
     # closed at publication.
-    if any(bank.bank_id == verified.bank.bank_id for bank in workspace.banks):
-        raise ValueError("a show bank with that id already exists")
-    stored = pack_service.store_verified_import(verified)
+    if any(bank.bank_id == destination_id for bank in workspace.banks):
+        raise ValueError("a show bank with that id already exists; choose a new import bank ID")
+    stored = pack_service.store_verified_import(verified, destination_bank_id=destination_id)
     imported = workspace.register_imported(stored.bank)
+    from .handlers import revoke_session_output
+
+    status = revoke_session_output(session)
+    session.recalled_offline_favorite = True
     import_ack: ShowPackImportAck = {
         "package_id": package_id,
         "bank_id": imported.bank_id,
         "artifact_count": len(verified.frames_by_artifact_id),
         "write_count": len(stored.writes),
     }
-    return _ok(
-        session,
-        show_pack_import=import_ack,
+    session.current_candidate = None
+    session.current_send_plan = None
+    session.preview_on = False
+    session.stage_coordinator.record_candidate(ANALOG_RYTM_DEVICE_ID, ready=None)
+    session.stage_coordinator.record_candidate(
+        ANALOG_FOUR_DEVICE_ID, ready=None, blocked_reason=A4_HARDWARE_BLOCK_REASON
+    )
+    return HandlerResult(
+        ack={"ok": True, "show_pack_import": import_ack},
+        events=[status, *_source_events(session), build_show_bank_changed(session)],
     )
 
 
@@ -631,6 +873,7 @@ SHOW_BANK_HANDLERS: Final[Mapping[str, ShowBankHandler]] = MappingProxyType(
         COMMAND_SHOW_BANK_SELECT: _handle_select,
         COMMAND_SHOW_BANK_UPDATE: _handle_update,
         COMMAND_SHOW_BANK_ADOPT_SOURCES: _handle_adopt_sources,
+        COMMAND_SHOW_BANK_ADOPT_LIBRARY_SOURCES: _handle_adopt_library_sources,
         COMMAND_SHOW_BANK_GENERATE_CANDIDATES: _handle_generate,
         COMMAND_SHOW_BANK_SELECT_CANDIDATE: _handle_select_candidate,
         COMMAND_SHOW_BANK_MARK_FAVORITE: _handle_mark_favorite,
@@ -648,4 +891,9 @@ SHOW_BANK_HANDLERS: Final[Mapping[str, ShowBankHandler]] = MappingProxyType(
     }
 )
 
-__all__ = ["SHOW_BANK_HANDLERS", "ShowBankHandler", "build_show_bank_changed"]
+__all__ = [
+    "SHOW_BANK_HANDLERS",
+    "ShowBankHandler",
+    "build_show_bank_changed",
+    "local_artifact_failure_message",
+]

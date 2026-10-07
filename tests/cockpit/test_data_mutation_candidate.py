@@ -128,13 +128,13 @@ def test_mutation_candidate_pad_deltas_is_tuple() -> None:
     assert isinstance(cand.pad_deltas, tuple)
 
 
-@pytest.mark.parametrize("depth", [0.10, 0.45, 0.90])
+@pytest.mark.parametrize("depth", [0.0, 0.01, 0.09, 0.10, 0.45, 0.90])
 def test_mutation_candidate_accepts_in_range_depth(depth: float) -> None:
     cand = _make_candidate(depth=depth)
     assert cand.depth == depth
 
 
-@pytest.mark.parametrize("depth", [0.0, 0.09, 0.91, 1.0, -0.5, 1.5])
+@pytest.mark.parametrize("depth", [0.91, 1.0, -0.01, -0.5, 1.5])
 def test_mutation_candidate_rejects_out_of_range_depth(depth: float) -> None:
     with pytest.raises(ValueError, match="depth"):
         _make_candidate(depth=depth)

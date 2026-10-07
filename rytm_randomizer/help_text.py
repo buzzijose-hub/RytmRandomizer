@@ -359,6 +359,24 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _device_support_inventory_report_help():
+    return """RytmRandomizer passive CLI: device-support-inventory-report
+
+Usage:
+  python -m rytm_randomizer.cli device-support-inventory-report
+  python -m rytm_randomizer.cli device-support-inventory-report --json
+  python -m rytm_randomizer.cli device-support-inventory-report --help
+
+Behavior:
+  Reports canonical native fields, MIDI catalogs, precision, legal domains,
+  mutation/export support, recovery, evidence sources and exact blockers.
+  Storage bounds are not undocumented display-domain or hardware-validation claims.
+
+Safety:
+  Passive and deterministic: no MIDI/USB access or port enumeration.
+  Does not grant hardware validation or unlock A4/BOTH sending."""
+
+
 def _scoped_randomization_preview_help():
     from .reports.scoped_randomization_preview import SAFETY_LINES
 
@@ -3496,6 +3514,7 @@ Safety:
   no hardware required""",
     "rytm-snapshot-pad-compatibility-report": _rytm_snapshot_pad_compatibility_report_help,
     "analog-rytm-midi-catalog-report": _analog_rytm_midi_catalog_report_help,
+    "device-support-inventory-report": _device_support_inventory_report_help,
     "scoped-randomization-preview": _scoped_randomization_preview_help,
     "kit-morph-preview": _kit_morph_preview_help,
     "rytm-outbound-cc-repeatability-report": """RytmRandomizer passive CLI: rytm-outbound-cc-repeatability-report

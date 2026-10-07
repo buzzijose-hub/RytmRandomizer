@@ -99,3 +99,17 @@ def test_fixture_dir_matches_export_surface_exactly() -> None:
         "RYTM_DATA_DUMP_CAPTURE=1 python scripts/capture_data_layer_dumps.py:\n"
         "    " + "\n    ".join(missing)
     )
+
+
+def test_serialize_routine_uses_qualified_identity_when_nested() -> None:
+    routine = _load_capture_module
+    expected = f"{routine.__module__}.{routine.__qualname__}"
+    assert _CAPTURE.serialize({"migration": routine}) == {"migration": expected}
+    assert _CAPTURE.serialize({"migration": routine}) == {"migration": expected}
+    assert _CAPTURE._is_skippable_export(routine)
+
+
+@pytest.mark.parametrize("value", [Path, pytest, object()])
+def test_serialize_unsupported_object_refuses_when_nested(value: object) -> None:
+    with pytest.raises(TypeError, match="Unsupported type"):
+        _CAPTURE.serialize({"migration": value})

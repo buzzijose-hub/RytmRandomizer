@@ -29,13 +29,15 @@ Backup-zip export is deferred to Wave 5 (recorded as a follow-up).
 from __future__ import annotations
 
 import json
+import os
 import re
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Generator, Mapping, Sequence
+from contextlib import contextmanager
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
-from typing import Final, cast
+from typing import ClassVar, Final, Literal, cast
 
 from ...data.persisted_state import PERSISTED_STATE_REFUSAL_METRIC_CODES as _REFUSAL_METRIC_CODES
 from ...data.persisted_state import (
@@ -44,10 +46,19 @@ from ...data.persisted_state import (
     require_schema_version,
 )
 from ...devices import all_devices
-from ...observability.errors import PersistedStateVersionError
+from ...observability.errors import DataError, PersistedStateVersionError
+from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
+from ...observability.tracing import current_op_id, trace
 from ...snapshot.sysex_file import extract_sysex_payloads
-from ..export.writer import atomic_write
+from ..capture import KitCaptureResult, decode_kit_capture_frame
+from ..data.rehearsal_favorite import LocalRehearsalFavorite
+from ..data.show_bank import RetainedSysexArtifact
+from ..data.stage import ANALOG_RYTM_DEVICE_ID
+from ..engine import mutate
+from ..engine.parameter_scope import rytm_parameter_depths
+from ..export.reader import decode_json_rejecting_duplicate_keys, read_bounded_artifact
+from ..export.writer import atomic_write_set, guard_atomic_write_tree
 from ..profiles.paths import default_profiles_dir
 
 __all__ = [
@@ -73,6 +84,35 @@ it in one place is the only way to change what this store writes.
 _LIBRARY_LEAF: Final[str] = "library"
 _RECORD_SUFFIX: Final[str] = ".json"
 _CAPTURES_LEAF: Final[str] = "captures"
+_FAVORITE_NAME_LIMIT: Final[int] = 128
+LIBRARY_MAX_RECORD_BYTES: Final[int] = 4 * 1024 * 1024
+LIBRARY_MAX_FILES: Final[int] = 4096
+LIBRARY_MAX_CAPTURE_FILE_BYTES: Final[int] = 8 * 1024 * 1024
+LIBRARY_MAX_SOURCE_FRAME_BYTES: Final[int] = 2 * 1024 * 1024
+LIBRARY_MAX_TOTAL_BYTES: Final[int] = 64 * 1024 * 1024
+SourceOrigin = Literal["input_capture", "file_import"]
+SourceRefusal = Literal[
+    "invalid_record_id",
+    "access",
+    "path",
+    "size",
+    "missing",
+    "record_shape",
+    "record_schema",
+    "frame_integrity",
+    "payload_identity",
+    "codec",
+    "metadata",
+    "timestamp",
+    "provenance",
+    "input_only",
+    "identity_collision",
+    "legacy_reconstruction_required",
+    "no_original_source",
+    "validation",
+    "schema_newer_than_app",
+]
+_logger = get_logger(__name__)
 
 _RECORD_ID_RE: Final[re.Pattern[str]] = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$")
 """Strict record-id charset — record ids become filenames, so no dots,
@@ -115,14 +155,91 @@ def _validate_record_id(record_id: object) -> str:
     ``isinstance`` check is genuine runtime validation.
     """
 
-    if not isinstance(record_id, str) or _RECORD_ID_RE.match(record_id) is None:
-        raise ValueError(f"invalid library record_id: {record_id!r}")
+    if not isinstance(record_id, str) or _RECORD_ID_RE.fullmatch(record_id) is None:
+        raise _LibrarySourceError("invalid_record_id", "invalid library record_id")
     return record_id
+
+
+class _LibrarySourceError(DataError, ValueError):
+    """Categorical, path-free source refusal compatible with ValueError callers."""
+
+    fingerprint: ClassVar[str] = "cockpit.library.original_source_refused"
+
+    def __init__(self, reason: SourceRefusal, message: str) -> None:
+        super().__init__(message, context={"store_id": LIBRARY_STORE_ID, "reason": reason})
+        self.reason: SourceRefusal = reason
+
+
+def _source_outcome(
+    decision: Literal["retain_source", "read_source_frame"],
+    outcome: Literal["retained", "reused", "verified", "reconstructed", "refused"],
+    *,
+    reason: SourceRefusal | None = None,
+) -> None:
+    context = {
+        "decision": decision,
+        "outcome": outcome,
+        "reason": reason,
+        "op_id": current_op_id(),
+        "input_only": True,
+        "sent_midi": False,
+    }
+    get_metrics().record_local_artifact_decision(decision, outcome)
+    if outcome == "refused":
+        _logger.warning("library_original_source", extra=context)
+        get_metrics().record_error(f"library_source_{reason}")
+    else:
+        _logger.debug("library_original_source", extra=context)
+
+
+@contextmanager
+def _source_boundary(
+    decision: Literal["retain_source", "read_source_frame"],
+) -> Generator[None, None, None]:
+    """Sanitize external reader/codec/writer failures at the Library boundary."""
+    try:
+        yield
+    except PersistedStateVersionError:
+        _source_outcome(decision, "refused", reason="schema_newer_than_app")
+        raise
+    except _LibrarySourceError as exc:
+        _source_outcome(decision, "refused", reason=exc.reason)
+        raise
+    except OSError:
+        _source_outcome(decision, "refused", reason="access")
+        # Never chain an OS exception containing an operator-owned path.
+        raise _LibrarySourceError("access", "library source storage cannot be accessed") from None
+    except (DataError, ValueError, TypeError, KeyError, OverflowError):
+        _source_outcome(decision, "refused", reason="validation")
+        raise _LibrarySourceError("validation", "library source validation failed") from None
+
+
+def _source_read_failure(
+    exc: DataError, *, subject: Literal["record", "retained frame"]
+) -> tuple[SourceRefusal, str]:
+    category = exc.context.get("category")
+    reason: SourceRefusal = (
+        category if category in ("access", "path", "size", "missing") else "validation"
+    )
+    return reason, f"library record has no exact source frame: {subject} read refused ({reason})"
+
+
+def _decode_source_frame(device_id: str, frame: bytes) -> KitCaptureResult:
+    try:
+        return decode_kit_capture_frame(device_id, frame)
+    except (DataError, ValueError, TypeError, KeyError, IndexError, OverflowError):
+        raise _LibrarySourceError(
+            "codec", "library record has no exact source frame: registered family codec refused"
+        ) from None
 
 
 @dataclass(frozen=True)
 class LibraryRecord:
-    """One immutable library record (a captured kit/sound payload)."""
+    """One captured payload or inert Rytm semantic rehearsal favorite.
+
+    Rehearsal source_hash is not a raw KIT frame fingerprint. Rehearsals
+    retain exact semantic source/candidate values, not hardware restore bytes.
+    """
 
     record_id: str
     device_id: str
@@ -131,6 +248,9 @@ class LibraryRecord:
     captured_at: str
     tags: tuple[str, ...]
     payload_hex: str
+    rehearsal: LocalRehearsalFavorite | None = None
+    source_frame: RetainedSysexArtifact | None = None
+    source_origin: SourceOrigin | None = None
 
     def to_dict(self) -> dict[str, object]:
         """JSON-safe dict form (the on-disk and on-wire shape)."""
@@ -143,18 +263,78 @@ class LibraryRecord:
             "captured_at": self.captured_at,
             "tags": list(self.tags),
             "payload_hex": self.payload_hex,
+            "record_kind": "capture" if self.rehearsal is None else "rehearsal_favorite",
+            "rehearsal": None if self.rehearsal is None else self.rehearsal.to_dict(),
+            "source_frame": None if self.source_frame is None else self.source_frame.to_dict(),
+            "source_origin": self.source_origin,
         }
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, object]) -> LibraryRecord:
         """Rebuild a record from its dict form; raises ``ValueError`` on junk."""
 
+        if raw.get(PERSISTED_STATE_VERSION_FIELD) == LIBRARY_STORE_SCHEMA_VERSION:
+            required = {
+                "record_id",
+                "device_id",
+                "kit_name",
+                "fingerprint",
+                "captured_at",
+                "tags",
+                "payload_hex",
+                "record_kind",
+                "rehearsal",
+                "source_frame",
+                "source_origin",
+                PERSISTED_STATE_VERSION_FIELD,
+            }
+            if set(raw) != required:
+                raise ValueError("library record fields differ from the schema")
         record_id = _validate_record_id(str(raw.get("record_id", "")))
         tags_raw = raw.get("tags", [])
         if not isinstance(tags_raw, (list, tuple)):
-            raise ValueError(f"library record {record_id!r} has non-list tags")
+            raise ValueError("library record has non-list tags")
         tag_values = cast("Sequence[object]", tags_raw)
-        return cls(
+        kind = raw.get("record_kind", "capture")
+        rehearsal_raw = raw.get("rehearsal")
+        if kind not in ("capture", "rehearsal_favorite") or (
+            (kind == "capture") != (rehearsal_raw is None)
+        ):
+            raise ValueError("library record kind does not match rehearsal payload")
+        rehearsal = (
+            None if rehearsal_raw is None else LocalRehearsalFavorite.from_dict(rehearsal_raw)
+        )
+        frame_raw = raw.get("source_frame")
+        if frame_raw is not None and not isinstance(frame_raw, Mapping):
+            raise ValueError("library source frame must be an object")
+        source_frame = (
+            None
+            if frame_raw is None
+            else RetainedSysexArtifact.from_dict(cast(Mapping[str, object], frame_raw))
+        )
+        origin = raw.get("source_origin")
+        if origin is not None and origin not in ("input_capture", "file_import"):
+            raise ValueError("unsupported library source provenance")
+        if (source_frame is None) != (origin is None) or (
+            rehearsal is not None and source_frame is not None
+        ):
+            raise ValueError("library source provenance does not match record kind")
+        if rehearsal is not None and (
+            any(
+                not isinstance(raw.get(key), str)
+                for key in (
+                    "record_id",
+                    "device_id",
+                    "kit_name",
+                    "fingerprint",
+                    "captured_at",
+                    "payload_hex",
+                )
+            )
+            or any(not isinstance(tag, str) for tag in tag_values)
+        ):
+            raise ValueError("library favorite metadata requires exact text fields")
+        record = cls(
             record_id=record_id,
             device_id=str(raw.get("device_id", "")),
             kit_name=str(raw.get("kit_name", "")),
@@ -162,7 +342,19 @@ class LibraryRecord:
             captured_at=str(raw.get("captured_at", "")),
             tags=tuple(str(tag) for tag in tag_values),
             payload_hex=str(raw.get("payload_hex", "")),
+            rehearsal=rehearsal,
+            source_frame=source_frame,
+            source_origin=origin,
         )
+        if rehearsal is not None and (
+            record.record_id != rehearsal.favorite_id
+            or record.device_id != rehearsal.source_snapshot.device
+            or record.fingerprint != rehearsal.source_hash
+            or record.captured_at != rehearsal.source_snapshot.captured_at.isoformat()
+            or record.payload_hex
+        ):
+            raise ValueError("library favorite metadata does not match retained source identity")
+        return record
 
     def matches(self, query: str) -> bool:
         """Case-insensitive substring match over the searchable fields."""
@@ -237,25 +429,226 @@ class LibraryStore:
         if not self._library_dir.is_dir():
             return ()
         records: list[LibraryRecord] = []
-        for path in sorted(self._library_dir.glob(f"*{_RECORD_SUFFIX}")):
+        for path in self._bounded_paths(self._library_dir, _RECORD_SUFFIX):
             record = _safe_load_record(path)
             if record is not None:
                 records.append(record)
         return tuple(sorted(records, key=lambda record: record.record_id))
 
-    def get(self, record_id: str) -> LibraryRecord | None:
-        """Return one record by id, or ``None`` when absent."""
+    def get(self, record_id: str, *, strict_original_source: bool = False) -> LibraryRecord | None:
+        """Read one record; strict original-source consumers retain refusal reasons.
+
+        The default preserves browse/CRUD warn-skip compatibility. Strict reads
+        still return None for an absent record, but refuse corrupt stored data.
+        """
 
         _validate_record_id(record_id)
+        self._bounded_paths(self._library_dir, _RECORD_SUFFIX)
         path = self._record_path(record_id)
-        if not path.is_file():
+        if not (os.path.lexists(path) if strict_original_source else path.is_file()):
             return None
-        return _safe_load_record(path)
+        return _safe_load_record(path, strict_original_source=strict_original_source)
+
+    @staticmethod
+    def _bounded_paths(directory: Path, suffix: str) -> tuple[Path, ...]:
+        try:
+            if directory.is_symlink():
+                raise _LibrarySourceError("path", "library directory cannot be a symlink")
+            if not directory.exists():
+                return ()
+            paths: list[Path] = []
+            total_bytes = 0
+            for count, path in enumerate(directory.iterdir(), start=1):
+                if count > LIBRARY_MAX_FILES:
+                    raise _LibrarySourceError(
+                        "size", "library directory exceeds the file count bound"
+                    )
+                total_bytes += path.stat(follow_symlinks=False).st_size
+                if total_bytes > LIBRARY_MAX_TOTAL_BYTES:
+                    raise _LibrarySourceError(
+                        "size", "library directory exceeds the aggregate size bound"
+                    )
+                if path.suffix == suffix:
+                    paths.append(path)
+            return tuple(sorted(paths))
+        except OSError:
+            raise _LibrarySourceError("access", "library directory cannot be inspected") from None
+
+    @trace("library.retain_source")
+    def retain_source(
+        self, result: KitCaptureResult, *, origin: SourceOrigin = "input_capture"
+    ) -> LibraryRecord:
+        """Keep exact codec-verified bytes locally, without granting hardware authority."""
+        with _source_boundary("retain_source"):
+            return self._retain_source(result, origin=origin)
+
+    def _retain_source(self, result: KitCaptureResult, *, origin: SourceOrigin) -> LibraryRecord:
+        if origin not in ("input_capture", "file_import"):
+            raise _LibrarySourceError("provenance", "unsupported library source provenance")
+        if not result.round_trip_verified or not result.input_only or result.sent_midi:
+            raise _LibrarySourceError(
+                "input_only", "library source must be verified and input-only"
+            )
+        decoded = _decode_source_frame(result.device_id, result.frame)
+        if (
+            decoded.fingerprint != result.fingerprint
+            or decoded.kit_name != result.kit_name
+            or len(result.frame) != result.frame_bytes
+        ):
+            raise _LibrarySourceError(
+                "metadata", "library source metadata disagrees with exact bytes"
+            )
+        payload = result.frame[1:-1]
+        record_id = payload_fingerprint(payload)
+        digest = sha256(result.frame).hexdigest()
+        artifact = RetainedSysexArtifact(f"{digest}.syx", digest, len(result.frame))
+        existing = self.get(record_id, strict_original_source=True)
+        if existing is not None:
+            if existing.device_id != result.device_id or existing.payload_hex != payload.hex():
+                raise _LibrarySourceError("identity_collision", "library source identity collision")
+            if existing.source_frame is not None:
+                if _read_record_source_frame(self._library_dir, existing) != result.frame:
+                    raise _LibrarySourceError(
+                        "identity_collision", "library source identity collision"
+                    )
+                _source_outcome("retain_source", "reused")
+                return existing
+        record = LibraryRecord(
+            record_id=record_id,
+            device_id=result.device_id,
+            kit_name=result.kit_name,
+            fingerprint=record_id,
+            captured_at=result.captured_at.isoformat(),
+            tags=() if existing is None else existing.tags,
+            payload_hex=payload.hex(),
+            source_frame=artifact,
+            source_origin=origin,
+        )
+        self._write_record(record, overwrite=existing is not None, frame=result.frame)
+        _source_outcome("retain_source", "retained")
+        return record
+
+    @trace("library.read_source_frame")
+    def read_source_frame(
+        self, record_id: str, *, allow_legacy_reconstruction: bool = False
+    ) -> bytes:
+        """Return inert source bytes; legacy envelope reconstruction is explicit.
+
+        Legacy payloads lost only the F0/F7 delimiters, but have no retained
+        framed-byte provenance. Reconstructing them never upgrades that claim.
+        Semantic rehearsal favorites cannot be converted into real captures.
+        """
+        with _source_boundary("read_source_frame"):
+            return self._read_source_frame(
+                record_id, allow_legacy_reconstruction=allow_legacy_reconstruction
+            )
+
+    def _read_source_frame(self, record_id: str, *, allow_legacy_reconstruction: bool) -> bytes:
+        record = self.get(record_id, strict_original_source=True)
+        if record is None or record.rehearsal is not None:
+            raise _LibrarySourceError(
+                "no_original_source", "library record has no exact source frame"
+            )
+        if record.source_frame is not None:
+            frame = _read_record_source_frame(self._library_dir, record)
+            _source_outcome("read_source_frame", "verified")
+            return frame
+        if not allow_legacy_reconstruction:
+            raise _LibrarySourceError(
+                "legacy_reconstruction_required",
+                "legacy source frame requires explicit reconstruction",
+            )
+        try:
+            payload = bytes.fromhex(record.payload_hex)
+        except ValueError:
+            raise _LibrarySourceError(
+                "payload_identity", "legacy source payload is not hex"
+            ) from None
+        if payload_fingerprint(payload) != record.fingerprint:
+            raise _LibrarySourceError(
+                "payload_identity", "legacy source payload fingerprint mismatch"
+            )
+        frame = b"\xf0" + payload + b"\xf7"
+        decoded = _decode_source_frame(record.device_id, frame)
+        if decoded.kit_name != record.kit_name:
+            raise _LibrarySourceError("metadata", "legacy source metadata mismatch")
+        _source_outcome("read_source_frame", "reconstructed")
+        return frame
 
     def search(self, query: str) -> tuple[LibraryRecord, ...]:
         """Records whose searchable fields contain ``query`` (case-folded)."""
 
         return tuple(record for record in self.list_records() if record.matches(query))
+
+    @staticmethod
+    @trace("verify_rehearsal")
+    def verify_rehearsal(favorite: LocalRehearsalFavorite) -> None:
+        """Recompute retained values using canonical scope/engine, never send them.
+
+        Candidate ULIDs are intentionally fresh on recomputation. The retained
+        ULID is integrity-bound by the DTO hash; all deterministic values and
+        provenance must agree independently of that nondeterministic field.
+        """
+        if favorite.source_snapshot.device != ANALOG_RYTM_DEVICE_ID:
+            raise ValueError("favorite_a4_candidate_verification_unavailable")
+        scope = favorite.mutation_scope()
+        reproduced = mutate(
+            favorite.source_snapshot,
+            favorite.profile,
+            favorite.candidate.depth,
+            favorite.candidate.seed,
+            target_pad_ids=scope.target_ids,
+            locked_pad_ids=scope.locked_ids,
+            parameter_depths=rytm_parameter_depths(
+                favorite.source_snapshot, favorite.parameter_selection, favorite.candidate.depth
+            ),
+        )
+        expected = favorite.candidate.to_dict()
+        actual = reproduced.to_dict()
+        expected.pop("candidate_id")
+        actual.pop("candidate_id")
+        if expected != actual:
+            _logger.warning(
+                "rehearsal_verification",
+                extra={"decision": "deterministic_candidate", "outcome": "refused"},
+            )
+            raise ValueError("favorite_candidate_deterministic_verification_failed")
+        _logger.debug(
+            "rehearsal_verification",
+            extra={
+                "decision": "deterministic_candidate",
+                "outcome": "verified",
+                "item_count": len(favorite.candidate.pad_deltas),
+            },
+        )
+
+    def retain_rehearsal(self, favorite: LocalRehearsalFavorite, name: str) -> LibraryRecord:
+        """Retain an exact scoped candidate in the existing atomic JSON library."""
+        if (
+            not isinstance(cast(object, name), str)
+            or not name.strip()
+            or len(name) > _FAVORITE_NAME_LIMIT
+        ):
+            raise ValueError("favorite name must be nonempty text of at most 128 characters")
+        self.verify_rehearsal(favorite)
+        existing = self.get(favorite.favorite_id)
+        if existing is not None:
+            if existing.rehearsal != favorite:
+                raise ValueError("favorite_record_identity_collision")
+            return existing
+        # Refused/corrupt records cannot be overwritten by a subsequent retain.
+        record = LibraryRecord(
+            record_id=favorite.favorite_id,
+            device_id=favorite.source_snapshot.device,
+            kit_name=name,
+            fingerprint=favorite.source_hash,
+            captured_at=favorite.source_snapshot.captured_at.isoformat(),
+            tags=(),
+            payload_hex="",
+            rehearsal=favorite,
+        )
+        self._write_record(record, overwrite=False)
+        return record
 
     def tag(self, record_id: str, tags: Sequence[str]) -> LibraryRecord:
         """Replace a record's tags; returns the updated record.
@@ -265,17 +658,9 @@ class LibraryStore:
 
         existing = self.get(record_id)
         if existing is None:
-            raise ValueError(f"unknown library record_id: {record_id!r}")
+            raise ValueError("unknown library record_id")
         clean_tags = tuple(str(tag) for tag in tags)
-        updated = LibraryRecord(
-            record_id=existing.record_id,
-            device_id=existing.device_id,
-            kit_name=existing.kit_name,
-            fingerprint=existing.fingerprint,
-            captured_at=existing.captured_at,
-            tags=clean_tags,
-            payload_hex=existing.payload_hex,
-        )
+        updated = replace(existing, tags=clean_tags)
         self._write_record(updated, overwrite=True)
         return updated
 
@@ -283,6 +668,7 @@ class LibraryStore:
         """Delete one record; returns ``True`` when a file was removed."""
 
         _validate_record_id(record_id)
+        self._bounded_paths(self._library_dir, _RECORD_SUFFIX)
         path = self._record_path(record_id)
         if not path.is_file():
             return False
@@ -305,13 +691,13 @@ class LibraryStore:
         if directory is None:
             raise ValueError("library captures_dir is not configured")
         if not directory.is_dir():
-            raise ValueError(f"library captures_dir does not exist: {directory}")
+            raise ValueError("library captures_dir does not exist")
 
         existing_ids = {record.record_id for record in self.list_records()}
         imported: list[LibraryRecord] = []
         skipped = 0
         failed: list[str] = []
-        for path in sorted(directory.glob("*.syx")):
+        for path in self._bounded_paths(directory, ".syx"):
             outcome = self._import_capture_file(path, existing_ids)
             imported.extend(outcome.imported)
             skipped += outcome.skipped_existing
@@ -330,8 +716,9 @@ class LibraryStore:
         """Import one ``*.syx`` file; never raises for a bad file."""
 
         try:
-            payloads = extract_sysex_payloads(path.read_bytes())
-        except (OSError, ValueError):
+            raw = read_bounded_artifact(path, maximum=LIBRARY_MAX_CAPTURE_FILE_BYTES)
+            frames = extract_sysex_payloads(raw, keep_framing=True)
+        except (OSError, ValueError, DataError):
             return LibraryImportResult(
                 imported=(),
                 skipped_existing=0,
@@ -340,7 +727,9 @@ class LibraryStore:
         imported: list[LibraryRecord] = []
         skipped = 0
         decoded_any = False
-        for payload in payloads:
+        for frame in frames:
+            framed = frame.startswith(b"\xf0") and frame.endswith(b"\xf7")
+            payload = frame[1:-1] if framed else frame
             decoded = _decode_with_any_device(payload)
             if decoded is None:
                 continue
@@ -350,6 +739,14 @@ class LibraryStore:
             if record_id in existing_ids:
                 skipped += 1
                 continue
+            result: KitCaptureResult | None = None
+            if framed:
+                try:
+                    result = decode_kit_capture_frame(device_id, frame)
+                except (DataError, KeyError, IndexError, TypeError, ValueError):
+                    # Generic historical payload decoding is not exact KIT
+                    # framing proof; never silently promote it to a capture.
+                    pass
             record = LibraryRecord(
                 record_id=record_id,
                 device_id=device_id,
@@ -359,7 +756,13 @@ class LibraryStore:
                 tags=(),
                 payload_hex=payload.hex(),
             )
-            self._write_record(record, overwrite=False)
+            if result is not None:
+                record = self.retain_source(
+                    replace(result, captured_at=datetime.fromisoformat(record.captured_at)),
+                    origin="file_import",
+                )
+            else:
+                self._write_record(record, overwrite=False)
             existing_ids.add(record_id)
             imported.append(record)
         if not decoded_any:
@@ -379,21 +782,64 @@ class LibraryStore:
 
         return self._library_dir / f"{record_id}{_RECORD_SUFFIX}"
 
-    def _write_record(self, record: LibraryRecord, *, overwrite: bool) -> None:
+    def _write_record(
+        self, record: LibraryRecord, *, overwrite: bool, frame: bytes | None = None
+    ) -> None:
         """Persist one record atomically (sibling tempfile + rename)."""
 
         # ``to_dict()`` is also the on-wire ack shape, so the persisted
         # envelope is stamped here (disk only) rather than in the DTO —
         # adding a field to the wire payload would change the WS contract.
         payload = record.to_dict()
+        if record.rehearsal is not None:
+            LibraryRecord.from_dict(payload)
+            self.verify_rehearsal(record.rehearsal)
         payload[PERSISTED_STATE_VERSION_FIELD] = LIBRARY_STORE_SCHEMA_VERSION
         encoded = json.dumps(payload, indent=2, sort_keys=True).encode("utf-8")
-        atomic_write(self._record_path(record.record_id), encoded, overwrite=overwrite)
+        if len(encoded) > LIBRARY_MAX_RECORD_BYTES:
+            raise _LibrarySourceError("size", "library record exceeds the size bound")
+        self._bounded_paths(self._library_dir, _RECORD_SUFFIX)
+        self._library_dir.mkdir(parents=True, exist_ok=True)
+        metadata = self._library_dir.stat(follow_symlinks=False)
+        artifacts: dict[Path, object] = {}
+        if record.source_frame is not None:
+            artifact = record.source_frame
+            destination = self._library_dir / artifact.artifact_name
+            if os.path.lexists(destination):
+                retained = _read_record_source_frame(self._library_dir, record)
+                if frame is not None and retained != frame:
+                    raise _LibrarySourceError(
+                        "identity_collision", "library source content-address collision"
+                    )
+            elif frame is None:
+                raise _LibrarySourceError("missing", "library retained source frame is missing")
+            else:
+                _validate_record_source_frame(record, frame)
+                artifacts[destination] = frame
+        artifacts[self._record_path(record.record_id)] = encoded
+        new_count = sum(not os.path.lexists(path) for path in artifacts)
+        if new_count > LIBRARY_MAX_FILES:
+            raise _LibrarySourceError("size", "library directory exceeds the file count bound")
+        total_bytes = 0
+        for count, _path in enumerate(self._library_dir.iterdir(), start=1):
+            if count + new_count > LIBRARY_MAX_FILES:
+                raise _LibrarySourceError("size", "library directory exceeds the file count bound")
+            total_bytes += _path.stat(follow_symlinks=False).st_size
+        total_bytes += sum(
+            len(cast(bytes, content))
+            - (path.stat(follow_symlinks=False).st_size if path.exists() else 0)
+            for path, content in artifacts.items()
+        )
+        if total_bytes > LIBRARY_MAX_TOTAL_BYTES:
+            raise _LibrarySourceError("size", "library directory exceeds the aggregate size bound")
+        with guard_atomic_write_tree(self._library_dir, (metadata.st_dev, metadata.st_ino)):
+            atomic_write_set(artifacts, overwrite=overwrite, redact_diagnostics=True)
 
 
-def _safe_load_record(path: Path) -> LibraryRecord | None:
+def _safe_load_record(path: Path, *, strict_original_source: bool = False) -> LibraryRecord | None:
     """Load one record file, or ``None`` when unreadable/malformed.
 
+    Strict original-source consumers receive categorical refusals instead.
     Per-file data problems stay on the existing "warn and skip" policy —
     one corrupt record must not take the whole library surface down.
 
@@ -406,16 +852,42 @@ def _safe_load_record(path: Path) -> LibraryRecord | None:
 
     readable = True
     raw: object = None
+    read_error: _LibrarySourceError | None = None
     try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+        raw = decode_json_rejecting_duplicate_keys(
+            read_bounded_artifact(path, maximum=LIBRARY_MAX_RECORD_BYTES)
+        )
+    except DataError as exc:
         readable = False
+        reason, message = _source_read_failure(exc, subject="record")
+        read_error = _LibrarySourceError(reason, message)
+    except OSError:
+        readable = False
+        read_error = _LibrarySourceError("access", "library record cannot be accessed")
+    except (ValueError, RecursionError):
+        readable = False
+        read_error = _LibrarySourceError(
+            "record_shape", "library record has no exact source frame: malformed record JSON"
+        )
 
     decision = classify_payload(LIBRARY_STORE_ID, raw, readable=readable)
     if decision.refused:
         get_metrics().record_persisted_state_refusal(
             LIBRARY_STORE_ID,
             _REFUSAL_METRIC_CODES[decision.code],
+        )
+        _logger.warning(
+            "library_record_refused",
+            extra={
+                "decision": "load_record",
+                "outcome": (
+                    "refused"
+                    if strict_original_source
+                    or decision.code == "persisted_state.schema_newer_than_app"
+                    else "skipped"
+                ),
+                "reason": decision.code if read_error is None else read_error.reason,
+            },
         )
         if decision.code == "persisted_state.schema_newer_than_app":
             # Path-free message: the store id and the two version numbers
@@ -430,6 +902,12 @@ def _safe_load_record(path: Path) -> LibraryRecord | None:
                 # class and one shared fingerprint for the condition.
                 context={"store_id": LIBRARY_STORE_ID, **decision.detail},
             )
+        if strict_original_source:
+            if read_error is not None:
+                raise _LibrarySourceError(read_error.reason, read_error.message)
+            raise _LibrarySourceError(
+                "record_schema", "library record has no exact source frame: record schema refused"
+            )
         return None
 
     if decision.code == "persisted_state.migrated":
@@ -443,9 +921,93 @@ def _safe_load_record(path: Path) -> LibraryRecord | None:
     if payload is None:  # pragma: no cover - accepted decisions always carry one
         return None
     try:
-        return LibraryRecord.from_dict(payload)
-    except ValueError:
+        record = LibraryRecord.from_dict(payload)
+        if record.record_id != path.stem:
+            raise ValueError("library record identity does not match filename")
+        if record.rehearsal is not None:
+            LibraryStore.verify_rehearsal(record.rehearsal)
+        if record.source_frame is not None:
+            _read_record_source_frame(path.parent, record)
+        return record
+    except (ValueError, TypeError, KeyError, OverflowError, DataError) as exc:
+        get_metrics().record_persisted_state_refusal(LIBRARY_STORE_ID, "unknown_shape")
+        error = (
+            exc
+            if isinstance(exc, _LibrarySourceError)
+            else _LibrarySourceError(
+                "record_shape", "library record has no exact source frame: record validation failed"
+            )
+        )
+        _logger.warning(
+            "library_record_refused",
+            extra={
+                "decision": "load_record",
+                "outcome": "refused" if strict_original_source else "skipped",
+                "reason": error.reason,
+            },
+        )
+        if strict_original_source:
+            raise _LibrarySourceError(error.reason, error.message) from None
         return None
+
+
+def _validate_record_source_frame(record: LibraryRecord, frame: bytes) -> None:
+    artifact = record.source_frame
+    if artifact is None:
+        raise _LibrarySourceError(
+            "no_original_source", "library record is missing retained frame identity"
+        )
+    if len(frame) != artifact.byte_count or sha256(frame).hexdigest() != artifact.sha256:
+        raise _LibrarySourceError(
+            "frame_integrity",
+            "library record has no exact source frame: retained frame hash or size mismatch",
+        )
+    if artifact.artifact_name != f"{artifact.sha256}.syx":
+        raise _LibrarySourceError("path", "library frame artifact is not content-addressed")
+    try:
+        captured_at = datetime.fromisoformat(record.captured_at)
+    except ValueError:
+        raise _LibrarySourceError("timestamp", "library source timestamp is invalid") from None
+    if captured_at.tzinfo is None or captured_at.utcoffset() is None:
+        raise _LibrarySourceError("timestamp", "library source timestamp must be timezone-aware")
+    payload = frame[1:-1]
+    if (
+        payload.hex() != record.payload_hex
+        or payload_fingerprint(payload) != record.fingerprint
+        or record.record_id != record.fingerprint
+    ):
+        raise _LibrarySourceError(
+            "payload_identity",
+            "library record has no exact source frame: frame and payload identity mismatch",
+        )
+    decoded = _decode_source_frame(record.device_id, frame)
+    if decoded.kit_name != record.kit_name:
+        raise _LibrarySourceError(
+            "metadata",
+            "library record has no exact source frame: source metadata does not match registered codec",
+        )
+
+
+def _read_record_source_frame(directory: Path, record: LibraryRecord) -> bytes:
+    artifact = record.source_frame
+    if artifact is None:
+        raise _LibrarySourceError(
+            "no_original_source", "library record has no retained source frame"
+        )
+    # Validate the filename before the read, even for directly constructed DTOs.
+    if artifact.artifact_name != f"{artifact.sha256}.syx":
+        raise _LibrarySourceError("path", "library frame artifact is not content-addressed")
+    try:
+        frame = read_bounded_artifact(
+            directory / artifact.artifact_name, maximum=LIBRARY_MAX_SOURCE_FRAME_BYTES
+        )
+    except DataError as exc:
+        reason, message = _source_read_failure(exc, subject="retained frame")
+        raise _LibrarySourceError(reason, message) from None
+    except OSError:
+        raise _LibrarySourceError("access", "library retained frame cannot be accessed") from None
+    _validate_record_source_frame(record, frame)
+    return frame
 
 
 def payload_fingerprint(payload: bytes) -> str:

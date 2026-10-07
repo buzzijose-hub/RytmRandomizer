@@ -25,8 +25,17 @@ Spec reference: see ``docs/superpowers/specs/2026-05-23-cockpit-and-profile-mode
 
 from __future__ import annotations
 
+import ast
+from pathlib import Path
+
 import pytest
-from cockpit.conftest import collect_initial_events, complete_handshake, drain_events, send_cmd
+from cockpit.conftest import (
+    collect_initial_events,
+    complete_handshake,
+    drain_events,
+    prepare_send_plan,
+    send_cmd,
+)
 from fastapi.testclient import TestClient
 
 from rytm_randomizer.cockpit.ws.protocol import (
@@ -34,19 +43,24 @@ from rytm_randomizer.cockpit.ws.protocol import (
     COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
     COMMAND_CLEAR_MUTATION_TARGETS,
     COMMAND_EXPORT_PROFILE_MODEL,
+    COMMAND_GET_MUTATION_PARAMETERS,
     COMMAND_LOAD_SNAPSHOT,
     COMMAND_PREPARE_SEND_PLAN,
     COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+    COMMAND_RECALL_REHEARSAL_FAVORITE,
     COMMAND_REGEN,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
+    COMMAND_RETAIN_REHEARSAL_FAVORITE,
     COMMAND_SAVE,
     COMMAND_SELECT_PROFILE,
     COMMAND_SEND,
     COMMAND_SET_A4_TRACK_LOCK,
     COMMAND_SET_DEPTH,
+    COMMAND_SET_MUTATION_PARAMETERS,
     COMMAND_SET_MUTATION_TARGETS,
     COMMAND_SET_PAD_LOCK,
+    COMMAND_SET_REHEARSAL_PRESET,
     COMMAND_TOGGLE_PREVIEW,
     COMMAND_TYPES,
     COMMAND_UNDO,
@@ -109,6 +123,84 @@ def test_set_depth_roundtrips_with_candidate_field(cockpit_ws: object) -> None:
     assert ack["ok"] is True
     # ``candidate`` is always present on a set_depth ack (None or dict).
     assert "candidate" in ack
+
+
+def test_get_mutation_parameters_roundtrips_with_canonical_controls(cockpit_ws: object) -> None:
+    ack = send_cmd(cockpit_ws, COMMAND_GET_MUTATION_PARAMETERS, request_id="rt-parameters-get")
+    event = drain_events(cockpit_ws, 1)[0]
+    assert ack == {"request_id": "rt-parameters-get", "ok": True}
+    assert set(event) == {"type", "rytm_parameters", "a4_parameters", "controls"}
+    assert event["type"] == "mutation_parameters_changed"
+    assert event["rytm_parameters"] is None
+    assert event["a4_parameters"] is None
+    controls = event["controls"]
+    pad2_filter = next(
+        control
+        for control in controls
+        if control["device_id"] == "analog_rytm_mk2"
+        and control["item_id"] == 2
+        and control["parameter_key"] == "flt"
+    )
+    assert pad2_filter["value"] == 100
+    assert pad2_filter["mutation_supported"] is True
+    assert pad2_filter["protected"] is False
+
+
+@pytest.mark.parametrize("cells", [None, [], [{"item_id": 2, "parameter_key": "flt"}]])
+def test_set_mutation_parameters_roundtrips_with_exact_scope(
+    cockpit_ws: object, cells: object
+) -> None:
+    ack = send_cmd(
+        cockpit_ws,
+        COMMAND_SET_MUTATION_PARAMETERS,
+        request_id="rt-parameters-set",
+        device_id="analog_rytm_mk2",
+        parameter_cells=cells,
+    )
+    events = drain_events(cockpit_ws, 4)
+    assert ack == {"request_id": "rt-parameters-set", "ok": True}
+    assert [event["type"] for event in events] == [
+        "mutation_parameters_changed",
+        "mutation_previewed",
+        "send_plan_changed",
+        "dual_machine_stage_changed",
+    ]
+    assert events[0]["rytm_parameters"] == cells
+    assert events[0]["a4_parameters"] is None
+    assert events[1]["candidate"] is None
+    assert events[2]["send_plan"] is None
+
+
+def test_rehearsal_preset_refuses_missing_canonical_source_over_wire(cockpit_ws: object) -> None:
+    ack = send_cmd(
+        cockpit_ws,
+        COMMAND_SET_REHEARSAL_PRESET,
+        request_id="rt-preset-incomplete",
+        preset_id="rytm_pad2_common",
+    )
+    assert ack["request_id"] == "rt-preset-incomplete"
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert (
+        "requires captured Filter Frequency, AMP Decay, Overdrive and Reverb Send" in ack["message"]
+    )
+
+
+@pytest.mark.parametrize(
+    "kind,body",
+    [
+        (COMMAND_RETAIN_REHEARSAL_FAVORITE, {"name": "Wire rehearsal"}),
+        (COMMAND_RECALL_REHEARSAL_FAVORITE, {"record_id": "missing-favorite"}),
+    ],
+)
+def test_rehearsal_favorite_commands_refuse_unwired_library_over_wire(
+    cockpit_ws: object, kind: str, body: dict[str, object]
+) -> None:
+    ack = send_cmd(cockpit_ws, kind, request_id="rt-favorite-unwired", **body)
+    assert ack["request_id"] == "rt-favorite-unwired"
+    assert ack["ok"] is False
+    assert ack["code"] == "validation_error"
+    assert ack["message"] == "library store is not configured for this session"
 
 
 def test_set_pad_lock_roundtrips_with_no_extras(cockpit_ws: object) -> None:
@@ -216,9 +308,9 @@ def test_send_roundtrips_with_new_snapshot_id_field(cockpit_ws: object) -> None:
     send_cmd(cockpit_ws, COMMAND_SELECT_PROFILE, profile_id="scene-industrial")
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, COMMAND_SET_DEPTH, depth=0.5)
-    send_cmd(cockpit_ws, COMMAND_PREPARE_SEND_PLAN)
-    drain_events(cockpit_ws, 1)
+    prepare_send_plan(cockpit_ws)
     ack = send_cmd(cockpit_ws, COMMAND_SEND, request_id="rt-send")
+    assert ack["ok"] is True, ack
     drain_events(cockpit_ws, 5)
 
     assert ack["request_id"] == "rt-send"
@@ -250,9 +342,9 @@ def test_load_snapshot_roundtrips_with_snapshot_id_field(cockpit_ws: object) -> 
     send_cmd(cockpit_ws, COMMAND_SELECT_PROFILE, profile_id="scene-industrial")
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, COMMAND_SET_DEPTH, depth=0.5)
-    send_cmd(cockpit_ws, COMMAND_PREPARE_SEND_PLAN)
-    drain_events(cockpit_ws, 1)
-    send_cmd(cockpit_ws, COMMAND_SEND)
+    prepare_send_plan(cockpit_ws)
+    send_ack = send_cmd(cockpit_ws, COMMAND_SEND)
+    assert send_ack["ok"] is True, send_ack
     drain_events(cockpit_ws, 5)
 
     ack = send_cmd(
@@ -274,9 +366,9 @@ def test_undo_roundtrips_with_snapshot_id_field(cockpit_ws: object) -> None:
     send_cmd(cockpit_ws, COMMAND_SELECT_PROFILE, profile_id="scene-industrial")
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, COMMAND_SET_DEPTH, depth=0.55)
-    send_cmd(cockpit_ws, COMMAND_PREPARE_SEND_PLAN)
-    drain_events(cockpit_ws, 1)
-    send_cmd(cockpit_ws, COMMAND_SEND)
+    prepare_send_plan(cockpit_ws)
+    send_ack = send_cmd(cockpit_ws, COMMAND_SEND)
+    assert send_ack["ok"] is True, send_ack
     drain_events(cockpit_ws, 5)
 
     ack = send_cmd(cockpit_ws, COMMAND_UNDO, request_id="rt-undo")
@@ -469,16 +561,16 @@ def test_all_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
     """Pin invariant: every cockpit-native command has a matching round-trip test above.
 
     ``COMMAND_TYPES`` is the union of the cockpit + wizard command surfaces
-    (49 cockpit + 8 wizard = 57 total). This test pins the legacy cockpit-native
+    (55 cockpit + 8 wizard = 63 total). This test pins the legacy cockpit-native
     commands; the wizard subset is exercised end-to-end in
     ``test_integration_wizard_flow.py``. If a new cockpit command lands and
     this assertion is not extended, the file falls out of sync silently —
     this test makes that drift visible at the integration boundary.
     """
 
-    # 22 commands round-trip here; the 8 arm/diagnostics/library commands
+    # 27 commands round-trip here; the 8 arm/diagnostics/library commands
     # are exercised in tests/cockpit/test_ws_arm_and_library_handlers.py.
-    assert len(COMMAND_TYPES) == 57
+    assert len(COMMAND_TYPES) == 63
     cockpit_native = {
         COMMAND_SELECT_PROFILE,
         COMMAND_SET_DEPTH,
@@ -486,6 +578,11 @@ def test_all_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
         COMMAND_SET_A4_TRACK_LOCK,
         COMMAND_SET_MUTATION_TARGETS,
         COMMAND_CLEAR_MUTATION_TARGETS,
+        COMMAND_GET_MUTATION_PARAMETERS,
+        COMMAND_SET_MUTATION_PARAMETERS,
+        COMMAND_SET_REHEARSAL_PRESET,
+        COMMAND_RETAIN_REHEARSAL_FAVORITE,
+        COMMAND_RECALL_REHEARSAL_FAVORITE,
         COMMAND_TOGGLE_PREVIEW,
         COMMAND_REGEN,
         COMMAND_PREPARE_SEND_PLAN,
@@ -504,7 +601,48 @@ def test_all_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
         "capture_current_kit",
     }
     assert cockpit_native <= COMMAND_TYPES
-    assert len(cockpit_native) == 22
+    assert len(cockpit_native) == 27
+
+    # Tie new scope/favorite commands to public positive behavioral tests,
+    # not merely to a larger protocol count or the refusals above.
+    scope_test_sources = {
+        COMMAND_GET_MUTATION_PARAMETERS: (
+            "test_integration_protocol_roundtrip.py",
+            "test_get_mutation_parameters_roundtrips_with_canonical_controls",
+            "COMMAND_GET_MUTATION_PARAMETERS",
+        ),
+        COMMAND_SET_MUTATION_PARAMETERS: (
+            "test_parameter_scope.py",
+            "test_scope_change_invalidates_old_confirmation",
+            "",
+        ),
+        COMMAND_SET_REHEARSAL_PRESET: (
+            "test_parameter_scope.py",
+            "test_scope_change_invalidates_old_confirmation",
+            "",
+        ),
+        COMMAND_RETAIN_REHEARSAL_FAVORITE: (
+            "test_parameter_scope.py",
+            "test_local_favorite_reopens_exact_values_and_scope_after_restart",
+            "",
+        ),
+        COMMAND_RECALL_REHEARSAL_FAVORITE: (
+            "test_parameter_scope.py",
+            "test_local_favorite_reopens_exact_values_and_scope_after_restart",
+            "",
+        ),
+    }
+    for command, (filename, test_name, symbol) in scope_test_sources.items():
+        tree = ast.parse(Path(__file__).with_name(filename).read_text(encoding="utf-8"))
+        functions = {node.name: node for node in tree.body if isinstance(node, ast.FunctionDef)}
+        assert test_name.startswith("test_") and test_name in functions
+        assert any(
+            (isinstance(arg, ast.Constant) and arg.value == command)
+            or (isinstance(arg, ast.Name) and arg.id == symbol)
+            for call in ast.walk(functions[test_name])
+            if isinstance(call, ast.Call)
+            for arg in call.args
+        ), f"{command} is not exercised by public {filename}::{test_name}"
 
 
 # ---------------------------------------------------------------------------
@@ -597,7 +735,7 @@ def test_malformed_json_closes_connection_but_server_keeps_serving(
     with cockpit_client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
         complete_handshake(ws)
         bootstrap = collect_initial_events(ws)
-    assert len(bootstrap) == 11
+    assert len(bootstrap) == 12
 
 
 def test_request_id_round_trips_with_unicode_payload(cockpit_ws: object) -> None:

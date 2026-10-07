@@ -5,17 +5,20 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { CockpitClientProvider } from '../../src/cockpit/context';
 import { ShowKitForgePanel } from '../../src/cockpit/showKitForge/ShowKitForgePanel';
 import { useCockpitStore } from '../../src/state';
-import type { Command, CommandAck, ShowBankEntry, ShowBankState, ShowDepthPresets } from '../../src/ws/protocol';
+import type { Command, CommandAck, LibraryRecord, ShowBankEntry, ShowBankState, ShowDepthPresets } from '../../src/ws/protocol';
 
 import {
   candidate,
   FakeCockpitClient,
+  libraryRecordA,
+  libraryRecordB,
   profile,
   readyDualMachineStage,
   sendPlan,
   sessionLive,
   sessionMock,
 } from './_fixtures';
+import { parameterControls, scopeControl } from './parameterScopeFixture';
 import { forgeCaptures, forgeEntry, readyEntry, showBankState } from './showKitForgeFixture';
 
 function mount(fake: FakeCockpitClient, state: ShowBankState | null = showBankState): ReturnType<typeof render> {
@@ -23,6 +26,7 @@ function mount(fake: FakeCockpitClient, state: ShowBankState | null = showBankSt
     showBank: state,
     showBankStale: false,
     kitCaptures: forgeCaptures,
+    parameterControls,
     profile,
     connectionStatus: 'connected',
   });
@@ -41,10 +45,231 @@ async function waitForCommand(fake: FakeCockpitClient, type: Command['type']): P
 }
 
 afterEach(() => {
-  useCockpitStore.getState().reset();
+  act(() => useCockpitStore.getState().reset());
 });
 
 describe('ShowKitForgePanel', () => {
+  it('lists only retained original frames by device and adopts explicitly declared slots without hardware commands', async () => {
+    const fake = new FakeCockpitClient();
+    mount(fake);
+    await waitForCommand(fake, 'show_bank_list');
+    const records: LibraryRecord[] = [
+      { ...libraryRecordA, record_id: 'original-rytm', record_kind: 'capture', source_origin: 'file_import',
+        source_frame: { artifact_name: 'rytm-original.syx', sha256: '1'.repeat(64), byte_count: 4096 } },
+      { ...libraryRecordB, record_id: 'original-a4', kit_name: '', source_origin: 'input_capture',
+        source_frame: { artifact_name: 'a4-original.syx', sha256: '2'.repeat(64), byte_count: 2048 } },
+      { ...libraryRecordA, record_id: 'favorite-not-source', record_kind: 'rehearsal_favorite',
+        source_frame: { artifact_name: 'favorite.syx', sha256: '3'.repeat(64), byte_count: 4096 } },
+      { ...libraryRecordA, record_id: 'payload-without-frame', source_frame: null },
+      { ...libraryRecordB, record_id: 'legacy-payload' },
+      { ...libraryRecordA, record_id: 'unsupported-family', device_id: 'digitakt',
+        source_frame: { artifact_name: 'other.syx', sha256: '4'.repeat(64), byte_count: 4096 } },
+    ];
+    act(() => useCockpitStore.setState({ libraryRecords: records, kitCaptures: [] }));
+    const rytm = screen.getByLabelText('Rytm source file');
+    const a4 = screen.getByLabelText('Analog Four source file');
+    expect(within(rytm).getAllByRole('option').map((option) => option.getAttribute('value'))).toEqual(['', 'original-rytm']);
+    expect(within(a4).getAllByRole('option').map((option) => option.getAttribute('value'))).toEqual(['', 'original-a4']);
+    expect(within(a4).getByRole('option', { name: /Unnamed KIT.*original-a4/ })).toBeInTheDocument();
+    const adopt = screen.getByRole('button', { name: 'Adopt source files' });
+    expect(adopt).toBeDisabled();
+    fireEvent.change(rytm, { target: { value: 'original-rytm' } });
+    expect(adopt).toBeDisabled();
+    fireEvent.change(a4, { target: { value: 'original-a4' } });
+    const slots = screen.getAllByLabelText('Source hardware slot (1\u2013128)');
+    fireEvent.change(slots[0]!, { target: { value: '17' } });
+    fireEvent.change(slots[1]!, { target: { value: '29' } });
+    expect(adopt).toBeEnabled();
+    await act(async () => { fireEvent.click(adopt); });
+    expect(fake.sent).toEqual([
+      { type: 'show_bank_list' },
+      { type: 'show_bank_adopt_library_sources', bank_id: 'bank-one', expected_revision: 7,
+        rytm_record_id: 'original-rytm', a4_record_id: 'original-a4', rytm_slot: 17, a4_slot: 29 },
+    ]);
+    expect(screen.getByText('Original file sources retained. Hardware capture and SEND remain separate.')).toBeInTheDocument();
+    expect(useCockpitStore.getState().showBank).toBe(showBankState);
+    expect(useCockpitStore.getState().kitCaptures).toEqual([]);
+    expect(screen.getByRole('button', { name: 'A4 SEND blocked \u2014 offline only' })).toBeDisabled();
+    act(() => useCockpitStore.setState({ libraryRecords: records.map((record) =>
+      record.record_id === 'original-rytm' ? { ...record, kit_name: '' } : record,
+    ) }));
+    expect(within(rytm).getByRole('option', { name: /Unnamed KIT.*original-rytm/ })).toBeInTheDocument();
+    expect(useCockpitStore.getState().libraryRecords!.find((record) => record.record_id === 'original-rytm')!.kit_name).toBe('');
+  });
+
+  it('imports and refreshes retained source records only through passive library commands', async () => {
+    const fake = new FakeCockpitClient();
+    mount(fake);
+    await waitForCommand(fake, 'show_bank_list');
+    expect(within(screen.getByLabelText('Rytm source file')).getAllByRole('option')).toHaveLength(1);
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Import captures folder' })); });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Refresh source files' })); });
+    expect(fake.sent).toEqual([{ type: 'show_bank_list' }, { type: 'library_import_captures' }, { type: 'library_list' }]);
+    expect(useCockpitStore.getState().libraryRecords).toBeNull();
+    expect(screen.getByRole('button', { name: 'Adopt source files' })).toBeDisabled();
+  });
+
+  it.each(['accept', 'refuse', 'throw'] as const)(
+    'keeps refreshed bank feedback when an old library request later %s after reconnect', async (outcome) => {
+      const fake = new FakeCockpitClient();
+      mount(fake);
+      await waitForCommand(fake, 'show_bank_list');
+      let settle!: (ack: CommandAck) => void;
+      let fail!: (error: Error) => void;
+      fake.responseQueue.push(new Promise((resolve, reject) => { settle = resolve; fail = reject; }));
+      fireEvent.click(screen.getByRole('button', { name: 'Import captures folder' }));
+      expect(screen.getByText('Import source files requested; waiting for the server.')).toBeInTheDocument();
+      act(() => useCockpitStore.getState().setConnectionStatus('reconnecting'));
+      expect(screen.getByRole('button', { name: 'Refresh source files' })).toBeDisabled();
+      act(() => useCockpitStore.getState().setConnectionStatus('connected'));
+      expect(screen.getByRole('button', { name: 'Import captures folder' })).toBeDisabled();
+      await act(async () => useCockpitStore.getState().setSessionStatus({ ...sessionLive }));
+      expect(fake.sent.filter((command) => command.type === 'show_bank_list')).toHaveLength(2);
+      expect(screen.getByRole('button', { name: 'Import captures folder' })).toBeDisabled();
+      act(() => useCockpitStore.getState().setShowBank({ ...showBankState, revision: 10 }));
+      const feedback = screen.getByText('Show bank refresh accepted; waiting for authoritative show bank state.');
+      await act(async () => {
+        if (outcome === 'throw') fail(new Error('obsolete library failure'));
+        else settle({ request_id: 'old', ok: outcome === 'accept', message: 'obsolete library failure' });
+      });
+      expect(feedback).toBeInTheDocument();
+      expect(screen.queryByText(/obsolete library failure/)).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Import captures folder' })).toBeEnabled();
+      expect(fake.sent).toEqual([{ type: 'show_bank_list' }, { type: 'library_import_captures' }, { type: 'show_bank_list' }]);
+    },
+  );
+
+  it.each(['cancel', 'escape', 'disconnect'] as const)(
+    'dismisses exact-plan confirmation through %s without issuing hardware commands', async (dismiss) => {
+      const fake = new FakeCockpitClient();
+      mount(fake);
+      await waitForCommand(fake, 'show_bank_list');
+      act(() => useCockpitStore.setState({ dualMachineStage: readyDualMachineStage,
+        previewCandidate: { ...candidate, candidate_id: 'rytm-candidate-one' },
+        sendPlan: { ...sendPlan, candidate_id: 'rytm-candidate-one' }, rytmPadLocks: [2],
+      }));
+      fireEvent.click(screen.getByRole('button', { name: 'Send exact Rytm plan' }));
+      expect(screen.getByRole('dialog', { name: 'Confirm send to hardware' })).toBeInTheDocument();
+      if (dismiss === 'cancel') fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+      else if (dismiss === 'escape') fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+      else act(() => useCockpitStore.getState().setConnectionStatus('reconnecting'));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(fake.sent).toEqual([{ type: 'show_bank_list' }]);
+      expect(screen.getByRole('button', { name: 'A4 SEND blocked \u2014 offline only' })).toBeDisabled();
+    },
+  );
+
+  it('distinguishes selected previews, retained candidates and local favorites from hardware saves', async () => {
+    const first = forgeEntry.candidates[0]!;
+    const entry: ShowBankEntry = { ...forgeEntry, candidates: [...forgeEntry.candidates, { ...first, candidate_id: 'candidate-three' }] };
+    const fake = new FakeCockpitClient();
+    mount(fake, { ...showBankState, banks: [{ ...showBankState.banks[0]!, entries: [entry] }] });
+    await waitForCommand(fake, 'show_bank_list');
+    expect(within(screen.getByRole('article', { name: 'Candidate 1' })).getByText('Selected for preview')).toBeInTheDocument();
+    expect(within(screen.getByRole('article', { name: 'Candidate 2' })).getByText('Local favorite')).toBeInTheDocument();
+    const retained = within(screen.getByRole('article', { name: 'Candidate 3' }));
+    expect(retained.getByText('Retained offline candidate')).toBeInTheDocument();
+    expect(retained.getByText('Retained local preparation, not a hardware KIT save.')).toBeInTheDocument();
+    expect(retained.getByRole('button', { name: 'Retain selected A4 offline artifact' })).toBeDisabled();
+    expect(fake.sent).toEqual([{ type: 'show_bank_list' }]);
+  });
+
+  it('supports one bounded rehearsal candidate and sends its exact current scope', async () => {
+    const fake = new FakeCockpitClient();
+    mount(fake);
+    await waitForCommand(fake, 'show_bank_list');
+    act(() => useCockpitStore.setState({ rytmPadTargets: [2], rytmPadLocks: [1], a4TrackTargets: [1], a4TrackLocks: [2] }));
+    fireEvent.change(screen.getByLabelText('Candidate count'), { target: { value: '1' } });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Forge 1 candidate pairs' })); });
+    expect(fake.sent).toEqual([
+      { type: 'show_bank_list' },
+      { type: 'show_bank_generate_candidates', bank_id: 'bank-one', entry_id: 'entry-one', expected_revision: 7,
+        depth_preset: 'small', depth: 0.25, candidate_count: 1, seed: 1, profile_id: profile.profile_id,
+        rytm_targets: [2], rytm_locks: [1], a4_targets: [1], a4_locks: [2] },
+    ]);
+  });
+
+  it('compares native A4 values against canonical sources without rounding or claiming output authority', async () => {
+    const first = forgeEntry.candidates[0]!;
+    const entry: ShowBankEntry = { ...forgeEntry, candidates: [{ ...first,
+      analog_four_candidate: { ...first.analog_four_candidate, values: [
+        { track_id: 1, parameter: 'filter1_frequency', screen_value: '64.00390625', encoded_native: 16385,
+          native_encoding: 'unsigned_q8_8', unpacked_offsets: [128, 129] },
+        { track_id: 2, parameter: 'filter2_frequency', screen_value: '0.00390625', encoded_native: 1,
+          native_encoding: 'unsigned-big-endian-q8.8', unpacked_offsets: [256, 257] },
+      ] },
+    }] };
+    const fake = new FakeCockpitClient();
+    mount(fake, { ...showBankState, banks: [{ ...showBankState.banks[0]!, entries: [entry] }] });
+    await waitForCommand(fake, 'show_bank_list');
+    const matchingCaptures = forgeCaptures.map((capture) => capture.device_id === 'analog_four_mk2'
+      ? { ...capture, fingerprint: entry.analog_four_source.fingerprint } : capture);
+    act(() => useCockpitStore.setState({ kitCaptures: matchingCaptures, parameterControls: [
+      scopeControl({ device_id: 'analog_four_mk2', item_id: 1, parameter_key: 'Filter1 Frequency', value: 16256, display_value: '63.50' }),
+      scopeControl({ device_id: 'analog_four_mk2', item_id: 2, parameter_key: 'filter2_frequency', value: 0, display_value: '0' }),
+    ] }));
+    const article = within(screen.getByRole('article', { name: 'Candidate 1' }));
+    expect(article.getByText('Track 1 filter1_frequency: source 63.50 to 64.00390625; native 16256 to 16385')).toBeInTheDocument();
+    expect(article.getByText('Track 2 filter2_frequency: source 0 to 0.00390625; native 0 to 1')).toBeInTheDocument();
+    act(() => useCockpitStore.setState({ kitCaptures: [] }));
+    expect(article.getByText('Track 2 filter2_frequency: source 0 to 0.00390625; native 0 to 1')).toBeInTheDocument();
+    act(() => useCockpitStore.setState({ kitCaptures: forgeCaptures.map((capture) =>
+      capture.device_id === 'analog_four_mk2' ? { ...capture, fingerprint: 'mismatching-current-kit' } : capture,
+    ) }));
+    expect(article.getByText('Track 2 filter2_frequency: source unavailable to 0.00390625; native unavailable to 1')).toBeInTheDocument();
+    act(() => useCockpitStore.setState({ kitCaptures: matchingCaptures, showBank: {
+      ...showBankState, banks: [{ ...showBankState.banks[0]!, active_entry_id: 'other-cue', entries: [entry] }],
+    } }));
+    expect(article.getByText('Track 2 filter2_frequency: source unavailable to 0.00390625; native unavailable to 1')).toBeInTheDocument();
+    act(() => useCockpitStore.setState({ showBank: {
+      ...showBankState, banks: [{ ...showBankState.banks[0]!, entries: [entry] }],
+    } }));
+    expect(article.getByText(/A4 SEND and hardware SAVE remain blocked/)).toBeInTheDocument();
+    expect(fake.sent).toEqual([{ type: 'show_bank_list' }]);
+    act(() => useCockpitStore.setState({ parameterControls: [] }));
+    expect(article.getByText('Track 2 filter2_frequency: source unavailable to 0.00390625; native unavailable to 1')).toBeInTheDocument();
+  });
+
+  it('preserves an ID-colliding bank and sends an explicit import-copy destination without paths', async () => {
+    const fake = new FakeCockpitClient();
+    mount(fake);
+    await waitForCommand(fake, 'show_bank_list');
+    fireEvent.change(screen.getByLabelText('Import package ID'), { target: { value: 'Warehouse-Pack' } });
+    fake.ackQueue.push({ request_id: 'collision', ok: false, message: 'bank ID already exists; choose a new destination' });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Import local pack' })); });
+    expect(screen.getByText(/bank ID already exists; choose a new destination/)).toBeInTheDocument();
+    expect(useCockpitStore.getState().showBank).toBe(showBankState);
+    fireEvent.change(screen.getByLabelText('New bank ID (optional)'), { target: { value: 'Warehouse-Copy' } });
+    fake.ackQueue.push({ request_id: 'copy', ok: true, show_pack_import: {
+      package_id: 'warehouse-pack', bank_id: 'warehouse-copy', artifact_count: 6, write_count: 6,
+    } });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Import local pack' })); });
+    expect(fake.sent).toEqual([
+      { type: 'show_bank_list' }, { type: 'show_bank_import', pack_name: 'warehouse-pack' },
+      { type: 'show_bank_import', pack_name: 'warehouse-pack', destination_bank_id: 'warehouse-copy' },
+    ]);
+    expect(screen.getByText(/Imported warehouse-pack: 6 artifacts verified and 6 files retained/)).toBeInTheDocument();
+    expect(useCockpitStore.getState().showBank).toBe(showBankState);
+  });
+
+  it.each(['../other', 'bank/name', 'bank\\name', 'has space', '_leading', 'x'.repeat(97)])(
+    'disables invalid explicit import destination %s without issuing a command', async (destination) => {
+      const fake = new FakeCockpitClient();
+      mount(fake);
+      await waitForCommand(fake, 'show_bank_list');
+      fireEvent.change(screen.getByLabelText('Import package ID'), { target: { value: 'safe-pack' } });
+      fireEvent.change(screen.getByLabelText('New bank ID (optional)'), { target: { value: destination } });
+      const button = screen.getByRole('button', { name: 'Import local pack' });
+      expect(button).toBeDisabled();
+      fireEvent.click(button);
+      expect(fake.sent).toEqual([{ type: 'show_bank_list' }]);
+      fireEvent.change(screen.getByLabelText('New bank ID (optional)'), { target: { value: '' } });
+      expect(button).toBeEnabled();
+      fireEvent.change(screen.getByLabelText('Import package ID'), { target: { value: '../unsafe' } });
+      expect(button).toBeDisabled();
+    },
+  );
+
   it('explains why an empty bank cannot be exported and sends no export command', async () => {
     const fake = new FakeCockpitClient();
     mount(fake, {
@@ -422,7 +647,7 @@ describe('ShowKitForgePanel', () => {
     expect(screen.getByLabelText('Audition notes')).toHaveValue('Draft still open');
   });
 
-  it('renders captured subset IDs and sends their exact target and lock identities', async () => {
+  it('renders canonical subset IDs and sends their exact target and lock identities', async () => {
     const fake = new FakeCockpitClient();
     mount(fake);
     await waitForCommand(fake, 'show_bank_list');
@@ -433,6 +658,11 @@ describe('ShowKitForgePanel', () => {
           (capture.device_id === 'analog_rytm_mk2' ? [3, 8] : [2, 4]).includes(item.index),
         ),
       })),
+      parameterControls: [
+        scopeControl({ item_id: 3 }), scopeControl({ item_id: 8 }),
+        scopeControl({ device_id: 'analog_four_mk2', item_id: 2 }),
+        scopeControl({ device_id: 'analog_four_mk2', item_id: 4 }),
+      ],
       rytmPadTargets: [], a4TrackTargets: [], rytmPadLocks: [], a4TrackLocks: [],
     }));
 
@@ -459,7 +689,7 @@ describe('ShowKitForgePanel', () => {
   });
 
   it.each(['missing', 'empty'] as const)(
-    'keeps %s captured layouts inert while retained-bank generation preserves the server scope',
+    'keeps %s canonical controls inert while retained-bank generation preserves the server scope',
     async (layout) => {
       const retainedState = {
         ...showBankState,
@@ -497,6 +727,7 @@ describe('ShowKitForgePanel', () => {
       await waitForCommand(fake, 'show_bank_list');
       act(() => useCockpitStore.setState({
         kitCaptures: layout === 'missing' ? [] : forgeCaptures.map((capture) => ({ ...capture, layout_items: [] })),
+        parameterControls: [],
         rytmPadTargets: [3], a4TrackTargets: [2], rytmPadLocks: [8], a4TrackLocks: [4],
       }));
       for (const name of ['Rytm pads', 'Analog Four tracks']) {
@@ -518,6 +749,7 @@ describe('ShowKitForgePanel', () => {
 
       act(() => useCockpitStore.setState({
         kitCaptures: forgeCaptures.filter((capture) => capture.device_id === 'analog_rytm_mk2'),
+        parameterControls: [scopeControl({ item_id: 3 })],
       }));
       expect(screen.getByRole('group', { name: 'Rytm pads' })).toBeEnabled();
       expect(screen.getByRole('group', { name: 'Analog Four tracks' })).toBeDisabled();
@@ -616,8 +848,8 @@ describe('ShowKitForgePanel', () => {
     const first = screen.getByRole('article', { name: 'Candidate 1' });
     const second = screen.getByRole('article', { name: 'Candidate 2' });
     expect(within(first).getByText('A4 offline saved-KIT-format artifact')).toBeInTheDocument();
-    expect(within(first).getByText(/Track 1 filter1_frequency: 63\.50/)).toBeInTheDocument();
-    expect(within(first).getByText(/Local file only\. Cockpit cannot SEND/)).toBeInTheDocument();
+    expect(within(first).getByText('Track 1 filter1_frequency: source unavailable to 63.50; native unavailable to 16256')).toBeInTheDocument();
+    expect(within(first).getByText(/Preview-only saved-KIT file\. A4 SEND and hardware SAVE remain blocked/)).toBeInTheDocument();
     expect(within(second).getByText(/Retained as/)).toHaveTextContent('4096 bytes');
     fireEvent.click(
       within(first).getByRole('button', { name: 'Retain selected A4 offline artifact' }),

@@ -43,13 +43,14 @@ def test_locked_pad_keeps_params_after_send(cockpit_ws: object) -> None:
     send_cmd(cockpit_ws, "set_pad_lock", pad_id=2, locked=True)
     _arm_candidate(cockpit_ws)
     prepare_send_plan(cockpit_ws)
-    send_cmd(cockpit_ws, "send")
+    send_ack = send_cmd(cockpit_ws, "send")
+    assert send_ack["ok"] is True, send_ack
     events_after = drain_events(cockpit_ws, 5)
 
     snapshot_after = next(e for e in events_after if e["type"] == "snapshot_changed")["snapshot"]
     pad2_after = next(p for p in snapshot_after["pads"] if p["pad_id"] == 2)
     # The fixture pre-seeds pad 2 with these values; locking must preserve them.
-    assert pad2_after["params"] == {"tun": 40, "dec": 60, "lev": 100}
+    assert pad2_after["params"] == {"tun": 40, "dec": 60, "flt": 100}
 
 
 def test_unlocked_pad_changes_after_send(cockpit_ws: object) -> None:
@@ -58,15 +59,16 @@ def test_unlocked_pad_changes_after_send(cockpit_ws: object) -> None:
     send_cmd(cockpit_ws, "set_pad_lock", pad_id=2, locked=True)
     _arm_candidate(cockpit_ws)
     prepare_send_plan(cockpit_ws)
-    send_cmd(cockpit_ws, "send")
+    send_ack = send_cmd(cockpit_ws, "send")
+    assert send_ack["ok"] is True, send_ack
     events_after = drain_events(cockpit_ws, 5)
 
     snapshot_after = next(e for e in events_after if e["type"] == "snapshot_changed")["snapshot"]
     pad1_after = next(p for p in snapshot_after["pads"] if p["pad_id"] == 1)
-    # Original pad 1 was {"tun": 32, "dec": 80, "lev": 110}; at depth 0.6 the
+    # Original pad 1 was {"tun": 32, "dec": 80, "flt": 110}; at depth 0.6 the
     # engine will almost certainly mutate at least one key. Equality on all
     # three values would be a near-zero-probability event.
-    assert pad1_after["params"] != {"tun": 32, "dec": 80, "lev": 110}
+    assert pad1_after["params"] != {"tun": 32, "dec": 80, "flt": 110}
 
 
 def test_unlocking_pad_restores_normal_mutation_path(cockpit_ws: object) -> None:
@@ -76,13 +78,14 @@ def test_unlocking_pad_restores_normal_mutation_path(cockpit_ws: object) -> None
     send_cmd(cockpit_ws, "set_pad_lock", request_id="req-unlock", pad_id=2, locked=False)
     _arm_candidate(cockpit_ws)
     prepare_send_plan(cockpit_ws)
-    send_cmd(cockpit_ws, "send")
+    send_ack = send_cmd(cockpit_ws, "send")
+    assert send_ack["ok"] is True, send_ack
     events_after = drain_events(cockpit_ws, 5)
 
     snapshot_after = next(e for e in events_after if e["type"] == "snapshot_changed")["snapshot"]
     pad2_after = next(p for p in snapshot_after["pads"] if p["pad_id"] == 2)
     # After unlock + SEND with non-trivial depth the original values should differ.
-    assert pad2_after["params"] != {"tun": 40, "dec": 60, "lev": 100}
+    assert pad2_after["params"] != {"tun": 40, "dec": 60, "flt": 100}
 
 
 def test_multiple_locked_pads_all_skipped(cockpit_ws: object) -> None:
@@ -92,13 +95,14 @@ def test_multiple_locked_pads_all_skipped(cockpit_ws: object) -> None:
     send_cmd(cockpit_ws, "set_pad_lock", request_id="req-3", pad_id=3, locked=True)
     _arm_candidate(cockpit_ws)
     prepare_send_plan(cockpit_ws)
-    send_cmd(cockpit_ws, "send")
+    send_ack = send_cmd(cockpit_ws, "send")
+    assert send_ack["ok"] is True, send_ack
     events_after = drain_events(cockpit_ws, 5)
 
     snapshot_after = next(e for e in events_after if e["type"] == "snapshot_changed")["snapshot"]
     pads_after = {p["pad_id"]: p["params"] for p in snapshot_after["pads"]}
-    assert pads_after[1] == {"tun": 32, "dec": 80, "lev": 110}  # locked, unchanged
-    assert pads_after[3] == {"tun": 50, "dec": 70, "lev": 95}  # locked, unchanged
+    assert pads_after[1] == {"tun": 32, "dec": 80, "flt": 110}  # locked, unchanged
+    assert pads_after[3] == {"tun": 50, "dec": 70, "flt": 95}  # locked, unchanged
     # Pads 2 + 4 should now differ from their seed values.
-    assert pads_after[2] != {"tun": 40, "dec": 60, "lev": 100}
-    assert pads_after[4] != {"tun": 64, "dec": 90, "lev": 85}
+    assert pads_after[2] != {"tun": 40, "dec": 60, "flt": 100}
+    assert pads_after[4] != {"tun": 64, "dec": 90, "flt": 85}

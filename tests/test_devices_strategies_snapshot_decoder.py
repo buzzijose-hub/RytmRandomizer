@@ -15,7 +15,11 @@ from pathlib import Path
 
 import pytest
 
-from conftest import pack_elektron_7bit, rytm_real_layout_kit_payload
+from conftest import (
+    pack_elektron_7bit,
+    rytm_frame_with_machine_values,
+    rytm_real_layout_kit_payload,
+)
 
 # WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
 # warm-worker V1.34 parity fixtures and runs in <60s.
@@ -166,6 +170,36 @@ def test_snapshot_exports_machine_fact_types() -> None:
     assert facts.promoted is False
 
 
+def test_snapshot_without_machine_facts_does_not_claim_mapping_readiness() -> None:
+    from rytm_randomizer.devices.strategies import RytmKitSnapshot
+
+    snapshot = RytmKitSnapshot(slot=0, kit_name="", raw=b"", unpacked=b"")
+
+    assert snapshot.machine_facts.facts_by_pad == {}
+    assert snapshot.machine_facts.promoted is False
+
+
+def test_decode_legacy_short_body_retains_unverified_missing_machine_facts() -> None:
+    from rytm_randomizer.devices.strategies import AnalogRytmSnapshotDecoder
+    from rytm_randomizer.devices.strategies.analog_rytm_snapshot_decoder import (
+        RYTM_KIT_TYPE_BYTE,
+    )
+    from rytm_randomizer.snapshot import ELEKTRON_MFR_ID
+
+    unpacked = bytes(32)
+    raw = ELEKTRON_MFR_ID + b"\x00" + bytes([RYTM_KIT_TYPE_BYTE]) + pack_elektron_7bit(unpacked)
+    snapshot = AnalogRytmSnapshotDecoder().decode(raw, slot=0)
+
+    assert snapshot.unpacked == unpacked
+    assert snapshot.machine_facts.promoted is False
+    assert len(snapshot.machine_facts.facts_by_pad) == 12
+    for fact in snapshot.machine_facts.facts_by_pad.values():
+        assert fact.raw_machine_value == -1
+        assert fact.decoded_machine_value is None
+        assert fact.promoted is False
+        assert "outside snapshot payload" in fact.reason
+
+
 def test_decode_extracts_candidate_machine_facts_from_real_layout() -> None:
     from rytm_randomizer.devices.strategies import AnalogRytmSnapshotDecoder
 
@@ -180,13 +214,51 @@ def test_decode_extracts_candidate_machine_facts_from_real_layout() -> None:
     assert snap.machine_facts.promoted is False
 
 
-def test_decode_marks_tom_pads_candidate_only_until_verified() -> None:
+def test_decode_keeps_unverified_tom_machine_facts_candidate_only() -> None:
     from rytm_randomizer.devices.strategies import AnalogRytmSnapshotDecoder
 
     snap = AnalogRytmSnapshotDecoder().decode(_real_layout_kit_payload(), slot=0)
 
     for pad in (6, 7, 8):
         fact = snap.machine_facts.facts_by_pad[pad]
+        assert fact.promoted is False
+        assert "candidate-only" in fact.reason
+
+
+def test_decode_promotes_xt_tom_facts_from_target_unit_return(
+    rytm_rio_return_frame: bytes,
+) -> None:
+    from rytm_randomizer.data.rytm_machine_catalog import RYTM_MACHINE_PROFILES_BY_KEY
+    from rytm_randomizer.devices.strategies import AnalogRytmSnapshotDecoder
+
+    snapshot = AnalogRytmSnapshotDecoder().decode(rytm_rio_return_frame[1:-1], slot=3)
+    xt_machine_value = RYTM_MACHINE_PROFILES_BY_KEY["xt_classic"].machine_value
+
+    assert snapshot.machine_facts.promoted is True
+    assert snapshot.raw == rytm_rio_return_frame[1:-1]
+    for pad in (6, 7, 8):
+        fact = snapshot.machine_facts.facts_by_pad[pad]
+        assert fact.raw_machine_value == xt_machine_value
+        assert fact.decoded_machine_value == xt_machine_value
+        assert fact.promoted is True
+
+
+@pytest.mark.parametrize("machine_value", (15, 16, 127, 0x88))
+def test_decode_keeps_other_tom_machine_values_unverified(
+    rytm_rio_return_frame: bytes, machine_value: int
+) -> None:
+    from rytm_randomizer.devices.strategies import AnalogRytmSnapshotDecoder
+
+    altered_frame = rytm_frame_with_machine_values(
+        rytm_rio_return_frame, dict.fromkeys((6, 7, 8), machine_value)
+    )
+    snapshot = AnalogRytmSnapshotDecoder().decode(altered_frame[1:-1], slot=3)
+
+    assert snapshot.machine_facts.promoted is False
+    for pad in (6, 7, 8):
+        fact = snapshot.machine_facts.facts_by_pad[pad]
+        assert fact.raw_machine_value == machine_value
+        assert fact.decoded_machine_value is None
         assert fact.promoted is False
         assert "candidate-only" in fact.reason
 

@@ -30,6 +30,11 @@ Future mutation and evidence work must also follow the updated
 [`targeted-mutation-safety` rule](.claude/rules/targeted-mutation-safety.md)
 and [`targeted-live-kit-mutation` skill](.claude/skills/learned/targeted-live-kit-mutation/SKILL.md).
 
+For captured machine projection and registry evidence coverage, read the
+[October 1 mapping report](docs/superpowers/plans/2026-10-01-rytm-captured-machine-mapping_RUN_REPORT.md).
+Keep the exact owning section, promoted identity and reverse CC check together;
+registered devices without parameter evidence must remain visible as unsupported.
+
 The current authority boundary is hardware-blocked by design: Analog Four
 Filter 1 Frequency is an offline saved-KIT artifact only, there is no A4 SEND,
 and the Rytm one-pad audition/restoration plus favorite save, recapture, and

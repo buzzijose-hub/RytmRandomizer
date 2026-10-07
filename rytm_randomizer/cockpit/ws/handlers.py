@@ -38,8 +38,10 @@ do **not** raise to express "the command is invalid" — they return
 the same categorical shape directly via :func:`_error_ack` so the
 wire-format contract is one and the same regardless of whether the
 failure was a handler-detected precondition or a raised exception.
-A structured :func:`logger.warning` call captures ``repr(exc)`` and
-the exception type server-side only, *never* on the wire
+A structured :func:`logger.warning` call captures the exception type and
+bounded forensic detail server-side only, *never* on the wire. Known local
+artifact refusals instead use fixed recovery text and redact forensic detail
+from both the log and the diagnostic journal. Other failures retain ``repr(exc)``
 (CODE_REVIEW.md PR 14, RR4f). ``repr(exc)`` is used (rather than
 ``str(exc)``) so the AST guard in
 ``tests/architecture/test_no_raw_exception_messages_on_wire.py`` can
@@ -66,9 +68,11 @@ import json
 import time
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable, Mapping
-from typing import Final, Protocol, SupportsFloat, SupportsInt, cast, runtime_checkable
+from threading import Event
+from typing import Final, Protocol, SupportsInt, cast, runtime_checkable
 
 from ...devices import get_device
+from ...guardrails.input_validation import canonical_json_bytes, require_float, require_text
 from ...observability.errors import RytmRandomizerError
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
@@ -77,6 +81,7 @@ from ..capture import (
     ANALOG_FOUR_DEVICE_ID,
     ANALOG_RYTM_DEVICE_ID,
     CAPTURE_DEVICE_IDS,
+    KitCaptureResult,
     cockpit_snapshot_from_rytm_capture,
     narrow_kit_capture_device_id,
 )
@@ -88,10 +93,14 @@ from ..data import (
     Snapshot,
     StageDeviceId,
 )
+from ..data.parameter_scope import RYTM_PAD2_REHEARSAL_PRESET_ID, ParameterSelection
+from ..data.rehearsal_favorite import LocalRehearsalFavorite
+from ..data.rytm_parameter_map import cockpit_parameter_live_blockers
 from ..device.connection import ConnectionState, active_connection_manager
 from ..diagnostics import build_diagnostics_payload
 from ..engine import mutate, prepare_send_plan
 from ..export import pack_profile_model
+from ..export.writer import WriteError
 from ..library import LibraryStore
 from ..mutation_targets import (
     A4_TRACK_TARGET_MAX,
@@ -99,6 +108,12 @@ from ..mutation_targets import (
     RYTM_PAD_TARGET_MAX,
     RYTM_PAD_TARGET_MIN,
     MutationTargets,
+)
+from ..parameter_scope import (
+    pad2_rehearsal_selection,
+    performance_parameter_controls,
+    rytm_parameter_depths,
+    validate_parameter_selection,
 )
 from .app_version import resolve_app_version
 from .protocol import (
@@ -110,6 +125,7 @@ from .protocol import (
     COMMAND_DIAGNOSTICS,
     COMMAND_DISARM,
     COMMAND_EXPORT_PROFILE_MODEL,
+    COMMAND_GET_MUTATION_PARAMETERS,
     COMMAND_LIBRARY_DELETE,
     COMMAND_LIBRARY_IMPORT_CAPTURES,
     COMMAND_LIBRARY_LIST,
@@ -120,16 +136,20 @@ from .protocol import (
     COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
     COMMAND_PREPARE_SEND_PLAN,
     COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
+    COMMAND_RECALL_REHEARSAL_FAVORITE,
     COMMAND_REGEN,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
+    COMMAND_RETAIN_REHEARSAL_FAVORITE,
     COMMAND_SAVE,
     COMMAND_SELECT_PROFILE,
     COMMAND_SEND,
     COMMAND_SET_A4_TRACK_LOCK,
     COMMAND_SET_DEPTH,
+    COMMAND_SET_MUTATION_PARAMETERS,
     COMMAND_SET_MUTATION_TARGETS,
     COMMAND_SET_PAD_LOCK,
+    COMMAND_SET_REHEARSAL_PRESET,
     COMMAND_TOGGLE_PREVIEW,
     COMMAND_UNDO,
     ERR_INTERNAL,
@@ -142,6 +162,7 @@ from .protocol import (
     EVENT_KIT_CAPTURES_CHANGED,
     EVENT_LIBRARY_CHANGED,
     EVENT_MUTATION_LOCKS_CHANGED,
+    EVENT_MUTATION_PARAMETERS_CHANGED,
     EVENT_MUTATION_PREVIEWED,
     EVENT_MUTATION_TARGETS_CHANGED,
     EVENT_PATCH_GENOME_CHANGED,
@@ -414,6 +435,18 @@ def _build_mutation_locks_changed(session: CockpitSession) -> dict[str, object]:
     }
 
 
+def build_mutation_parameters_changed(session: CockpitSession) -> dict[str, object]:
+    return {
+        "type": EVENT_MUTATION_PARAMETERS_CHANGED,
+        "rytm_parameters": session.rytm_parameters.to_list(),
+        "a4_parameters": session.a4_parameters.to_list(),
+        "controls": performance_parameter_controls(
+            session.device.capture_snapshot(),
+            session.offline_a4_capture or session.kit_captures.get(ANALOG_FOUR_DEVICE_ID),
+        ),
+    }
+
+
 def _build_dual_machine_stage_changed(session: CockpitSession) -> dict[str, object]:
     """Build the authoritative coordinated stage at its current revision."""
 
@@ -475,7 +508,7 @@ def _build_performance_console_changed() -> dict[str, object]:
 
 
 async def emit_initial_events(emitter: EventEmitter, session: CockpitSession) -> None:
-    """Send the 11 bootstrap events a freshly-connected client expects.
+    """Send the 12 bootstrap events a freshly-connected client expects.
 
     Order matters for the UI: a client renders the session status pill
     first (so the user sees "armed" or "mock"), then the snapshot (so
@@ -502,14 +535,15 @@ async def emit_initial_events(emitter: EventEmitter, session: CockpitSession) ->
     await emitter.send_event(_build_kit_captures_changed(session))
     await emitter.send_event(_build_mutation_targets_changed(session))
     await emitter.send_event(_build_mutation_locks_changed(session))
+    await emitter.send_event(build_mutation_parameters_changed(session))
     await emitter.send_event(_build_dual_machine_stage_changed(session))
     await emitter.send_event(_build_performance_console_changed())
     # Wave 3: when the launch brain is wired (the ``__main__`` boot path),
     # a freshly-connected client also receives the latest passive
     # connection state so the header renders plug/unplug truth without
     # waiting for the next poll diff. Unwired sessions (unit tests,
-    # embedded harnesses) keep the authoritative 11-event whole-state
-    # bootstrap; wired sessions append this connection frame as event 12.
+    # embedded harnesses) keep the authoritative 12-event whole-state
+    # bootstrap; wired sessions append this connection frame as event 13.
     manager = active_connection_manager()
     if manager is not None:
         await emitter.send_event(build_connection_changed(manager.state))
@@ -549,7 +583,7 @@ async def emit_initial_events(emitter: EventEmitter, session: CockpitSession) ->
 # mockups.
 _RECOMPUTE_CACHE_MAXSIZE: Final[int] = 16
 _recompute_cache: OrderedDict[
-    tuple[str, str, float, int, tuple[int, ...], tuple[int, ...]],
+    tuple[str, str, str, float, int, tuple[int, ...], tuple[int, ...], ParameterSelection],
     MutationCandidate,
 ] = OrderedDict()
 
@@ -580,14 +614,23 @@ def _recompute_candidate(
         session.current_candidate = None
         return None
     snapshot = session.device.capture_snapshot()
+    try:
+        depths = rytm_parameter_depths(snapshot, session.rytm_parameters, session.depth)
+    except ValueError:
+        # A new machine/source may revoke cells. Reset to none, never to all.
+        session.rytm_parameters = ParameterSelection(())
+        depths = {}
+        _logger.info("parameter_scope_source_changed", extra={"outcome": "selection_cleared"})
     target_pad_ids = frozenset(session.rytm_pad_targets)
     key = (
         snapshot.snapshot_id,
-        session.active_profile.profile_id,
+        hashlib.sha256(canonical_json_bytes(snapshot.to_dict())).hexdigest(),
+        hashlib.sha256(canonical_json_bytes(session.active_profile.to_dict())).hexdigest(),
         session.depth,
         session.seed,
         tuple(sorted(target_pad_ids)),
         tuple(sorted(session.pad_locks)),
+        session.rytm_parameters,
     )
     cached = None if force_fresh else _recompute_cache.get(key)
     if cached is not None:
@@ -602,7 +645,28 @@ def _recompute_candidate(
         session.seed,
         target_pad_ids=target_pad_ids,
         locked_pad_ids=frozenset(session.pad_locks),
+        parameter_depths=depths,
     )
+    effective_ids = {delta.pad_id for delta in candidate.pad_deltas}
+    for pad in snapshot.pads:
+        if pad.pad_id not in effective_ids:
+            continue
+        protected = {
+            parameter: cockpit_parameter_live_blockers(pad.machine, parameter)
+            for parameter in pad.params
+            if parameter != "lev" or snapshot.device == ANALOG_RYTM_DEVICE_ID
+        }
+        blockers = sorted({code for codes in protected.values() for code in codes})
+        if blockers:
+            _logger.info(
+                "mutation_guard_outcome",
+                extra={
+                    "pad_id": pad.pad_id,
+                    "blocker_codes": blockers,
+                    "outcome": "protected_preserved",
+                    "protected_field_count": sum(bool(codes) for codes in protected.values()),
+                },
+            )
     _recompute_cache[key] = candidate
     # Evict the least-recently-used entry once over capacity. ``popitem
     # (last=False)`` removes the front (oldest) entry; with the touch
@@ -633,6 +697,13 @@ def _clear_send_plan_if_needed(session: CockpitSession) -> list[dict[str, object
 # responsibility to log via :data:`_logger` BEFORE calling this helper
 # -- the helper itself takes only the safe text.
 # ---------------------------------------------------------------------------
+
+
+def _record_scope_refusal(reason: str) -> None:
+    _logger.info(
+        "studio_scope_refused",
+        extra={"decision": "scope_or_recall", "reason": reason, "outcome": "refused"},
+    )
 
 
 def _error_ack(code: str, message: str) -> dict[str, object]:
@@ -669,6 +740,28 @@ _HANDLER_VALIDATION_MESSAGE: Final[str] = "command rejected by handler validatio
 _HANDLER_INTERNAL_MESSAGE: Final[str] = "internal error processing command"
 
 
+def _is_local_artifact_command(cmd_type: str | None) -> bool:
+    from .show_bank_handlers import SHOW_BANK_HANDLERS
+
+    return cmd_type in SHOW_BANK_HANDLERS or cmd_type in (
+        COMMAND_LIBRARY_LIST,
+        COMMAND_LIBRARY_SEARCH,
+        COMMAND_LIBRARY_TAG,
+        COMMAND_LIBRARY_DELETE,
+        COMMAND_LIBRARY_IMPORT_CAPTURES,
+        COMMAND_RETAIN_REHEARSAL_FAVORITE,
+        COMMAND_RECALL_REHEARSAL_FAVORITE,
+    )
+
+
+def _local_artifact_failure_message(exc: BaseException, cmd_type: str) -> str | None:
+    if not _is_local_artifact_command(cmd_type):
+        return None
+    from .show_bank_handlers import local_artifact_failure_message
+
+    return local_artifact_failure_message(exc)
+
+
 def _classify_handler_exception(exc: BaseException) -> tuple[str, str]:
     """Map a handler-raised exception to a ``(code, canonical_message)`` pair.
 
@@ -690,6 +783,13 @@ def _classify_handler_exception(exc: BaseException) -> tuple[str, str]:
     if isinstance(exc, (KeyError, ValueError, FileExistsError)):
         return ERR_VALIDATION, _HANDLER_VALIDATION_MESSAGE
     return ERR_INTERNAL, _HANDLER_INTERNAL_MESSAGE
+
+
+def dispatcher_failure_ack(exc: BaseException, request_id: object) -> dict[str, object]:
+    """Reuse categorical handler errors when the transport dispatcher itself fails."""
+
+    code, message = _classify_handler_exception(exc)
+    return {"request_id": request_id, **_error_ack(code, message)}
 
 
 def _exc_fingerprint(exc: BaseException) -> str | None:
@@ -730,9 +830,11 @@ def _redacted_exception_repr(
     return repr(exc)
 
 
-def _bounded_handler_exception_repr(exc: BaseException) -> str:
+def _bounded_handler_exception_repr(exc: BaseException, *, redact_artifact: bool = False) -> str:
     """Keep useful exception context without logging an oversized rejected request."""
 
+    if redact_artifact:
+        return f"{type(exc).__name__}('<redacted-local-artifact>')"
     detail = repr(exc)
     if len(detail) <= _HANDLER_EXCEPTION_REPR_MAX_CHARS:
         return detail
@@ -840,88 +942,135 @@ async def _handle_capture_current_kit(
     input_port = cmd["input_port"]
     if not isinstance(input_port, str) or not input_port.strip():
         raise ValueError("capture input_port must be a non-empty string")
-    try:
-        result = await asyncio.to_thread(
+    if session.capture_cancel is not None:
+        _logger.info(
+            "cockpit_kit_capture_refused",
+            extra={"device_id": device_id, "reason": "capture_busy", "sent_midi": False},
+        )
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "another current-kit capture is active")
+        )
+    cancel_event = Event()
+    generation = session.capture_generation
+    session.capture_cancel = cancel_event
+    input_task = asyncio.create_task(
+        asyncio.to_thread(
             session.kit_capture_service.capture,
             device_id,
             input_port.strip(),
+            cancel_event=cancel_event,
         )
-    except (OSError, RuntimeError, TypeError, ValueError, RytmRandomizerError) as exc:
-        _logger.warning(
-            "cockpit_kit_capture_failed",
-            extra={
-                "device_id": device_id,
-                "exception_type": type(exc).__name__,
-                "exception_repr": _redacted_exception_repr(
-                    exc,
-                    sensitive_value=input_port.strip(),
-                ),
-                "fingerprint": _CAPTURE_FAILED_FINGERPRINT,
-            },
-        )
-        session.error_journal.record(
-            _CAPTURE_FAILED_FINGERPRINT,
-            "current-kit capture failed",
-            context={"device_id": device_id},
-        )
-        get_metrics().record_error(_CAPTURE_FAILED_FINGERPRINT)
+    )
+    try:
+        try:
+            result = await asyncio.shield(input_task)
+        except asyncio.CancelledError:
+            cancel_event.set()
+            _record_cancelled_capture(device_id)
+
+            def release_cancelled_capture(completed: asyncio.Task[KitCaptureResult]) -> None:
+                if not completed.cancelled():
+                    completed.exception()
+                if session.capture_cancel is cancel_event:
+                    session.capture_cancel = None
+
+            # Disconnect must not wait for a noncooperative provider to close.
+            # Only this cancelled path detaches cleanup; success still owns adoption.
+            input_task.add_done_callback(release_cancelled_capture)
+            raise
+        except (OSError, RuntimeError, TypeError, ValueError, RytmRandomizerError) as exc:
+            if cancel_event.is_set() or generation != session.capture_generation:
+                _record_cancelled_capture(device_id)
+                return HandlerResult(
+                    ack=_error_ack(ERR_VALIDATION, "current-kit capture cancelled")
+                )
+            _logger.warning(
+                "cockpit_kit_capture_failed",
+                extra={
+                    "device_id": device_id,
+                    "exception_type": type(exc).__name__,
+                    "exception_repr": _redacted_exception_repr(
+                        exc,
+                        sensitive_value=input_port.strip(),
+                    ),
+                    "fingerprint": _CAPTURE_FAILED_FINGERPRINT,
+                },
+            )
+            session.error_journal.record(
+                _CAPTURE_FAILED_FINGERPRINT,
+                "current-kit capture failed",
+                context={"device_id": device_id},
+            )
+            get_metrics().record_error(_CAPTURE_FAILED_FINGERPRINT)
+            session.stage_coordinator.record_capture(
+                device_id,
+                succeeded=False,
+                connected=None,
+                error="current-kit capture failed",
+            )
+            failure_events: list[dict[str, object]] = []
+            if session.show_kit_forge is not None:
+                if session.show_kit_forge.revoke_hardware_evidence():
+                    failure_events.extend(_show_bank_state_events(session))
+            if device_id == ANALOG_RYTM_DEVICE_ID:
+                failure_events.extend(_clear_send_plan_if_needed(session))
+                session.current_candidate = None
+                if session.preview_on:
+                    failure_events.append(_build_mutation_previewed(None))
+            failure_events.append(_build_dual_machine_stage_changed(session))
+            return HandlerResult(
+                ack=_error_ack(ERR_VALIDATION, "current-kit capture failed"),
+                events=failure_events,
+            )
+        if (
+            cancel_event.is_set()
+            or generation != session.capture_generation
+            or session.capture_cancel is not cancel_event
+        ):
+            _record_cancelled_capture(device_id)
+            return HandlerResult(ack=_error_ack(ERR_VALIDATION, "current-kit capture cancelled"))
+        events: list[dict[str, object]] = []
         session.stage_coordinator.record_capture(
             device_id,
-            succeeded=False,
-            connected=None,
-            error="current-kit capture failed",
+            succeeded=True,
+            connected=True,
         )
-        failure_events: list[dict[str, object]] = []
-        if session.show_kit_forge is not None:
-            if session.show_kit_forge.revoke_hardware_evidence():
-                failure_events.extend(_show_bank_state_events(session))
         if device_id == ANALOG_RYTM_DEVICE_ID:
-            failure_events.extend(_clear_send_plan_if_needed(session))
+            snapshot = cockpit_snapshot_from_rytm_capture(result)
+            events.extend(_clear_send_plan_if_needed(session))
+            session.device.adopt_snapshot(snapshot)
+            if session.history_store.has_entries:
+                session.history_store.append_post_send(snapshot, via="capture")
+            else:
+                session.history_store.initial(snapshot)
             session.current_candidate = None
+            candidate = _recompute_candidate(session, force_fresh=True)
+            session.recalled_offline_favorite = False
+            _record_stage_scope(session, ANALOG_RYTM_DEVICE_ID)
+            _record_rytm_candidate(session, candidate)
+            events.extend(
+                [
+                    _build_snapshot_changed(snapshot),
+                    _build_history_updated(session.history_store.current),
+                ]
+            )
             if session.preview_on:
-                failure_events.append(_build_mutation_previewed(None))
-        failure_events.append(_build_dual_machine_stage_changed(session))
-        return HandlerResult(
-            ack=_error_ack(ERR_VALIDATION, "current-kit capture failed"),
-            events=failure_events,
-        )
-    events: list[dict[str, object]] = []
-    session.stage_coordinator.record_capture(
-        device_id,
-        succeeded=True,
-        connected=True,
-    )
-    if device_id == ANALOG_RYTM_DEVICE_ID:
-        snapshot = cockpit_snapshot_from_rytm_capture(result)
-        events.extend(_clear_send_plan_if_needed(session))
-        session.device.adopt_snapshot(snapshot)
-        if session.history_store.has_entries:
-            session.history_store.append_post_send(snapshot, via="capture")
+                events.append(_build_mutation_previewed(candidate))
         else:
-            session.history_store.initial(snapshot)
-        session.current_candidate = None
-        candidate = _recompute_candidate(session, force_fresh=True)
-        _record_stage_scope(session, ANALOG_RYTM_DEVICE_ID)
-        _record_rytm_candidate(session, candidate)
-        events.extend(
-            [
-                _build_snapshot_changed(snapshot),
-                _build_history_updated(session.history_store.current),
-            ]
+            _record_stage_scope(session, ANALOG_FOUR_DEVICE_ID)
+            session.offline_a4_capture = None
+        session.kit_captures[device_id] = result
+        if session.show_kit_forge is not None and session.show_kit_forge.observe_capture(result):
+            events.extend(_show_bank_state_events(session))
+        events.insert(0, _build_kit_captures_changed(session))
+        events.append(_build_dual_machine_stage_changed(session))
+        return HandlerResult(
+            ack={"ok": True, "kit_capture": result.to_dict()},
+            events=events,
         )
-        if session.preview_on:
-            events.append(_build_mutation_previewed(candidate))
-    else:
-        _record_stage_scope(session, ANALOG_FOUR_DEVICE_ID)
-    session.kit_captures[device_id] = result
-    if session.show_kit_forge is not None and session.show_kit_forge.observe_capture(result):
-        events.extend(_show_bank_state_events(session))
-    events.insert(0, _build_kit_captures_changed(session))
-    events.append(_build_dual_machine_stage_changed(session))
-    return HandlerResult(
-        ack={"ok": True, "kit_capture": result.to_dict()},
-        events=events,
-    )
+    finally:
+        if input_task.done() and session.capture_cancel is cancel_event:
+            session.capture_cancel = None
 
 
 async def _handle_select_profile(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
@@ -943,7 +1092,9 @@ async def _handle_select_profile(cmd: dict[str, object], session: CockpitSession
 async def _handle_set_depth(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     # ``cast`` mirrors the historical ``float(<wire value>)`` coercion
     # exactly: a non-numeric wire value still raises through ``float``.
-    depth = float(cast(SupportsFloat, cmd["depth"]))
+    depth = require_float(cmd["depth"], "depth")
+    if not 0 <= depth <= 0.90:
+        raise ValueError("depth must be in 0..0.90")
     events = _clear_send_plan_if_needed(session)
     session.depth = depth
     candidate = _recompute_candidate(session)
@@ -1107,6 +1258,99 @@ async def _handle_clear_mutation_targets(
     return HandlerResult(ack={"ok": True}, events=events)
 
 
+def _parameter_scope_transition(session: CockpitSession) -> list[dict[str, object]]:
+    session.current_candidate = None
+    session.current_send_plan = None
+    _record_stage_scope(session, ANALOG_RYTM_DEVICE_ID)
+    _record_stage_scope(session, ANALOG_FOUR_DEVICE_ID)
+    session.stage_coordinator.record_candidate(ANALOG_FOUR_DEVICE_ID, ready=None)
+    candidate = _recompute_candidate(session, force_fresh=True)
+    _record_rytm_candidate(session, candidate)
+    return [
+        build_mutation_parameters_changed(session),
+        _build_mutation_previewed(candidate if session.preview_on else None),
+        _build_send_plan_changed(None),
+        _build_dual_machine_stage_changed(session),
+    ]
+
+
+async def _handle_set_mutation_parameters(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    device_id = narrow_kit_capture_device_id(cmd["device_id"])
+    selection = ParameterSelection.parse(cmd["parameter_cells"])
+    controls = performance_parameter_controls(
+        session.device.capture_snapshot(),
+        session.offline_a4_capture or session.kit_captures.get(ANALOG_FOUR_DEVICE_ID),
+    )
+    try:
+        validate_parameter_selection(selection, controls, device_id)
+    except ValueError:
+        _record_scope_refusal("control_protected_or_unavailable")
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "select only canonical captured mutable controls; protected or unavailable fields cannot be selected",
+            )
+        )
+    if device_id == ANALOG_RYTM_DEVICE_ID:
+        session.rytm_parameters = selection
+    else:
+        session.a4_parameters = selection
+    events = _parameter_scope_transition(session)
+    _logger.info(
+        "mutation_parameters_changed",
+        extra={
+            "device_id": device_id,
+            "outcome": "validated",
+            "explicit_scope": selection.cells is not None,
+        },
+    )
+    return HandlerResult(ack={"ok": True}, events=events)
+
+
+async def _handle_get_mutation_parameters(
+    _cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    return HandlerResult(ack={"ok": True}, events=[build_mutation_parameters_changed(session)])
+
+
+async def _handle_set_rehearsal_preset(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    if cmd["preset_id"] != RYTM_PAD2_REHEARSAL_PRESET_ID:
+        _record_scope_refusal("preset_unknown")
+        raise ValueError("unsupported rehearsal preset")
+    try:
+        selection = pad2_rehearsal_selection(session.device.capture_snapshot())
+    except ValueError:
+        _record_scope_refusal("preset_source_fields_unavailable")
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "Pad 2 rehearsal requires captured Filter Frequency, AMP Decay, Overdrive and Reverb Send values",
+            )
+        )
+    session.rytm_parameters = selection
+    session.a4_parameters = ParameterSelection(())
+    session.rytm_pad_targets = {2}
+    session.pad_locks = set(range(RYTM_PAD_TARGET_MIN, RYTM_PAD_TARGET_MAX + 1)) - {2}
+    session.a4_track_targets.clear()
+    session.a4_track_locks = set(range(A4_TRACK_TARGET_MIN, A4_TRACK_TARGET_MAX + 1))
+    session.depth = 0.10
+    session.preview_on = True
+    events = [_build_mutation_targets_changed(session), _build_mutation_locks_changed(session)]
+    events.extend(_parameter_scope_transition(session))
+    _logger.info(
+        "rehearsal_preset_selected",
+        extra={"preset_id": RYTM_PAD2_REHEARSAL_PRESET_ID, "physical_validation": "pending"},
+    )
+    return HandlerResult(
+        ack={"ok": True, "physical_validation_required": True, "depth": session.depth},
+        events=events,
+    )
+
+
 async def _handle_toggle_preview(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     on = bool(cmd["on"])
     events = _clear_send_plan_if_needed(session)
@@ -1170,6 +1414,7 @@ async def _handle_prepare_send_plan(
         session.current_candidate,
         frozenset(session.pad_locks),
         pad_targets=frozenset(session.rytm_pad_targets),
+        parameter_selection=session.rytm_parameters,
     )
     if plan is None:
         session.stage_coordinator.record_plan(ANALOG_RYTM_DEVICE_ID, ready=False)
@@ -1191,6 +1436,17 @@ async def _handle_prepare_send_plan(
 
 
 async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    if session.hardware_intent and session.armed_apply is None:
+        # Context loss must refuse hardware intent even if teardown cleared
+        # the candidate and plan. Never acknowledge a silent mock fallback.
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "hardware was disarmed automatically (device lost or send "
+                "failed); re-arm to send to hardware, or disarm explicitly "
+                "to continue in mock mode",
+            )
+        )
     if session.current_candidate is None:
         return HandlerResult(
             ack=_error_ack(ERR_VALIDATION, "no current candidate; set a profile and depth first")
@@ -1217,6 +1473,29 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
             )
         )
     live_hardware_audition = session.armed_apply is not None or session.device.is_armed
+    checked = prepare_send_plan(
+        session.device.capture_snapshot(),
+        session.active_profile,
+        session.current_candidate,
+        frozenset(session.pad_locks),
+        frozenset(session.rytm_pad_targets),
+        parameter_selection=session.rytm_parameters,
+    )
+    if checked is None or not checked.ready or checked.to_dict() != sent_plan.to_dict():
+        _record_scope_refusal("prepared_plan_stale")
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION, "send plan is stale; prepare the current exact scope again"
+            )
+        )
+    if live_hardware_audition and session.recalled_offline_favorite:
+        _record_scope_refusal("recall_requires_fresh_capture")
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "local favorite recall requires a fresh saved-source capture before hardware audition",
+            )
+        )
     hardware_evidence_events: list[dict[str, object]] = []
     if live_hardware_audition and session.show_kit_forge is not None:
         try:
@@ -1247,22 +1526,6 @@ async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> Handl
         if refusal is not None:
             refusal.events.extend(hardware_evidence_events)
             return refusal
-    elif session.hardware_intent:
-        # The operator armed and never explicitly disarmed, but the seam is
-        # gone — an INVOLUNTARY auto-disarm (device unplugged, provider
-        # error, transport teardown) cleared it. Falling through here would
-        # skip the per-action confirmation, write to the mock adapter, and
-        # ack ok:True with a new snapshot id while putting ZERO bytes on the
-        # wire: the operator keeps performing, believing the device is
-        # following. Refuse instead, and say why.
-        return HandlerResult(
-            ack=_error_ack(
-                ERR_VALIDATION,
-                "hardware was disarmed automatically (device lost or send "
-                "failed); re-arm to send to hardware, or disarm explicitly "
-                "to continue in mock mode",
-            )
-        )
     elif session.device.is_armed:
         _logger.info(
             "cockpit_live_send_authorized",
@@ -2101,6 +2364,23 @@ _ARM_SEND_REFUSED_FINGERPRINT: Final[str] = "cockpit.arm.send_refused"
 _CAPTURE_FAILED_FINGERPRINT: Final[str] = "cockpit.capture.failed"
 """Journal fingerprint for an input-only saved-KIT capture failure."""
 
+_CAPTURE_CANCELLED_FINGERPRINT: Final[str] = "cockpit.capture.cancelled"
+"""Bounded diagnostic category for a cancelled input-only operation."""
+
+
+def _record_cancelled_capture(device_id: str) -> None:
+    _logger.info(
+        "cockpit_kit_capture_cancelled",
+        extra={
+            "device_id": device_id,
+            "reason": "capture_cancelled",
+            "fingerprint": _CAPTURE_CANCELLED_FINGERPRINT,
+            "sent_midi": False,
+        },
+    )
+    get_metrics().record_error(_CAPTURE_CANCELLED_FINGERPRINT)
+
+
 _GUARDED_SEND_FAILED_FINGERPRINT: Final[str] = "cockpit.send.guarded_boundary_failed"
 """Journal fingerprint for a guarded-device apply failure."""
 
@@ -2263,6 +2543,13 @@ def _show_bank_state_events(session: CockpitSession) -> list[dict[str, object]]:
     return [{"type": EVENT_SHOW_BANK_CHANGED, "show_bank": workspace.state_dict()}]
 
 
+def cancel_pending_capture(session: CockpitSession) -> None:
+    """Signal owned input cancellation and reject every result from the old context."""
+    session.capture_generation += 1
+    if session.capture_cancel is not None:
+        session.capture_cancel.set()
+
+
 def _teardown_armed_state(session: CockpitSession) -> None:
     """Return the session to the passive baseline (idempotent).
 
@@ -2278,17 +2565,41 @@ def _teardown_armed_state(session: CockpitSession) -> None:
     teardowns close the port exactly once.
     """
 
+    cancel_pending_capture(session)
+    # Only revoked output authority invalidates a prepared Studio preview.
+    # Passive transport loss still cancels input, but keeps inert review state.
+    had_output_authority = session.armed_apply is not None or session.device.is_armed
+    if had_output_authority:
+        session.current_candidate = None
+        session.current_send_plan = None
+        _record_rytm_candidate(session, None)
     armed = session.armed_apply
     session.armed_apply = None
     if armed is not None:
         armed.disarm()
-    session.stage_coordinator.record_rytm_authority(armed=False)
+    if had_output_authority:
+        session.stage_coordinator.record_rytm_authority(armed=False)
     if session.show_kit_forge is not None:
         session.show_kit_forge.revoke_hardware_evidence()
     _logger.info(
         "cockpit_armed_state_revoked",
         extra={"had_armed_seam": armed is not None},
     )
+
+
+def revoke_session_output(
+    session: CockpitSession, *, preserve_source_capture: bool = False
+) -> dict[str, object]:
+    """Revoke volatile output grants for local recall, never restore hardware."""
+    if preserve_source_capture and session.armed_apply is None and not session.device.is_armed:
+        # Inert Show Forge reselection must not revoke the fresh reload dump
+        # it is explicitly required to follow. Real output loss still revokes.
+        cancel_pending_capture(session)
+        session.current_send_plan = None
+    else:
+        _teardown_armed_state(session)
+    session.hardware_intent = False
+    return _build_session_status(session)
 
 
 def disarm_session_on_teardown(session: CockpitSession) -> None:
@@ -2331,6 +2642,8 @@ def build_armed_watchdog(
 
     def _on_connection_change(state: ConnectionState) -> None:
         phase_lost = state.phase not in ("listening", "armed")
+        if phase_lost:
+            cancel_pending_capture(session)
         if phase_lost and session.show_kit_forge is not None:
             changed = session.show_kit_forge.revoke_hardware_evidence()
             if changed and broadcaster is not None:
@@ -2586,7 +2899,11 @@ async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> Handle
 async def _handle_disarm(_cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     """Explicit disarm: tear the armed seam down, restore the passive device."""
 
-    if session.armed_apply is None and not session.device.is_armed:
+    if (
+        session.armed_apply is None
+        and not session.device.is_armed
+        and session.capture_cancel is None
+    ):
         return HandlerResult(ack=_error_ack(ERR_VALIDATION, "session is not armed"))
     _teardown_armed_state(session)
     # EXPLICIT disarm is the only thing that clears hardware intent: the
@@ -2722,6 +3039,110 @@ async def _handle_library_import_captures(
     )
 
 
+async def _handle_retain_rehearsal_favorite(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    store = session.library_store
+    if store is None:
+        return _library_unconfigured_ack()
+    if session.active_profile is None or session.current_candidate is None:
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION, "preview a scoped candidate before retaining a local favorite"
+            )
+        )
+    favorite = LocalRehearsalFavorite(
+        source_snapshot=session.device.capture_snapshot(),
+        profile=session.active_profile,
+        candidate=session.current_candidate,
+        rytm_pad_targets=frozenset(session.rytm_pad_targets),
+        a4_track_targets=frozenset(session.a4_track_targets),
+        locked_pad_ids=frozenset(session.pad_locks),
+        locked_a4_track_ids=frozenset(session.a4_track_locks),
+        rytm_parameter_selection=session.rytm_parameters,
+        a4_parameter_selection=session.a4_parameters,
+    )
+    try:
+        record = store.retain_rehearsal(favorite, require_text(cmd["name"], "name"))
+    except (OSError, WriteError) as exc:
+        _record_scope_refusal("favorite_persistence_failed")
+        raise WriteError("local rehearsal favorite persistence failed") from exc
+    return HandlerResult(
+        ack={"ok": True, "library_record": record.to_dict()}, events=[_build_library_changed(store)]
+    )
+
+
+async def _handle_recall_rehearsal_favorite(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    store = session.library_store
+    if store is None:
+        return _library_unconfigured_ack()
+    record = store.get(require_text(cmd["record_id"], "record_id"))
+    if record is None or record.rehearsal is None:
+        _record_scope_refusal("favorite_missing_or_invalid")
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION,
+                "local rehearsal favorite is unavailable or invalid; stored files were not reset",
+            )
+        )
+    favorite = record.rehearsal
+    # Verify everything before revoking or replacing any current review state.
+    store.verify_rehearsal(favorite)
+    passive = revoke_session_output(session)
+    source = favorite.source_snapshot
+    session.device.adopt_snapshot(source)
+    history = session.history_store.current
+    if any(entry.snapshot.snapshot_id == source.snapshot_id for entry in history.entries):
+        session.history_store.load(source.snapshot_id)
+    elif session.history_store.has_entries:
+        session.history_store.append_post_send(source, via="load")
+    else:
+        session.history_store.initial(source)
+    session.active_profile = favorite.profile
+    session.depth = favorite.candidate.depth
+    session.seed = favorite.candidate.seed
+    session.rytm_pad_targets = set(favorite.rytm_pad_targets)
+    session.a4_track_targets = set(favorite.a4_track_targets)
+    session.pad_locks = set(favorite.locked_pad_ids)
+    session.a4_track_locks = set(favorite.locked_a4_track_ids)
+    session.rytm_parameters = favorite.rytm_parameter_selection
+    session.a4_parameters = favorite.a4_parameter_selection
+    session.current_candidate = favorite.candidate
+    session.current_send_plan = None
+    session.recalled_offline_favorite = True
+    session.preview_on = True
+    _record_stage_scope(session, ANALOG_RYTM_DEVICE_ID)
+    _record_stage_scope(session, ANALOG_FOUR_DEVICE_ID)
+    _record_rytm_candidate(session, session.current_candidate)
+    session.stage_coordinator.record_candidate(ANALOG_FOUR_DEVICE_ID, ready=None)
+    _logger.info(
+        "local_rehearsal_recalled",
+        extra={"outcome": "verified_disarmed", "hardware_authority": False},
+    )
+    return HandlerResult(
+        ack={
+            "ok": True,
+            "library_record_id": record.record_id,
+            "depth": session.depth,
+            "armed": False,
+        },
+        events=[
+            passive,
+            _build_snapshot_changed(source),
+            _build_profile_changed(session.active_profile),
+            _build_history_updated(session.history_store.current),
+            _build_mutation_targets_changed(session),
+            _build_mutation_locks_changed(session),
+            build_mutation_parameters_changed(session),
+            _build_mutation_previewed(session.current_candidate),
+            _build_send_plan_changed(None),
+            _build_dual_machine_stage_changed(session),
+        ],
+    )
+
+
 HandlerFn = Callable[[dict[str, object], CockpitSession], Awaitable[HandlerResult]]
 
 _CORE_HANDLERS: dict[str, HandlerFn] = {
@@ -2733,6 +3154,11 @@ _CORE_HANDLERS: dict[str, HandlerFn] = {
     COMMAND_SET_DEPTH: _handle_set_depth,
     COMMAND_SET_A4_TRACK_LOCK: _handle_set_a4_track_lock,
     COMMAND_SET_MUTATION_TARGETS: _handle_set_mutation_targets,
+    COMMAND_SET_MUTATION_PARAMETERS: _handle_set_mutation_parameters,
+    COMMAND_GET_MUTATION_PARAMETERS: _handle_get_mutation_parameters,
+    COMMAND_SET_REHEARSAL_PRESET: _handle_set_rehearsal_preset,
+    COMMAND_RETAIN_REHEARSAL_FAVORITE: _handle_retain_rehearsal_favorite,
+    COMMAND_RECALL_REHEARSAL_FAVORITE: _handle_recall_rehearsal_favorite,
     COMMAND_SET_PAD_LOCK: _handle_set_pad_lock,
     COMMAND_TOGGLE_PREVIEW: _handle_toggle_preview,
     COMMAND_REGEN: _handle_regen,
@@ -2784,7 +3210,7 @@ def _resolve_handler(cmd_type: str) -> HandlerFn | None:
         return _CORE_HANDLERS[cmd_type]
     if cmd_type.startswith("show_bank_"):
         # Show Kit Forge is loaded only when its panel requests state, keeping
-        # the fixed eleven-event bootstrap and ordinary passive edit path
+        # the fixed twelve-event bootstrap and ordinary passive edit path
         # unchanged.
         from .show_bank_handlers import SHOW_BANK_HANDLERS  # noqa: PLC0415
 
@@ -2829,7 +3255,8 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
       id wasn't found); everything else (``TypeError`` / ``RuntimeError``
       / :class:`RytmRandomizerError`) maps to ``code=ERR_INTERNAL`` and
       is the last-line safety net for genuine bugs. In every case the
-      full ``repr(exc)`` and exception type are logged server-side; only
+      exception type and bounded detail are logged server-side; known local
+      artifact failures use safe categories with redacted detail. Only
       the categorical ``code`` and a short canonical ``message`` reach
       the wire (PR 14 / RR4f).
 
@@ -2897,6 +3324,28 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
     # boot paths that never touch a ``wizard_*`` command do not pay the
     # wizard's import cost.
     handler = _resolve_handler(cmd_type) if isinstance(cmd_type, str) else None
+    if session.capture_cancel is not None and cmd_type not in (
+        COMMAND_CAPTURE_CURRENT_KIT,
+        COMMAND_DISARM,
+        COMMAND_DIAGNOSTICS,
+    ):
+        label = cmd_type if handler is not None and isinstance(cmd_type, str) else "<unknown>"
+        _metrics.record_ws_command(
+            label, (time.perf_counter() - _t0) * 1000.0, error_code=ERR_VALIDATION
+        )
+        _logger.info(
+            "ws_command_refused",
+            extra={
+                "reason": "capture_active",
+                "cmd_type": label,
+                "request_id": request_id,
+                "outcome": "refused",
+            },
+        )
+        return {
+            "request_id": request_id,
+            **_error_ack(ERR_VALIDATION, "current-kit capture is active; disarm to cancel it"),
+        }
     # OBS O2 — bucket label for the RED counters. Use the actual cmd_type
     # if it's a string; non-string types collapse to the same "<unknown>"
     # label the operation span uses, so the operator sees one consistent
@@ -2923,6 +3372,17 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
     with operation(op_name, logger=_logger, request_id=request_id):
         try:
             result = await handler(cmd, session)
+        except asyncio.CancelledError:
+            _metrics.record_ws_command(
+                _label,
+                (time.perf_counter() - _t0) * 1000.0,
+                error_code=ERR_VALIDATION,
+            )
+            _logger.info(
+                "ws_command_cancelled",
+                extra={"cmd_type": _label, "request_id": request_id, "outcome": "cancelled"},
+            )
+            raise
         except (KeyError, OSError, TypeError, ValueError, RuntimeError, RytmRandomizerError) as exc:
             # PR 14 / RR4f: never echo the underlying exception text back
             # over the wire -- exception messages routinely embed filesystem
@@ -2935,7 +3395,14 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
             # stays at floor 0 for this file -- ``repr`` still carries the
             # exception type + args for forensic purposes. Only the log copy
             # is truncated; the internal exception retains its full details.
-            code, message = _classify_handler_exception(exc)
+            # Recognized local artifact failures omit that detail entirely;
+            # unknown failures keep the original RR4f classification/logging.
+            artifact_message = _local_artifact_failure_message(exc, _label)
+            code, message = (
+                _classify_handler_exception(exc)
+                if artifact_message is None
+                else (ERR_VALIDATION, artifact_message)
+            )
             # Wave 4: taxonomy errors also land in the session's bounded
             # error journal so the ``diagnostics`` command can replay the
             # last 50 categorized failures without log access. The
@@ -2957,7 +3424,9 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
                     "code": code,
                     "cmd_type": cmd_type,
                     "exception_type": type(exc).__name__,
-                    "exception_repr": _bounded_handler_exception_repr(exc),
+                    "exception_repr": _bounded_handler_exception_repr(
+                        exc, redact_artifact=_is_local_artifact_command(_label)
+                    ),
                     # OBS O4 — when ``exc`` is a :class:`RytmRandomizerError`
                     # subclass (one of the arms of the except tuple above),
                     # this is the stable ``<subsystem>.<verb>.<noun>``
@@ -3026,8 +3495,12 @@ __all__ = [
     "WS_ERROR_CODES",
     "build_armed_watchdog",
     "build_connection_changed",
+    "build_mutation_parameters_changed",
+    "cancel_pending_capture",
+    "dispatcher_failure_ack",
     "drain_pending_events",
     "emit_initial_events",
     "handle_command",
     "resolve_connection_phase",
+    "revoke_session_output",
 ]

@@ -1,9 +1,9 @@
 """Pure paired candidate generation for Show Kit Forge.
 
 The module composes the existing Cockpit Rytm mutation engine with the
-narrow, offline-only Analog Four Filter 1 Frequency renderer.  It performs no
-filesystem or MIDI I/O.  Full SysEx bytes stay in the in-process result until
-an explicit retain/export action hands them to :mod:`.store`.
+optional native-field and legacy Filter 1 Frequency renderers. It performs no
+filesystem or MIDI I/O. The workspace retains full framed artifacts atomically
+with the immutable recipe; rendering grants no output authority.
 """
 
 from __future__ import annotations
@@ -20,7 +20,9 @@ from ...data.analog_four_sysex_calibration import (
 )
 from ...devices import (
     AnalogFourFilter1FrequencyCandidateMutation,
+    AnalogFourNativeMutation,
     get_analog_four_filter1_frequency_candidate_capability,
+    get_analog_four_native_field_capability,
     resolve_saved_kit_capture_capability,
 )
 from ..capture import (
@@ -30,10 +32,13 @@ from ..capture import (
     cockpit_snapshot_from_rytm_capture,
 )
 from ..data import MutationCandidate, ProfileModel, Snapshot
+from ..data.parameter_scope import A4_NATIVE_PARAMETER_ALIASES, A4_NATIVE_PARAMETER_KEYS
 from ..data.show_bank import (
+    A4_NATIVE_MUTATION_ALGORITHM,
     A4_SHOW_KIT_DEVICE_ID,
     RYTM_SHOW_KIT_DEVICE_ID,
     AnalogFourCandidateValue,
+    AnalogFourNativeCandidateValue,
     AnalogFourOfflineCandidate,
     OxiShowMetadata,
     ShowBankEntry,
@@ -45,6 +50,7 @@ from ..data.show_bank import (
 )
 from ..engine.mutate import mutate
 from ..engine.prng import xorshift32
+from ..parameter_scope import rytm_parameter_depths
 
 _UINT32_MAX: Final[int] = (1 << 32) - 1
 _UINT32_MIDPOINT: Final[int] = 1 << 31
@@ -241,15 +247,24 @@ def _deterministic_candidate_id(
 
 
 def _a4_semantic_fingerprint(
-    values: tuple[AnalogFourCandidateValue, ...],
+    values: tuple[AnalogFourCandidateValue | AnalogFourNativeCandidateValue, ...],
 ) -> str:
     return _fingerprint(
         [
-            {
-                "parameter": value.parameter,
-                "raw_q8_8": value.encoded_unsigned_8_8,
-                "track_id": value.track_id,
-            }
+            (
+                {
+                    "parameter": value.parameter,
+                    "raw_q8_8": value.encoded_unsigned_8_8,
+                    "track_id": value.track_id,
+                }
+                if isinstance(value, AnalogFourCandidateValue)
+                else {
+                    "parameter": value.parameter,
+                    "encoded_native": value.encoded_native,
+                    "native_encoding": value.native_encoding,
+                    "track_id": value.track_id,
+                }
+            )
             for value in sorted(values, key=lambda item: (item.track_id, item.parameter))
         ]
     )
@@ -283,6 +298,11 @@ def _a4_mutation_values(
 ) -> tuple[AnalogFourFilter1FrequencyCandidateMutation, ...]:
     unpacked = _a4_source_unpacked(source_frame)
     effective_tracks = recipe.analog_four_scope.effective_ids
+    selection = recipe.analog_four_scope.parameters
+    if selection.cells is not None and any(
+        cell.parameter_key != A4_FILTER1_FREQUENCY_PARAMETER for cell in selection.cells
+    ):
+        raise ValueError("A4 parameter scope contains an unsupported saved-KIT field")
     state = ((recipe.seed & _UINT32_MAX) ^ _A4_PRNG_XOR) or _A4_PRNG_XOR
     for _ in range(_A4_PRNG_WARMUP):
         _, state = xorshift32(state)
@@ -290,6 +310,8 @@ def _a4_mutation_values(
     mutations: list[AnalogFourFilter1FrequencyCandidateMutation] = []
     for track in effective_tracks:
         raw, state = xorshift32(state)
+        if not selection.includes(track, A4_FILTER1_FREQUENCY_PARAMETER):
+            continue
         calibration = analog_four_sysex_calibration_for(A4_FILTER1_FREQUENCY_PARAMETER)
         offset = calibration.native_offset_for_track(track)
         source_raw = int.from_bytes(unpacked[offset : offset + calibration.native_width], "big")
@@ -312,6 +334,47 @@ def _a4_mutation_values(
     return tuple(mutations)
 
 
+def _a4_native_mutation_values(
+    source_frame: bytes, *, recipe: ShowKitRecipe
+) -> tuple[AnalogFourNativeMutation, ...]:
+    source = get_analog_four_native_field_capability().read_native_fields(source_frame)
+    selection = recipe.analog_four_scope.parameters
+    if selection.cells is not None:
+        for cell in selection.cells:
+            key = A4_NATIVE_PARAMETER_KEYS.get(cell.parameter_key, cell.parameter_key)
+            value = source.value(key, cell.item_id)
+            if not value.mutable:
+                raise ValueError("A4 scope selects an immutable or unestablished native field")
+    state = ((recipe.seed & _UINT32_MAX) ^ _A4_PRNG_XOR) or _A4_PRNG_XOR
+    for _ in range(_A4_PRNG_WARMUP):
+        _, state = xorshift32(state)
+    changes: list[AnalogFourNativeMutation] = []
+    for cell in source.values:
+        raw, state = xorshift32(state)
+        key = A4_NATIVE_PARAMETER_ALIASES.get(cell.parameter, cell.parameter)
+        if (
+            cell.track not in recipe.analog_four_scope.effective_ids
+            or not selection.includes(cell.track, key)
+            or not cell.mutable
+            or cell.domain is None
+            or recipe.depth == 0
+        ):
+            continue
+        domain = cell.domain
+        index = domain.index_of(cell.encoded_native)
+        delta = int(
+            round(
+                ((raw - _UINT32_MIDPOINT) / _UINT32_MIDPOINT)
+                * recipe.depth
+                * (domain.value_count - 1)
+            )
+        )
+        rendered = domain.value_at(min(domain.value_count - 1, max(0, index + delta)))
+        if rendered != cell.encoded_native:
+            changes.append(AnalogFourNativeMutation(cell.parameter, cell.track, rendered))
+    return tuple(changes)
+
+
 def forge_candidate_pair(  # noqa: PLR0913 - explicit immutable sources, recipe, and evidence time
     *,
     entry: ShowBankEntry,
@@ -327,6 +390,8 @@ def forge_candidate_pair(  # noqa: PLR0913 - explicit immutable sources, recipe,
         raise ValueError("Rytm source snapshot does not match the immutable show-bank anchor")
     if profile.profile_id != recipe.profile_id:
         raise ValueError("active profile does not match the show-kit recipe")
+    if recipe.profile is not None and recipe.profile != profile:
+        raise ValueError("profile content does not match the retained show-kit recipe")
     if _show_kit_sha256(analog_four_source_frame) != entry.analog_four_source.sysex.frame_sha256:
         raise ValueError("Analog Four source bytes do not match the immutable show-bank anchor")
 
@@ -337,31 +402,54 @@ def forge_candidate_pair(  # noqa: PLR0913 - explicit immutable sources, recipe,
         recipe.seed,
         target_pad_ids=frozenset(recipe.rytm_scope.target_ids),
         locked_pad_ids=frozenset(recipe.rytm_scope.locked_ids),
+        parameter_depths=rytm_parameter_depths(
+            rytm_source_snapshot, recipe.rytm_scope.parameters, recipe.depth
+        ),
     )
-    filter1_capability = get_analog_four_filter1_frequency_candidate_capability()
-    rendered_a4 = filter1_capability.render_filter1_frequency_candidate(
-        analog_four_source_frame,
-        _a4_mutation_values(analog_four_source_frame, recipe=recipe),
-    )
+    a4_values: tuple[AnalogFourCandidateValue | AnalogFourNativeCandidateValue, ...]
+    if recipe.a4_algorithm == A4_NATIVE_MUTATION_ALGORITHM:
+        rendered_native = get_analog_four_native_field_capability().render_native_fields(
+            analog_four_source_frame,
+            _a4_native_mutation_values(analog_four_source_frame, recipe=recipe),
+        )
+        rendered_frame = rendered_native.framed_sysex
+        rendered_sha = rendered_native.sha256
+        a4_values = tuple(
+            AnalogFourNativeCandidateValue(
+                track_id=item.rendered.track,
+                parameter=item.rendered.parameter,
+                screen_value=item.rendered.screen_value or str(item.rendered.encoded_native),
+                encoded_native=item.rendered.encoded_native,
+                native_encoding=item.rendered.metadata.native_encoding.value,
+                unpacked_offsets=item.rendered.unpacked_offsets,
+            )
+            for item in rendered_native.applied_mutations
+        )
+    else:
+        rendered_a4 = get_analog_four_filter1_frequency_candidate_capability().render_filter1_frequency_candidate(
+            analog_four_source_frame, _a4_mutation_values(analog_four_source_frame, recipe=recipe)
+        )
+        rendered_frame = rendered_a4.framed_sysex
+        rendered_sha = rendered_a4.sha256
+        a4_values = tuple(
+            AnalogFourCandidateValue(
+                track_id=item.track,
+                parameter=A4_FILTER1_FREQUENCY_PARAMETER,
+                screen_value=item.redecoded_screen_value,
+                encoded_unsigned_8_8=item.redecoded_raw_q8_8,
+                unpacked_offset=item.intended_unpacked_offsets[0],
+            )
+            for item in rendered_a4.applied_mutations
+        )
     candidate_id = _deterministic_candidate_id(
         entry,
         recipe,
         generated_rytm,
-        rendered_a4.sha256,
+        rendered_sha,
     )
     rytm_candidate = _clone_candidate_with_id(generated_rytm, candidate_id)
-    a4_values = tuple(
-        AnalogFourCandidateValue(
-            track_id=item.track,
-            parameter=A4_FILTER1_FREQUENCY_PARAMETER,
-            screen_value=item.redecoded_screen_value,
-            encoded_unsigned_8_8=item.redecoded_raw_q8_8,
-            unpacked_offset=item.intended_unpacked_offsets[0],
-        )
-        for item in rendered_a4.applied_mutations
-    )
     analog_four_candidate = AnalogFourOfflineCandidate(
-        artifact_fingerprint=rendered_a4.sha256[:16],
+        artifact_fingerprint=rendered_sha[:16],
         semantic_fingerprint=(
             _a4_semantic_fingerprint(a4_values)
             if a4_values
@@ -369,9 +457,9 @@ def forge_candidate_pair(  # noqa: PLR0913 - explicit immutable sources, recipe,
         ),
         source_fingerprint=entry.analog_four_source.fingerprint,
         sysex=ShowKitSysex(
-            artifact_id=_artifact_id("a4-candidate", rendered_a4.sha256),
-            frame_sha256=rendered_a4.sha256,
-            frame_bytes=len(rendered_a4.framed_sysex),
+            artifact_id=_artifact_id("a4-candidate", rendered_sha),
+            frame_sha256=rendered_sha,
+            frame_bytes=len(rendered_frame),
         ),
         values=a4_values,
         evidence_status="offline-captured-kit-mutation-validated",
@@ -402,7 +490,7 @@ def forge_candidate_pair(  # noqa: PLR0913 - explicit immutable sources, recipe,
     )
     return ForgedCandidatePair(
         candidate=candidate,
-        analog_four_frame=rendered_a4.framed_sysex,
+        analog_four_frame=rendered_frame,
     )
 
 
@@ -432,8 +520,29 @@ def analog_four_capture_semantic_fingerprint(
         # an empty semantic subset must never make every recapture match.
         return result.fingerprint
     unpacked = _a4_source_unpacked(result.frame)
-    observed_values: list[AnalogFourCandidateValue] = []
+    observed_values: list[AnalogFourCandidateValue | AnalogFourNativeCandidateValue] = []
+    native = get_analog_four_native_field_capability().read_native_fields(result.frame)
     for value in candidate.values:
+        if isinstance(value, AnalogFourNativeCandidateValue):
+            cell = native.value(value.parameter, value.track_id)
+            if (
+                not cell.mutable
+                or cell.screen_value is None
+                or value.native_encoding != cell.metadata.native_encoding.value
+                or value.unpacked_offsets != cell.unpacked_offsets
+            ):
+                raise ValueError("A4 native claim disagrees with canonical readback")
+            observed_values.append(
+                AnalogFourNativeCandidateValue(
+                    cell.track,
+                    cell.parameter,
+                    cell.screen_value,
+                    cell.encoded_native,
+                    cell.metadata.native_encoding.value,
+                    cell.unpacked_offsets,
+                )
+            )
+            continue
         calibration = analog_four_sysex_calibration_for(value.parameter)
         offset = calibration.native_offset_for_track(value.track_id)
         raw = int.from_bytes(unpacked[offset : offset + calibration.native_width], "big")

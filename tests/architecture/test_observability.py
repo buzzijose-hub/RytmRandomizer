@@ -430,6 +430,9 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # pattern.
         "ProfileAlreadyExistsError",
         "ProfileRegistryAccessError",
+        # Library original-frame refusals preserve ValueError compatibility
+        # while carrying bounded DataError context and no operator-owned path.
+        "_LibrarySourceError",
         # Auto-update spec §11 Contract A (the persisted-state downgrade
         # refusal). Multi-inherits :class:`DataError` + :class:`ValueError`
         # and is raised by every config-dir store whose on-disk payload
