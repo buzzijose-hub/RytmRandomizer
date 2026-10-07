@@ -1121,18 +1121,16 @@ class ShowKitForgeWorkspace:
         source_id = entry.rytm_source.snapshot_id
         if source_id is None:
             raise ValueError("Rytm source is missing its mutation snapshot identity")
-        if candidate.analog_four_candidate.sysex.retained is None:
-            self._retained_frame(bank, candidate.analog_four_candidate.sysex.artifact_id)
+        artifact_id = candidate.analog_four_candidate.sysex.artifact_id
         # One fresh complete read/proof; subsequent consumers use these exact bytes.
         frames = MappingProxyType(
             {
-                item.artifact_id: self._store.read_retained(item.retained)
+                item.artifact_id: self._retained_frame(bank, item.artifact_id)
                 for item in bank.sysex_artifacts()
-                if item.retained is not None
+                if item.retained is not None or item.artifact_id == artifact_id
             }
         )
         verify_show_bank_frames(bank, frames)
-        artifact_id = candidate.analog_four_candidate.sysex.artifact_id
         frame = frames[artifact_id]
         decoded = decode_kit_capture_frame(ANALOG_FOUR_DEVICE_ID, frame)
         if (

@@ -370,16 +370,23 @@ def test_legacy_workspace_transition_validates_once_and_preserves_return_shape(
     assert verified == [bank.revision]
 
 
+@pytest.mark.parametrize("different_candidate", [False, True])
 def test_workspace_recall_refuses_lost_selection_before_publication_or_adoption(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, different_candidate: bool
 ) -> None:
     journey = _journey(tmp_path)
-    _, candidate = _generate(journey)
+    other, candidate = _generate(journey)
     workspace = journey.workspace
     session = _session(workspace, journey.bank_id, journey.entry_id, tmp_path)
     bank = workspace.bank(journey.bank_id)
     unselected = replace(
-        bank, entries=(replace(bank.entry(journey.entry_id), selected_candidate_id=None),)
+        bank,
+        entries=(
+            replace(
+                bank.entry(journey.entry_id),
+                selected_candidate_id=other.candidate_id if different_candidate else None,
+            ),
+        ),
     )
 
     def lost_selection(*_args: object, **_kwargs: object) -> ShowBank:
@@ -388,7 +395,10 @@ def test_workspace_recall_refuses_lost_selection_before_publication_or_adoption(
     before = _session_state(session)
     disk = _disk(workspace.store.root)
     monkeypatch.setattr(workspace_module, "select_candidate", lost_selection)
-    with pytest.raises(AssertionError, match="lost its selection"):
+    with pytest.raises(
+        AssertionError,
+        match="changed its candidate" if different_candidate else "lost its selection",
+    ):
         workspace.recall_candidate(
             journey.bank_id,
             journey.entry_id,
@@ -532,3 +542,59 @@ def test_recall_rechecks_revision_after_whole_bank_proof(
     assert _session_state(session) == before
     assert workspace.bank(journey.bank_id) == bank
     assert _disk(workspace.store.root) == disk
+
+
+@pytest.mark.parametrize("command_type", _COMMANDS)
+@pytest.mark.parametrize("changed_bytes", [False, True])
+def test_cache_only_legacy_candidate_is_verified_and_retained_before_recall(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    command_type: str,
+    changed_bytes: bool,
+) -> None:
+    journey = _journey(tmp_path)
+    (candidate,) = _generate(journey, count=1)
+    workspace = journey.workspace
+    bank = workspace.bank(journey.bank_id)
+    entry = bank.entry(journey.entry_id)
+    sysex = candidate.analog_four_candidate.sysex
+    frame = workspace.store.read_retained(sysex.retained)
+    legacy_candidate = replace(
+        candidate,
+        analog_four_candidate=replace(
+            candidate.analog_four_candidate, sysex=replace(sysex, retained=None)
+        ),
+    )
+    legacy = replace(
+        bank,
+        bank_id="cache-only-legacy-recall",
+        revision=0,
+        entries=(replace(entry, candidates=(legacy_candidate,)),),
+    )
+    workspace.store.save(legacy)
+    workspace.register_imported(legacy)
+    journey = replace(journey, bank_id=legacy.bank_id)
+    monkeypatch.setitem(
+        workspace._volatile_frames,
+        sysex.artifact_id,
+        journey.originals[ANALOG_FOUR_DEVICE_ID] if changed_bytes else frame,
+    )
+    session = _session(workspace, legacy.bank_id, journey.entry_id, tmp_path)
+    before = _session_state(session)
+    disk = _disk(workspace.store.root)
+    ack = _command(journey, session, command_type, candidate.candidate_id)
+    if changed_bytes:
+        assert not ack["ok"] and ack["code"] == handlers.ERR_VALIDATION
+        assert _session_state(session) == before
+        assert workspace.bank(legacy.bank_id) == legacy
+        assert _disk(workspace.store.root) == disk
+        return
+    assert ack["ok"], ack
+    selected = workspace.bank(legacy.bank_id).entry(journey.entry_id).selected_candidate
+    assert selected is not None
+    retained = selected.analog_four_candidate.sysex.retained
+    assert retained is not None and workspace.store.read_retained(retained) == frame
+    restarted = ShowKitForgeWorkspace(workspace.store)
+    assert restarted.bank(legacy.bank_id).entry(journey.entry_id).selected_candidate == selected
+    assert session.current_candidate == candidate.rytm_candidate
+    assert session.armed_apply is None and not session.hardware_intent
