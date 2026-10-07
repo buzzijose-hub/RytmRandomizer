@@ -711,3 +711,13 @@ source, build through the existing Windows lane, verify the exact executable,
 then run a real90-120minute offline endurance exercise. Prior100second trials
 remain smoke only. Parent owns native startup and delivery; a disjoint worker
 owns the QA driver/verifier repair. No MIDI authority or dependency changes.
+
+Packaged1c093 smoke exposed a pending-preset/device-selector race before timed
+acceptance. A controlled delayed-response regression fails because device/item
+selectors remain enabled while the preset later resets their view. The contained
+repair owns only the existing MutationParametersPanel and its canonical-fixture
+tests: hold those selectors during presetPending, then restore normal selection
+after success/refusal. Server locks, generation authority and protections remain
+unchanged. Rebuild the exact reviewed source and rerun actual package setup before
+the full timed rehearsal. The unrelated hosted macOS numba/librosa segmentation
+fault is investigated separately without dependency bumps, skips or retries.
