@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-07T19:19:00Z",
+  "updated_at": "2026-10-07T23:03:00Z",
   "status": "in-flight",
-  "phase": "Oct07-reliability-source-verified-publication-Windows-package-and-endurance-pending",
+  "phase": "Oct07-exact-Windows-offline-delivered-90minute-and-normal-restart-pass-physical-human-gates-pending",
   "prototype_source": "8cfa6f7b6cf9469ffa134598182febb60ecdd1df",
   "prototype_worktree": "C:/Users/Jose Buzzi/.codex/worktrees/rytm-tom-mapping/RytmRandomizer",
   "delivery_start_source": "941643c551abfa225f45c70a954b6671d1cbb5f4",
@@ -24,7 +24,7 @@
   "reliability_deadline": "2026-10-07T05:41:19Z",
   "reliability_resumed_at": "2026-10-07T15:37:39Z",
   "reliability_resume_deadline": "2026-10-07T23:37:39Z",
-  "reliability_resume_source": "e96b4bc69eaf8b993d17b3d1d5031cfbfa79a3aa",
+  "reliability_resume_source": "6e098f85ddeb48d9beb97f732f22e2f2152d86eb",
   "historical_elapsed_time_recorded": false,
   "work": {
     "mapping_implementation": "Oct05-all8-CY-Ride-SRC-blocked-25of29-new-fallback-rows-documented-only-guardedCC7-eligible-224-descriptive-bindings-retained-Studio-SRC-metadata-published3461f42e",
@@ -37,6 +37,20 @@
     "post_merge_maintainability_audit": "pending"
   },
   "receipts": [
+    {
+      "scope": "Oct07-exact-6e098f85-Windows-offline-delivery",
+      "result": "Windows37688652919SUCCESS6e098f85 source/binaryhashesverified. Fresh90minutes5400.0028376seconds180cycles21:30:45.793Z-23:00:45.993Z passed4cues188candidates180canonicalexports182GEN182favorites;8copyimports173deliberatemissingduplicaterefusals preserveexisting. Recoveries2/90sameShellnewtokensdisarmedexactrecall andcleanuptrue. 149->150deadlineprobe2.844seconds unchanged5secondlimit;separatesmoke60.008s3cycles;actualnormal-launcher2fullappstarts exactcandidate/sourceSYX/scope/locks/disarmed passedcleanup/listenersclosed. Private425.23-586.18MiB10processes3938-4032handlesminimumfree14.59GiBqueue13of256drops0pendingmax4journalmax1history2; no claimedglobalhistoryring/nativecacheoccupancy. OneQAstartupdebuglistenerretrybeforeclock;40/70minfailedattemptsnotcombined. CI33SUCCESS1skip; full10860/51touched100 verified; READYofflineNOTREADYshows. NoMIDI/USBaccess;old6ebunchanged;QAcredentialsoutsidebundle;human/physical/historical14/16remainpending.",
+      "passing_verdict": true,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
+    {
+      "scope": "Oct07-84-timed-failure-and-6e098-generation-repair",
+      "result": "Exact84 package FAILED140cycles4187.123seconds candidate-generation after5secondUIdeadline;149thcandidate retainedatomically, no bankloss, bothcontrolledbackendrestarts andcleanuptrue. Attemptsnevercombined. New6e098sourcefull10860pass5skip6warnings480.04seconds,51touched100linebranch,combined99.6674272590percent,pure12854of12932,strictpinnedtypinglintVulture/Node17/hooksparitypass. Onefreshgenerationwholeproof/canonicalsourcectx/directguardedreads/revisioncheckbeforepub; allprotection/pins/timeouts held. Windows37688652919exact6ebuilding; actualdeadlinecase andfresh90minimumacceptancepending. Older6eb5d4lastverified preserved.",
+      "passing_verdict": false,
+      "final_delivery_verdict": false,
+      "hardware_observation": false
+    },
     {
       "scope": "Oct07-final-e96b4bc6-source-acceptance",
       "result": "Full10834passed5skipped6existingwarnings471.68seconds; canonical51touchedproductionmodules100linebranch; combined99.6673925365percent purebranch12852of12930; strictpinnedPyright1.1.411zeroerrorswarnings, Ruff Black928 isort Vulture fourversiondeclarationspass. Eighttargeteddimensions findingsclosed; historical14/16exceptions protectedhumanreview physicalrehearsal remainpending. ExactWindowspackage and fresh100minute acceptance notyetperformed; MIDIoff no realports accessed.",

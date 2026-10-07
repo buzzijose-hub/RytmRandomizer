@@ -4,6 +4,31 @@ Last updated: 2026-10-07. This file is a hand-authored snapshot and is meant to 
 
 ## Current Snapshot
 
+Offline Windows source `6e098f85ddeb48d9beb97f732f22e2f2152d86eb` is delivered
+at `C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-6e098f85ddeb`.
+The fresh packaged90minute run PASSED5400.0028376seconds/180cycles with two
+owned-backend recoveries and cleanup.180canonical export proofs, four cues /
+188candidates, exact disarmed recall and two full normal-launcher restarts pass.
+An isolated149->150deadline probe passed2.844s, with the unchanged5s limit.
+Private memory425.23-586.18MiB;10processes;handles3938-4032;minimum free14.59GiB;
+queue13/256,zero drops,history2for source reuse. One diagnostic-startup retry
+preceded the timed clock; earlier40/70minute failures are not combined.
+SourceCI33success/1intentionalskip; protected human review remains requested.
+READY for the tested offline scope, NOT READY for shows or hardware output.
+No MIDI/USB enumeration/open/arming/write occurred. Old deliveries/settings stay
+preserved. See the delivery's studio-procedure/DELIVERY-RECEIPT.md for hashes,
+accounting, limitations and the first backed-up Pad2 physical/recovery test.
+
+Latest source `6e098f85` passes10860tests/5skips/6existingwarnings480.04s and
+all51touched modules100%line/branch. The exact84package100minute attempt failed
+after140cycles/~70minutes: generation completed after the five-second UI
+deadline, with its candidate retained atomically and safe cleanup. No bankloss
+or physical access is observed. Generation now shares one fresh complete proof
+and canonical source context and avoids repeated guarded artifact lookup;
+all protections and deadlines remain. New exact Windows37688652919 builds6e;
+affected-case proof and fresh90minute acceptance subsequently passed as above.
+The earlier40/70minute failures remain failed and are never combined.
+
 The resumed October7 reliability source `e96b4bc6` is verified, not yet a new
 delivery. Full10834tests pass with5skips/6existingwarnings471.68s; all51touched
 modules have100%line/branch coverage. Strict pinned typing and whole lint pass.
@@ -20,7 +45,9 @@ favorite replacement confirmation. Measured near-deadline repeated recall proof
 is replaced with one fresh whole-bank verification per action; later requests
 still revalidate. Cache-only legacy recall preserves and validates available
 exact bytes before atomic retention. Final source acceptance passes; replacement
-package and uninterrupted100minute endurance remain pending.
+package and uninterrupted100minute endurance were pending at that earlier
+checkpoint. That attempt later failed; the current fresh90minute requirement
+is stated above.
 The prior network interruption ended execution without timed acceptance. Fresh
 resume15:37:39UTC, ceiling23:37:39UTC October7. Older db2daf6c Windows build
 37545232133 succeeded but was not delivered. PR CI37544839205 failed the

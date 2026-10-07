@@ -444,3 +444,35 @@ has not been updated by these records.
   First physical gate remains backed-up scratch source, four-field Pad 2 at
   10%, exact approved audition, DISARM, manual KIT reload and fresh comparison.
   No real MIDI/USB enumeration/open/arming/send/device changes occurred.
+
+## October 7 Resumed Reliability Closeout
+
+- Resume15:37:39Z after an unmeasured prior transport interruption. Preserved
+  pending typed/QA edits and the existing assembly/PR254; old deliveries/settings
+  and dirty primary checkout were not reset.
+- Native hydrate fixture orders actual App evaluation before existing strict
+  assertions; original timeout cause remains unproven. Later32scenario runs pass.
+  Mac native-audio crash did not recur on final source; bounded post-failure
+  diagnostics preserve failure status and were not falsely treated as repair.
+- Actual1c setup trials failed;1784smoke passed then40minute attempt failed at
+  favorite confirmation.84smoke passed then70minute attempt failed at generation
+  deadline with its149thcandidate retained. All failed attempts remain failed,
+  not combined with accepted time. Pending-view/confirmation, source validation,
+  cache-only recall, repeated proofs/reads and error/publication findings repaired.
+- Source6e098f85:10860tests/5skip/6existingwarnings480.04s;51touched100coverage;
+  strictpinnedtyping/wholelint/Vulture/17NodeQA/870architecture/685parity pass.
+  Public generation shape, field/pin/precision/unknown-byte protections stay.
+- Exact Windows37688652919 hash-verified. Actual149case2.844s within5s,60.008s
+  separate smoke, then fresh90minutes5400.0028376seconds/180cycles PASSED.
+  Two owned backend recoveries and two subsequent full normal-launcher starts
+  preserved exact disarmed favorites/scope/locks/source bytes. All owned app
+  processes/listeners stopped; credentials stayed outside delivery.
+-180resource samples:425.23-586.18MiBprivate,10processes,3938-4032handles,
+  minimumfree14.59GiB,queue13/256/drops0,history2. Controller-observed latency
+  includes QA handling; no unmeasured global cache/history bound is claimed.
+- New delivery6e098f85ddeb preserves prior6eb, whose binaries were rehashed.
+  SourceCI33successful/one intentional skip; humanCHANGES_REQUESTED and14/16
+  exceptions stay visible. Receipt-only publication does not require rebuilding
+  unchanged production. READYoffline scope, NOTREADYshows/hardware. First
+  physical gate is backed-up scratch source/Pad2four-controls10%/exact ready
+  plan/one audition/DISARM/manual KIT reload/fresh baseline comparison.

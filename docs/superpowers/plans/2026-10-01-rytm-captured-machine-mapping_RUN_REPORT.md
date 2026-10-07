@@ -5,7 +5,70 @@
 
 ## October 7 Resumed Reliability Acceptance
 
-Current production source `e96b4bc69eaf8b993d17b3d1d5031cfbfa79a3aa` passed
+Final offline delivery source is `6e098f85ddeb48d9beb97f732f22e2f2152d86eb`.
+Windows37688652919 succeeded; both binary hashes were independently verified.
+The exact package passed a fresh90minutes/5400.0028376seconds/180cycles from
+21:30:45.793Z to23:00:45.993Z. Four cues ended with188candidates;180canonical
+exports/byte proofs,182generation and182favorite operations passed. Eight
+copy imports passed;173intentional missing/duplicate refusals preserved state.
+Both owned backend recoveries at2/90 passed with credential rotation, same
+shell and fresh disarmed recall. Cleanup passed; one diagnostic-listener startup
+restart was before the timed clock, not hidden in acceptance. No computer
+reboot or real hardware access was observed.
+
+Actual149->150failure-state probe passed2.844s inside unchanged5s. A separate
+60.008s/three-cycle smoke passed. Following acceptance, the exact hash-checked
+normal launcher passed two full app starts with identical favorite, source SYX,
+scope, locks, seed/depth and disarmed recall; owned listeners/processes closed.
+The prior40/70minute failures remain failed evidence; their durations are never
+combined. New public receipts exclude test credentials/settings, which stayed
+outside delivery. Older6eb binaries were rehashed unchanged.
+
+Measured180samples:425.23-586.18MiBprivate(first487.17/last547.55),10processes,
+3938-4032handles,minimum free14.59GiB,queue13/256/zero drops,pendingmax4,
+journalmax1/50,history2for this reuse workload. Generationmax3.534s/favoritemax
+3.575s/exportmax0.650s are controller-observed, not isolated backend timings.
+History is append-only, not a global ring; native frame-cache occupancy is not
+exposed and its structural128item/64MiB limits have separate software tests.
+
+READY for the tested offline scope, NOT READY for shows/hardware. SourceCI has
+33successful checks/one intentional skip; human approval and historical14/16
+exceptions remain open. Further acceptance requires fresh backed-up scratch
+captures, the four-control Rytm Pad2 preset at10%, exact plan inspection and
+one controlled audition, DISARM/manual KIT reload/fresh baseline comparison.
+No general A4/BOTH, CYRideSRC, paired precision, unsaved synchronization,
+automatic restore, hardware SAVE or Pi approval is granted. Resumed start
+15:37:39Z, software acceptance/normal restart ended23:01:37.703Z; closeout follows.
+
+Latest published source `6e098f85ddeb48d9beb97f732f22e2f2152d86eb` passes
+10,860 tests / 5 skipped / 6 existing warnings in 480.04 seconds. All51touched
+production modules pass100%line/branch; combined99.6674272590%, purebranch
+12,854/12,932. Pinned typing, whole Ruff/Black929/isort/Vulture,17NodeQA cases
+and normal architecture/parity hooks pass. The public generation tuple contract
+is unchanged. Generation with an existing selected/favorite candidate reuses
+one fresh action-local whole-bank/source proof; the no-prior path retains its
+existing source validation without that replay.
+guarded retained reads avoid repeated artifact lookup and original rereads.
+Different selected/favorite candidates and all unrelated artifacts remain
+verified. Revision is rechecked before atomic publication. No validation,
+encoding, protection, pins or timeout was weakened.
+
+The exact84 Windows package failed its100minute attempt after140cycles /
+4,187.123seconds, with both controlled backend recoveries and owned cleanup
+passing. Its149thcandidate was published atomically after the five-second UI
+deadline. This is not acceptance and not bank loss. The new26regressions pass;
+the70minute and earlier40minute failures are never combined. New Windows
+run37688652919 builds exact6e source. Actual large-bank deadline proof and a
+fresh90minute minimum acceptance subsequently passed as above. The prior6eb offline delivery
+and old settings remain preserved.
+
+The248-candidate different-selection/favorite benchmark confirms one proof
+instead of two and fewer original reads. Recorded7.793/3.920second timings
+overlapped briefly and are not a controlled comparison; artifact enumeration
+was not the dominant cost. The native packaged failure must be retested rather
+than inferred fixed from helper measurements. All MIDI remains disabled.
+
+Earlier production source `e96b4bc69eaf8b993d17b3d1d5031cfbfa79a3aa` passed
 10,834 tests / 5 skipped / 6 existing warnings in 471.68 seconds. Canonical Gate1
 passes all 51 touched production modules at 100% line and branch coverage;
 combined coverage is 99.6673925365%, pure branch 12,852/12,930 (99.3967517401%).
@@ -23,8 +86,10 @@ one fresh whole-bank proof and shares immutable action-local bytes with its
 consumer; there is no persistent proof cache. Canonical source fingerprint
 checks and a fresh revision check precede publication. Excluded fields, scope,
 locks and disarmed adoption remain enforced. The focused integrated regression
-set passed 116 tests / 3 existing warnings in 26.87 seconds. A new exact-source
-Windows package and uninterrupted 100-minute acceptance still remain pending.
+set passed 116 tests / 3 existing warnings in 26.87 seconds.
+At that earlier checkpoint, a replacement package and uninterrupted100minute
+acceptance remained pending. That later attempt failed; the current fresh
+requirement is the90minute minimum stated above.
 
 The preceding `424723dc` full run passed 10,829 tests / 5 skipped / 6 existing
 warnings in 796.48 seconds, but Gate1 still missed one workspace guard branch.
