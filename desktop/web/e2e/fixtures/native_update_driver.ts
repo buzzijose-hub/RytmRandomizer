@@ -277,6 +277,14 @@ export async function run(scenario: string, origin: string): Promise<void> {
     await invoke('report', { passed: true, detail: `${assertions} native/DOM assertions` });
   } catch (error) {
     stop();
-    await invoke('report', { passed: false, detail: error instanceof Error ? error.message : 'native assertion failed' });
+    const message = error instanceof Error ? error.message : 'native assertion failed';
+    const startup = message === 'Timed out: React cockpit mounted' ? JSON.stringify({
+      document_phase: window.sessionStorage.getItem(`native-${scenario}`) === 'reloaded' ? 'reloaded' : 'initial',
+      ready_state: document.readyState,
+      app_root_present: document.getElementById('root') !== null,
+      app_root_child_count: document.getElementById('root')?.childElementCount ?? 0,
+      main_script_present: document.querySelector('script[src="/src/main.tsx"]') !== null,
+    }) : null;
+    await invoke('report', { passed: false, detail: startup === null ? message : `${message}; ${startup}` });
   }
 }

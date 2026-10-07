@@ -206,8 +206,8 @@ impl NativeFixture {
         // Tauri's already-injected invoke bridge instead of importing again.
         // Keep the report categorical: import errors can contain local paths.
         format!(
-            "import('/e2e/fixtures/native_update_driver.ts')\
-             .then(m => m.run({scenario}, {origin}))\
+            "import('/e2e/fixtures/native_update_bootstrap.ts')\
+             .then(m => m.bootstrap({scenario}, {origin}))\
              .catch(() => window.__TAURI_INTERNALS__.invoke('report', \
              {{passed: false, detail: 'native_driver_bootstrap_or_report_failed'}}));"
         )

@@ -1,10 +1,10 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-10-06. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-10-07. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
 
-The later October6 reliability continuation is in source verification, not yet
+The resumed October7 reliability continuation is in source verification, not yet
 a new delivery. It fixes the delivered missing-package generic error, rejects
 generation requests that drop current locks or expand targets, verifies direct
 favorite/selection transitions before publication, and permits unnamed exact
@@ -12,7 +12,15 @@ KIT sources with local cue-label fallbacks. New adversarial source/profile/
 migration/rollback cases and read-only health queue statistics are integrated.
 The reproducible packaged-app driver passed a100-second trial, explicitly not
 endurance; the required90-120minute new-build rehearsal remains pending.
-Start21:41:19UTC, ceiling05:41:19UTC October7. MIDI stays off; old deliveries and
+The prior network interruption ended execution without timed acceptance. Fresh
+resume15:37:39UTC, ceiling23:37:39UTC October7. Published db2daf6c Windows build
+37545232133 succeeded but has not been delivered. PR CI37544839205 failed the
+native hydrate_reload mount guard while31other native cases passed; push CI
+37544832928 passed. Retained artifacts do not establish the original cause.
+The fixture now orders App evaluation before driver startup and distinguishes
+initial/reloaded mount refusals, without retries or changed deadlines. Pending
+QA repairs use creation-ordered process ownership and categorical errors.
+MIDI stays off; old deliveries and
 the dirty primary checkout are preserved. Human and physical gates stay open.
 
 October 6 offline preparation is delivered from production

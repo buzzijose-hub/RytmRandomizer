@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from rytm_randomizer.cockpit.capture import ANALOG_FOUR_DEVICE_ID, ANALOG_RYTM_DEVICE_ID
 from rytm_randomizer.cockpit.ws.handlers import handle_command
 from rytm_randomizer.cockpit.ws.protocol import ERR_VALIDATION
 from rytm_randomizer.cockpit.ws.session import CockpitSession
@@ -68,7 +69,11 @@ def _generation(root: Path) -> tuple[CockpitSession, dict[str, object]]:
     ],
 )
 def test_generation_refuses_wire_scope_expansion_before_a_revision_or_recall(
-    tmp_path: Path, field: str, requested: list[int], reason: str
+    tmp_path: Path,
+    package_logs: pytest.LogCaptureFixture,
+    field: str,
+    requested: list[int],
+    reason: str,
 ) -> None:
     session, command = _generation(tmp_path)
     session.rytm_pad_targets = {1, 2}
@@ -94,6 +99,26 @@ def test_generation_refuses_wire_scope_expansion_before_a_revision_or_recall(
     assert session.rytm_pad_targets == {1, 2} and session.a4_track_targets == {1, 2}
     assert session.pending_events == [] and session.current_send_plan is None
     assert session.armed_apply is None and not session.hardware_intent
+    records = [
+        record
+        for record in package_logs.records
+        if record.getMessage() == "show_bank_generation_scope_refused"
+    ]
+    assert len(records) == 1
+    context = records[0].__dict__
+    is_rytm = field.startswith("rytm_")
+    prefix = "rytm" if is_rytm else "a4"
+    available_count = 12 if is_rytm else 4
+    assert context["device_id"] == (ANALOG_RYTM_DEVICE_ID if is_rytm else ANALOG_FOUR_DEVICE_ID)
+    assert context["requested_target_count"] == len(
+        command[f"{prefix}_targets"] or range(available_count)
+    )
+    assert context["current_target_count"] == 2
+    assert context["requested_lock_count"] == len(command[f"{prefix}_locks"])
+    assert context["current_lock_count"] == len(locks[0 if is_rytm else 1])
+    assert context["outcome"] == "refused"
+    assert context["reason"] in {"operator_locks_omitted", "operator_targets_expanded"}
+    assert not {"target_ids", "locked_ids", "parameter_values", "path", "token"} & context.keys()
 
 
 @pytest.mark.parametrize("narrow", [False, True])

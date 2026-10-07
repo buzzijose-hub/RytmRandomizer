@@ -77,6 +77,33 @@ describe('native acceptance polling deadline', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
+  it.each(['initial', 'reloaded'] as const)('still refuses an unmounted %s App at the unchanged deadline', async (phase) => {
+    vi.useFakeTimers();
+    document.body.innerHTML = '<div id="root"></div><script src="/src/main.tsx"></script>';
+    window.sessionStorage.clear();
+    if (phase === 'reloaded') window.sessionStorage.setItem('native-hydrate_reload', 'reloaded');
+    restartFixture.invoke.mockResolvedValue({ terminal: [] });
+    try {
+      const pending = run('hydrate_reload', 'http://127.0.0.1:99');
+      await vi.advanceTimersByTimeAsync(24_999);
+      expect(restartFixture.invoke).not.toHaveBeenCalledWith('report', expect.anything());
+      await vi.advanceTimersByTimeAsync(1);
+      await pending;
+      expect(restartFixture.invoke).toHaveBeenCalledWith('report', {
+        passed: false,
+        detail: expect.stringContaining(`"document_phase":"${phase}"`),
+      });
+      const report = restartFixture.invoke.mock.calls.find(([command]) => command === 'report');
+      expect(report?.[1].detail).toContain('Timed out: React cockpit mounted');
+      expect(report?.[1].detail).toContain('"app_root_child_count":0');
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      window.sessionStorage.clear();
+      document.body.innerHTML = '';
+      restartFixture.invoke.mockReset();
+    }
+  });
+
   it.each(['rejected', 'accepted'] as const)('polls the socket despite stale connected state and detects %s', async (verdict) => {
     vi.useFakeTimers();
     document.body.innerHTML = '<div data-testid="cockpit-root"></div><div data-testid="update-chip">1.35.1</div>';

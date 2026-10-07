@@ -47,20 +47,26 @@ const summary = { source_commit: manifest.source_commit, binary_sha256: manifest
 const save = () => fs.writeFileSync(path.join(reportRoot, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
 const record = value => fs.appendFileSync(telemetry, JSON.stringify({ at: new Date().toISOString(), ...value }) + '\n');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const errorType = error => ['AssertionError', 'Error', 'TimeoutError', 'TypeError', 'RangeError', 'SyntaxError'].includes(error?.name) ? error.name : 'Error';
 
 const powershell = String.raw`
 $ErrorActionPreference='Stop'
 $r=[Console]::In.ReadToEnd()|ConvertFrom-Json
+function Descendants-Of($all,$root){
+  $ids=[System.Collections.Generic.HashSet[int]]::new()
+  $byId=@{};foreach($p in $all){$byId[$p.ProcessId]=$p}
+  [void]$ids.Add($root.ProcessId)
+  # Parent PIDs can be reused; an older child cannot belong to the current parent.
+  do{$changed=$false;foreach($p in $all){if($ids.Contains($p.ParentProcessId)-and$byId.ContainsKey($p.ParentProcessId)-and$p.CreationDate -ge $byId[$p.ParentProcessId].CreationDate-and$ids.Add($p.ProcessId)){$changed=$true}}}while($changed)
+  return @($all|Where-Object {$ids.Contains($_.ProcessId)})
+}
 function Own-Tree {
   $all=@(Get-CimInstance Win32_Process)
   $shell=$all|Where-Object ProcessId -eq $r.shell_pid|Select-Object -First 1
   if($null -eq $shell -or $shell.ExecutablePath -ne (Join-Path $r.bundle 'rytm-randomizer-shell.exe')){throw 'Owned shell missing'}
   $delta=[math]::Abs(($shell.CreationDate.ToUniversalTime().Ticks-[long]$r.created_ticks)/[TimeSpan]::TicksPerSecond)
   if($delta -gt 3){throw 'Owned shell identity changed'}
-  $ids=[System.Collections.Generic.HashSet[int]]::new()
-  [void]$ids.Add($shell.ProcessId)
-  do{$changed=$false;foreach($p in $all){if($ids.Contains($p.ParentProcessId)-and$ids.Add($p.ProcessId)){$changed=$true}}}while($changed)
-  return @($all|Where-Object {$ids.Contains($_.ProcessId)})
+  return @(Descendants-Of $all $shell)
 }
 function Stop-Owned($owned){
   foreach($p in $owned){
@@ -104,9 +110,7 @@ if($r.operation -eq 'launch'){
   $side=@($tree|Where-Object {$_.ParentProcessId -eq $r.shell_pid-and$_.ExecutablePath -eq $sidecarPath})
   if($side.Count -ne 1){throw 'Expected one owned backend root'}
   $token=Join-Path $r.state 'ws-token.txt';$before=(Get-FileHash -LiteralPath $token -Algorithm SHA256).Hash
-  $ids=[System.Collections.Generic.HashSet[int]]::new();[void]$ids.Add($side[0].ProcessId)
-  do{$changed=$false;foreach($p in $tree){if($ids.Contains($p.ParentProcessId)-and$ids.Add($p.ProcessId)){$changed=$true}}}while($changed)
-  Stop-Owned @($tree|Where-Object {$ids.Contains($_.ProcessId)})
+  Stop-Owned @(Descendants-Of $tree $side[0])
   $deadline=[DateTime]::UtcNow.AddSeconds(30);$replacement=$null;$rotated=$false
   do{Start-Sleep -Milliseconds 250;$replacement=Get-CimInstance Win32_Process|Where-Object {$_.ParentProcessId -eq $r.shell_pid-and$_.ExecutablePath -eq $sidecarPath-and$_.ProcessId -ne $side[0].ProcessId}|Select-Object -First 1;$rotated=(Test-Path -LiteralPath $token)-and((Get-FileHash -LiteralPath $token -Algorithm SHA256).Hash -ne $before)}while(($null -eq $replacement-or-not$rotated)-and[DateTime]::UtcNow -lt $deadline)
   if($null -eq $replacement-or-not$rotated){throw 'Owned backend recovery deadline exceeded'}
@@ -335,12 +339,15 @@ async function main() {
     summary.passed = true; summary.stop_reason = smoke > 0 ? 'bounded-smoke-completed-not-endurance' : 'declared-endurance-duration-completed';
     await page.screenshot({ path: path.join(reportRoot, 'final-desktop.png') });
   } catch (error) {
-    summary.stop_reason = 'failure'; summary.failure = String(error); throw error;
+    summary.passed = false;
+    summary.stop_reason = 'failure';
+    summary.failure = { category: 'offline_rehearsal_operation_failed', error_type: errorType(error) };
+    throw error;
   } finally {
     summary.ended_at = new Date().toISOString();
     if (browser) await browser.close().catch(() => {});
     if (launch) {
-      try { summary.cleanup = processOperation('stop'); } catch (error) { summary.cleanup = { stopped: false, error: String(error) }; summary.passed = false; }
+      try { summary.cleanup = processOperation('stop'); } catch (error) { summary.cleanup = { stopped: false, category: 'owned_process_cleanup_failed', error_type: errorType(error) }; summary.passed = false; }
     }
     save(); console.log(JSON.stringify({ passed: summary.passed, mode: summary.mode, cycles: summary.cycles, stop_reason: summary.stop_reason, report: reportRoot }));
   }

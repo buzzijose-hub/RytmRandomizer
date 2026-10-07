@@ -18,6 +18,7 @@ from rytm_randomizer.cockpit.show_bank.export import SHOW_PACK_SUFFIX, ShowPackS
 from rytm_randomizer.cockpit.show_bank.store import ShowBankStore
 from rytm_randomizer.devices import get_analog_four_native_field_capability
 from rytm_randomizer.devices.strategies.analog_four_kit_fields import decode_a4_pitch_components
+from rytm_randomizer.devices.strategies.analog_four_native_fields import AnalogFourNativeEncoding
 from rytm_randomizer.devices.strategies.analog_four_saved_kit_codec import (
     decode_analog_four_saved_kit_payload,
 )
@@ -86,18 +87,15 @@ def verify_rehearsal_pack(package: Path) -> RehearsalPackProof:
                     or cell.unpacked_offsets != value.unpacked_offsets
                 ):
                     raise ValueError("rehearsal native value disagrees with decoded bytes")
-                if value.parameter.endswith("tune"):
+                is_tune = cell.metadata.native_encoding is AnalogFourNativeEncoding.TUNE
+                if is_tune:
                     before_cell = original.value(value.parameter, value.track_id)
                     if (
                         decode_a4_pitch_components(cell.encoded_native)[1:]
                         != decode_a4_pitch_components(before_cell.encoded_native)[1:]
                     ):
                         raise ValueError("rehearsal changed coupled pitch precision")
-                approved.update(
-                    cell.unpacked_offsets[:1]
-                    if value.parameter.endswith("tune")
-                    else cell.unpacked_offsets
-                )
+                approved.update(cell.unpacked_offsets[:1] if is_tune else cell.unpacked_offsets)
                 native_fields += 1
             differences = {
                 offset

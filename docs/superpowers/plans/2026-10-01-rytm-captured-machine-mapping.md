@@ -698,3 +698,16 @@ connection IDs. Preserve drop-oldest/closing/FIFO and authentication exactly.
 The endurance driver samples this existing health surface and records backend
 restart segments; history reuse is observed without inventing a global history
 eviction policy. Source/store/WS repairs remain in their declared ownership.
+
+### October 7 Interrupted-Run Continuation
+
+Resume at 2026-10-07T15:37:39Z with a fresh eight-hour ceiling of
+2026-10-07T23:37:39Z. Preserve published db2daf6c and both pending edits.
+Finish categorical QA diagnostics, creation-ordered process ownership and
+scope-refusal input logging. Diagnose the native hydrate_reload failure from
+run37544839205 with actual logs/artifacts before repairing its cause; retain
+strict assertions and existing deadlines. Freeze and review the corrected
+source, build through the existing Windows lane, verify the exact executable,
+then run a real90-120minute offline endurance exercise. Prior100second trials
+remain smoke only. Parent owns native startup and delivery; a disjoint worker
+owns the QA driver/verifier repair. No MIDI authority or dependency changes.

@@ -507,10 +507,20 @@ async def _handle_generate(cmd: dict[str, object], session: CockpitSession) -> H
         a4_track_targets=frozenset(session.a4_track_targets),
     )
     scopes = (
-        (rytm_scope, authoritative.rytm_scope(session.pad_locks), RYTM_LANE_POLICY.available_ids),
-        (a4_scope, authoritative.a4_scope(session.a4_track_locks), A4_LANE_POLICY.available_ids),
+        (
+            ANALOG_RYTM_DEVICE_ID,
+            rytm_scope,
+            authoritative.rytm_scope(session.pad_locks),
+            RYTM_LANE_POLICY.available_ids,
+        ),
+        (
+            ANALOG_FOUR_DEVICE_ID,
+            a4_scope,
+            authoritative.a4_scope(session.a4_track_locks),
+            A4_LANE_POLICY.available_ids,
+        ),
     )
-    for request_scope, session_scope, available in scopes:
+    for device_id, request_scope, session_scope, available in scopes:
         message: str | None = None
         reason: str | None = None
         if not session_scope.locked_ids <= request_scope.locked_ids:
@@ -522,7 +532,16 @@ async def _handle_generate(cmd: dict[str, object], session: CockpitSession) -> H
         if message is not None:
             _logger.info(
                 "show_bank_generation_scope_refused",
-                extra={"decision": "generation_scope", "reason": reason, "outcome": "refused"},
+                extra={
+                    "decision": "generation_scope",
+                    "reason": reason,
+                    "outcome": "refused",
+                    "device_id": device_id,
+                    "requested_target_count": len(request_scope.target_ids or available),
+                    "current_target_count": len(session_scope.target_ids or available),
+                    "requested_lock_count": len(request_scope.locked_ids),
+                    "current_lock_count": len(session_scope.locked_ids),
+                },
             )
             return HandlerResult(ack={"ok": False, "code": ERR_VALIDATION, "message": message})
     profile_id = _show_bank_text(cmd, "profile_id")
