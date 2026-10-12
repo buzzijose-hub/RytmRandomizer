@@ -169,7 +169,8 @@ def test_encoder_rejects_non_midi_header_and_candidate_rejects_dependency_reenco
 
     def drift(prefix, unpacked):
         encoded = encode_analog_four_saved_kit_payload(prefix, unpacked)
-        return replace(encoded, prefix=prefix[:-1] + bytes(((prefix[-1] + 1) % 128,)))
+        payload = encoded.payload[:8] + bytes(((prefix[-1] + 1) % 128,)) + encoded.payload[9:]
+        return replace(encoded, payload=payload)
 
     monkeypatch.setattr(candidate, "encode_analog_four_saved_kit_payload", drift)
     with pytest.raises(ValueError, match="round-trip byte-identically"):
@@ -191,7 +192,7 @@ def test_legal_maximum_is_passively_readable_without_broadening_old_mutation_sam
     assert value.device_screen_label == "127.99"
     assert value.screen_value == "127.9921875"
     assert value.mutable is False
-    assert value.protection_reason == "outside_existing_f1_mutation_evidence"
+    assert value.protection_reason == "source_value_outside_established_domain"
 
 
 @pytest.mark.parametrize("track", range(4))

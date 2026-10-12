@@ -98,6 +98,10 @@ def _registered_command_exit_code(args: Sequence[str]) -> int | None:
     from . import cli_registry
 
     lazy_commands = {
+        "a4-working-kit-compare": (
+            "rytm_randomizer.reports.analog_four_working_kit_comparison_cli",
+            "ANALOG_FOUR_WORKING_KIT_COMPARISON_CLI_COMMAND",
+        ),
         "mock-mapper-report": (
             "rytm_randomizer.reports",
             "MOCK_MAPPER_REPORT_CLI_COMMAND",

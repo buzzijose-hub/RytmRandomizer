@@ -67,7 +67,8 @@ _FIXTURE_DIR = Path(__file__).parent / "fixtures" / "rio145"
 def test_ordinary_rytm_lfo_label_keeps_its_own_signed_contract_and_exact_numeric_value(
     raw: int, label: str
 ) -> None:
-    sound = RytmSound.from_bytes(bytes(RYTM_SOUND_SIZE))
+    _, kit = _rytm_fixture("RYTM_Test1_Init_Kit.syx")
+    sound = kit.sound(0)
     sound.lfo_depth_raw16 = raw
     before = sound.to_bytes()
     assert sound.lfo_depth_device_label == label

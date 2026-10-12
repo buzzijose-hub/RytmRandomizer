@@ -58,10 +58,20 @@ from .strategies.analog_four_native_fields import (
 from .strategies.analog_four_saved_kit_candidate import (
     validate_analog_four_candidate_source as validate_analog_four_indexed_source,
 )
+from .strategies.analog_four_working_kit_comparison import (
+    AnalogFourExperimentEvidenceOrigin,
+    AnalogFourWorkingKitComparison,
+    AnalogFourWorkingKitFrames,
+    compare_analog_four_working_kit,
+)
 from .strategies.analog_rytm_kit_fields import RytmKit
 
 __all__ = [
     "Device",
+    "AnalogFourExperimentEvidenceOrigin",
+    "AnalogFourWorkingKitComparison",
+    "AnalogFourWorkingKitFrames",
+    "compare_analog_four_working_kit",
     "RytmKit",
     "encode_bipolar",
     "AnalogFourFilter1FrequencyCandidateCapability",

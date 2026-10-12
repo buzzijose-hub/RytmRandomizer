@@ -63,6 +63,7 @@ def test_working_capture_cannot_be_adopted_or_imported_as_an_indexed_source(tmp_
             original.sysex,
             frame_sha256=sha256(working.frame).hexdigest(),
             frame_bytes=len(working.frame),
+            retained=None,
         ),
     )
     with pytest.raises(DataError) as failure:
@@ -81,7 +82,7 @@ def test_working_capture_cannot_verify_a_fully_locked_favorite_or_preflight(tmp_
         workspace.bank(harness.bank_id).revision,
         profile=harness.profile,
         depth_preset="small",
-        depth=0,
+        depth=0.0,
         seed=91,
         candidate_count=1,
         rytm_targets=(),
