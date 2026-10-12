@@ -24,7 +24,7 @@ from typing import Final, Literal, NoReturn, cast
 
 from ...devices import validate_analog_four_indexed_source
 from ...guardrails.input_validation import canonical_json_bytes
-from ...observability.errors import DataError
+from ...observability.errors import DataError, WorkingKitSourceRefusalError
 from ...observability.logging import get_logger
 from ...observability.tracing import trace
 from ...snapshot.sysex_file import extract_sysex_payloads
@@ -187,6 +187,8 @@ def validate_show_bank_capture_frame(capture: ShowKitCapture, frame: bytes) -> K
         decoded = decode_kit_capture_frame(capture.device_id, frame)
         if capture.device_id == ANALOG_FOUR_DEVICE_ID:
             validate_analog_four_indexed_source(frame)
+    except WorkingKitSourceRefusalError:
+        raise
     except (DataError, KeyError, IndexError, TypeError, ValueError) as exc:
         raise DataError(
             "capture failed its registered device-family codec",

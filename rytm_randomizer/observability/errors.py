@@ -73,7 +73,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from types import MappingProxyType
-from typing import ClassVar
+from typing import ClassVar, Literal
 
 __all__ = [
     "ActiveBoundaryError",
@@ -91,6 +91,7 @@ __all__ = [
     "RealMidiSendError",
     "RytmRandomizerError",
     "StateError",
+    "WorkingKitSourceRefusalError",
 ]
 
 
@@ -233,6 +234,24 @@ class BoundaryError(RytmRandomizerError):
     """Generic boundary / contract violation that is not MIDI- or data-shaped."""
 
     fingerprint: ClassVar[str] = "boundary.error.unspecified"
+
+
+class WorkingKitSourceRefusalError(BoundaryError, ValueError):
+    """Passive working-RAM evidence cannot authorize an indexed-source operation."""
+
+    fingerprint: ClassVar[str] = "boundary.kit.working_source_refused"
+    reason: ClassVar[Literal["working_kit_read_only"]] = "working_kit_read_only"
+    recovery_message: ClassVar[str] = (
+        "Working KIT response is passive evidence; import a backed-up indexed KIT source "
+        "for generation, adoption, recapture or preflight. Working-state freshness and "
+        "recovery remain unverified."
+    )
+
+    def __init__(self) -> None:
+        super().__init__(
+            WorkingKitSourceRefusalError.recovery_message,
+            context={"reason": WorkingKitSourceRefusalError.reason},
+        )
 
 
 class ConfigError(RytmRandomizerError):
