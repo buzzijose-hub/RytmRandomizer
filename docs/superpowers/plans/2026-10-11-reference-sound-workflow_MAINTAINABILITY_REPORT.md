@@ -22,5 +22,8 @@ This does not retroactively certify PR #254's historical Gate 14/16 deviations.
 Known nonblocking review note: the numeric record adapter keeps a defensive
 overflow catch while preserving integer JSON spellings for stable context/CAS
 identity. No confirmed maintainability regression remains in the scoped review.
-The next acceptance gates are whole touched-file coverage, exact packaged UI,
-reviewed publication and actual instrument/recovery rehearsal.
+The final source gate passes11,457tests685.46s, all63touched modules100%line/branch;
+the frontend passes1292tests31.51s with allfourcoverage measures100%. The redundant
+overflow catch noted earlier was removed, with integer JSON identity retained.
+The next acceptance gates are exact packaged UI, reviewed publication and actual
+instrument/recovery rehearsal.

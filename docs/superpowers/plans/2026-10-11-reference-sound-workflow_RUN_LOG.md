@@ -13,3 +13,5 @@ Append-only recorded events; UTC. Synthetic tests are not physical observations.
 2026-10-12T06:51:54Z | repair | Sourcee13a7d51; all four architecture causes and actual refusal/huge-number cases pass99focused checks; new full run started.
 2026-10-12T07:03:56Z | broad-result | 11455pass/5skip/6warnings697.13s; package99.67%; strict touched-file gate reports one redundant uncovered catch.
 2026-10-12T07:06:00Z | source-freeze-candidate | Source7cf12e1a removes redundant catch and strengthens exact nonzero PCM width evidence; final broad coverage running; pins/parity unchanged.
+2026-10-12T07:22:00Z | final-worker-repair | Source92b64b9c contains submission failure and cooperative-cancellation telemetry fixes; targeted ownership regressions pass; new broad run starts.
+2026-10-12T07:34:48Z | source-acceptance | 11457pass5skip6warnings685.46s; package99.68%; all63touched100%line/branch; pinnedPyright1.1.411clean. Frontend1292tests/81files31.51s allfourcoverage100%; TS/ESLint clean. Exact Windows package/CI/physical acceptance still pending.

@@ -30,7 +30,8 @@ A4 native/inference subset, not complete device or acoustic-model support.
 | Green full source run: 11,455 pass / five skips / six warnings / 697.13s | Package coverage 99.67%; one uncovered redundant record-adapter catch remained in the stricter touched-file gate. |
 | Pinned strict typing | Pyright 1.1.411 passes all 63 integration-target touched production modules. |
 | Whole lint / new-module ratchet / dead code | Ruff, Black (950 files), isort; new PLR/ERA/ARG/FA100 and Vulture80 pass. |
-| Final source verification | In progress after redundant catch removal and exact nonzero 16/24/32-bit segment test; final touched-file report pending. |
+| Final source verification | 11,457 pass / five skips / six existing warnings / 685.46s. Package 99.68%; all 63 integration-target touched production modules 100% line/branch. Architecture and frozen parity included. |
+| Final frontend | 1,292 pass / 81 files / 31.51s; statements/branches/functions/lines 100%; TypeScript and ESLint clean. |
 
 Resource probes during the run showed approximately 14-15 GiB free RAM. Only
 one heavy local job ran at a time, with two pytest workers and one browser
@@ -46,6 +47,12 @@ actual four-thread controls, limits and shared-artifact recovery are documented.
 The learned frozen-worker skill/rule records the non-obvious startup and cleanup
 failure mechanisms. No timeout, dependency-pin, frozen-parity or authority gate
 was relaxed. Historical PR #254 Gate 14/16 exceptions remain visible.
+
+Final submission-failure fencing and cooperative-cancellation telemetry repairs
+are included in production `92b64b9c`. All eight separately targeted review
+dimensions clear their blocking incremental findings. One nonblocking opportunity
+remains: generalize the repeated wire-footprint assertion arithmetic. No encoding
+or output defect was observed; the two canonical codec/readback proofs remain.
 
 Final package hashes, executable journey, fresh CI/review status, end time and
 stop reason will be recorded in the exact delivery receipt. Physical completion

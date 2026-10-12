@@ -13,7 +13,10 @@ repairs; OS-backed publication locks preserve newer favorites. Frozen audio's
 Windows stdin/spawn deadlock is repaired: an intermediate executable completed
 both paths in 23.922 seconds. The real browser workflow passes in 19.8 seconds,
 including recording/refinement, local export and restart recall. The current
-broad architecture/coverage run and final packaged-shell acceptance remain
+broad verification passes11,457tests/5skips/6existingwarnings685.46s; all63touched
+production modules100%line/branch, package99.68%, pinnedtyping1.1.411clean.
+Frontend1292tests/81files31.51s passes allfourcoverage100%, TS/ESLint clean.
+Exact final packaged-shell acceptance, fresh CI and protected review remain
 separate pending gates. No MIDI/USB operations or protected merges occurred. The prior
 delivery below remains the launchable verified build until a new exact receipt
 supersedes it. See the [active plan](superpowers/plans/2026-10-11-reference-sound-workflow.md).
