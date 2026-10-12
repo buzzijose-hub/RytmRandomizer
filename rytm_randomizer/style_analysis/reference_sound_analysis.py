@@ -4,57 +4,74 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping
-from typing import Final, cast
+from typing import Final, TypedDict, cast
 
+from ..guardrails.input_validation import (
+    require_float,
+    require_int,
+    require_object,
+    require_sequence,
+    require_text,
+)
 from ..guardrails.schema import Confidence, SourceType
 from .extractor import (
     AudioDnaEvidence,
+    AudioDnaEvidencePayload,
     AudioFeatureAnalysis,
     AudioSynthesisFeatures,
+    AudioSynthesisFeaturesPayload,
     audio_dna_evidence_to_dict,
     audio_synthesis_features_to_dict,
 )
-from .feature_report import FeatureReport, feature_report_to_dict
+from .feature_report import FeatureReport, FeatureReportPayload, feature_report_to_dict
 
 _MAX_SOUND_TEXT_LENGTH: Final[int] = 1024
 _MAX_SOUND_SCOPE_FIELDS: Final[int] = 256
 _MAX_SOUND_ENERGY_ARC: Final[int] = 32
 
 
+class ReferenceSoundAnalysisPayload(TypedDict):
+    report: FeatureReportPayload
+    features: AudioSynthesisFeaturesPayload
+    evidence: AudioDnaEvidencePayload
+
+
 def sound_mapping(value: object) -> Mapping[str, object]:
+    data = require_object(value, "Reference-sound record", ValueError)
     if not isinstance(value, dict):
         raise ValueError("Reference-sound record is not an object.")
-    return cast(dict[str, object], value)
+    return data
 
 
 def sound_text(value: object) -> str:
-    if not isinstance(value, str) or not value or len(value) > _MAX_SOUND_TEXT_LENGTH:
+    text = require_text(value, "Reference-sound text field", ValueError)
+    if not text or len(text) > _MAX_SOUND_TEXT_LENGTH:
         raise ValueError("Reference-sound record has an invalid text field.")
-    return value
+    return text
 
 
 def sound_number(value: object) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+    number = require_float(value, "Reference-sound numeric field", ValueError)
+    if not math.isfinite(number):
         raise ValueError("Reference-sound record has an invalid numeric field.")
-    return float(value)
+    return number
 
 
 def sound_integer(value: object) -> int:
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise ValueError("Reference-sound record has an invalid integer field.")
-    return value
+    return require_int(value, "Reference-sound integer field", ValueError)
 
 
 def sound_string_tuple(value: object) -> tuple[str, ...]:
-    if not isinstance(value, list) or len(cast(list[object], value)) > _MAX_SOUND_SCOPE_FIELDS:
+    items = require_sequence(value, "Reference-sound controls", ValueError, kind="list")
+    if len(items) > _MAX_SOUND_SCOPE_FIELDS:
         raise ValueError("Reference-sound controls must be a bounded list.")
-    values = tuple(sound_text(item) for item in cast(list[object], value))
+    values = tuple(sound_text(item) for item in items)
     if len(set(values)) != len(values):
         raise ValueError("Reference-sound controls cannot contain duplicates.")
     return values
 
 
-def sound_analysis_to_dict(analysis: AudioFeatureAnalysis) -> dict[str, object]:
+def sound_analysis_to_dict(analysis: AudioFeatureAnalysis) -> ReferenceSoundAnalysisPayload:
     return {
         "report": feature_report_to_dict(analysis.feature_report),
         "features": audio_synthesis_features_to_dict(analysis.synthesis_features),

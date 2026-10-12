@@ -13,7 +13,10 @@ from typing import get_args
 import pytest
 from cockpit.conftest import make_reference_pcm
 
-from rytm_randomizer.cockpit.export.reference_sound_analysis import sound_analysis_from_dict
+from rytm_randomizer.cockpit.export.reference_sound_analysis import (
+    sound_analysis_from_dict,
+    sound_analysis_to_dict,
+)
 from rytm_randomizer.cockpit.export.reference_sound_records import (
     REFERENCE_SOUND_METRIC,
     ReferenceSoundFeatureName,
@@ -23,7 +26,6 @@ from rytm_randomizer.cockpit.export.reference_sound_records import (
     narrow_sound_device_id,
     narrow_sound_feature,
     require_sound_digest,
-    sound_analysis_payload,
     sound_candidate_from_dict,
     sound_context_from_dict,
     sound_delta_payload,
@@ -78,7 +80,7 @@ def _record(analysis: AudioFeatureAnalysis) -> ReferenceSoundRecordingPayload:
         "candidate_id": "a" * 64,
         "candidate_sha256": "b" * 64,
         "audio_sha256": analysis.audio_sha256,
-        "features": sound_analysis_payload(analysis),
+        "features": sound_analysis_to_dict(analysis),
         "distance": 0.0,
         "score": 100,
         "metric": REFERENCE_SOUND_METRIC,

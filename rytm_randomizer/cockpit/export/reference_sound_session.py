@@ -32,6 +32,7 @@ from ...style_analysis.extractor import (
 from .reader import decode_json_rejecting_duplicate_keys
 from .reference_sound_analysis import (
     sound_analysis_from_dict,
+    sound_analysis_to_dict,
     sound_features_from_dict,
     sound_integer,
     sound_number,
@@ -60,7 +61,6 @@ from .reference_sound_records import (
     narrow_sound_device_id,
     require_sound_digest,
     require_sound_title,
-    sound_analysis_payload,
     sound_candidate_from_dict,
     sound_context_from_dict,
     sound_delta_payload,
@@ -74,9 +74,9 @@ from .reference_sound_store import (
     reference_sound_json,
     sound_artifact_name,
 )
+from .writer import atomic_write
 
 _MAX_KIT_DESTINATION_SLOT: Final[int] = 127
-from .writer import atomic_write
 
 SoundAnalyzer = Callable[[Path, Event], AudioFeatureAnalysis]
 
@@ -294,7 +294,7 @@ class ReferenceSoundWorkspace:
             **current,
             "session_id": identity,
             "context": context,
-            "analysis": sound_analysis_payload(analysis),
+            "analysis": sound_analysis_to_dict(analysis),
             "candidates": [sound_candidate_from_dict(item.to_dict()) for item in candidates],
             "recordings": [],
             "refinements": [],
@@ -538,7 +538,7 @@ class ReferenceSoundWorkspace:
             "candidate_id": candidate_id,
             "candidate_sha256": candidate_sha256,
             "audio_sha256": info.sha256,
-            "features": sound_analysis_payload(analysis),
+            "features": sound_analysis_to_dict(analysis),
             "distance": score.distance,
             "score": score.similarity,
             "metric": REFERENCE_SOUND_METRIC,
