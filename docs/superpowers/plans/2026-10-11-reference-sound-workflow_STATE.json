@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "phase": "packaging",
-  "source_commit": "92b64b9cfdc647eaca83006415af2e1a5591656b",
+  "phase": "package_validation",
+  "source_commit": "64d5c6193ce227a033f61cd09d497b13ac1fa992",
   "reference_pr": 254,
   "midi_disabled": true,
   "started_at": "2026-10-12T03:42:18Z",
-  "updated_at": "2026-10-12T07:34:00Z",
+  "updated_at": "2026-10-12T09:56:10Z",
   "completed": [
     "both-device native source-preserving alternatives",
     "exact original and segment retention",
@@ -17,11 +17,17 @@
     "intermediate frozen-runtime proof",
     "targeted review repairs and architecture closure",
     "final 11457-test source suite and 63 touched files at 100 percent coverage",
-    "1292 frontend tests and four coverage measures at 100 percent"
+    "1292 frontend tests and four coverage measures at 100 percent",
+    "exact-source audio-enabled Windows delivery and verified binary hashes",
+    "final frozen worker RPC proof without developer paths",
+    "strict single-start native both-device journey and exact restart recall",
+    "unchanged normal offline launcher connection proof",
+    "fresh successful PR CI at 63c5ccf2",
+    "delivery receipt and focused first studio test"
   ],
   "pending": [
-    "fresh CI and protected review",
-    "exact-source Windows delivery and packaged UI proof",
+    "separately measured new-package sustained rehearsal",
+    "protected human review of final head",
     "actual instrument recordings and recovery rehearsal"
   ]
 }

@@ -1,9 +1,10 @@
 # Reference Sound Reassessment
 
-> Status: in-flight (source assessed; final delivery acceptance pending).
+> Status: in-flight (source and packaged software assessed; physical acceptance pending).
 
-Reassessment after integrated production source `e13a7d51`. Final source coverage,
-Windows delivery, CI and physical acceptance remain separate pending evidence.
+Reassessment began at integrated source `e13a7d51` and was closed against final
+production `92b64b9c`, packaged at `64d5c619`. Source coverage, Windows delivery
+and CI are verified; sustained rehearsal and physical acceptance remain separate.
 This does not retroactively certify PR #254's historical Gate 14/16 deviations.
 
 | Dimension | Result Versus Pre-Code Audit |
@@ -14,16 +15,17 @@ This does not retroactively certify PR #254's historical Gate 14/16 deviations.
 | Magic Values | New-module PLR/ERA/ARG/FA100 passes; resource limits use named constants. Source-dependent domains and encodings stay canonical, not guessed. |
 | Configuration | Four child-only thread controls documented exactly. No new MIDI, restoration or operator trust switch. |
 | Tests | Shared retained sources/audio fixtures; adversarial CAS, schema, exact bytes, huge numbers, repeated cancellation, duplicate feedback and actual WS disconnect. Frozen parity and pins unchanged. |
-| Build Loop | Two pytest workers and one heavy job. Intermediate frozen proof 23.922s; real browser journey 19.8s. Latest broad run before closure: 11,423 pass / four architecture failures / 706.71s; all four causes then passed the 99-check repair gate. Final broad result is still pending. |
+| Build Loop | Two pytest workers and one heavy job. Final source 11,457 pass / 685.46s; all 63 touched modules 100% line/branch. Final frozen RPC 24.578s and strict packaged UI 40.558s pass; earlier failures remain retained. |
 | Errors | Closed reason vocabulary and actionable fixed messages; refusal telemetry includes direct decisions without raw paths or exception text. Failure-before-publication and owned cleanup tested. |
-| Version | VERSION unchanged. Existing exact-source installer workflow and binary manifest remain authoritative; no developer interpreter required in the delivered runtime. Final delivery receipt must supersede intermediate proof. |
+| Version | VERSION unchanged. Exact-source installer workflow and binary manifest remain authoritative; no developer interpreter required. Source64d5 package receipt now supersedes intermediate proof without modifying older deliveries. |
 | Extension | A future intent field updates canonical bindings, source-bound projection and tests. An unverified location/conversion still requires an evidence experiment, not an inference coefficient. |
 
-Known nonblocking review note: the numeric record adapter keeps a defensive
-overflow catch while preserving integer JSON spellings for stable context/CAS
-identity. No confirmed maintainability regression remains in the scoped review.
+The earlier numeric-adapter catch review note is resolved while integer JSON
+spellings remain stable for context/CAS identity. No confirmed maintainability
+regression remains in the scoped review.
 The final source gate passes11,457tests685.46s, all63touched modules100%line/branch;
 the frontend passes1292tests31.51s with allfourcoverage measures100%. The redundant
 overflow catch noted earlier was removed, with integer JSON identity retained.
-The next acceptance gates are exact packaged UI, reviewed publication and actual
+Exact packaged UI passes and fresh63c5 CI succeeds. The remaining gates are
+the separately timed rehearsal result, protected human approval and actual
 instrument/recovery rehearsal.

@@ -1,6 +1,6 @@
 # Reference Sound Workflow
 
-> Status: in-flight (implementation; software, package and physical acceptance pending).
+> Status: in-flight (packaged software verified; sustained run and physical acceptance pending).
 
 ## Mission And Baseline
 
@@ -8,7 +8,7 @@ Develop reference-to-discovery sound matching for Analog Four MKII and Analog
 Rytm MKII without claiming exact reproduction or acoustic hardware proof.
 Start: 2026-10-12 03:42:18 UTC. Session cap: eight productive hours; retain a
 resume checkpoint at interruption or cap, not a fabricated completion claim.
-PR #254 remains OPEN / CHANGES_REQUESTED at 2cf9f72b. Verified Windows source
+Kickoff PR #254 was OPEN / CHANGES_REQUESTED at 2cf9f72b. Verified Windows source
 6e098f85 and older deliveries stay untouched. The primary checkout is dirty;
 assembly is the clean `rytm-studio-mapping` worktree.
 
@@ -78,11 +78,16 @@ journey passed in 19.8 seconds, including original/segment identity, exact scope
 recording comparison, refinement, native export and disarmed restart recall.
 
 The first full composition had 11,279 passes and ten contract/provenance failures;
-458 targeted checks pass after their repairs. A newer broad coverage run is in
-flight. Remaining integration architecture/coverage and direct-refusal telemetry
-findings are not certified away by focused tests. Exact final package, fresh CI,
-human review and physical acceptance are separate pending gates. The previous
-Windows delivery remains the verified build until a new receipt supersedes it.
+458 targeted checks pass after their repairs. Final source verification passes
+11,457 tests with five skips and six existing warnings; all 63 touched production
+modules have 100% line/branch coverage. The exact `64d5c619` audio-enabled Windows
+delivery passes a 24.578s bundled worker proof and a 40.558s strict native journey
+on both devices, including exact disarmed recall after restart. Its unchanged
+offline launcher connects in 5.402s. Native QA cold-profile setup is repaired in
+test-only `75ac5c32`; failed/retried earlier attempts stay separate. CI succeeds
+at test-only `63c5ccf2`; production remains byte-identical to the build source.
+The new sustained rehearsal, protected human review and physical acceptance
+are separate pending gates. Both old and new Windows deliveries are preserved.
 
 ## Architecture And Acceptance
 

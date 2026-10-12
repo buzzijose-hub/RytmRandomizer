@@ -1109,8 +1109,15 @@ dev server, Rust hot-reload, and the sidecar all spin up together.
 The new **Reference sound** workspace is for one short sound. It is distinct
 from the description compiler and song/profile wizard. The prior `6e098f85`
 rehearsal package does not contain this feature or its audio dependencies.
-Use only a new source-bound delivery whose receipt includes frozen-worker and
-actual UI acceptance. Implementation or a packaging trial is not show readiness.
+The audio-enabled source `64d5c619` package is delivered at
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-64d5c6193ce2`.
+Its receipt includes frozen-worker and actual native UI acceptance. The older
+delivery stays preserved. Implementation or a packaging trial is not show readiness.
+
+```powershell
+Set-Location "C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-studio-64d5c6193ce2"
+.\Launch-Offline.ps1 -Hidden:$false
+```
 
 1. Open the offline launcher with MIDI disabled. Import a mono/stereo
    16/24/32-bit PCM WAV (8-96 kHz, at most 16 MiB / 120 seconds). Keep a

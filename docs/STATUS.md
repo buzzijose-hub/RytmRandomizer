@@ -16,10 +16,17 @@ including recording/refinement, local export and restart recall. The current
 broad verification passes11,457tests/5skips/6existingwarnings685.46s; all63touched
 production modules100%line/branch, package99.68%, pinnedtyping1.1.411clean.
 Frontend1292tests/81files31.51s passes allfourcoverage100%, TS/ESLint clean.
-Exact final packaged-shell acceptance, fresh CI and protected review remain
-separate pending gates. No MIDI/USB operations or protected merges occurred. The prior
-delivery below remains the launchable verified build until a new exact receipt
-supersedes it. See the [active plan](superpowers/plans/2026-10-11-reference-sound-workflow.md).
+The audio-enabled Windows delivery is now available from source `64d5c619`
+at `C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-64d5c6193ce2`.
+Its exact-source bundled worker proof passes24.578s, strict native both-device
+journey passes40.558s (one startup,47commands,zero failures), and unchanged
+offline launcher connects5.402s. The later test-only QA commits do not change
+those production binaries. Fresh CI at `63c5ccf2` passes; protected human review
+and physical recordings/application/recovery remain pending. The new timed
+rehearsal is accounted separately; short proofs are not endurance acceptance.
+No MIDI/USB operations or protected merges occurred. The older delivery below
+is preserved. See the new delivery's `studio-procedure/DELIVERY-RECEIPT.md` and
+the [active plan](superpowers/plans/2026-10-11-reference-sound-workflow.md).
 
 Offline Windows source `6e098f85ddeb48d9beb97f732f22e2f2152d86eb` is delivered
 at `C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-6e098f85ddeb`.

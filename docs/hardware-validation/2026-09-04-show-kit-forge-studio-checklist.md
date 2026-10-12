@@ -42,6 +42,25 @@ Its candidate export does not grant Cockpit SEND or hardware SAVE/restore author
 Exact bounds and shared-artifact recovery are in
 [Reference Sound Rehearsal](../COCKPIT_QUICKSTART.md#reference-sound-rehearsal).
 
+### Manual Single-KIT Receive
+
+After the operator preflight, open GLOBAL SETTINGS > SYSEX DUMP > SYSEX RECEIVE
+on the selected instrument. In the left column choose KIT, then in the right
+column choose the exact disposable KIT 01-128 matching the exported destination.
+Do not choose ANYTHING, ACTIVE KIT, a Sound bank or a whole-project operation.
+Press YES to listen, then send exactly one candidate KIT file using the approved
+SysEx librarian and that instrument's exact output. Additional files can advance
+through subsequent slots; an empty-looking slot is not a substitute for a backup.
+After transfer, press NO to stop receiving, load the selected scratch KIT and
+inspect the requested and untouched values before sounding it. Stop if the menu,
+firmware, destination or file type differs from the planned test.
+
+These menu semantics are documented in the official
+[Rytm MKII OS1.72 manual, sections14.5.1-14.5.2](https://www.elektron.se/wp-content/uploads/2025/01/Analog-Rytm-MKII-User-Manual_ENG_OS1.72_250130.pdf)
+and [A4 MKII OS1.51C manual, section12.5.2](https://www.elektron.se/wp-content/uploads/2024/09/Analog-Four-MKII-User-Manual_ENG_OS1.51C_220204-1.pdf).
+They do not certify the operator's current firmware or authorize autonomous
+transfer. The Studio offline launcher remains MIDI-disabled throughout.
+
 ### Guarded Live Pad 2 Proof
 
 Use the exact portable build and hashes in the PR #254 software delivery

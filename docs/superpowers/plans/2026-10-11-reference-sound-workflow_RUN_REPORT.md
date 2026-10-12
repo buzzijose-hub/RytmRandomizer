@@ -54,10 +54,25 @@ dimensions clear their blocking incremental findings. One nonblocking opportunit
 remains: generalize the repeated wire-footprint assertion arithmetic. No encoding
 or output defect was observed; the two canonical codec/readback proofs remain.
 
-Final package hashes, executable journey, fresh CI/review status, end time and
-stop reason will be recorded in the exact delivery receipt. Physical completion
-requires real instrument recordings plus application/save/reload/recovery tests;
-software fixtures and synthetic comparison audio cannot establish it.
+The exact `64d5c619` Windows package is delivered with verified shell and
+audio-enabled sidecar hashes, a tested offline launcher and focused studio
+procedure. Final frozen RPC proof passes24.578s; strict native both-device UI
+proof passes40.558s with one startup,47commands and zero failures. Normal
+launcher connection passes5.402s. The source-dependent synthetic proofs cover
+generation/favorite/recording/refinement/export and exact restart recall, not
+actual acoustic quality. Minimum sampled free RAM13.439GiB and maximum sampled
+owned private memory587.797MiB are samples, not continuous peaks. Owned cleanup
+passes. Earlier diagnostic startup retry/failure receipts remain failed or
+interrupted; the missing isolated Windows known folder was repaired in QA only,
+without retries or deadline inflation in the final proof.
+
+Fresh PR CI run38221193854 succeeds at63c5ccf2. Test-only63c5/75ac commits leave
+production byte-identical to package source64d5. The latest human review remains
+Eddie's October3 CHANGES_REQUESTED; no protected merge or approval bypass.
+The separately timed new-package rehearsal is in progress/pending its result.
+End time and stop reason will be recorded after owned cleanup. Physical
+completion requires real instrument recordings plus application/save/reload/
+recovery tests; software fixtures and synthetic audio cannot establish it.
 
 ## Fresh-Export Onboarding Check
 
