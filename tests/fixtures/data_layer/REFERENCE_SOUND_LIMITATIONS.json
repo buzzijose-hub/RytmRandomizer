@@ -1,0 +1,6 @@
+[
+  "Local saved-KIT candidate only; no live eligibility, hardware verification or SEND authority.",
+  "Audio inference is heuristic intent, not measured audible similarity or exact recreation.",
+  "Pitch, machine/oscillator selectors, routing, samples and unknown bytes are preserved.",
+  "Only selected expressible controls change; excluded direction traits remain unexpressed."
+]

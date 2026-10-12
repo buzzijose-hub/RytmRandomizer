@@ -108,6 +108,7 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
         protocol.COMMAND_LIBRARY_TAG,
         protocol.COMMAND_LIBRARY_DELETE,
         protocol.COMMAND_LIBRARY_IMPORT_CAPTURES,
+        protocol.COMMAND_REFERENCE_SOUND,
         protocol.COMMAND_SHOW_BANK_LIST,
         protocol.COMMAND_SHOW_BANK_CREATE,
         protocol.COMMAND_SHOW_BANK_SELECT,
@@ -131,8 +132,9 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
     }
     assert individual <= protocol.COMMAND_TYPES
     assert isinstance(protocol.COMMAND_TYPES, frozenset)
-    # 55 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
-    assert len(protocol.COMMAND_TYPES) == 63
+    # 56 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
+    assert len(protocol.COMMAND_TYPES) == 64
+    assert protocol.COMMAND_REFERENCE_SOUND in protocol.COMMAND_TYPES
 
 
 def test_event_and_command_constants_match_spec_strings() -> None:

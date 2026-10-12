@@ -163,11 +163,34 @@ def test_al16_generator_dependencies_match_the_complete_behavior_contract() -> N
     )
 
 
-def test_committed_al02_blocked_evidence_hashes_are_frozen() -> None:
+def test_historical_al02_blocked_evidence_hashes_are_preserved() -> None:
     assert {
-        relative_path: hashlib.sha256((_REPO_ROOT / relative_path).read_bytes()).hexdigest()
+        relative_path: hashlib.sha256(
+            (_REPO_ROOT / "output/al16/archive/2026-08-02" / Path(relative_path).name).read_bytes()
+        ).hexdigest()
         for relative_path in _COMMITTED_EVIDENCE_HASHES
     } == _COMMITTED_EVIDENCE_HASHES
+
+
+def test_current_al02_provenance_refresh_is_explicit_and_stays_blocked() -> None:
+    path = _REPO_ROOT / "output/al16/AL02_LOCK_RYTM_manifest.json"
+    assert (
+        hashlib.sha256(path.read_bytes()).hexdigest()
+        == "b89d79a11b3f6d95d1f81f958af4360061fe0b8bd1b0cecc55f1f3f1af42a16b"
+    )
+    current = json.loads(path.read_text(encoding="utf-8"))
+    historical = json.loads(
+        (_REPO_ROOT / "output/al16/archive/2026-08-02/AL02_LOCK_RYTM_manifest.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert current["build_status"] == historical["build_status"] == "blocked"
+    assert current["output_emitted"] is False and current["intentionally_changed_raw_bytes"] == 0
+    current.pop("build_timestamp")
+    historical.pop("build_timestamp")
+    current["generator_dependency_sha256"].pop("rytm_randomizer/devices/__init__.py")
+    historical["generator_dependency_sha256"].pop("rytm_randomizer/devices/__init__.py")
+    assert current == historical
 
 
 def test_committed_al02_evidence_is_bound_to_current_inputs_and_generator() -> None:

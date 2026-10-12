@@ -88,8 +88,9 @@ def test_cockpit_command_types_includes_wizard_commands() -> None:
     """All 8 wizard commands must appear in :data:`protocol.COMMAND_TYPES`."""
 
     assert wizard_protocol.WIZARD_COMMAND_TYPES <= protocol.COMMAND_TYPES
-    # 55 cockpit-native commands + 8 wizard commands = 63 total
-    assert len(protocol.COMMAND_TYPES) == 55 + 8
+    # 56 cockpit-native commands + 8 wizard commands = 64 total
+    assert len(protocol.COMMAND_TYPES) == 56 + 8
+    assert protocol.COMMAND_REFERENCE_SOUND in protocol.COMMAND_TYPES
 
 
 def test_cockpit_event_types_includes_wizard_events() -> None:

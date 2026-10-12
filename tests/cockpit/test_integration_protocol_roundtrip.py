@@ -561,7 +561,7 @@ def test_all_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
     """Pin invariant: every cockpit-native command has a matching round-trip test above.
 
     ``COMMAND_TYPES`` is the union of the cockpit + wizard command surfaces
-    (55 cockpit + 8 wizard = 63 total). This test pins the legacy cockpit-native
+    (56 cockpit + 8 wizard = 64 total). This test pins the legacy cockpit-native
     commands; the wizard subset is exercised end-to-end in
     ``test_integration_wizard_flow.py``. If a new cockpit command lands and
     this assertion is not extended, the file falls out of sync silently —
@@ -570,7 +570,15 @@ def test_all_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
 
     # 27 commands round-trip here; the 8 arm/diagnostics/library commands
     # are exercised in tests/cockpit/test_ws_arm_and_library_handlers.py.
-    assert len(COMMAND_TYPES) == 63
+    assert len(COMMAND_TYPES) == 64
+    assert "reference_sound" in COMMAND_TYPES
+    source = (
+        Path(__file__).with_name("test_reference_sound_handlers.py").read_text(encoding="utf-8")
+    )
+    assert (
+        "def test_actual_ws_upload_scope_generation_favorite_playback_export_and_restart" in source
+    )
+    assert 'send_cmd(ws, "reference_sound"' in source
     cockpit_native = {
         COMMAND_SELECT_PROFILE,
         COMMAND_SET_DEPTH,
