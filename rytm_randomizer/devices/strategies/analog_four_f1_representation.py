@@ -35,7 +35,7 @@ from ...data.analog_four_saved_kit_layout import A4_KIT_SYNTH_TRACK_COUNT
 from ...guardrails.input_validation import require_int
 
 
-def _integer(value: object, maximum: int, name: str) -> int:
+def _require_f1_value(value: object, maximum: int, name: str) -> int:
     result = require_int(value, name)
     if not 0 <= result <= maximum:
         raise ValueError(f"{name} outside 0..{maximum}")
@@ -44,30 +44,30 @@ def _integer(value: object, maximum: int, name: str) -> int:
 
 def native_to_screen(native: int) -> str:
     """Forward two-decimal F1 label, with truncation and no unique inverse."""
-    native = _integer(native, A4_F1_NATIVE_MAX, "native")
+    native = _require_f1_value(native, A4_F1_NATIVE_MAX, "native")
     hundredths = native * A4_F1_DISPLAY_SCALE // A4_F1_NATIVE_SCALE
     return f"{hundredths // A4_F1_DISPLAY_SCALE}.{hundredths % A4_F1_DISPLAY_SCALE:02d}"
 
 
 def native_to_wire14(native: int) -> int:
     """Stock precision-one wire conversion discards the low native bit."""
-    return _integer(native, A4_F1_NATIVE_MAX, "native") >> 1
+    return _require_f1_value(native, A4_F1_NATIVE_MAX, "native") >> 1
 
 
 def parsed_wire14_to_native(wire14: int) -> int:
     """Parsed NRPN value-stage candidate; it does not acknowledge a commit."""
-    return _integer(wire14, A4_F1_WIRE14_MAX, "wire14") << 1
+    return _require_f1_value(wire14, A4_F1_WIRE14_MAX, "wire14") << 1
 
 
 def split_wire14(wire14: int) -> tuple[int, int]:
     """Split a validated fourteen-bit scalar into two inert data bytes."""
-    wire14 = _integer(wire14, A4_F1_WIRE14_MAX, "wire14")
+    wire14 = _require_f1_value(wire14, A4_F1_WIRE14_MAX, "wire14")
     return wire14 >> 7, wire14 & A4_F1_DATA_BYTE_MAX
 
 
 def join_parsed_bytes(msb: int, lsb: int) -> int:
     """Concatenate parsed bytes; this alone is not a native parser model."""
-    return (_integer(msb, A4_F1_DATA_BYTE_MAX, "msb") << 7) | _integer(
+    return (_require_f1_value(msb, A4_F1_DATA_BYTE_MAX, "msb") << 7) | _require_f1_value(
         lsb, A4_F1_DATA_BYTE_MAX, "lsb"
     )
 
@@ -96,15 +96,15 @@ def represent(native: int) -> AnalogFourF1Representation:
 
 
 def _require_f1_cc(control: int, value: int) -> None:
-    _integer(control, A4_F1_DATA_BYTE_MAX, "control")
-    _integer(value, A4_F1_DATA_BYTE_MAX, "value")
+    _require_f1_value(control, A4_F1_DATA_BYTE_MAX, "control")
+    _require_f1_value(value, A4_F1_DATA_BYTE_MAX, "value")
     if control not in (A4_F1_MAPPING.cc_msb, A4_F1_MAPPING.cc_lsb):
         raise ValueError("control is not F1 CC18 or CC50")
 
 
 def apply_parsed_cc_half(baseline: int, control: int, value: int) -> int:
     """Preserve/replace the native low byte, then apply the F1 queue bound."""
-    baseline = _integer(baseline, A4_F1_NATIVE_MAX, "baseline")
+    baseline = _require_f1_value(baseline, A4_F1_NATIVE_MAX, "baseline")
     _require_f1_cc(control, value)
     if control == A4_F1_MAPPING.cc_msb:
         proposed = (value << 8) | (baseline & A4_F1_LOW_BYTE_MASK)
@@ -115,8 +115,8 @@ def apply_parsed_cc_half(baseline: int, control: int, value: int) -> int:
 
 def stock_cc_samples(coarse_sample: int, fine_sample: int) -> tuple[int, int]:
     """Model separate getter samples, without asserting snapshot coherence."""
-    coarse_sample = _integer(coarse_sample, A4_F1_NATIVE_MAX, "coarse sample")
-    fine_sample = _integer(fine_sample, A4_F1_NATIVE_MAX, "fine sample")
+    coarse_sample = _require_f1_value(coarse_sample, A4_F1_NATIVE_MAX, "coarse sample")
+    fine_sample = _require_f1_value(fine_sample, A4_F1_NATIVE_MAX, "fine sample")
     return coarse_sample >> 8, (fine_sample >> 1) & A4_F1_DATA_BYTE_MAX
 
 
@@ -141,10 +141,10 @@ def observe_parsed_cc_half(
     """Prefer caller-supplied pending state; incomplete context stays partial."""
     _require_f1_cc(control, value)
     if track_index is not None:
-        _integer(track_index, A4_KIT_SYNTH_TRACK_COUNT - 1, "resolved track index")
+        _require_f1_value(track_index, A4_KIT_SYNTH_TRACK_COUNT - 1, "resolved track index")
     for sample in (current_native, pending_native):
         if sample is not None:
-            _integer(sample, A4_F1_NATIVE_MAX, "baseline")
+            _require_f1_value(sample, A4_F1_NATIVE_MAX, "baseline")
     baseline = pending_native if pending_native is not None else current_native
     source = A4_F1_BASELINE_UNKNOWN
     if pending_native is not None:
@@ -188,15 +188,17 @@ class AnalogFourF1NrpnRow:
 
     def __post_init__(self) -> None:
         if self.track_index is not None:
-            _integer(self.track_index, A4_KIT_SYNTH_TRACK_COUNT - 1, "resolved track index")
+            _require_f1_value(
+                self.track_index, A4_KIT_SYNTH_TRACK_COUNT - 1, "resolved track index"
+            )
         for half in (self.parameter_msb, self.parameter_lsb, self.value_msb, self.value_lsb):
             if half is not None:
-                _integer(half, A4_F1_DATA_BYTE_MAX, "cached half")
+                _require_f1_value(half, A4_F1_DATA_BYTE_MAX, "cached half")
 
     def receive(self, control: int, value: int) -> AnalogFourF1NrpnTransition:
         """99/98 clear both data halves; 6/38 dispatch independently; 121 is inert."""
-        _integer(control, A4_F1_DATA_BYTE_MAX, "control")
-        _integer(value, A4_F1_DATA_BYTE_MAX, "value")
+        _require_f1_value(control, A4_F1_DATA_BYTE_MAX, "control")
+        _require_f1_value(value, A4_F1_DATA_BYTE_MAX, "value")
         if control == ANALOG_FOUR_NRPN_PARAMETER_MSB_CC:
             row = replace(self, parameter_msb=value, value_msb=0, value_lsb=0)
             return AnalogFourF1NrpnTransition(row, None, NrpnObservationStatus.ADDRESS_SELECTED)

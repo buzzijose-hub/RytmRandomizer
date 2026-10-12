@@ -277,7 +277,9 @@ def _read_value(
             # the larger legal passive domain from the scoped static contract.
             screen = format_a4_fixed_8_8(raw)
             known = True
-            reason = "outside_existing_f1_mutation_evidence"
+            # This reason is part of native-fields-v1 candidate replay records.
+            # Explain the larger passive domain only in operator projections.
+            reason = "source_value_outside_established_domain"
     return AnalogFourNativeValue(
         metadata, track, raw, screen, offsets, native_bytes, domain, known, reason
     )

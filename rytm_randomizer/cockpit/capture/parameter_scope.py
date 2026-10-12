@@ -121,6 +121,8 @@ def _a4_controls(capture: KitCaptureResult | None) -> list[PerformanceParameterC
                 reasons.append("source_value_unavailable")
             elif not cell.source_value_known:
                 reasons.append("source_value_outside_verified_domain")
+            elif metadata.parameter == "filter1_frequency" and cell.domain is None:
+                reasons.append("outside_existing_f1_mutation_evidence")
             mutable = cell is not None and cell.mutable
             encoding = metadata.native_encoding.value
             precision = f"{encoding}; quantum {metadata.display_quantum or 'not established'}"

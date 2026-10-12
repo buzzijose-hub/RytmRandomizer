@@ -15,6 +15,7 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 
 | Date | Plan | Status | PR |
 |---|---|---|---|
+| 2026-10-12 | [native-representation-integration](2026-10-12-native-representation-integration.md) | in-flight; representation integration, package verification and supervised experiment pending | [#254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254) |
 | 2026-10-11 | [reference-sound-workflow](2026-10-11-reference-sound-workflow.md) | in-flight; implementation, packaged acceptance and physical evidence pending | [#254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254) |
 | 2026-10-01 | [rytm-captured-machine-mapping](2026-10-01-rytm-captured-machine-mapping.md) | in-flight; software published, mapping runtime/fresh capture verified; protected review and post-merge assessment pending | [#254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254) |
 | 2026-10-01 | [rytm mapping repository-only onboarding](2026-10-01-rytm-captured-machine-mapping_ONBOARDING.md) | in-flight; five-question document simulation passed; protected plan termination pending | [#254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254) |

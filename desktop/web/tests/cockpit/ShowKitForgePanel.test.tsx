@@ -209,7 +209,7 @@ describe('ShowKitForgePanel', () => {
       scopeControl({ device_id: 'analog_four_mk2', item_id: 2, parameter_key: 'filter2_frequency', value: 0, display_value: '0' }),
     ] }));
     const article = within(screen.getByRole('article', { name: 'Candidate 1' }));
-    expect(article.getByText('Track 1 filter1_frequency: source 63.50 to 64.00390625; native 16256 to 16385')).toBeInTheDocument();
+    expect(article.getByText('Track 1 filter1_frequency: source 63.50 to 64.00; native 16256 to 16385')).toBeInTheDocument();
     expect(article.getByText('Track 2 filter2_frequency: source 0 to 0.00390625; native 0 to 1')).toBeInTheDocument();
     act(() => useCockpitStore.setState({ kitCaptures: [] }));
     expect(article.getByText('Track 2 filter2_frequency: source 0 to 0.00390625; native 0 to 1')).toBeInTheDocument();

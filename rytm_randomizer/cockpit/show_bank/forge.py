@@ -24,6 +24,7 @@ from ...devices import (
     get_analog_four_filter1_frequency_candidate_capability,
     get_analog_four_native_field_capability,
     resolve_saved_kit_capture_capability,
+    validate_analog_four_indexed_source,
 )
 from ..capture import (
     ANALOG_FOUR_DEVICE_ID,
@@ -101,6 +102,7 @@ def capture_reference(
         if not snapshot_id:
             raise ValueError("Rytm source capture requires its promoted snapshot id")
     elif result.device_id == ANALOG_FOUR_DEVICE_ID:
+        validate_analog_four_indexed_source(result.frame)
         device_id = A4_SHOW_KIT_DEVICE_ID
         device_label = "a4"
         if snapshot_id is not None:
@@ -515,6 +517,7 @@ def analog_four_capture_semantic_fingerprint(
 
     if result.device_id != ANALOG_FOUR_DEVICE_ID or not result.round_trip_verified:
         return None
+    validate_analog_four_indexed_source(result.frame)
     if not candidate.values:
         # A fully locked A4 partner must retain the complete source payload;
         # an empty semantic subset must never make every recapture match.

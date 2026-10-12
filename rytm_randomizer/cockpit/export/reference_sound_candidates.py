@@ -10,6 +10,7 @@ from typing import Literal, cast
 
 from ...data.analog_four_audio_inference import ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER
 from ...data.analog_four_kit_fields import parse_a4_fixed_8_8
+from ...data.analog_four_saved_kit_layout import A4_WORKING_KIT_OBJECT_BYTE
 from ...data.analog_rytm_kit_fields import RYTM_SOUND_U7_FIELDS
 from ...data.analog_rytm_kit_layout import (
     RYTM_KIT_SYSEX_HEADER_SIZE_WITHOUT_F0,
@@ -32,6 +33,7 @@ from ...devices import (
     get_analog_four_native_field_capability,
     resolve_saved_kit_capture_capability,
 )
+from ...observability.errors import BoundaryError
 from ...snapshot.mutation_scope import registered_mutation_ids
 from ...style_analysis.analog_four_patch_inference import (
     build_analog_four_inference_feature_values,
@@ -45,6 +47,7 @@ from ...style_analysis.extractor import (
 )
 from ...style_analysis.runtime_types import require_runtime_type
 from ..data.stage import ANALOG_FOUR_DEVICE_ID, ANALOG_RYTM_DEVICE_ID
+from .reference_sound_errors import REFERENCE_SOUND_FAILURE_MESSAGES, reference_sound_error_context
 
 
 @dataclass(frozen=True)
@@ -144,7 +147,9 @@ class ReferenceSoundCandidate:
         }
 
 
-def _validate_source(source_frame: bytes, device_id: str, target: int) -> bytes:
+def _validate_source(
+    source_frame: bytes, device_id: str, target: int, *, require_indexed: bool = False
+) -> bytes:
     if type(source_frame) is not bytes:
         raise TypeError("source_frame must be immutable bytes")
     if device_id not in (ANALOG_RYTM_DEVICE_ID, ANALOG_FOUR_DEVICE_ID):
@@ -155,7 +160,23 @@ def _validate_source(source_frame: bytes, device_id: str, target: int) -> bytes:
     decoded = codec.decode_saved_kit_capture(source_frame)
     if codec.encode_saved_kit_capture(decoded) != source_frame:
         raise ValueError("source KIT must round-trip byte-identically")
+    if (
+        require_indexed
+        and device_id == ANALOG_FOUR_DEVICE_ID
+        and decoded.header[-4] == A4_WORKING_KIT_OBJECT_BYTE
+    ):
+        raise BoundaryError(
+            REFERENCE_SOUND_FAILURE_MESSAGES["working_kit_read_only"],
+            context=reference_sound_error_context("working_kit_read_only"),
+        )
     return decoded.unpacked
+
+
+def require_reference_sound_generation_source(
+    source_frame: bytes, device_id: str, target: int
+) -> None:
+    """Validate the source before analysis; passive working frames cannot generate."""
+    _validate_source(source_frame, device_id, target, require_indexed=True)
 
 
 def _rytm_reference_controls(unpacked: bytes, target: int) -> tuple[ReferenceSoundControl, ...]:
@@ -434,6 +455,7 @@ def render_reference_sound_candidates(  # noqa: PLR0913 - explicit immutable req
     strength: float = 1.0,
 ) -> tuple[ReferenceSoundCandidate, ...]:
     """Render the eight existing DNA directions against exactly one saved sound."""
+    require_reference_sound_generation_source(source_frame, device_id, target)
     controls = list_reference_sound_controls(source_frame, device_id, target)
     _validate_reference_request(analysis, parameters, locks, strength, controls)
     workspace = build_audio_patch_dna_workspace(
@@ -467,6 +489,7 @@ def render_refined_reference_sound_candidate(  # noqa: PLR0913 - same explicit r
     strength: float = 1.0,
 ) -> ReferenceSoundCandidate:
     """Render one already-refined measurement without reapplying DNA transforms."""
+    require_reference_sound_generation_source(source_frame, device_id, target)
     controls = list_reference_sound_controls(source_frame, device_id, target)
     _validate_reference_request(analysis, parameters, locks, strength, controls)
     return _render(
@@ -489,6 +512,7 @@ __all__ = [
     "ReferenceSoundChange",
     "ReferenceSoundControl",
     "list_reference_sound_controls",
+    "require_reference_sound_generation_source",
     "render_reference_sound_candidates",
     "render_refined_reference_sound_candidate",
 ]

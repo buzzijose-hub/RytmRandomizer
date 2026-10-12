@@ -45,6 +45,7 @@ from .reference_sound_audio import (
 )
 from .reference_sound_candidates import (
     ReferenceSoundCandidate,
+    require_reference_sound_generation_source,
     render_reference_sound_candidates,
     render_refined_reference_sound_candidate,
 )
@@ -284,6 +285,7 @@ class ReferenceSoundWorkspace:
         current = self._load(session_id)
         audio = self._segment_bytes(current)
         source = ReferenceSoundSource(source_frame, narrow_sound_device_id(device_id), target)
+        require_reference_sound_generation_source(source.frame, source.device_id, source.target)
         context = sound_context_from_dict(
             {
                 "segment_sha256": reference_sound_digest(audio),

@@ -449,7 +449,7 @@ def test_metadata_discloses_unmapped_precision_and_incompatible_machine(scope_so
     assert not incompatible["mutation_supported"]
 
 
-@pytest.mark.parametrize("raw", [16257, 65535])
+@pytest.mark.parametrize("raw", [16256, 16257, 16258, 32766])
 def test_a4_metadata_decodes_native_width_and_fraction_without_granting_output(
     scope_source, raw
 ) -> None:
@@ -481,16 +481,16 @@ def test_a4_metadata_decodes_native_width_and_fraction_without_granting_output(
     )
     if raw <= calibration.native_raw_max:
         assert all(
-            row["mutation_supported"]
-            and row["display_value"] == calibration.format_native_screen_value(raw)
+            row["mutation_supported"] and row["display_value"] == f"{raw * 100 // 256 / 100:.2f}"
             for row in rows
         )
     else:
         assert all(
             not row["mutation_supported"]
-            and "source_value_outside_verified_domain" in row["reasons"]
+            and "outside_existing_f1_mutation_evidence" in row["reasons"]
             for row in rows
         )
+    assert all("not Hz" in row["native_precision"] for row in rows)
     missing = [
         row
         for row in performance_parameter_controls(scope_source)
@@ -500,6 +500,13 @@ def test_a4_metadata_decodes_native_width_and_fraction_without_granting_output(
     assert all(
         row["value"] is None and "source_value_unavailable" in row["reasons"] for row in missing
     )
+
+
+@pytest.mark.parametrize("raw", [32767, 65535])
+def test_a4_scope_rejects_invalid_f1_words_instead_of_exposing_controls(raw) -> None:
+    frame = analog_four_saved_kit_frame(unpacked_overrides={128: raw >> 8, 129: raw & 255})
+    with pytest.raises(ValueError, match="F1 native word"):
+        capture_fixed_frame(ANALOG_FOUR_DEVICE_ID, frame)
 
 
 @pytest.mark.parametrize(

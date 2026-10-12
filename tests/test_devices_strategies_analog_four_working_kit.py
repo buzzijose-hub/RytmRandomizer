@@ -144,6 +144,38 @@ def test_working_response_cannot_enter_an_existing_indexed_candidate_writer() ->
     assert inspected.prefix[5] == 0x58
 
 
+def test_working_response_without_integrity_cannot_claim_source_availability() -> None:
+    header = bytearray(_retained_frame()[1:10])
+    header[5] = 0x58
+    short_body = pack_elektron_7bit(bytes(32), mask_order=Elektron7BitMaskOrder.MSB_FIRST)
+    with pytest.raises(ValueError, match="complete integrity validation"):
+        decode_analog_four_saved_kit_payload(bytes(header) + short_body, require_trailer=False)
+
+
+def test_encoder_rejects_non_midi_header_and_candidate_rejects_dependency_reencode_drift(
+    monkeypatch,
+) -> None:
+    from dataclasses import replace
+
+    from rytm_randomizer.devices.strategies import analog_four_saved_kit_candidate as candidate
+    from rytm_randomizer.devices.strategies.analog_four_saved_kit_codec import (
+        encode_analog_four_saved_kit_payload,
+    )
+
+    source = _retained_frame()
+    decoded = decode_analog_four_saved_kit_payload(source[1:-1], require_trailer=True)
+    with pytest.raises(ValueError, match="MIDI data domain"):
+        encode_analog_four_saved_kit_payload(decoded.prefix[:-1] + b"\x80", decoded.unpacked)
+
+    def drift(prefix, unpacked):
+        encoded = encode_analog_four_saved_kit_payload(prefix, unpacked)
+        return replace(encoded, prefix=prefix[:-1] + bytes(((prefix[-1] + 1) % 128,)))
+
+    monkeypatch.setattr(candidate, "encode_analog_four_saved_kit_payload", drift)
+    with pytest.raises(ValueError, match="round-trip byte-identically"):
+        candidate.validate_analog_four_candidate_source(source)
+
+
 @pytest.mark.parametrize("track", range(4))
 def test_legal_maximum_is_passively_readable_without_broadening_old_mutation_sampling(
     track: int,

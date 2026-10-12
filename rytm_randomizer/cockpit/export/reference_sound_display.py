@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from ...devices.strategies.analog_four_f1_representation import native_to_screen, represent
+from ...devices import a4_f1_native_to_screen as native_to_screen
+from ...devices import a4_f1_represent as represent
 from ..data.stage import ANALOG_FOUR_DEVICE_ID
 from .reference_sound_candidates import ReferenceSoundControl
 from .reference_sound_records import ReferenceSoundSessionPayload, sound_session_from_dict

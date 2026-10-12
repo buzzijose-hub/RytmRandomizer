@@ -356,7 +356,7 @@ def test_unknown_numeric_and_coupled_sources_stay_byte_exact_and_cannot_be_overw
     for field, native in (
         ("osc1_tune", b"\xff\xff"),
         ("osc1_tune", b"\x7f\xff"),
-        ("filter1_frequency", b"\x7f\xff"),
+        ("filter1_frequency", b"\x7f\xfe"),
         ("env2_depth_a", b"\xff\x00"),
         ("noise_level", b"\xff"),
     ):

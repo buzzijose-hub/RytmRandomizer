@@ -4,19 +4,130 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import replace
+from pathlib import Path
 from threading import Event
 
 import pytest
 from cockpit.conftest import make_reference_pcm
 
-from rytm_randomizer.cockpit.export.reference_sound_candidates import ReferenceSoundControl
+from rytm_randomizer.cockpit.export.reference_sound_candidates import (
+    ReferenceSoundControl,
+    list_reference_sound_controls,
+    render_reference_sound_candidates,
+    render_refined_reference_sound_candidate,
+)
 from rytm_randomizer.cockpit.export.reference_sound_display import (
     reference_sound_operator_control,
     reference_sound_operator_session,
 )
 from rytm_randomizer.cockpit.export.reference_sound_session import ReferenceSoundWorkspace
+from rytm_randomizer.devices.strategies.analog_four_saved_kit_codec import (
+    decode_analog_four_saved_kit_payload,
+    encode_analog_four_saved_kit_payload,
+)
+from rytm_randomizer.observability.errors import BoundaryError
 
 pytestmark = pytest.mark.fast
+
+
+def _label_test_source(native: int, *, working: bool = False) -> bytes:
+    original = (
+        Path(__file__).parents[1] / "fixtures/native_representation/a4_init_retained.syx"
+    ).read_bytes()
+    source = decode_analog_four_saved_kit_payload(original[1:-1], require_trailer=True)
+    body = bytearray(source.unpacked)
+    body[128:130] = native.to_bytes(2, "big")
+    header = bytearray(source.prefix)
+    header[5] = 0x58 if working else 0x52
+    encoded = encode_analog_four_saved_kit_payload(bytes(header), bytes(body))
+    return b"\xf0" + encoded.payload + b"\xf7"
+
+
+@pytest.mark.parametrize("native", [32513, 32766])
+def test_larger_legal_f1_sources_keep_legacy_preservation_reason_and_favorite_replay(
+    reference_sound_workspace: ReferenceSoundWorkspace, native: int
+) -> None:
+    workspace = reference_sound_workspace
+    source = _label_test_source(native)
+    imported = workspace.import_reference(make_reference_pcm(), "Legacy protected F1")
+    retained = workspace.commit(
+        workspace.generate(
+            imported["session_id"],
+            source_frame=source,
+            device_id="analog_four_mk2",
+            target=1,
+            parameters=("filter1_frequency",),
+            locks=(),
+            strength=0.5,
+            cancel=Event(),
+        )
+    )
+    candidate = retained["candidates"][0]
+    assert (
+        "filter1_frequency preserved: source_value_outside_established_domain."
+        in candidate["limitations"]
+    )
+    assert candidate["changes"] == []
+    selected = workspace.select(retained["session_id"], candidate["candidate_id"], favorite=True)
+    restarted = ReferenceSoundWorkspace(workspace.store, analyzer=workspace.analyzer)
+    assert restarted.reopen(retained["session_id"]) == selected
+    assert restarted.candidate(retained["session_id"], candidate["candidate_id"]).frame == source
+    exported = restarted.export_patch(retained["session_id"], candidate["candidate_id"], 18)
+    assert (
+        decode_analog_four_saved_kit_payload(exported[1:-1], require_trailer=True).unpacked
+        == decode_analog_four_saved_kit_payload(source[1:-1], require_trailer=True).unpacked
+    )
+    assert workspace.reopen(retained["session_id"]) == selected
+
+
+def test_working_source_inspection_is_read_only_and_generation_refuses_before_analysis(
+    reference_sound_workspace: ReferenceSoundWorkspace, audio_patch_dna_analysis, monkeypatch
+) -> None:
+    workspace = reference_sound_workspace
+    source = _label_test_source(16257, working=True)
+    controls = list_reference_sound_controls(source, "analog_four_mk2", 1)
+    assert all(not control.mutable for control in controls)
+    assert all("working_kit_freshness_unverified" in control.reasons for control in controls)
+    imported = workspace.import_reference(make_reference_pcm(), "Working inspection")
+    before = {
+        path.name: path.read_bytes()
+        for path in workspace.store.directory.iterdir()
+        if path.is_file()
+    }
+
+    def forbidden_analysis(*args):
+        pytest.fail("read-only source must be refused before audio analysis")
+
+    monkeypatch.setattr(workspace, "analyzer", forbidden_analysis)
+    calls = (
+        lambda: workspace.generate(
+            imported["session_id"],
+            source_frame=source,
+            device_id="analog_four_mk2",
+            target=1,
+            parameters=(),
+            locks=(),
+            strength=0,
+            cancel=Event(),
+        ),
+        lambda: render_reference_sound_candidates(
+            source, "analog_four_mk2", 1, audio_patch_dna_analysis, (), (), 0
+        ),
+        lambda: render_refined_reference_sound_candidate(
+            source, "analog_four_mk2", 1, audio_patch_dna_analysis, (), (), 0
+        ),
+    )
+    for call in calls:
+        with pytest.raises(BoundaryError) as failure:
+            call()
+        assert failure.value.context["error_code"] == "working_kit_read_only"
+        assert "indexed" in str(failure.value)
+    assert {
+        path.name: path.read_bytes()
+        for path in workspace.store.directory.iterdir()
+        if path.is_file()
+    } == before
+    assert workspace.reopen(imported["session_id"]) == imported
 
 
 @pytest.mark.parametrize(

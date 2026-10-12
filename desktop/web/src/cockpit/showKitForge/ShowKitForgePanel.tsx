@@ -31,6 +31,7 @@ import { A4PreparationPanel } from './A4PreparationPanel';
 
 import {
   applyEntryMove,
+  analogFourCandidateLabel,
   findActiveBank,
   findEntry,
   fingerprintMatchLabel,
@@ -1205,7 +1206,7 @@ export function ShowKitForgePanel(): JSX.Element {
                                  ) : undefined;
                                  return (
                                  <li key={`${value.track_id}-${value.parameter}`}>
-                                   Track {value.track_id} {value.parameter}: source {sourceControl?.display_value ?? 'unavailable'} to {value.screen_value}; native {sourceControl?.value ?? 'unavailable'} to {'encoded_native' in value ? value.encoded_native : value.encoded_unsigned_8_8}
+                                   Track {value.track_id} {value.parameter}: source {sourceControl?.display_value ?? 'unavailable'} to {analogFourCandidateLabel(value.parameter, 'encoded_native' in value ? value.encoded_native : value.encoded_unsigned_8_8, value.screen_value)}; native {sourceControl?.value ?? 'unavailable'} to {'encoded_native' in value ? value.encoded_native : value.encoded_unsigned_8_8}
                                  </li>
                                  );
                                })}

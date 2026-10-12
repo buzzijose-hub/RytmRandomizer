@@ -22,12 +22,13 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Final, Literal, NoReturn, cast
 
+from ...devices import validate_analog_four_indexed_source
 from ...guardrails.input_validation import canonical_json_bytes
 from ...observability.errors import DataError
 from ...observability.logging import get_logger
 from ...observability.tracing import trace
 from ...snapshot.sysex_file import extract_sysex_payloads
-from ..capture import KitCaptureResult, decode_kit_capture_frame
+from ..capture import ANALOG_FOUR_DEVICE_ID, KitCaptureResult, decode_kit_capture_frame
 from ..data.show_bank import (
     LEGACY_SHOW_BANK_SCHEMA_VERSION,
     PREVIOUS_SHOW_BANK_SCHEMA_VERSION,
@@ -184,6 +185,8 @@ def validate_show_bank_capture_frame(capture: ShowKitCapture, frame: bytes) -> K
         _raise_show_bank_corruption("hash", "capture frame differs from its declared identity")
     try:
         decoded = decode_kit_capture_frame(capture.device_id, frame)
+        if capture.device_id == ANALOG_FOUR_DEVICE_ID:
+            validate_analog_four_indexed_source(frame)
     except (DataError, KeyError, IndexError, TypeError, ValueError) as exc:
         raise DataError(
             "capture failed its registered device-family codec",

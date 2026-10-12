@@ -71,7 +71,6 @@ from .analog_four_f1_contract import (
     A4_F1_RESEARCH_OS,
     A4_F1_SERIALIZED_SOUND_OFFSET,
     A4_F1_WIRE14_MAX,
-    F1BaselineSource,
 )
 from .analog_four_kit_fields import (
     A4_FIXED_8_8_ENCODING,
@@ -149,7 +148,6 @@ from .analog_four_saved_kit_layout import (
     A4_SNAPSHOT_LAYOUT_WORKING_KIT,
     A4_SOUND_STORAGE_TRAILER,
     A4_WORKING_KIT_OBJECT_BYTE,
-    AnalogFourKitSourceKind,
 )
 from .analog_four_sysex_calibration import (
     A4_FILTER2_RESONANCE_PARAMETER,
@@ -333,8 +331,6 @@ from .reference_sound_candidates import (
 from .rytm_lfo_depth_contract import (
     RYTM_LFO_DEPTH_CONTRACT,
     RYTM_LFO_DEPTH_PROVENANCE,
-    RytmLfoDepthContract,
-    RytmLfoDepthProvenance,
 )
 from .rytm_machine_catalog import (
     RYTM_MACHINE_PROFILES,
@@ -385,16 +381,12 @@ __all__ = [
     "A4_F1_RESEARCH_OS",
     "A4_F1_SERIALIZED_SOUND_OFFSET",
     "A4_F1_WIRE14_MAX",
-    "F1BaselineSource",
     "RYTM_LFO_DEPTH_CONTRACT",
     "RYTM_LFO_DEPTH_PROVENANCE",
-    "RytmLfoDepthContract",
-    "RytmLfoDepthProvenance",
     "A4_KIT_PROTOCOL_VERSION",
     "A4_KIT_STORAGE_MARKER",
     "A4_SOUND_STORAGE_TRAILER",
     "A4_WORKING_KIT_OBJECT_BYTE",
-    "AnalogFourKitSourceKind",
     "A4_SNAPSHOT_LAYOUT_WORKING_KIT",
     "A4_REFERENCE_INFERENCE_BINDINGS",
     "REFERENCE_SOUND_LIMITATIONS",

@@ -41,6 +41,26 @@ pytestmark = [pytest.mark.fast, pytest.mark.usefixtures("offline_hardware_denied
 Source: TypeAlias = tuple[bytes, str, int, tuple[str, ...]]
 
 
+def _assert_operator_session_preserves_retained(retained: dict, displayed: dict) -> None:
+    expected = copy.deepcopy(retained)
+    for candidate in expected["candidates"]:
+        if candidate["device_id"] != "analog_four_mk2":
+            continue
+        for change in candidate["changes"]:
+            if change["parameter"] != "filter1_frequency":
+                continue
+            for key in ("source", "proposed", "rendered"):
+                word = change[f"{key}_value"]
+                hundredths = word * 100 // 256
+                change[f"{key}_display"] = f"{hundredths // 100}.{hundredths % 100:02d}"
+            raw = change["rendered_value"]
+            change["units"] += (
+                f"; F1 label is truncated/not Hz; NRPN14={raw // 2}, "
+                f"lost native bit={raw % 2}; output unverified"
+            )
+    assert displayed == expected
+
+
 def _files(directory: Path) -> dict[str, bytes]:
     return {
         str(path.relative_to(directory)): path.read_bytes()
@@ -674,7 +694,9 @@ def test_record_refine_original_and_recording_playback_use_retained_real_store(
     )
     assert refined["ok"] is True
     assert len(refined["reference_sound"]["session"]["refinements"]) == 1
-    assert workspace.reopen(payload["session_id"]) == refined["reference_sound"]["session"]
+    _assert_operator_session_preserves_retained(
+        workspace.reopen(payload["session_id"]), refined["reference_sound"]["session"]
+    )
     catalog = _call(session, "list")
     assert catalog["ok"] is True
     summaries = catalog["reference_sound"]["sessions"]
@@ -816,7 +838,9 @@ def test_atomic_publication_failure_rolls_back_new_candidates_and_manifest(
     with pytest.raises(writer.WriteSetError):
         workspace.commit(compared)
     assert _files(workspace.store.directory) == before
-    assert workspace.reopen(generated["session_id"]) == generated
+    _assert_operator_session_preserves_retained(
+        workspace.reopen(generated["session_id"]), generated
+    )
 
 
 def test_recording_and_refinement_limits_and_duplicate_refinement_preserve_retained_work(

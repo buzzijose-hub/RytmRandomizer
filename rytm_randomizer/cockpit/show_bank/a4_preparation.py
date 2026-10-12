@@ -23,6 +23,7 @@ from ...devices import (
     get_analog_four_filter1_frequency_candidate_capability,
     get_analog_four_native_field_capability,
     resolve_saved_kit_capture_capability,
+    validate_analog_four_indexed_source,
 )
 from ...guardrails.input_validation import require_boolean, require_text
 from ...snapshot.mutation_scope import MutationScope, registered_mutation_ids
@@ -94,6 +95,7 @@ class A4PreparationContext:
 def _frame_fingerprint(frame: bytes) -> str:
     """Revalidate a saved-KIT frame through the registered capture capability."""
 
+    validate_analog_four_indexed_source(frame)
     capability = resolve_saved_kit_capture_capability(ANALOG_FOUR_DEVICE_ID).capability
     decoded = capability.decode_saved_kit_capture(frame)
     if capability.encode_saved_kit_capture(decoded) != frame:

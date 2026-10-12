@@ -1,0 +1,18 @@
+[
+  [
+    "value/conversion_contract.json",
+    "fb578c5c5fcbc12a8f70cae95f11c6122dafa698fc20e7c3e5f9f184264332e9"
+  ],
+  [
+    "value/reference_converter.py",
+    "588acf6bb776c36edfe54e09cd16dd3207d47bdd821a841709e3d87c3b4b1926"
+  ],
+  [
+    "value/boundary_vectors.json",
+    "023038410a98c903308a73d39003f451852d568cdc2b803324cbfa6a99506722"
+  ],
+  [
+    "working_state/REVIEW_VALUE_INPUT.md",
+    "dc152421b8b74090d73180392ff7fa4bb6b1a4f42cfd0fe8980ad65de3e9f6e4"
+  ]
+]

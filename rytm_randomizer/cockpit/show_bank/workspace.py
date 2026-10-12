@@ -14,6 +14,7 @@ from datetime import datetime
 from types import MappingProxyType
 from typing import Final, Literal, cast
 
+from ...devices import validate_analog_four_indexed_source
 from ...observability.logging import get_logger
 from ...observability.tracing import trace
 from ...snapshot.mutation_scope import MutationScope
@@ -127,6 +128,8 @@ def _device_capture(
         raise ValueError(f"a current {device_id} KIT capture is required")
     if not result.round_trip_verified or result.sent_midi or not result.input_only:
         raise ValueError("show-bank capture must be verified and input-only")
+    if device_id == ANALOG_FOUR_DEVICE_ID:
+        validate_analog_four_indexed_source(result.frame)
     return result
 
 

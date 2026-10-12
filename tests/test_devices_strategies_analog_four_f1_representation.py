@@ -28,6 +28,8 @@ from rytm_randomizer.devices.strategies.analog_four_f1_representation import (
     stock_cc_samples,
 )
 
+pytestmark = pytest.mark.fast
+
 _VECTORS_PATH: Final[Path] = (
     Path(__file__).parent / "fixtures" / "native_representation" / "analog_four_f1_vectors.json"
 )

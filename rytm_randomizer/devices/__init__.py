@@ -42,6 +42,8 @@ from .strategies import (
     analog_four_snapshot_payload_fingerprint,
     rytm_snapshot_payload_fingerprint,
 )
+from .strategies.analog_four_f1_representation import native_to_screen as a4_f1_native_to_screen
+from .strategies.analog_four_f1_representation import represent as a4_f1_represent
 from .strategies.analog_four_kit_fields import encode_bipolar
 from .strategies.analog_four_native_fields import (
     AnalogFourNativeAppliedMutation,
@@ -52,6 +54,9 @@ from .strategies.analog_four_native_fields import (
     AnalogFourNativeMutation,
     AnalogFourNativeReadback,
     AnalogFourNativeValue,
+)
+from .strategies.analog_four_saved_kit_candidate import (
+    validate_analog_four_candidate_source as validate_analog_four_indexed_source,
 )
 from .strategies.analog_rytm_kit_fields import RytmKit
 
@@ -81,6 +86,8 @@ __all__ = [
     "SavedKitCaptureFrame",
     "SnapshotDecoder",
     "all_devices",
+    "a4_f1_native_to_screen",
+    "a4_f1_represent",
     "analog_four_snapshot_payload_fingerprint",
     "get_device",
     "get_analog_four_filter1_frequency_candidate_capability",
@@ -88,4 +95,5 @@ __all__ = [
     "register_device",
     "resolve_saved_kit_capture_capability",
     "rytm_snapshot_payload_fingerprint",
+    "validate_analog_four_indexed_source",
 ]

@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ...data.rytm_lfo_depth_contract import RYTM_LFO_DEPTH_CONTRACT as _CONTRACT
+from ...guardrails.input_validation import require_int
 
 
 @dataclass(frozen=True)
@@ -25,9 +26,8 @@ class RytmLfoDepthObservation:
     native_max: int
 
 
-def _integer(value: int, maximum: int, name: str) -> int:
-    if type(value) is not int:
-        raise TypeError(f"{name} must be an integer, not bool")
+def _require_lfo_depth_value(value: int, maximum: int, name: str) -> int:
+    value = require_int(value, name)
     if not _CONTRACT.native_min <= value <= maximum:
         raise ValueError(f"{name} outside 0..{maximum}")
     return value
@@ -36,7 +36,9 @@ def _integer(value: int, maximum: int, name: str) -> int:
 def rytm_lfo_depth_native_to_screen(native: int) -> str:
     """Forward device label; retain exact center and signed near-zero text."""
 
-    delta = _integer(native, _CONTRACT.native_max, "native") - _CONTRACT.native_center
+    delta = (
+        _require_lfo_depth_value(native, _CONTRACT.native_max, "native") - _CONTRACT.native_center
+    )
     if delta == 0:
         return "(0)"
     hundredths = abs(delta) * _CONTRACT.decimal_scale // _CONTRACT.units_per_whole
@@ -49,13 +51,16 @@ def rytm_lfo_depth_native_to_screen(native: int) -> str:
 def rytm_lfo_depth_native_to_nrpn14(native: int) -> int:
     """Inert outgoing value; odd native words lose bit 0."""
 
-    return _integer(native, _CONTRACT.native_max, "native") >> _CONTRACT.fine_shift
+    return _require_lfo_depth_value(native, _CONTRACT.native_max, "native") >> _CONTRACT.fine_shift
 
 
 def rytm_lfo_depth_parsed_nrpn14_to_native(value: int) -> int:
     """Propose an even word from an already parsed value, not a raw NRPN row."""
 
-    return _integer(value, _CONTRACT.nrpn_value_max, "NRPN value") << _CONTRACT.fine_shift
+    return (
+        _require_lfo_depth_value(value, _CONTRACT.nrpn_value_max, "NRPN value")
+        << _CONTRACT.fine_shift
+    )
 
 
 def rytm_lfo_depth_cc_proposal(
@@ -68,15 +73,15 @@ def rytm_lfo_depth_cc_proposal(
     Sequentially feeding proposals models arithmetic order, not queue commits.
     """
 
-    control = _integer(control, _CONTRACT.cc_value_max, "control")
-    value = _integer(value, _CONTRACT.cc_value_max, "CC value")
+    control = _require_lfo_depth_value(control, _CONTRACT.cc_value_max, "control")
+    value = _require_lfo_depth_value(value, _CONTRACT.cc_value_max, "CC value")
     if control == _CONTRACT.midi_mapping.cc_msb:
         return value << _CONTRACT.coarse_shift
     if control != _CONTRACT.midi_mapping.cc_lsb:
         raise ValueError("control is not an LFO Depth coarse/fine CC")
     if current_or_pending is None:
         raise ValueError("fine CC requires an available current/pending baseline")
-    baseline = _integer(current_or_pending, _CONTRACT.native_max, "baseline")
+    baseline = _require_lfo_depth_value(current_or_pending, _CONTRACT.native_max, "baseline")
     return (baseline & _CONTRACT.high_byte_mask) | (value << _CONTRACT.fine_shift)
 
 
@@ -87,8 +92,8 @@ def rytm_lfo_depth_stock_cc_notification(native: int, channel: int) -> tuple[int
     CC118 output by other, unsearched producers or actual hardware delivery.
     """
 
-    native = _integer(native, _CONTRACT.native_max, "native")
-    channel = _integer(channel, _CONTRACT.channel_max, "channel")
+    native = _require_lfo_depth_value(native, _CONTRACT.native_max, "native")
+    channel = _require_lfo_depth_value(channel, _CONTRACT.channel_max, "channel")
     return (
         _CONTRACT.cc_status | channel,
         _CONTRACT.midi_mapping.cc_msb,
@@ -101,13 +106,15 @@ def decode_rytm_lfo_depth_coupled_word(word: bytes) -> int:
 
     if type(word) is not bytes or len(word) != _CONTRACT.word_size:
         raise ValueError("exactly two stored bytes required")
-    return _integer(int.from_bytes(word, "big"), _CONTRACT.native_max, "stored native word")
+    return _require_lfo_depth_value(
+        int.from_bytes(word, "big"), _CONTRACT.native_max, "stored native word"
+    )
 
 
 def observe_rytm_lfo_depth_stock_cc(value: int) -> RytmLfoDepthObservation:
     """Possible words before coarse-only output, not an incoming CC proposal."""
 
-    value = _integer(value, _CONTRACT.cc_value_max, "CC value")
+    value = _require_lfo_depth_value(value, _CONTRACT.cc_value_max, "CC value")
     return RytmLfoDepthObservation(
         native_min=value << _CONTRACT.coarse_shift,
         native_max=((value + 1) << _CONTRACT.coarse_shift) - 1,
