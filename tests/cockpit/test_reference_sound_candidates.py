@@ -41,22 +41,11 @@ pytestmark = pytest.mark.fast
 _FIXTURES = Path(__file__).parents[1] / "fixtures" / "rio145"
 
 
-@pytest.fixture(params=[ANALOG_RYTM_DEVICE_ID, ANALOG_FOUR_DEVICE_ID])
-def source(request: pytest.FixtureRequest) -> tuple[bytes, str, int, tuple[str, ...]]:
-    device_id = request.param
-    if device_id == ANALOG_RYTM_DEVICE_ID:
-        return (
-            (_FIXTURES / "RYTM_RIO145_AR_CORE_RETURN_Kit.syx").read_bytes(),
-            device_id,
-            2,
-            ("filter_frequency", "amp_decay", "amp_overdrive"),
-        )
-    return (
-        (_FIXTURES / "A4_RIO145_CORE_RETURN_Kit.syx").read_bytes(),
-        device_id,
-        3,
-        ("filter1_frequency", "filter2_resonance", "noise_level"),
-    )
+@pytest.fixture
+def source(
+    reference_sound_source: tuple[bytes, str, int, tuple[str, ...]],
+) -> tuple[bytes, str, int, tuple[str, ...]]:
+    return reference_sound_source
 
 
 def test_eight_candidates_are_deterministic_source_preserving_and_redecoded(

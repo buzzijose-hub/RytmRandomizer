@@ -23,14 +23,15 @@ from ...data.reference_sound_candidates import (
     RYTM_REFERENCE_FEATURE_TERMS,
 )
 from ...data.rytm_machine_catalog import RYTM_MACHINE_PROFILES, is_machine_allowed_on_pad
-from ...devices import get_analog_four_native_field_capability, resolve_saved_kit_capture_capability
-from ...devices.strategies.analog_four_kit_fields import encode_bipolar
-from ...devices.strategies.analog_four_native_fields import (
+from ...devices import (
     AnalogFourNativeDomain,
     AnalogFourNativeEncoding,
     AnalogFourNativeMutation,
+    RytmKit,
+    encode_bipolar,
+    get_analog_four_native_field_capability,
+    resolve_saved_kit_capture_capability,
 )
-from ...devices.strategies.analog_rytm_kit_fields import RytmKit
 from ...snapshot.mutation_scope import registered_mutation_ids
 from ...style_analysis.analog_four_patch_inference import (
     build_analog_four_inference_feature_values,
@@ -157,7 +158,7 @@ def _validate_source(source_frame: bytes, device_id: str, target: int) -> bytes:
     return decoded.unpacked
 
 
-def _rytm_controls(unpacked: bytes, target: int) -> tuple[ReferenceSoundControl, ...]:
+def _rytm_reference_controls(unpacked: bytes, target: int) -> tuple[ReferenceSoundControl, ...]:
     sound = RytmKit.from_bytes(unpacked).sound(target - 1)
     machine = int(sound.machine)
     profile = next((p for p in RYTM_MACHINE_PROFILES if p.machine_value == machine), None)
@@ -197,7 +198,7 @@ def list_reference_sound_controls(
     """List source-bound controls without I/O or live eligibility grants."""
     unpacked = _validate_source(source_frame, device_id, target)
     if device_id == ANALOG_RYTM_DEVICE_ID:
-        return _rytm_controls(unpacked, target)
+        return _rytm_reference_controls(unpacked, target)
     native = get_analog_four_native_field_capability().read_native_fields(source_frame)
     controls: list[ReferenceSoundControl] = []
     for cell in native.values:
@@ -222,7 +223,7 @@ def list_reference_sound_controls(
     return tuple(controls)
 
 
-def _validate_request(
+def _validate_reference_request(
     analysis: AudioFeatureAnalysis,
     parameters: tuple[str, ...],
     locks: tuple[str, ...],
@@ -434,7 +435,7 @@ def render_reference_sound_candidates(  # noqa: PLR0913 - explicit immutable req
 ) -> tuple[ReferenceSoundCandidate, ...]:
     """Render the eight existing DNA directions against exactly one saved sound."""
     controls = list_reference_sound_controls(source_frame, device_id, target)
-    _validate_request(analysis, parameters, locks, strength, controls)
+    _validate_reference_request(analysis, parameters, locks, strength, controls)
     workspace = build_audio_patch_dna_workspace(
         analysis, track=target if device_id == ANALOG_FOUR_DEVICE_ID else 1
     )
@@ -467,7 +468,7 @@ def render_refined_reference_sound_candidate(  # noqa: PLR0913 - same explicit r
 ) -> ReferenceSoundCandidate:
     """Render one already-refined measurement without reapplying DNA transforms."""
     controls = list_reference_sound_controls(source_frame, device_id, target)
-    _validate_request(analysis, parameters, locks, strength, controls)
+    _validate_reference_request(analysis, parameters, locks, strength, controls)
     return _render(
         source_frame,
         device_id,

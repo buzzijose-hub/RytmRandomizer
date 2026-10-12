@@ -329,6 +329,12 @@ def _library_record_v2_to_v3(payload: Mapping[str, object]) -> Mapping[str, obje
 
 _REGISTERED_STORES: Final[tuple[PersistedStateStore, ...]] = (
     PersistedStateStore(
+        store_id="reference_sound_store",
+        schema_version=1,
+        owner_module="rytm_randomizer.cockpit.export.reference_sound_store",
+        description="Exact reference audio, scoped native candidates and supplied-recording feedback under {config}/reference-sounds.",
+    ),
+    PersistedStateStore(
         store_id="profile_registry",
         schema_version=1,
         owner_module="rytm_randomizer.cockpit.profiles.registry",

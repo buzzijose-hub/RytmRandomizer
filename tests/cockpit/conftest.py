@@ -46,11 +46,15 @@ from __future__ import annotations
 import builtins
 import hashlib
 import logging
+import struct
+import wave
 from collections.abc import Generator, Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
+from io import BytesIO
 from pathlib import Path
-from typing import Final
+from threading import Event
+from typing import TYPE_CHECKING, Final
 
 import pytest
 from fastapi.testclient import TestClient
@@ -68,6 +72,64 @@ from rytm_randomizer.cockpit.ws.protocol import (
 )
 from rytm_randomizer.cockpit.ws.server import create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
+from rytm_randomizer.style_analysis.extractor import AudioFeatureAnalysis
+
+if TYPE_CHECKING:
+    from rytm_randomizer.cockpit.export.reference_sound_session import ReferenceSoundWorkspace
+
+
+def make_reference_pcm(
+    *, rate: int = 8000, channels: int = 1, width: int = 2, frames: int = 800
+) -> bytes:
+    """Small exact PCM fixture; not instrument or acoustic-quality evidence."""
+    buffer = BytesIO()
+    with wave.open(buffer, "wb") as audio:
+        audio.setframerate(rate)
+        audio.setnchannels(channels)
+        audio.setsampwidth(width)
+        audio.writeframes(
+            (struct.pack("<h", 1200) if width == 2 else b"\0" * width) * frames * channels
+        )
+    return buffer.getvalue()
+
+
+@pytest.fixture(params=["analog_rytm_mk2", "analog_four_mk2"])
+def reference_sound_source(
+    request: pytest.FixtureRequest,
+) -> tuple[bytes, str, int, tuple[str, ...]]:
+    fixtures = Path(__file__).parents[1] / "fixtures" / "rio145"
+    if request.param == "analog_rytm_mk2":
+        return (
+            (fixtures / "RYTM_RIO145_AR_CORE_RETURN_Kit.syx").read_bytes(),
+            request.param,
+            2,
+            ("filter_frequency", "amp_decay", "amp_overdrive"),
+        )
+    return (
+        (fixtures / "A4_RIO145_CORE_RETURN_Kit.syx").read_bytes(),
+        request.param,
+        3,
+        ("filter1_frequency", "filter2_resonance", "noise_level"),
+    )
+
+
+@pytest.fixture
+def reference_sound_workspace(
+    tmp_path: Path, audio_patch_dna_analysis: AudioFeatureAnalysis
+) -> ReferenceSoundWorkspace:
+    from rytm_randomizer.cockpit.export.reference_sound_session import ReferenceSoundWorkspace
+    from rytm_randomizer.cockpit.export.reference_sound_store import ReferenceSoundStore
+
+    def analyze(path: Path, cancel: Event) -> AudioFeatureAnalysis:
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        return replace(
+            audio_patch_dna_analysis,
+            synthesis_features=replace(
+                audio_patch_dna_analysis.synthesis_features, audio_sha256=digest
+            ),
+        )
+
+    return ReferenceSoundWorkspace(ReferenceSoundStore(tmp_path / "sounds"), analyzer=analyze)
 
 
 @pytest.fixture

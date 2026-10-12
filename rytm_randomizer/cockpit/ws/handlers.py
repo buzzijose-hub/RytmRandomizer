@@ -137,6 +137,7 @@ from .protocol import (
     COMMAND_PREPARE_SEND_PLAN,
     COMMAND_PREVIEW_OPERATOR_PACKAGE_APPLY,
     COMMAND_RECALL_REHEARSAL_FAVORITE,
+    COMMAND_REFERENCE_SOUND,
     COMMAND_REGEN,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_SEQUENCE,
     COMMAND_REHEARSE_OPERATOR_PACKAGE_STEP,
@@ -3208,6 +3209,10 @@ def _resolve_handler(cmd_type: str) -> HandlerFn | None:
 
     if cmd_type in _CORE_HANDLERS:
         return _CORE_HANDLERS[cmd_type]
+    if cmd_type == COMMAND_REFERENCE_SOUND:
+        from .reference_sound_handlers import handle_reference_sound  # noqa: PLC0415
+
+        return handle_reference_sound
     if cmd_type.startswith("show_bank_"):
         # Show Kit Forge is loaded only when its panel requests state, keeping
         # the fixed twelve-event bootstrap and ordinary passive edit path

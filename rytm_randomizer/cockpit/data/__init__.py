@@ -8,6 +8,8 @@ import Snapshot`` without reaching into each submodule. See
 
 from __future__ import annotations
 
+from ...guardrails.input_validation import canonical_json_bytes
+
 from ...data.local_artifact_recovery import (
     LOCAL_ARTIFACT_RECOVERY_MESSAGES,
     LOCAL_EXPORT_RECOVERY_MESSAGES,
@@ -55,6 +57,7 @@ from .types import (
 from .ulid import new_ulid
 
 __all__ = [
+    "canonical_json_bytes",
     "LOCAL_ARTIFACT_RECOVERY_MESSAGES",
     "LOCAL_EXPORT_RECOVERY_MESSAGES",
     "LOCAL_SOURCE_RECOVERY_MESSAGES",

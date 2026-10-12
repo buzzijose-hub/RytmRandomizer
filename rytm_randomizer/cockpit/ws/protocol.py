@@ -347,6 +347,7 @@ COMMAND_LIBRARY_DELETE: Final[Literal["library_delete"]] = "library_delete"
 COMMAND_LIBRARY_IMPORT_CAPTURES: Final[Literal["library_import_captures"]] = (
     "library_import_captures"
 )
+COMMAND_REFERENCE_SOUND: Final[Literal["reference_sound"]] = "reference_sound"
 
 COMMAND_SHOW_BANK_LIST: Final[Literal["show_bank_list"]] = "show_bank_list"
 COMMAND_SHOW_BANK_CREATE: Final[Literal["show_bank_create"]] = "show_bank_create"
@@ -428,6 +429,7 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_LIBRARY_TAG,
             COMMAND_LIBRARY_DELETE,
             COMMAND_LIBRARY_IMPORT_CAPTURES,
+            COMMAND_REFERENCE_SOUND,
             COMMAND_ANALYZE_PATCH_GENOME,
             COMMAND_LIST_CAPTURE_INPUTS,
             COMMAND_CAPTURE_CURRENT_KIT,
@@ -1107,6 +1109,34 @@ class LibraryImportCapturesCommand(TypedDict):
     type: Literal["library_import_captures"]
 
 
+class ReferenceSoundCommand(TypedDict, total=False):
+    """Bounded passive reference-sound operations; no paths or output authority."""
+
+    type: Literal["reference_sound"]
+    action: str
+    session_id: str
+    candidate_id: str
+    candidate_sha256: str
+    source_record_id: str
+    device_id: str
+    target: int
+    parameters: list[str]
+    locks: list[str]
+    strength: float
+    correction_gain: float
+    favorite: bool
+    title: str
+    size: int
+    upload_id: str
+    chunk: str
+    offset: int
+    start_frame: int
+    frame_count: int
+    destination_slot: int
+    audio_kind: Literal["segment", "original", "recording"]
+    recording_sha256: str
+
+
 class AnalyzePatchGenomeCommand(TypedDict):
     """``analyze_patch_genome`` — compile four passive Analog Four candidates."""
 
@@ -1373,6 +1403,7 @@ __all__ = [
     "COMMAND_SHOW_BANK_VERIFY_RECAPTURE",
     "COMMAND_TOGGLE_PREVIEW",
     "COMMAND_TYPES",
+    "COMMAND_REFERENCE_SOUND",
     "COMMAND_UNDO",
     "CommandAck",
     "CommandEnvelope",
@@ -1414,6 +1445,7 @@ __all__ = [
     "LibraryChangedEvent",
     "LibraryDeleteCommand",
     "LibraryImportCapturesCommand",
+    "ReferenceSoundCommand",
     "LibraryListCommand",
     "LibrarySearchCommand",
     "LibraryTagCommand",

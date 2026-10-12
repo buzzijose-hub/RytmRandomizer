@@ -57,6 +57,7 @@ from ..stage import DualMachineStageCoordinator
 from .wizard_session import WizardSession
 
 if TYPE_CHECKING:
+    from ..export.reference_sound_session import ReferenceSoundWorkspace
     from ..show_bank.export import ShowPackService
     from ..show_bank.workspace import ShowKitForgeWorkspace
 
@@ -109,6 +110,12 @@ class CockpitSession:
         default_factory=dict[KitCaptureDeviceId, KitCaptureResult]
     )
     offline_a4_capture: KitCaptureResult | None = None
+    reference_sounds: ReferenceSoundWorkspace | None = None
+    """Passive retained audio workspace, initialized only when requested."""
+    sound_cancel: Event | None = None
+    sound_upload_id: str | None = None
+    sound_upload_size: int = 0
+    sound_upload: bytes = field(default=b"", repr=False)
     """Retained-file metadata source, never a live/fresh input capture."""
     capture_cancel: Event | None = None
     """Cancellation signal for the one owned input capture, never output authority."""

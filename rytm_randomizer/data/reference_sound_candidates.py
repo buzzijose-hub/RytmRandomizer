@@ -6,6 +6,15 @@ from types import MappingProxyType
 from typing import Final
 
 from .analog_four_audio_inference import AnalogFourInferenceParameter
+from .analog_four_saved_kit_layout import A4_KIT_OBJECT_BYTE
+from .analog_rytm_kit_layout import RYTM_KIT_DUMP_ID
+
+REFERENCE_SOUND_SAVED_COMMANDS: Final[MappingProxyType[str, int]] = MappingProxyType(
+    {
+        "analog_four_mk2": A4_KIT_OBJECT_BYTE,
+        "analog_rytm_mk2": RYTM_KIT_DUMP_ID,
+    }
+)
 
 # Bind existing A4 inference names to existing native field identities.
 A4_REFERENCE_INFERENCE_BINDINGS: Final[MappingProxyType[str, AnalogFourInferenceParameter]] = (
@@ -63,6 +72,7 @@ REFERENCE_SOUND_LIMITATIONS: Final[tuple[str, ...]] = (
 )
 
 __all__ = [
+    "REFERENCE_SOUND_SAVED_COMMANDS",
     "A4_REFERENCE_INFERENCE_BINDINGS",
     "REFERENCE_SOUND_LIMITATIONS",
     "RYTM_REFERENCE_FEATURE_TERMS",

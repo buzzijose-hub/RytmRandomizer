@@ -145,6 +145,7 @@ from .protocol import (
     CLOSE_CODE_MESSAGE_TOO_BIG,
     CLOSE_CODE_POLICY_VIOLATION,
     COMMAND_CAPTURE_CURRENT_KIT,
+    COMMAND_REFERENCE_SOUND,
     HANDSHAKE_AUTH_FAILED,
     HANDSHAKE_AUTH_REQUIRED,
     HELLO_FRAME_TYPE,
@@ -639,6 +640,7 @@ def _observe_capture_completion(
     request_id: object,
     acknowledged: asyncio.Event,
     started_at: float,
+    command_type: str = COMMAND_CAPTURE_CURRENT_KIT,
 ) -> None:
     """Retrieve detached failures, returning a safe ack only if none was enqueued."""
 
@@ -646,11 +648,14 @@ def _observe_capture_completion(
         return
     error = task.exception()
     if error is not None:
-        _logger.error("capture_dispatch_failed", extra={"error_type": type(error).__name__})
+        _logger.error(
+            "capture_dispatch_failed",
+            extra={"error_type": type(error).__name__, "command_type": command_type},
+        )
         if not acknowledged.is_set():
             ack = dispatcher_failure_ack(error, request_id)
             get_metrics().record_ws_command(
-                COMMAND_CAPTURE_CURRENT_KIT,
+                command_type,
                 (time.perf_counter() - started_at) * 1000.0,
                 error_code=cast(str, ack["code"]),
             )
@@ -716,7 +721,8 @@ async def _reader_loop(
             command = envelope.get("command")
             if (
                 isinstance(command, dict)
-                and cast("dict[str, object]", command).get("type") == COMMAND_CAPTURE_CURRENT_KIT
+                and cast("dict[str, object]", command).get("type")
+                in (COMMAND_CAPTURE_CURRENT_KIT, COMMAND_REFERENCE_SOUND)
                 and (capture_task is None or capture_task.done())
             ):
                 # Input capture is the one long operation allowed off this reader.
@@ -732,6 +738,7 @@ async def _reader_loop(
                         request_id=envelope.get("request_id"),
                         acknowledged=acknowledged,
                         started_at=time.perf_counter(),
+                        command_type=cast(str, cast("dict[str, object]", command)["type"]),
                     )
                 )
                 await asyncio.sleep(0)
@@ -741,6 +748,10 @@ async def _reader_loop(
         if capture_task is not None:
             if not capture_task.done():
                 cancel_pending_capture(session)
+                if session.sound_cancel is not None or session.sound_upload_id is not None:
+                    from .reference_sound_handlers import cancel_reference_sound  # noqa: PLC0415
+
+                    cancel_reference_sound(session)
                 capture_task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await capture_task

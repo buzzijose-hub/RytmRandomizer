@@ -42,6 +42,7 @@ from .strategies import (
     analog_four_snapshot_payload_fingerprint,
     rytm_snapshot_payload_fingerprint,
 )
+from .strategies.analog_four_kit_fields import encode_bipolar
 from .strategies.analog_four_native_fields import (
     AnalogFourNativeAppliedMutation,
     AnalogFourNativeCandidateResult,
@@ -52,9 +53,12 @@ from .strategies.analog_four_native_fields import (
     AnalogFourNativeReadback,
     AnalogFourNativeValue,
 )
+from .strategies.analog_rytm_kit_fields import RytmKit
 
 __all__ = [
     "Device",
+    "RytmKit",
+    "encode_bipolar",
     "AnalogFourFilter1FrequencyCandidateCapability",
     "AnalogFourFilter1FrequencyCandidateMutation",
     "AnalogFourFilter1FrequencyCandidateResult",
