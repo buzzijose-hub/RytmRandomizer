@@ -1,7 +1,7 @@
 # Show Kit Forge Remaining Studio Checklist
 
 Prepared: 2026-09-04
-Updated guidance: 2026-10-05 (no new physical observations recorded)
+Updated guidance: 2026-10-12 (no new physical observations recorded)
 
 Status: **pending operator-present hardware validation**
 
@@ -11,6 +11,38 @@ save attestation, or a semantic match must not be rewritten as an unobserved
 hardware result.
 
 ## Next Studio Session: One Bounded Rehearsal
+
+### Reference Sound File Proof
+
+The new Reference sound feature has a separate file-only rehearsal. Use the
+matching exact-source delivery receipt, not the previous audio-disabled package.
+Its candidate export does not grant Cockpit SEND or hardware SAVE/restore authority.
+
+1. Complete the preflight below once: firmware, exact ports/channels, backed-up
+   saved originals and a different, genuinely disposable scratch slot. Capture
+   the fresh originals before changing anything; preserve full frames and hashes.
+2. Start with Rytm Pad 2, one short reference WAV, low strength and only known
+   common Filter Frequency/AMP Decay fields. Inspect the native source/proposed/
+   readback values and exact excluded fields. Deliberately choose another scratch
+   destination and retain the downloaded file and exported SHA separately from
+   the source-destination candidate SHA. Do not widen to SRC or paired live sends.
+3. Manually import that single KIT with the instrument's SysEx receive/librarian
+   workflow. Verify the intended destination before transfer. Inspect requested
+   values and untouched pads/sections, audition at low level and record isolated
+   instrument output against the exact candidate/export identity.
+4. Upload the recording, inspect the defined feature distance/ranking and one
+   bounded refinement. Import/audition the refined file only after the preceding
+   observations pass. A score is not a probability or an acoustic certificate.
+5. Manually save the scratch KIT, dump and compare its native payload, then
+   DISARM, manually reload the backed-up saved original and compare a fresh full
+   baseline. Stop on unexplained differences. Repeat separately for one supported
+   A4 track; general A4/BOTH output remains blocked. Record physical evidence
+   separately from software tests, local favorites and offline export success.
+
+Exact bounds and shared-artifact recovery are in
+[Reference Sound Rehearsal](../COCKPIT_QUICKSTART.md#reference-sound-rehearsal).
+
+### Guarded Live Pad 2 Proof
 
 Use the exact portable build and hashes in the PR #254 software delivery
 receipt, not an older running server. Close FL Studio/Overbridge before the
