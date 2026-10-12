@@ -1,4 +1,4 @@
-/* Run with node --test. All driver I/O is fake; PowerShell sees synthetic rows only. */
+/* Run with node --test. Native app launches are fake; process rows are synthetic. */
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -10,7 +10,7 @@ const driver = path.resolve(__dirname, '../e2e/fixtures/offline_endurance_driver
 const source = fs.readFileSync(driver, 'utf8');
 const privateDetails = String.raw`C:\Users\private-operator\secret-kit.syx token=private-token-value kit=Private Stage Name`;
 
-async function runFakeDriver({ failure, cleanupFailure, launchFailure = false, cleanupOnly = false }) {
+async function runFakeDriver({ failure, cleanupFailure, launchFailure = false, cleanupOnly = false, debugAvailable = true }) {
   const writes = new Map(), operations = [];
   let powershell;
   const root = path.parse(driver).root;
@@ -22,7 +22,8 @@ async function runFakeDriver({ failure, cleanupFailure, launchFailure = false, c
       env: { RYTM_RAND_MIDI_BACKEND: 'off' },
     },
     console: { log() {} },
-    fetch: async () => ({ ok: true }),
+    fetch: async () => ({ ok: debugAvailable }),
+    setTimeout: callback => callback(),
     require(name) {
       if (name === 'node:fs') return {
         existsSync: () => false,
@@ -160,6 +161,19 @@ test('launch stderr never enters the persisted failure or requests cleanup witho
   assertPrivateFree(writes);
 });
 
+test('unavailable debugging fails after one launch and the unchanged 20-probe window by default', async () => {
+  const { report, writes, operations } = await runFakeDriver({ debugAvailable: false });
+  assert.deepEqual(operations, ['launch', 'stop']);
+  assert.equal(report.startup.attempt_count, 1);
+  assert.equal(report.startup.debug_probe_count, 20);
+  assert.equal(report.startup.debug_listener_ready, false);
+  assert.equal(report.setup_interruptions.length, 1);
+  assert.equal(report.setup_interruptions[0].reason, 'debug_listener_unavailable');
+  assert.equal(report.passed, false);
+  assert.deepEqual(report.cleanup, { stopped: true });
+  assertPrivateFree(writes);
+});
+
 test('stable cue rotation remains fair while display order changes', () => {
   const helper = source.match(/^const rehearsalCueId = .*;$/m)?.[0];
   assert(helper, 'The real cue rotation helper is required');
@@ -242,6 +256,36 @@ async function processFunctions() {
   assert(powershell.includes('Stop-Owned @(Descendants-Of $tree $side[0])'));
   return powershell.slice(0, boundary);
 }
+
+test('cold launch creates the isolated Windows local known folder before starting the shell', async t => {
+  const { powershell } = await runFakeDriver({ launchFailure: true });
+  const outputRoot = path.resolve(path.dirname(driver), '../../../../output/local');
+  fs.mkdirSync(outputRoot, { recursive: true });
+  const runRoot = fs.mkdtempSync(path.join(outputRoot, 'OCT12-startup-test-'));
+  assert.equal(path.dirname(runRoot), outputRoot);
+  t.after(() => fs.rmSync(runRoot, { recursive: true, force: true }));
+  const state = path.join(runRoot, 'state');
+  const fakeLaunch = String.raw`
+function Start-Process {
+  param($FilePath,$WorkingDirectory,$WindowStyle,[switch]$PassThru)
+  if($WindowStyle -ne 'Hidden'){throw 'Native QA must remain hidden'}
+  if($env:RYTM_RAND_MIDI_BACKEND -ne 'off'-or$env:RYTM_RAND_UPDATES -ne 'off'){throw 'Offline settings required'}
+  if(-not(Test-Path -LiteralPath (Join-Path $env:USERPROFILE 'AppData/Local') -PathType Container)){throw 'Cold Windows local known folder missing'}
+  if($env:LOCALAPPDATA -ne (Join-Path $env:USERPROFILE 'local')){throw 'Existing local override changed'}
+  if($env:APPDATA -ne (Join-Path $env:USERPROFILE 'roaming')){throw 'Source-priming roaming override changed'}
+  return [pscustomobject]@{Id=100;StartTime=[DateTime]::UtcNow}
+}
+`;
+  const result = spawnSync('pwsh.exe', ['-NoProfile', '-NonInteractive', '-Command', fakeLaunch + powershell], {
+    input: JSON.stringify({ operation: 'launch', bundle: path.join(runRoot, 'bundle'), state }),
+    encoding: 'utf8', timeout: 10000, windowsHide: true,
+  });
+  assert.equal(result.status, 0, result.stderr);
+  const launch = JSON.parse(result.stdout.trim());
+  assert.equal(launch.shell_pid, 100);
+  assert.notEqual(launch.ws_port, launch.debug_port);
+  assert(fs.existsSync(path.join(state, 'AppData', 'Local')));
+});
 
 function evaluatePowerShell(functions, body) {
   const result = spawnSync('pwsh.exe', ['-NoProfile', '-NonInteractive', '-Command', functions + processRows + body], {

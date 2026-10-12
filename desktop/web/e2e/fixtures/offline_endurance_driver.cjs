@@ -25,7 +25,7 @@ const a4Fields = argument('--a4-fields', 'Filter1 Frequency,filter2_resonance').
 const a4SourceHash = argument('--a4-source-sha256', null);
 const includePad2 = args.includes('--pad2');
 const referenceSound = args.includes('--reference-sound');
-const startupAttempts = Number(argument('--startup-attempts', '2'));
+const startupAttempts = Number(argument('--startup-attempts', '1'));
 assert(args.includes('--bundle') && args.includes('--run-root'));
 assert(path.isAbsolute(python));
 assert(smoke > 0 ? smoke <= 600 : minutes >= 90 && minutes <= 120);
@@ -116,6 +116,8 @@ function Stop-Owned($owned){
 }
 if($r.operation -eq 'launch'){
   New-Item -ItemType Directory -Path $r.state -Force|Out-Null
+  # Windows known-folder lookup uses USERPROFILE, not the LOCALAPPDATA override.
+  New-Item -ItemType Directory -Path (Join-Path $r.state 'AppData/Local') -Force|Out-Null
   $listener=[System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback,0)
   $listener.Start();$ws=$listener.LocalEndpoint.Port;$listener.Stop()
   $listener.Start();$debug=$listener.LocalEndpoint.Port;$listener.Stop()
@@ -188,14 +190,20 @@ async function main() {
       fs.writeFileSync(path.join(runRoot, 'owned-launch.json'), JSON.stringify(launch, null, 2) + '\n');
       save();
       let available = false;
+      const startupStarted = performance.now();
+      summary.startup = { attempt_count: attempt + 1, debug_probe_count: 0, debug_listener_ready: false };
       for (let probe = 0; probe < 20; probe++) {
-        try { const response = await fetch(`http://127.0.0.1:${launch.debug_port}/json/version`); available = response.ok; } catch { /* Cold WebView may need a separate fresh profile. */ }
+        summary.startup.debug_probe_count++;
+        try { const response = await fetch(`http://127.0.0.1:${launch.debug_port}/json/version`); available = response.ok; } catch { /* Readiness is bounded to this launch's probe window. */ }
         if (available) break;
         await sleep(500);
       }
+      summary.startup.debug_listener_ready = available;
+      summary.startup.debug_elapsed_ms = performance.now() - startupStarted;
+      save();
       if (available) break;
       summary.setup_interruptions.push({ reason: 'debug_listener_unavailable', attempt, at: new Date().toISOString() });
-      processOperation('stop'); launch = null;
+      summary.cleanup = processOperation('stop'); launch = null;
     }
     assert(launch, 'Configured isolated WebView startup attempts refused debugging');
     browser = await chromium.connectOverCDP(`http://127.0.0.1:${launch.debug_port}`);
