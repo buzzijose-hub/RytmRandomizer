@@ -432,8 +432,15 @@ native BLAS/Numba libraries cannot multiply worker threads under pytest-xdist:
 | `OPENBLAS_NUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
 | `VECLIB_MAXIMUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
 
-These are test-process controls only. The application does not read or change
-them, and contributors do not need to set them for normal runs.
+The native audio worker forces `OPENBLAS_NUM_THREADS`, `OMP_NUM_THREADS`,
+`MKL_NUM_THREADS` and `NUMBA_NUM_THREADS` to `1` inside the spawned child only.
+The additional diagnostic controls above are not all production settings.
+In a frozen worker it enables required Numba compiled
+signatures with `NUMBA_DISABLE_JIT=0` and sets `NUMBA_CACHE_DIR` to a parent-owned
+temporary cache that is removed after cleanup. These are internal resource
+controls, not operator configuration or a mode that enables hardware. The
+server and unrelated applications retain their environment, and contributors
+do not need to set these variables for normal runs.
 
 The opt-in native-audio cache diagnostic also sets `NUMBA_CACHE_DIR` to an owned
 shared or isolated cache, reads it only in its bounded child, and enables
@@ -848,6 +855,7 @@ Skills under `.claude/skills/` package repeatable knowledge so an agent (or a hu
 | [`codex-hook-additionalcontext-reprompt`](.claude/skills/learned/codex-hook-additionalcontext-reprompt/SKILL.md) | Codex hooks run only `type:command` handlers — re-prompt the model via `additionalContext`. |
 | [`playwright-strict-mode-selectors`](.claude/skills/learned/playwright-strict-mode-selectors/SKILL.md) | Keep browser locators unique and stable under Playwright strict mode. |
 | [`targeted-live-kit-mutation`](.claude/skills/learned/targeted-live-kit-mutation/SKILL.md) | Carry target-minus-lock scope, fresh capture authority, package-import isolation, exact-plan SEND, narrow A4 evidence, and atomic paired retention through live-kit work. |
+| [`frozen-audio-worker-containment`](.claude/skills/learned/frozen-audio-worker-containment/SKILL.md) | Diagnose frozen Windows spawn/stdin deadlocks and retain worker ownership under repeated cancellation. |
 
 **Codex discovers these too.** Codex scans `$REPO_ROOT/.agents/skills/`, not `.claude/skills/`. The repo ships a committed symlink **`.agents/skills` → `.claude/skills/learned`** so codex auto-discovers every learned skill (identical `SKILL.md` format). Edit a skill once in `.claude/skills/learned/` and both agents see it. On a Windows clone where the symlink checked out as a plain file, run `git config core.symlinks true && git checkout -- .agents/skills` to re-materialize it. See [`AGENTS.md` § Skills](AGENTS.md#skills--codex-auto-discovers-them-from-agentsskills).
 

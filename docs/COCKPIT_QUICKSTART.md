@@ -1104,6 +1104,78 @@ dev server, Rust hot-reload, and the sidecar all spin up together.
 
 ---
 
+## Reference Sound Rehearsal
+
+The new **Reference sound** workspace is for one short sound. It is distinct
+from the description compiler and song/profile wizard. The prior `6e098f85`
+rehearsal package does not contain this feature or its audio dependencies.
+Use only a new source-bound delivery whose receipt includes frozen-worker and
+actual UI acceptance. Implementation or a packaging trial is not show readiness.
+
+1. Open the offline launcher with MIDI disabled. Import a mono/stereo
+   16/24/32-bit PCM WAV (8-96 kHz, at most 16 MiB / 120 seconds). Keep a
+   sample-aligned 0.05-8 second segment. Original and segment bytes are retained
+   separately and can be played again after reopening.
+2. Choose Rytm or A4, an exact retained original KIT from Library, and one pad
+   or track. Use the existing captures-folder import when a backed-up source
+   is not yet retained. Legacy metadata without original frames is not enough.
+3. Inspect source-bound controls and select only the intended fields. Locks
+   and mandatory protection win. Source machine/oscillator selectors, tuning,
+   unknown bytes and unsupported traits remain preserved. Rytm's initial audio
+   intent scope is common filter frequency/resonance and AMP attack/hold/decay/
+   overdrive; A4 uses the source-dependent supported inference/native subset.
+4. Generate and inspect source, proposed and actually rendered values/units,
+   explanations and exact changed controls. Eight directions are hypotheses,
+   not eight verified sound matches; some scoped directions may be identical.
+   Changing source, segment or scope creates another context without erasing
+   previous favorites. No file operation grants SEND authority.
+5. Retain a local favorite, reopen it and verify exact values and original
+   playback. Export requires a deliberately selected scratch KIT destination
+   (UI KIT 1-128, native 0-127). The original sound payload, source identity and
+   favorites remain intact; only the output envelope destination is adjusted.
+   The original saved source slot is refused. The candidate SHA shown before
+   export identifies its retained source-destination frame; the exported scratch
+   frame has its own SHA because the destination and integrity bytes change.
+
+One session retains at most 16 supplied recordings and three refinement rounds.
+The store is bounded to 64 sessions / 256 MiB, and an analysis worker has a
+60-second deadline. A refused operation preserves committed work. For recovery,
+close the app and preserve a complete copy of its reference-sound store before
+restoring an unmodified backup or using a compatible app. Content-addressed
+audio/KIT artifacts may be shared across sessions: do not delete individual
+artifacts to make space. Capacity refusal is not permission to remove user work.
+
+### First Physical Experiment
+
+Before leaving offline mode, record firmware, exact input/output names and
+channels, a backed-up source KIT and a genuinely disposable scratch slot for
+each instrument. Do not overwrite a show KIT. A4/BOTH SEND, CY Ride SRC, paired
+MIDI conversion, unsaved synchronization, hardware SAVE and automatic restore
+remain held. The workspace does not bypass those controls.
+
+Start with **one** low-strength Rytm Pad 2 file candidate using only known common
+controls, then repeat separately with one supported A4 track. Use the device's
+manual SysEx receive/librarian workflow into the selected scratch slot; verify
+the destination before transfer and stop on any discrepancy. Check all requested
+values and untouched pads/tracks/sections before auditioning at low monitor
+level. Record the isolated instrument output as a short PCM WAV, with the exact
+candidate/export SHA and recording association in the observation receipt.
+
+Upload that recording against the exact candidate. Compare the displayed
+weighted 11-feature L1 distance and deltas; the score is not a probability or
+proof of reproduction. At most three residual refinement rounds are permitted.
+A zero-residual result is retained without an unnecessary replacement. Source,
+scope, locks and exclusions remain unchanged throughout refinement.
+
+Manually save the scratch KIT on the instrument, dump it back and compare its
+native payload with the exported candidate and declared byte-diff allowlist.
+Then DISARM, manually reload the backed-up original saved KIT and obtain a fresh
+baseline dump. Verify the full native baseline, not just the selected controls.
+Local UNDO/favorites are not hardware recovery. Record actual application,
+audible output, save/reload and recovery separately from fixture or package tests.
+Do not expand controls or declare FULL FEATURE COMPLETE until both physical
+paths and the declared rehearsal scope pass.
+
 ## Reference
 
 - [`docs/superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md`](superpowers/specs/2026-05-23-cockpit-and-profile-model-design.md) — full Phase 1 cockpit design spec (events, commands, profile model, mutation engine, phasing).

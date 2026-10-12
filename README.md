@@ -125,6 +125,17 @@ never enumerates, opens, or writes a MIDI port.
 <a id="export-pipeline"></a>
 ## Export Pipeline
 
+**Reference sound workflow (integration acceptance pending):** import and retain a
+short PCM WAV, select an exact segment and original Rytm/A4 KIT, scope supported
+controls, inspect eight source-preserving local candidates, retain favorites,
+compare supplied audition recordings and perform bounded refinement. Export uses
+an explicit scratch slot; it does not transmit. Existing native protection and
+live-send limits remain. This is heuristic reference-to-discovery, not an exact
+reproduction claim or a trained instrument renderer. The previous verified
+Windows rehearsal build is preserved and does not include this feature. See the
+[reference-sound procedure](docs/COCKPIT_QUICKSTART.md#reference-sound-rehearsal)
+and [active plan](docs/superpowers/plans/2026-10-11-reference-sound-workflow.md).
+
 <div align="center">
 <img src="docs/assets/export-pipeline.svg" alt="Export pipeline — ProfileModel through pack, sign, atomic write, verify, to a portable .rymp file" width="100%" />
 </div>

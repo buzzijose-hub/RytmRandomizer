@@ -1307,6 +1307,71 @@ adapter records shared export RED metrics and structured logs with categorical
 
 ---
 
+### Reference Sound Workflow (2026-10)
+
+The reference-sound workspace is a separate single-sound workflow, not the
+song/profile wizard. Its authenticated `reference_sound` command uploads bounded
+PCM WAV chunks without accepting filesystem paths. Original bytes and the exact
+sample-aligned segment are retained independently. Source KITs come from the
+existing original-frame LibraryStore. Scope, locks, source hash and segment hash
+define a deterministic session context; changing one creates another context
+without erasing earlier favorites.
+
+| Owner | Responsibility |
+| --- | --- |
+| `cockpit/ws/reference_sound_handlers.py` | Authenticated `reference_sound` command, bounded upload, operator-context fence and categorical replies; no hardware authority. |
+| `cockpit/export/reference_sound_records.py` | Typed context/session/candidate/recording/refinement wire records, strict constructors and source identity validation. |
+| `cockpit/export/reference_sound_errors.py` | Closed reason codes, fixed operator messages and bounded diagnostic classification. |
+| `cockpit/export/reference_sound_analysis.py` | Public export facade for the canonical lower `style_analysis/reference_sound_analysis.py` validators and typed serializer. |
+| `PreparedReferenceSound` in `cockpit/export/reference_sound_session.py` | Immutable worker-to-owner payload/artifact handoff, with expected-manifest compare-and-swap identity. |
+
+`cockpit/export/reference_sound_session.py` composes the existing eight-direction
+DNA, native inference, recording comparison and residual refinement. A worker
+returns a prepared result only. The owning event-loop action checks cancellation
+and operator context before canonical atomic publication, with no intervening
+await. Reader teardown cancels and awaits the owned worker. Reference operations
+require output disarmed and have no send provider or hardware authority.
+
+Prepared payloads are canonical immutable bytes with immutable artifact maps;
+callers receive freshly parsed typed wire records. Records validate finite
+numeric types, exact keys, device targets, scores and evidence flags. Canonical
+scalar validators and the lower analysis serializer have one owner, exposed
+through the export facade. Repeated feedback reproducing an existing candidate
+is a no-op, not another alternative. Child-origin interruption is a categorical
+failure, not a parent signal. A private executor future stays owned through
+repeated cancellation and cleanup.
+
+The pure candidate adapter resolves saved codecs through `devices`, using its
+public native field types, Rytm field view and bipolar converter. It patches only
+source-bound selected fields, redecodes each result, proves native/wire diffs,
+preserves the source machine, native companions and unknown bytes, and reports
+protected/unexpressible traits. Rytm initially has six common continuous audio
+intent bindings; A4 uses the existing native domains and 25 inference bindings
+with source-dependent protection. These are heuristic musical intentions, not
+additional mapping evidence, live eligibility or trained acoustic models.
+
+`reference_sound_store` is registered in the canonical persisted-state registry.
+It uses the shared bounded reader, canonical JSON facade and atomic write set,
+content-addressed audio/SysEx, capped storage and checksum-verified manifests.
+Reopen recomputes candidates and residual feedback under current policy and
+verifies exact artifacts. Metadata summaries stay compact; audio is read in
+bounded chunks from approved session artifacts only. Local favorites are not
+hardware KIT saves, and recalling them does not recover an instrument.
+
+Native analysis runs in the existing spawned crash-contained process. The frozen
+entry dispatches multiprocessing workers before server/watcher startup. Audio
+dependencies and required librosa source/stubs are bundled; worker threads and
+input size/duration are bounded. Cancellation, child failure and timeout do not
+publish a replacement session. Candidate playback requires a supplied recording;
+there is no simulated instrument preview. Ranking reuses the normalized
+11-feature weighted L1 metric, not a probability or proof of sound accuracy.
+
+Export requires an explicit zero-based scratch slot, uses canonical stored-dump
+commands and `ElektronNativeObjectMessage.with_slot`, then verifies the unchanged
+sound payload through both native-envelope and family codecs. It writes a local
+file only. Actual application, audible quality, hardware saving and manual
+reload/recovery remain separate physical acceptance requirements.
+
 ## 6.5 Cockpit WebSocket security contract (post CODE_REVIEW.md sweep, 2026-05)
 
 The cockpit sidecar exposes a single `/ws` endpoint on `127.0.0.1:4317`. "Loopback only"

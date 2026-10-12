@@ -3433,3 +3433,38 @@ PE handoffs from unverified production NSIS/MSI, macOS/Linux installation,
 publisher signing and production distribution. See [release assembly](BUILDING_INSTALLERS.md#verified-updater-release-assembly)
 for the four target formats and [native acceptance](../desktop/web/native-e2e/README.md)
 for the isolated fixture contract.
+
+## Reference Sound Workflow
+
+```mermaid
+flowchart LR
+    UI[Reference sound panel] --> WS[Authenticated reference_sound command / bounded upload]
+    WS --> Owner[Owned cancellation / context fence]
+    Owner --> Session[ReferenceSoundWorkspace]
+    Session --> Records[reference_sound_records / strict typed wire records]
+    Records --> Facade[export/reference_sound_analysis facade]
+    Facade --> Lower[style_analysis/reference_sound_analysis / canonical validators and serializer]
+    WS --> Errors[reference_sound_errors / closed reason codes and fixed messages]
+    Library[Original-frame LibraryStore] --> Session
+    Session --> Worker[Spawned audio analysis / bounded native worker]
+    Worker --> Analysis[Measurements / exact segment provenance]
+    Analysis --> DNA[Existing eight directions / native inference]
+    DNA --> Codec[Device codec / native field capability]
+    Codec --> Proof[Re-decode / approved byte-diff proof]
+    Proof --> Prepared[PreparedReferenceSound / immutable result / no worker publication]
+    Prepared --> Owner
+    Owner --> Store[Registered store / OS lock + manifest CAS + atomic write set]
+    Recording[Supplied audition recording] --> Worker
+    Analysis --> Metric[11-feature weighted L1 / bounded residual refinement]
+    Metric --> DNA
+    Store --> Recall[Exact disarmed reopen / local favorites]
+    Store --> Export[Explicit scratch slot / local SysEx download]
+    Hardware[Manual instrument load / recording / save / reload] -. physical evidence pending .-> Recording
+```
+
+This workflow grants no MIDI output authority. Rytm SRC/machine fields are
+preserved in this reference-sound scope; the existing Cockpit's separately
+documented eligible SRC controls are not revoked or expanded. Restrictions on
+unverified A4/BOTH sending, paired MIDI conversion and automatic restoration
+remain held. A similarity score is a defined feature comparison of supplied
+audio, not a probability, synthetic preview or physical sound-match certificate.

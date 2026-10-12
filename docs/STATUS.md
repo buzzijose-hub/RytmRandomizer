@@ -1,8 +1,22 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-10-07. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-10-12. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
+
+The reference-sound integration is in flight on PR #254's assembly branch.
+Both device paths now produce source-preserving local KIT candidates rather
+than Rytm proposals only. Exact PCM segments, scope/locks, recording comparison,
+bounded refinement and disarmed local favorite/reopen are implemented. The
+unchanged 187 adversarial cases pass after cancellation and stale-publication
+repairs; OS-backed publication locks preserve newer favorites. Frozen audio's
+Windows stdin/spawn deadlock is repaired: an intermediate executable completed
+both paths in 23.922 seconds. The real browser workflow passes in 19.8 seconds,
+including recording/refinement, local export and restart recall. The current
+broad architecture/coverage run and final packaged-shell acceptance remain
+separate pending gates. No MIDI/USB operations or protected merges occurred. The prior
+delivery below remains the launchable verified build until a new exact receipt
+supersedes it. See the [active plan](superpowers/plans/2026-10-11-reference-sound-workflow.md).
 
 Offline Windows source `6e098f85ddeb48d9beb97f732f22e2f2152d86eb` is delivered
 at `C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-6e098f85ddeb`.
@@ -312,6 +326,17 @@ Digitakt #240 remains a separate passive device PR; it is not included as merged
 support in this updater checkpoint.
 
 ## Recent Cleanup
+
+- 2026-10-12: Integrated the reference-sound workflow and genuine frozen-audio
+  packaging repair. Both paths generate verified local KIT candidates; exact
+  audio segments, supplied-recording comparison and bounded refinement retain
+  source/scope/locks and local favorites. Current locking and source-slot
+  protection repairs remain in verification. New data snapshots and one command
+  contract are explicit; V1.34 fixtures are untouched. AL02's historical blocked
+  receipt is archived byte-identically, while its current receipt refreshes only
+  build time and the public-device-facade dependency hash. It remains blocked
+  with 18 gaps and emits no kit. Final package, CI/review and physical acceptance
+  remain separate pending gates.
 
 - 2026-10-05: PR #254 review repair blocks all CY Ride SRC rows and audits
   29 previously eligible fallback rows: 25 remain documented-only eligible,

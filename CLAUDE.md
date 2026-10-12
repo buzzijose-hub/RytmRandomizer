@@ -94,6 +94,10 @@ This repo has unusually strict invariants because it talks to physical hardware 
 
 The [`.claude/rules/skill-routing.md`](.claude/rules/skill-routing.md) table maps task types to specific skills. For example: adding a CC parameter → `add-pad-command`; adding a data table → `extend-data-layer`; reviewing code post-push → `code-review`; updating docs → `docs-update-with-pr`. See [`docs/AGENT_TASK_RECIPES.md`](docs/AGENT_TASK_RECIPES.md) for step-by-step recipes for the most common tasks.
 
+For packaged audio spawn/shutdown changes, consult the
+[frozen worker rule](.claude/rules/frozen-audio-worker-containment.md) and
+[learned containment skill](.claude/skills/learned/frozen-audio-worker-containment/SKILL.md).
+
 ## Anti-patterns to refuse
 
 Refuse these patterns by default; require explicit user override to proceed.

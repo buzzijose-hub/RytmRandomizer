@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "phase": "verifying",
+  "source_commit": "7cf12e1a2719ffb5fcefec07b600e8ae6c1ebbcf",
+  "reference_pr": 254,
+  "midi_disabled": true,
+  "started_at": "2026-10-12T03:42:18Z",
+  "updated_at": "2026-10-12T07:12:00Z",
+  "completed": [
+    "both-device native source-preserving alternatives",
+    "exact original and segment retention",
+    "scope locks and native precision",
+    "supplied-recording comparison and bounded refinement",
+    "favorites and exact disarmed restart recall",
+    "worker interruption cancellation and publication repairs",
+    "actual browser both-device journey",
+    "intermediate frozen-runtime proof",
+    "targeted review repairs and architecture closure"
+  ],
+  "pending": [
+    "final touched-file coverage and source gates",
+    "final frontend gates",
+    "fresh CI and protected review",
+    "exact-source Windows delivery and packaged UI proof",
+    "actual instrument recordings and recovery rehearsal"
+  ]
+}

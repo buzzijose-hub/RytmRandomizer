@@ -125,11 +125,15 @@ Contract details (pinned by `tests/test_launch_smoke.py`):
   shell uses the PATH-python dev fallback at runtime. An explicit
   binary can also be forced at runtime via the `RYTM_RAND_SIDECAR_BIN`
   env var.
-- **Known limitation.** The audio-analysis stack (librosa / numba) is
-  excluded from the bundle — it is PyInstaller-hostile and only backs
-  the Profile Wizard's audio-source analyzers. Wizard audio analysis
-  requires a pip-installed sidecar until a dedicated packaging
-  workstream lands; every other cockpit surface works from the bundle.
+- **Audio-enabled packaging.** New builds include the bounded measured-audio
+  surface (librosa, NumPy/SciPy, soundfile/soxr and Numba/llvmlite). Librosa
+  source and lazy-loader stubs are retained for frozen compilation. The
+  entry runs `multiprocessing.freeze_support()` before any server/watcher
+  startup, so native audio jobs stay in an isolated child. Size, duration,
+  timeout and cancellation limits remain enforced. Previous delivered
+  binaries remain audio-disabled; source tests or a packaging trial are not
+  a receipt for a new usable Windows shell. Require actual frozen-worker
+  and packaged UI acceptance with exact source and binary hashes.
 
 In CI, the `desktop-bundle` job in
 `.github/workflows/installers.yml` runs the script on each OS before

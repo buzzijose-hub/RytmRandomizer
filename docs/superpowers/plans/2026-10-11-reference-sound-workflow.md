@@ -14,6 +14,12 @@ assembly is the clean `rytm-studio-mapping` worktree.
 
 ## Pre-Code Maintainability Audit
 
+Companion audit: [pre-code record](2026-10-11-reference-sound-workflow_MAINTAINABILITY_AUDIT.md).
+Post-integration reassessment: [report](2026-10-11-reference-sound-workflow_MAINTAINABILITY_REPORT.md).
+Permanent accounting: [run report](2026-10-11-reference-sound-workflow_RUN_REPORT.md),
+[run log](2026-10-11-reference-sound-workflow_RUN_LOG.md),
+[architecture delta](2026-10-11-reference-sound-workflow_ARCHITECTURE_BEFORE_AFTER.md).
+
 | Question | Baseline / Action |
 | --- | --- |
 | Onboarding | Existing guides identify Device strategies, passive export and WS/UI ownership. No timed onboarding measurement. |
@@ -33,13 +39,50 @@ assembly is the clean `rytm-studio-mapping` worktree.
 | --- | --- | --- | --- |
 | Runtime | `RytmRandomizer-worktrees/reference-audio-runtime`, `codex/reference-audio-runtime` | Existing isolated audio-analysis runtime, packaging script, new worker entry and focused runtime tests only | Baseline |
 | Rytm | `RytmRandomizer-worktrees/reference-rytm-candidates`, `codex/reference-rytm-candidates` | Pure Rytm source-preserving audio candidate renderer, corresponding immutable mapping facts and focused tests only | Baseline |
-| Session / UI | Assembly `rytm-studio-mapping`, `codex/studio-rytm-mapping` | Shared sound session persistence/orchestration, WS/UI adapters and journey tests | Runtime and Rytm contracts |
+| Session | Assembly `rytm-studio-mapping`, `codex/studio-rytm-mapping` | Shared sound session persistence/orchestration, WS adapters and journey tests | Runtime and Rytm contracts |
+| UI | `RytmRandomizer-worktrees/reference-sound-ui`, `codex/reference-sound-ui` | Desktop web panel, typed protocol, model and UI regression tests | Explicit session/WS contract |
+| Adversarial | `RytmRandomizer-worktrees/reference-sound-adversarial`, `codex/reference-sound-adversarial` | One source/record/persistence/cancellation fault-test module | Integrated backend checkpoint |
+| Frozen Diagnosis | `RytmRandomizer-worktrees/reference-frozen-runtime`, `codex/reference-frozen-runtime` | Runtime/packaging and their tests only; replaces completed Runtime worker | Actual frozen trial failure |
 | Verification / Delivery | Assembly | Integration regressions, source-bound package receipts and existing operator guidance | Integrated implementation |
 
 Each WS uses planner/TDD/implementer/coverage/reviewer phases. At most two
 workers run concurrently; main owns immediate contract and integration work.
 Review fan-out is one dimension per agent, at most two active, consolidated into
 one PR comment. No competing or stacked PR. Reuse #254, direct integration base.
+
+### Integration Checkpoint
+
+Runtime `ef3cb85b` and candidate `12fc7272` are merged. Retained-session source
+`3621c509`, shared fixtures `3a1d2ef7` and adversarial tests `0d603bca` are
+integrated. Six reproduced cancellation/stale-favorite failures were repaired
+at `04812b4a`; the unchanged 187 adversarial cases pass. Publication now uses
+an OS-backed namespace lock plus expected-manifest comparison, and successful
+context adoption clears the old SEND plan in both backend and UI event state.
+Failures preserve the previous plan and retained user work.
+
+The initial 125,190,308-byte Windows frozen sidecar trial built in 74.6 seconds
+but its actual native-audio job timed out at 60 seconds. Windows child startup
+was blocked behind the parent's pending synchronous stdin read. The existing
+generated entry now polls pipe bytes and dispatches freeze support before
+watcher/app composition. A replacement intermediate binary completed both
+device workflows in 23.922 seconds; it is not the final delivery. The unchanged
+deadline was not increased and failed attempts remain failed.
+
+Typed record validation and immutable prepared results landed at `8df83a15`;
+canonical scalar/analysis serializer reuse at `c47ceaf8`. Child interruption and
+repeated cancellation repairs (`8622c2e8`, `244be12c`) preserve the parent and
+worker fence. Categorical artifact/schema/slot/capacity refusals and bounded
+owned QA shutdown are integrated from `92fce481`. Repeated feedback producing an
+existing candidate is a no-op; both device regressions pass. The actual browser
+journey passed in 19.8 seconds, including original/segment identity, exact scopes,
+recording comparison, refinement, native export and disarmed restart recall.
+
+The first full composition had 11,279 passes and ten contract/provenance failures;
+458 targeted checks pass after their repairs. A newer broad coverage run is in
+flight. Remaining integration architecture/coverage and direct-refusal telemetry
+findings are not certified away by focused tests. Exact final package, fresh CI,
+human review and physical acceptance are separate pending gates. The previous
+Windows delivery remains the verified build until a new receipt supersedes it.
 
 ## Architecture And Acceptance
 

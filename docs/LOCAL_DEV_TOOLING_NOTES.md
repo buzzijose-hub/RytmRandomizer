@@ -276,6 +276,16 @@ that variable only in its child mode, rejecting caches outside the owned root.
 `NUMBA_DEBUG_CACHE=1` supplies bounded cache-hit categories. `TMPDIR`, `TEMP`
 and `TMP` point to owned temporary directories; inherited `LIBROSA_CACHE_DIR`
 is removed so the experiment cannot read or mutate an external librosa cache.
+
+The production reference-sound native worker sets `OPENBLAS_NUM_THREADS`,
+`OMP_NUM_THREADS`, `MKL_NUM_THREADS` and `NUMBA_NUM_THREADS` to `1` inside its
+spawned child; the remaining diagnostic controls are not production settings.
+Frozen execution additionally uses
+`NUMBA_DISABLE_JIT=0` for required compiled signatures and a parent-owned
+`NUMBA_CACHE_DIR`, removed after worker cleanup. The parent server and unrelated
+processes are unchanged. These are internal safe resource limits, not operator
+configuration, MIDI switches or reusable trust in a compiled cache. Verify the
+actual bundled executable; a `sys.frozen` fixture alone is insufficient.
 `PYTHONPATH` prepends this checkout, `PYTHONDONTWRITEBYTECODE=1` avoids checkout
 bytecode writes, `PYTHONUNBUFFERED=1` flushes child diagnostics, and
 `RYTM_RAND_MIDI_BACKEND=off` is forced.
