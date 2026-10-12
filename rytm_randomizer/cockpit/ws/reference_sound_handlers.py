@@ -12,7 +12,7 @@ from threading import Event
 from typing import Final, TypeVar
 
 from ...guardrails.input_validation import require_sequence
-from ...observability.errors import BoundaryError, DataError, RytmRandomizerError
+from ...observability.errors import BoundaryError, RytmRandomizerError
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ..data.stage import ANALOG_FOUR_DEVICE_ID, ANALOG_RYTM_DEVICE_ID
@@ -25,7 +25,11 @@ from ..export.reference_sound_analysis import (
 )
 from ..export.reference_sound_audio import REFERENCE_AUDIO_MAX_BYTES
 from ..export.reference_sound_candidates import list_reference_sound_controls
-from ..export.reference_sound_session import ReferenceSoundWorkspace, StyleAnalysisDependencyError
+from ..export.reference_sound_errors import (
+    REFERENCE_SOUND_FAILURE_MESSAGES,
+    reference_sound_failure_reason,
+)
+from ..export.reference_sound_session import ReferenceSoundWorkspace
 from ..export.reference_sound_store import reference_sound_digest
 from .protocol import ERR_VALIDATION, EVENT_SEND_PLAN_CHANGED
 from .result import HandlerResult
@@ -370,50 +374,21 @@ async def handle_reference_sound(cmd: dict[str, object], session: CockpitSession
     except asyncio.CancelledError:
         raise
     except (KeyError, TypeError, ValueError, OSError, RuntimeError, RytmRandomizerError) as exc:
+        reason = reference_sound_failure_reason(exc)
         _logger.warning(
             "reference_sound_refused",
             extra={
                 "error_type": type(exc).__name__,
                 "fingerprint": "reference_sound.operation.failed",
+                "reason": reason,
             },
         )
-        get_metrics().record_error("reference_sound.operation.failed")
-        if (
-            isinstance(exc, InterruptedError)
-            or isinstance(exc, RytmRandomizerError)
-            and exc.context.get("error_code") == "interrupted"
-        ):
-            return _sound_refusal(
-                "Audio operation cancelled. Existing sessions and favorites are unchanged."
-            )
-        if (
-            isinstance(exc, StyleAnalysisDependencyError)
-            or isinstance(exc, RytmRandomizerError)
-            and exc.context.get("error_code") == "dependency_missing"
-        ):
-            return _sound_refusal(
-                "Audio analysis runtime is missing. Launch the audio-enabled Windows delivery."
-            )
-        if (
-            isinstance(exc, FileNotFoundError)
-            or isinstance(exc, DataError)
-            and exc.context.get("category") == "missing"
-        ):
-            return _sound_refusal(
-                "A retained audio or KIT artifact is missing. Restore its saved copy; existing work is unchanged."
-            )
-        if isinstance(exc, OSError):
-            return _sound_refusal(
-                "Local audio or session storage could not be read or written. Check disk space and permissions; existing work is unchanged."
-            )
-        if (
-            isinstance(exc, RuntimeError)
-            or isinstance(exc, RytmRandomizerError)
-            and exc.context.get("error_code") == "inference_failed"
-        ):
-            return _sound_refusal(
-                "Audio worker failed or timed out. Use a shorter PCM WAV and retry; retained work is unchanged."
-            )
-        return _sound_refusal(
-            "Reference-sound request or retained identity is invalid. Refresh the session, select a compatible source and scope, or restore its unmodified artifacts."
+        get_metrics().record_error(f"reference_sound.{reason}")
+        return HandlerResult(
+            ack={
+                "ok": False,
+                "code": ERR_VALIDATION,
+                "reason": reason,
+                "message": REFERENCE_SOUND_FAILURE_MESSAGES[reason],
+            }
         )

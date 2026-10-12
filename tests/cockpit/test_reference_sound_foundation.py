@@ -37,7 +37,7 @@ from rytm_randomizer.cockpit.export.reference_sound_store import (
     require_sound_session_id,
     sound_artifact_name,
 )
-from rytm_randomizer.observability.errors import DataError
+from rytm_randomizer.observability.errors import BoundaryError, DataError
 from rytm_randomizer.style_analysis.extractor import AudioFeatureAnalysis
 
 pytestmark = pytest.mark.fast
@@ -143,12 +143,12 @@ def test_distinct_store_writers_are_serialized_and_stale_manifest_is_refused(
     assert second.load(str(_payload()["session_id"])) == _payload()
     newer = {**_payload(), "favorite": True}
     second.publish(newer, {}, expected_manifest=expected)
-    with pytest.raises(ValueError, match="changed while working"):
+    with pytest.raises(BoundaryError, match="changed while working"):
         first.publish(_payload(), {}, expected_manifest=expected)
     assert first.load(str(_payload()["session_id"])) == newer
-    with pytest.raises(ValueError, match="changed while working"):
+    with pytest.raises(BoundaryError, match="changed while working"):
         first.publish(newer, {}, expected_manifest=None)
-    with pytest.raises(ValueError, match="changed while working"):
+    with pytest.raises(BoundaryError, match="changed while working"):
         first.publish(
             {**_payload(), "session_id": "sound-" + "b" * 32}, {}, expected_manifest=expected
         )
@@ -310,11 +310,16 @@ def test_storage_limits_refuse_without_overwriting_work(
         monkeypatch.setattr(store_module, "REFERENCE_SOUND_MAX_TOTAL_BYTES", 1)
     else:
         monkeypatch.setattr(store_module, "REFERENCE_SOUND_MAX_SESSIONS", 0)
-    with pytest.raises(ValueError):
+    with pytest.raises(BoundaryError) as refused:
         if kind == "catalog":
             store.catalog()
         else:
             store.publish(payload, {})
+    assert refused.value.context["error_code"] == (
+        "manifest_limit"
+        if kind == "manifest"
+        else "session_limit" if kind in ("sessions", "catalog") else "storage_limit"
+    )
     assert {path.name: path.read_bytes() for path in tmp_path.iterdir()} == before
 
 
