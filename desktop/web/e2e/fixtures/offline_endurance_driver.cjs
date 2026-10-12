@@ -25,6 +25,7 @@ const a4Fields = argument('--a4-fields', 'Filter1 Frequency,filter2_resonance').
 const a4SourceHash = argument('--a4-source-sha256', null);
 const includePad2 = args.includes('--pad2');
 const referenceSound = args.includes('--reference-sound');
+const nativeRepresentation = args.includes('--native-representation');
 const startupAttempts = Number(argument('--startup-attempts', '1'));
 assert(args.includes('--bundle') && args.includes('--run-root'));
 assert(path.isAbsolute(python));
@@ -34,6 +35,8 @@ assert(intervalSeconds >= 10 && intervalSeconds <= 180);
 assert(smoke > 0 || intervalSeconds >= 30);
 assert(Number.isInteger(a4Track) && a4Track >= 1 && a4Track <= 4);
 assert(Number.isInteger(startupAttempts) && startupAttempts >= 1 && startupAttempts <= 2);
+assert(!(referenceSound && nativeRepresentation), 'Choose one bounded packaged journey');
+assert(!nativeRepresentation || smoke > 0, 'Native representation requires a bounded smoke budget');
 assert(a4Fields.length > 0 && a4Fields.length <= 8);
 assert(!runRoot.startsWith(bundle + path.sep), 'QA credentials must be outside delivery');
 assert(!fs.existsSync(runRoot), 'Use a new isolated QA namespace');
@@ -185,6 +188,11 @@ async function main() {
   let observePending = () => [];
   try {
     if (referenceSound) require('./reference_sound_package_journey.cjs').primeReferenceSources(repo, runRoot, python);
+    if (nativeRepresentation) {
+      summary.mode = 'native-representation';
+      summary.native_representation = require('./native_representation_package_journey.cjs').primeNativeRepresentationSources(repo, runRoot, python);
+      save();
+    }
     for (let attempt = 0; attempt < startupAttempts; attempt++) {
       launch = processOperation('launch');
       fs.writeFileSync(path.join(runRoot, 'owned-launch.json'), JSON.stringify(launch, null, 2) + '\n');
@@ -231,6 +239,7 @@ async function main() {
       if (value.show_pack_export) exported = value.show_pack_export;
       if (value.diagnostics) diagnostics = value.diagnostics;
       if (value.reference_sound?.session) latest.reference_sound_session = value.reference_sound.session;
+      if (value.reference_sound?.controls) latest.reference_sound_controls = value.reference_sound.controls;
       if (value.reference_sound?.sysex_base64) latest.reference_sound_export = value.reference_sound;
       if (!pending.has(value.request_id)) return;
       const operation = pending.get(value.request_id); pending.delete(value.request_id);
@@ -246,6 +255,15 @@ async function main() {
       await expect(page.getByTestId('safety-rail').getByText('Connected', { exact: true })).toBeVisible({ timeout: 30000 });
       await expect(page.getByTestId('safety-rail').getByText('Hardware Off')).toBeVisible();
     };
+    if (nativeRepresentation) {
+      const started = performance.now();
+      await require('./native_representation_package_journey.cjs').exerciseNativeRepresentationPackage({ page, latest, connected, processOperation, summary, save, reportRoot, record, digest, repo, runRoot, python, budgetSeconds: smoke });
+      assert.equal(rawPageErrors, 0); assert.equal(observationFailure, null);
+      summary.elapsed_seconds = (performance.now() - started) / 1000;
+      summary.passed = true; summary.phase = 'completed';
+      summary.stop_reason = 'bounded-native-representation-package-proof-not-hardware';
+      return;
+    }
     if (referenceSound) {
       const started = performance.now();
       await require('./reference_sound_package_journey.cjs').exerciseReferenceSoundPackage({ page, latest, connected, processOperation, summary, save, reportRoot, record, digest });
