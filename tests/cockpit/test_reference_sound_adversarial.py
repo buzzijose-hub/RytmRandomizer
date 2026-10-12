@@ -97,6 +97,74 @@ def _call(session: CockpitSession, action: str, **body: object) -> dict:
     return asyncio.run(_command(session, action, **body))
 
 
+def test_refinement_respects_current_target_lock_and_late_lock_changes(
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: Source,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = reference_sound_workspace
+    payload = _recorded(workspace, _generated(workspace, reference_sound_source))
+    session, source_id = make_reference_sound_session(tmp_path, workspace, reference_sound_source)
+    target = reference_sound_source[2]
+    locks = (
+        session.pad_locks
+        if reference_sound_source[1] == "analog_rytm_mk2"
+        else session.a4_track_locks
+    )
+    before = _files(workspace.store.directory)
+    locks.add(target)
+    refused = _call(
+        session,
+        "refine",
+        session_id=payload["session_id"],
+        candidate_id=payload["selected_candidate_id"],
+        correction_gain=0.5,
+    )
+    assert not refused["ok"] and "locked" in refused["message"]
+    assert _files(workspace.store.directory) == before
+    locks.clear()
+    renderer = sound_service.render_refined_reference_sound_candidate
+
+    def late_lock(*args, **kwargs):
+        result = renderer(*args, **kwargs)
+        locks.add(target)
+        return result
+
+    monkeypatch.setattr(sound_service, "render_refined_reference_sound_candidate", late_lock)
+    refused = _call(
+        session,
+        "refine",
+        session_id=payload["session_id"],
+        candidate_id=payload["selected_candidate_id"],
+        correction_gain=0.5,
+    )
+    assert not refused["ok"] and "changed during refinement" in refused["message"]
+    assert _files(workspace.store.directory) == before
+    _assert_passive(session, source_id, reference_sound_source)
+
+
+def test_original_saved_slot_is_protected_before_transferable_export(
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: Source,
+) -> None:
+    workspace = reference_sound_workspace
+    payload = _generated(workspace, reference_sound_source)
+    source = ElektronNativeObjectMessage.from_bytes(reference_sound_source[0])
+    before = _files(workspace.store.directory)
+    with pytest.raises(ValueError, match="source slot is protected"):
+        workspace.export_patch(payload["session_id"], payload["selected_candidate_id"], source.slot)
+    assert _files(workspace.store.directory) == before
+    safe = workspace.export_patch(
+        payload["session_id"], payload["selected_candidate_id"], (source.slot + 1) % 128
+    )
+    candidate = workspace.candidate(payload["session_id"], payload["selected_candidate_id"])
+    assert (
+        ElektronNativeObjectMessage.from_bytes(safe).payload
+        == ElektronNativeObjectMessage.from_bytes(candidate.frame).payload
+    )
+
+
 def _generation_request(base: dict, source_id: str, source: Source) -> dict:
     return {
         "session_id": base["session_id"],

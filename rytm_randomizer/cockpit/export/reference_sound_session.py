@@ -434,6 +434,10 @@ class ReferenceSoundWorkspace:
         candidate = self.candidate(session_id, candidate_id)
         source = ElektronNativeObjectMessage.from_bytes(candidate.frame)
         command = REFERENCE_SOUND_SAVED_COMMANDS[candidate.device_id]
+        if source.command == command and source.slot == slot:
+            raise ValueError(
+                "Choose a different scratch KIT slot; the original saved source slot is protected."
+            )
         targeted = replace(source.with_slot(slot), command=command)
         frame = targeted.to_bytes()
         codec = resolve_saved_kit_capture_capability(candidate.device_id).capability

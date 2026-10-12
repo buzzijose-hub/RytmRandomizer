@@ -11,7 +11,6 @@ from threading import Event
 from typing import Final, TypeVar
 
 from ...guardrails.input_validation import require_sequence
-
 from ...observability.errors import BoundaryError, DataError, RytmRandomizerError
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
@@ -266,6 +265,19 @@ async def _execute_reference_sound(
         cancel_reference_sound(session)
         return _reply(session=payload)
     if action == "refine":
+        payload = workspace.reopen(session_id)
+        context = sound_mapping(payload["context"])
+        device = sound_text(context["device_id"])
+        target = sound_integer(context["target"])
+        lock_sets = {
+            ANALOG_RYTM_DEVICE_ID: session.pad_locks,
+            ANALOG_FOUR_DEVICE_ID: session.a4_track_locks,
+        }
+        if target in lock_sets.get(device, set()):
+            return _sound_refusal(
+                "The selected pad/track is locked. Unlock it explicitly before refinement."
+            )
+        owner_context = _operator_context(session)
         result = await _owned_operation(
             session,
             lambda cancel: workspace.refine(
@@ -275,6 +287,10 @@ async def _execute_reference_sound(
                 cancel=cancel,
             ),
         )
+        if owner_context != _operator_context(session):
+            return _sound_refusal(
+                "Locks or scope changed during refinement. No candidate was published; prepare again."
+            )
         payload = workspace.commit(result)
         return _sound_session_result(session, payload)
     if action == "read_audio":

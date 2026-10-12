@@ -59,8 +59,11 @@ from typing import TYPE_CHECKING, Final
 import pytest
 from fastapi.testclient import TestClient
 
-from rytm_randomizer.cockpit.capture import KitCaptureResult, KitCaptureService
-from rytm_randomizer.cockpit.capture import decode_kit_capture_frame
+from rytm_randomizer.cockpit.capture import (
+    KitCaptureResult,
+    KitCaptureService,
+    decode_kit_capture_frame,
+)
 from rytm_randomizer.cockpit.data import PadState, Snapshot
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.device.connection import set_active_connection_manager
