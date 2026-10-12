@@ -20,6 +20,7 @@ from fastapi.testclient import TestClient
 
 from rytm_randomizer.cockpit.data import CockpitSendPlan, SendPlanPacket
 from rytm_randomizer.cockpit.export.reference_sound_session import ReferenceSoundWorkspace
+from rytm_randomizer.cockpit.ws import reference_sound_handlers as sound_handlers
 from rytm_randomizer.cockpit.ws.handlers import handle_command
 from rytm_randomizer.cockpit.ws.reference_sound_handlers import (
     _owned_operation,
@@ -32,6 +33,92 @@ pytestmark = pytest.mark.fast
 
 
 _session = make_reference_sound_session
+
+
+def test_action_group_boundaries_refuse_foreign_actions_without_touching_retained_state(
+    tmp_path: Path,
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: tuple[bytes, str, int, tuple[str, ...]],
+) -> None:
+    session, _ = _session(tmp_path, reference_sound_workspace, reference_sound_source)
+    base = reference_sound_workspace.import_reference(make_reference_pcm(), "Action group fixture")
+    command = {"action": "foreign", "session_id": base["session_id"]}
+    before = {
+        item.name: item.read_bytes()
+        for item in reference_sound_workspace.store.directory.iterdir()
+        if item.is_file()
+    }
+    for handler in (
+        sound_handlers._sound_upload,
+        sound_handlers._sound_inputs,
+        sound_handlers._sound_retention,
+    ):
+        with pytest.raises(ValueError, match="action is not supported"):
+            handler(command, session)
+    with pytest.raises(ValueError, match="analysis action is not supported"):
+        asyncio.run(sound_handlers._sound_analysis_operation(command, session))
+    assert {
+        item.name: item.read_bytes()
+        for item in reference_sound_workspace.store.directory.iterdir()
+        if item.is_file()
+    } == before
+
+
+def test_actual_websocket_disconnect_cancels_and_drains_the_owned_audio_worker(
+    tmp_path: Path,
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: tuple[bytes, str, int, tuple[str, ...]],
+) -> None:
+    from rytm_randomizer.observability.errors import BoundaryError
+
+    session, source_id = _session(tmp_path, reference_sound_workspace, reference_sound_source)
+    base = reference_sound_workspace.import_reference(make_reference_pcm(), "Disconnect fixture")
+    entered, finished = Event(), Event()
+
+    def delayed(_path: Path, cancel: Event) -> AudioFeatureAnalysis:
+        entered.set()
+        try:
+            assert cancel.wait(3), "Disconnect must cancel this worker"
+            raise BoundaryError("test-owned child stopped", context={"error_code": "interrupted"})
+        finally:
+            finished.set()
+
+    reference_sound_workspace.analyzer = delayed
+    _, device, target, parameters = reference_sound_source
+    before = {
+        item.name: item.read_bytes()
+        for item in reference_sound_workspace.store.directory.iterdir()
+        if item.is_file()
+    }
+    with TestClient(create_app(session, token=TEST_WS_TOKEN)) as client:
+        with client.websocket_connect("/ws", subprotocols=["rytm-rand-cockpit-v1"]) as ws:
+            complete_handshake(ws)
+            collect_initial_events(ws)
+            ws.send_json(
+                {
+                    "request_id": "disconnect-analysis",
+                    "command": {
+                        "type": "reference_sound",
+                        "action": "generate",
+                        "session_id": base["session_id"],
+                        "source_record_id": source_id,
+                        "device_id": device,
+                        "target": target,
+                        "parameters": list(parameters),
+                        "locks": [],
+                        "strength": 0.1,
+                    },
+                }
+            )
+            assert entered.wait(2)
+            assert session.sound_cancel is not None
+        assert finished.wait(2)
+    assert session.sound_cancel is None
+    assert {
+        item.name: item.read_bytes()
+        for item in reference_sound_workspace.store.directory.iterdir()
+        if item.is_file()
+    } == before
 
 
 @pytest.mark.parametrize("worker_fails", [False, True])

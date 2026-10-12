@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Final, Literal, TypeAlias, TypedDict, TypeVar, cast
 
 from ...data.audio_patch_dna import AUDIO_PATCH_DNA_CANDIDATE_COUNT
-from ...guardrails.input_validation import require_exact_keys, require_object, require_sequence
 from ...snapshot.mutation_scope import registered_mutation_ids
 from ...style_analysis.analog_four_patch_render_rank import AnalogFourRenderFeatureDelta
 from ...style_analysis.extractor import (
@@ -16,6 +15,7 @@ from ...style_analysis.extractor import (
     audio_synthesis_features_to_dict,
 )
 from ...style_analysis.feature_report import FeatureReportPayload
+from ..data import require_exact_keys, require_object, require_sequence
 from ..data.stage import ANALOG_FOUR_DEVICE_ID, ANALOG_RYTM_DEVICE_ID, StageDeviceId
 from .reference_sound_analysis import (
     ReferenceSoundAnalysisPayload,
@@ -194,14 +194,14 @@ class ReferenceSoundSource:
         if type(self.frame) is not bytes or not self.frame:
             raise ValueError("Reference-sound source must be immutable frame bytes.")
         device = narrow_sound_device_id(self.device_id)
-        _target(self.target, device)
+        _sound_record_target(self.target, device)
 
     @property
     def sha256(self) -> str:
         return reference_sound_digest(self.frame)
 
 
-def _target(value: object, device: StageDeviceId) -> int:
+def _sound_record_target(value: object, device: StageDeviceId) -> int:
     target = sound_integer(value)
     if target not in registered_mutation_ids(device):
         raise ValueError("Reference-sound target is outside the device domain.")
@@ -223,7 +223,7 @@ def _records(
     return [parse(item) for item in items]
 
 
-def _number(value: object) -> float:
+def _sound_record_number(value: object) -> float:
     try:
         checked = sound_number(value)
     except OverflowError as exc:
@@ -233,7 +233,7 @@ def _number(value: object) -> float:
 
 
 def _normalized(value: object) -> float:
-    number = _number(value)
+    number = _sound_record_number(value)
     if not 0 <= number <= 1:
         raise ValueError("Reference-sound number must be in 0..1.")
     return number
@@ -269,7 +269,7 @@ def sound_segment_from_dict(value: object) -> ReferenceSoundSegmentPayload:
     info = _record(data["original"], ReferenceAudioInfoPayload.__required_keys__)
     rate, count = sound_integer(info["sample_rate"]), sound_integer(info["frame_count"])
     channels, width = sound_integer(info["channels"]), sound_integer(info["sample_width"])
-    seconds = _number(info["seconds"])
+    seconds = _sound_record_number(info["seconds"])
     start, frames = sound_integer(data["start_frame"]), sound_integer(data["frame_count"])
     if (
         not _PCM_MIN_SAMPLE_RATE <= rate <= _PCM_MAX_SAMPLE_RATE
@@ -302,7 +302,7 @@ def sound_context_from_dict(value: object) -> ReferenceSoundContextPayload:
     device = narrow_sound_device_id(data["device_id"])
     return {
         "device_id": device,
-        "target": _target(data["target"], device),
+        "target": _sound_record_target(data["target"], device),
         "source_sha256": require_sound_digest(data["source_sha256"]),
         "segment_sha256": require_sound_digest(data["segment_sha256"]),
         "parameters": _strings(data["parameters"]),
@@ -354,7 +354,7 @@ def sound_candidate_from_dict(value: object) -> ReferenceSoundCandidatePayload:
         "direction": sound_text(data["direction"]),
         "label": sound_text(data["label"]),
         "device_id": device,
-        "target": _target(data["target"], device),
+        "target": _sound_record_target(data["target"], device),
         "source_sha256": require_sound_digest(data["source_sha256"]),
         "frame_sha256": require_sound_digest(data["frame_sha256"]),
         "frame_size": sound_integer(data["frame_size"]),
@@ -406,7 +406,7 @@ def _delta(value: object) -> ReferenceSoundFeatureDeltaPayload:
 
 def sound_recording_from_dict(value: object) -> ReferenceSoundRecordingPayload:
     data = _record(value, ReferenceSoundRecordingPayload.__required_keys__)
-    score, distance = sound_integer(data["score"]), _number(data["distance"])
+    score, distance = sound_integer(data["score"]), _sound_record_number(data["distance"])
     if (
         not 0 <= score <= _SCORE_MAXIMUM
         or not 0 <= distance <= 1
@@ -418,7 +418,7 @@ def sound_recording_from_dict(value: object) -> ReferenceSoundRecordingPayload:
         "candidate_sha256": require_sound_digest(data["candidate_sha256"]),
         "audio_sha256": require_sound_digest(data["audio_sha256"]),
         "features": _analysis(data["features"]),
-        "distance": _number(data["distance"]),
+        "distance": _sound_record_number(data["distance"]),
         "score": score,
         "metric": sound_text(data["metric"]),
         "feature_deltas": _records(data["feature_deltas"], _delta),

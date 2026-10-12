@@ -5,9 +5,10 @@ from __future__ import annotations
 import asyncio
 import json
 from pathlib import Path
+from threading import Event
 
 import pytest
-from cockpit.conftest import make_reference_sound_session
+from cockpit.conftest import make_reference_pcm, make_reference_sound_session
 
 from rytm_randomizer.cockpit.export.reference_sound_errors import (
     REFERENCE_SOUND_FAILURE_MESSAGES,
@@ -29,6 +30,98 @@ from rytm_randomizer.observability.metrics import get_metrics
 from rytm_randomizer.style_analysis.extractor import StyleAnalysisDependencyError
 
 pytestmark = [pytest.mark.fast, pytest.mark.usefixtures("offline_hardware_denied")]
+
+
+@pytest.mark.parametrize("action", ["generate", "refine"])
+def test_oversized_numeric_request_is_refused_without_publication_or_lost_ownership(
+    action: str,
+    tmp_path: Path,
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: tuple[bytes, str, int, tuple[str, ...]],
+) -> None:
+    workspace = reference_sound_workspace
+    session, source_id = make_reference_sound_session(tmp_path, workspace, reference_sound_source)
+    original = workspace.import_reference(make_reference_pcm(), "Numeric refusal fixture")
+    frame, device, target, parameters = reference_sound_source
+    generated = workspace.commit(
+        workspace.generate(
+            original["session_id"],
+            source_frame=frame,
+            device_id=device,
+            target=target,
+            parameters=parameters,
+            locks=(),
+            strength=0.1,
+            cancel=Event(),
+        )
+    )
+    command = {
+        "action": action,
+        "session_id": generated["session_id"],
+        "candidate_id": generated["selected_candidate_id"],
+        "correction_gain": 10**1000,
+        "source_record_id": source_id,
+        "device_id": device,
+        "target": target,
+        "parameters": list(parameters),
+        "locks": [],
+        "strength": 10**1000,
+    }
+    before = {
+        item.name: item.read_bytes()
+        for item in workspace.store.directory.iterdir()
+        if item.is_file()
+    }
+    result = asyncio.run(handlers.handle_reference_sound(command, session))
+    assert result.ack is not None and result.ack["ok"] is False
+    assert result.ack["reason"] == "invalid_identity"
+    assert session.sound_cancel is None and session.current_send_plan is None
+    assert {
+        item.name: item.read_bytes()
+        for item in workspace.store.directory.iterdir()
+        if item.is_file()
+    } == before
+    assert workspace.reopen(generated["session_id"]) == generated
+
+
+@pytest.mark.parametrize(
+    "reason",
+    ["hardware_active", "operation_busy", "recording_not_in_session", "audio_kind_invalid"],
+)
+def test_actual_guardrail_refusal_emits_one_fixed_reason_log_and_counter(
+    reason: ReferenceSoundFailureReason,
+    tmp_path: Path,
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: tuple[bytes, str, int, tuple[str, ...]],
+    caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = reference_sound_workspace
+    session, _ = make_reference_sound_session(tmp_path, workspace, reference_sound_source)
+    original = workspace.import_reference(make_reference_pcm(), "Guardrail fixture")
+    command: dict[str, object] = {"action": "list"}
+    if reason == "hardware_active":
+        session.hardware_intent = True
+    elif reason == "operation_busy":
+        session.sound_cancel = Event()
+    else:
+        command = {
+            "action": "read_audio",
+            "session_id": original["session_id"],
+            "offset": 0,
+            "audio_kind": "recording" if reason == "recording_not_in_session" else "unsupported",
+            "recording_sha256": "f" * 64,
+        }
+    monkeypatch.setattr(handlers._logger, "handlers", [caplog.handler])
+    before = get_metrics().errors_by_kind[f"reference_sound.{reason}"]
+    result = asyncio.run(handlers.handle_reference_sound(command, session))
+    assert result.ack is not None and result.ack["reason"] == reason
+    assert result.ack["message"] == REFERENCE_SOUND_FAILURE_MESSAGES[reason]
+    assert get_metrics().errors_by_kind[f"reference_sound.{reason}"] == before + 1
+    records = [item for item in caplog.records if item.message == "reference_sound_refused"]
+    assert len(records) == 1 and records[0].reason == reason
+    assert records[0].fingerprint == f"reference_sound.{reason}"
+    assert result.events == []
 
 
 @pytest.mark.parametrize("reason", tuple(REFERENCE_SOUND_FAILURE_MESSAGES))

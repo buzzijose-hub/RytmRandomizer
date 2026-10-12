@@ -27,6 +27,7 @@ from ..export.reference_sound_audio import REFERENCE_AUDIO_MAX_BYTES, REFERENCE_
 from ..export.reference_sound_candidates import list_reference_sound_controls
 from ..export.reference_sound_errors import (
     REFERENCE_SOUND_FAILURE_MESSAGES,
+    ReferenceSoundFailureReason,
     reference_sound_failure_reason,
 )
 from ..export.reference_sound_records import ReferenceSoundSessionPayload
@@ -60,8 +61,26 @@ def _reply(**values: object) -> HandlerResult:
     return HandlerResult(ack={"ok": True, "reference_sound": values})
 
 
-def _sound_refusal(message: str) -> HandlerResult:
-    return HandlerResult(ack={"ok": False, "code": ERR_VALIDATION, "message": message})
+def _sound_refusal(
+    reason: ReferenceSoundFailureReason, *, error_type: str = "GuardrailDecision"
+) -> HandlerResult:
+    _logger.warning(
+        "reference_sound_refused",
+        extra={
+            "error_type": error_type,
+            "fingerprint": f"reference_sound.{reason}",
+            "reason": reason,
+        },
+    )
+    get_metrics().record_error(f"reference_sound.{reason}")
+    return HandlerResult(
+        ack={
+            "ok": False,
+            "code": ERR_VALIDATION,
+            "reason": reason,
+            "message": REFERENCE_SOUND_FAILURE_MESSAGES[reason],
+        }
+    )
 
 
 def _sound_session_result(
@@ -358,14 +377,10 @@ def _sound_outputs(cmd: dict[str, object], session: CockpitSession) -> HandlerRe
             requested = sound_text(cmd["recording_sha256"])
             records = require_sequence(payload["recordings"], "retained recordings", ValueError)
             if not any(sound_mapping(item)["audio_sha256"] == requested for item in records):
-                return _sound_refusal(
-                    "That recording is not retained in this session. Select one of its recorded auditions."
-                )
+                return _sound_refusal("recording_not_in_session")
             digest = requested
         elif kind != "segment":
-            return _sound_refusal(
-                "Choose original audio, the retained segment or a recorded audition."
-            )
+            return _sound_refusal("audio_kind_invalid")
         audio = workspace.store.read_artifact(digest, "wav")
         offset = sound_integer(cmd["offset"])
         if not 0 <= offset < len(audio):
@@ -399,7 +414,7 @@ async def _execute_reference_sound(
         cancel_reference_sound(session)
         return _reply(cancelled=True)
     if session.sound_cancel is not None:
-        return _sound_refusal("Audio analysis is running. Cancel it before changing this session.")
+        return _sound_refusal("operation_busy")
     if action in ("list", "controls", "upload_begin", "upload_chunk", "upload_finish"):
         return _sound_inputs(cmd, session)
     if action in ("generate", "record", "refine"):
@@ -416,29 +431,11 @@ async def handle_reference_sound(cmd: dict[str, object], session: CockpitSession
         or session.armed_apply is not None
         or session.capture_cancel is not None
     ):
-        return _sound_refusal(
-            "DISARM and finish KIT capture before using the offline reference-sound workspace."
-        )
+        return _sound_refusal("hardware_active")
     try:
         return await _execute_reference_sound(cmd, session)
     except asyncio.CancelledError:
         raise
     except (KeyError, TypeError, ValueError, OSError, RuntimeError, RytmRandomizerError) as exc:
         reason = reference_sound_failure_reason(exc)
-        _logger.warning(
-            "reference_sound_refused",
-            extra={
-                "error_type": type(exc).__name__,
-                "fingerprint": "reference_sound.operation.failed",
-                "reason": reason,
-            },
-        )
-        get_metrics().record_error(f"reference_sound.{reason}")
-        return HandlerResult(
-            ack={
-                "ok": False,
-                "code": ERR_VALIDATION,
-                "reason": reason,
-                "message": REFERENCE_SOUND_FAILURE_MESSAGES[reason],
-            }
-        )
+        return _sound_refusal(reason, error_type=type(exc).__name__)

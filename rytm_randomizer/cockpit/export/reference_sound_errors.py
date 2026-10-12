@@ -14,6 +14,10 @@ from ...observability.errors import (
 from ...style_analysis.extractor import StyleAnalysisDependencyError
 
 ReferenceSoundFailureReason = Literal[
+    "hardware_active",
+    "operation_busy",
+    "recording_not_in_session",
+    "audio_kind_invalid",
     "scratch_slot_invalid",
     "scratch_slot_protected",
     "recording_too_long",
@@ -42,6 +46,10 @@ ReferenceSoundFailureReason = Literal[
 REFERENCE_SOUND_FAILURE_MESSAGES: Final[Mapping[ReferenceSoundFailureReason, str]] = (
     MappingProxyType(
         {
+            "hardware_active": "DISARM and finish KIT capture before using the offline reference-sound workspace.",
+            "operation_busy": "Audio analysis is running. Cancel it before changing this session.",
+            "recording_not_in_session": "That recording is not retained in this session. Select one of its recorded auditions.",
+            "audio_kind_invalid": "Choose original audio, the retained segment or a recorded audition.",
             "scratch_slot_invalid": "Choose an explicit scratch KIT slot in 0..127 before export.",
             "scratch_slot_protected": "Choose a different scratch KIT slot; the original saved source slot is protected.",
             "recording_too_long": "Use a candidate recording up to eight seconds.",

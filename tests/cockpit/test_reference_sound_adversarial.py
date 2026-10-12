@@ -901,6 +901,50 @@ def test_refining_a_refined_parent_with_repeated_feedback_never_duplicates_candi
     assert _files(workspace.store.directory) == before
 
 
+def test_rehashed_duplicate_refinement_is_refused_on_reopen(
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: Source,
+) -> None:
+    workspace = reference_sound_workspace
+    initial = _recorded(workspace, _generated(workspace, reference_sound_source))
+    refined = workspace.commit(
+        workspace.refine(
+            initial["session_id"],
+            initial["selected_candidate_id"],
+            correction_gain=0.5,
+            cancel=Event(),
+        )
+    )
+    forged = copy.deepcopy(refined)
+    forged["refinements"].append(copy.deepcopy(forged["refinements"][0]))
+    forged["candidates"].append(copy.deepcopy(forged["candidates"][-1]))
+    workspace.store.publish(forged, {})
+    before = _files(workspace.store.directory)
+    with pytest.raises(ValueError, match="duplicate candidate identities"):
+        workspace.reopen(forged["session_id"])
+    assert _files(workspace.store.directory) == before
+
+
+def test_invalid_recording_pcm_preserves_every_retained_artifact(
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: Source,
+) -> None:
+    workspace = reference_sound_workspace
+    payload = _generated(workspace, reference_sound_source)
+    candidate = workspace.candidate(payload["session_id"], payload["selected_candidate_id"])
+    before = _files(workspace.store.directory)
+    with pytest.raises(BoundaryError) as failure:
+        workspace.compare(
+            payload["session_id"],
+            candidate.candidate_id,
+            candidate_sha256=reference_sound_digest(candidate.frame),
+            recording=b"corrupt PCM bytes",
+            cancel=Event(),
+        )
+    assert failure.value.context["error_code"] == "audio_invalid"
+    assert _files(workspace.store.directory) == before
+
+
 def test_zero_distance_feedback_is_noop_and_long_recording_is_refused(
     reference_sound_workspace: ReferenceSoundWorkspace,
     reference_sound_source: Source,

@@ -725,10 +725,9 @@ async def _reader_loop(
                 in (COMMAND_CAPTURE_CURRENT_KIT, COMMAND_REFERENCE_SOUND)
                 and (capture_task is None or capture_task.done())
             ):
-                # Input capture is the one long operation allowed off this reader.
-                # Its handler reserves session.capture_cancel before awaiting the
-                # input thread. All other mutations refuse while it is active;
-                # DISARM remains available on this same authenticated connection.
+                # KIT capture and reference analysis own one off-reader task.
+                # Their handlers reserve a cancellation fence before awaiting
+                # worker input; DISARM/cancel remain available on this connection.
                 acknowledged = asyncio.Event()
                 capture_task = asyncio.create_task(dispatch(envelope, acknowledged))
                 capture_task.add_done_callback(

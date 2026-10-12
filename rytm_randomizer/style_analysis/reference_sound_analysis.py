@@ -51,7 +51,10 @@ def sound_text(value: object) -> str:
 
 
 def sound_number(value: object) -> float:
-    number = require_float(value, "Reference-sound numeric field", ValueError)
+    try:
+        number = require_float(value, "Reference-sound numeric field", ValueError)
+    except OverflowError as exc:
+        raise ValueError("Reference-sound numeric field is too large.") from exc
     if not math.isfinite(number):
         raise ValueError("Reference-sound record has an invalid numeric field.")
     return number
