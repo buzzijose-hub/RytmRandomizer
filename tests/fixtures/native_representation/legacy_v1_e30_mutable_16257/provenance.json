@@ -1,0 +1,128 @@
+{
+  "all_loaded_application_modules_verified_against_git": 147,
+  "analysis_substitution": "Only analyzer callback replaced; exact old audio_patch_dna_analysis dataclasses, with actual WAV digest",
+  "application_modules": [
+    {
+      "path": "rytm_randomizer/cockpit/export/reference_sound_session.py",
+      "sha256": "ff627416284e529748ca4a50d99e8244ef429ec22bf56e1f80063891a6892499"
+    },
+    {
+      "path": "rytm_randomizer/cockpit/export/reference_sound_store.py",
+      "sha256": "5f47b2d6d804129239ce4a3b6c8a8abc571f768dcaaae94261900189907ec453"
+    },
+    {
+      "path": "rytm_randomizer/cockpit/export/reference_sound_candidates.py",
+      "sha256": "ab8a8b53e650378e658b7e9ff6672bbba50a71a3239b2cad7b7c585befafdb3f"
+    },
+    {
+      "path": "rytm_randomizer/devices/strategies/analog_four_saved_kit_codec.py",
+      "sha256": "546973eab21c8a70f70861521553506a0c3a8746989c3dbb257500e6667a86b2"
+    },
+    {
+      "path": "rytm_randomizer/devices/strategies/analog_four_native_fields.py",
+      "sha256": "3399ee35f175d437a2285879ca66de2bc8ed48342292dcbcfb73256ecf5ce6e3"
+    },
+    {
+      "path": "rytm_randomizer/devices/strategies/analog_four_kit_fields.py",
+      "sha256": "85e9eb7705702f3e4fedd247f406c5ef48dcdc2bba05a9e7e9acfa4402884c2f"
+    },
+    {
+      "path": "rytm_randomizer/style_analysis/extractor.py",
+      "sha256": "ceebf7b1e3ebb7f8cd5efda24259e3aa511e01f6c4dcc608d53e79acf3e57390"
+    }
+  ],
+  "artifact_sha256": {
+    "exports/2e4ee7aa82898f2f47ee9a18290cc203491506420b7814db9337136907bf0141.syx": "5a885912d3cbedbc4fe6a7f024424438996dc71ac59a9a969c42203082a77b80",
+    "exports/36ddd6a17df21359da48c24396a4eed6a16981fda2b60f9e5601ce97abdab37f.syx": "624558e70a1f68716f0a84117664633250bc52a6243535769dd7406ef282b732",
+    "exports/8c0f9628f9880a3f99f9295cbf627540a822960ebbaaf138fb5ce4a4c503e3f0.syx": "624558e70a1f68716f0a84117664633250bc52a6243535769dd7406ef282b732",
+    "exports/8cb4097fc31a722a12f007aedc5ceac4cb900531679c72f952132c7fc9bf82b3.syx": "859f9d2cc5b5f63028c8c641a030313fe1d67dfcb37f0c8115a5db555a3966ff",
+    "exports/a9a7712002fea7d1c3e1813236861e8b9ea1315aed349dc5cb1735f3638cced5.syx": "624558e70a1f68716f0a84117664633250bc52a6243535769dd7406ef282b732",
+    "exports/b4f9925b26b300e4e93a4eb90697a69e3af9b3f548e81ef7d26f57029f82cd09.syx": "624558e70a1f68716f0a84117664633250bc52a6243535769dd7406ef282b732",
+    "exports/d89c5d22889ef9fc2aa0d503c81ad556acab4e7d9860b2c392e7eff262531ac6.syx": "fac64e1cd76f3840954a92a9b80a2ee548c7b6b4770598dd8467a1a661d36457",
+    "exports/e39aa26a676a8318bd09585ff53ffcc969bceb03716473c0240a78a6621ae6fc.syx": "e24026f0dd8f338fb89a4ce1d086a65d2019878985c2d5c9403f67271871edf5",
+    "store/000a56297104514dbcf48fdee8657c34afccae68c9e3409904c2568a797f2e0a.syx": "000a56297104514dbcf48fdee8657c34afccae68c9e3409904c2568a797f2e0a",
+    "store/0bcb50b1ed406035d4f2af3587db7ff86fb858564e454c3bfed1ba0c29626580.wav": "0bcb50b1ed406035d4f2af3587db7ff86fb858564e454c3bfed1ba0c29626580",
+    "store/2adb306ae2b827c4c1666bab8bc1bb980e512e42706dcc1f9e3adcc7fe3f7bfa.syx": "2adb306ae2b827c4c1666bab8bc1bb980e512e42706dcc1f9e3adcc7fe3f7bfa",
+    "store/3e8b13d5ecc94b442617b53e8ce0560072ddd2980a3605f768aa3a7ffe155c0b.syx": "3e8b13d5ecc94b442617b53e8ce0560072ddd2980a3605f768aa3a7ffe155c0b",
+    "store/4d66736a50de6f27e619cb7ef15d8e6ba0dbd134a13379cd93ab0b19fbb5722c.syx": "4d66736a50de6f27e619cb7ef15d8e6ba0dbd134a13379cd93ab0b19fbb5722c",
+    "store/8099e2363bdc286195dc6da7fa9da36d93867a4e65b70a9c232896e0ad088e1a.syx": "8099e2363bdc286195dc6da7fa9da36d93867a4e65b70a9c232896e0ad088e1a",
+    "store/b572086627990220fcbb64ddbdaf3dcbef694dbbc5c9fa8e1c57d544edaccab7.syx": "b572086627990220fcbb64ddbdaf3dcbef694dbbc5c9fa8e1c57d544edaccab7",
+    "store/sound-39ef93955fd27033e5cd9cf48536ddb5.sound.json": "396e54d60139d2a1e2055c638b18626b2d230afec2e606d58c9ed95e95684bf7",
+    "store/sound-ec99b2a5a5b850f8ad31e1c6af29924b.sound.json": "425b1ddc82492e05b6e14f7501ad0194b2d04f2ac7441ca43238195b76dd003b"
+  },
+  "candidate_ids": [
+    "a9a7712002fea7d1c3e1813236861e8b9ea1315aed349dc5cb1735f3638cced5",
+    "e39aa26a676a8318bd09585ff53ffcc969bceb03716473c0240a78a6621ae6fc",
+    "8cb4097fc31a722a12f007aedc5ceac4cb900531679c72f952132c7fc9bf82b3",
+    "d89c5d22889ef9fc2aa0d503c81ad556acab4e7d9860b2c392e7eff262531ac6",
+    "b4f9925b26b300e4e93a4eb90697a69e3af9b3f548e81ef7d26f57029f82cd09",
+    "8c0f9628f9880a3f99f9295cbf627540a822960ebbaaf138fb5ce4a4c503e3f0",
+    "2e4ee7aa82898f2f47ee9a18290cc203491506420b7814db9337136907bf0141",
+    "36ddd6a17df21359da48c24396a4eed6a16981fda2b60f9e5601ce97abdab37f"
+  ],
+  "capture_script_sha256": "c629323dbc4795d687969fea7ebbdbc79a11084671c276021855ee72adbfc83c",
+  "evidence_kind": "software-only synthetic replay witness",
+  "export_slot": 18,
+  "favorite_candidate_id": "a9a7712002fea7d1c3e1813236861e8b9ea1315aed349dc5cb1735f3638cced5",
+  "fixture_schema": "native-reference-sound-legacy-v1",
+  "hardware_authority": false,
+  "helper_definitions": [
+    {
+      "path": "tests/conftest.py",
+      "sha256": "898ff8915705ab51e0931213c2139fed18064a487071b0248dc88a3e472cd4c7"
+    },
+    {
+      "path": "tests/cockpit/conftest.py",
+      "sha256": "a50505d00226c95761cafa1e1bb682f19d57de5179771516be674713ea21b150"
+    }
+  ],
+  "locks": [],
+  "original_source": {
+    "file": "a4_init_retained.syx",
+    "sha256": "50c753f3a2acd73ca77e2930e9b9658ea62bbe51f7cb9f7644e6f8ff2689cc5e"
+  },
+  "parameters": [
+    "filter1_frequency"
+  ],
+  "physical_validation": false,
+  "response_kind": 82,
+  "session_id": "sound-ec99b2a5a5b850f8ad31e1c6af29924b",
+  "source_commit": "e30cc84cbb9c745654632f71ac827e05007ce320",
+  "source_control": {
+    "domain": {
+      "maximum": 32512,
+      "minimum": 0,
+      "quantum": 1,
+      "values": []
+    },
+    "mutable": true,
+    "offsets": [
+      128,
+      129
+    ],
+    "output_authority": "local-file-only",
+    "parameter": "filter1_frequency",
+    "reasons": [],
+    "send_supported": false,
+    "source_display": "63.50390625",
+    "source_value": 16257,
+    "units": "unsigned-big-endian-q8.8"
+  },
+  "source_native": 16257,
+  "source_native_domain": {
+    "maximum": 32512,
+    "minimum": 0,
+    "quantum": 1,
+    "values": []
+  },
+  "source_sha256": "2adb306ae2b827c4c1666bab8bc1bb980e512e42706dcc1f9e3adcc7fe3f7bfa",
+  "strength": 0.5,
+  "synthetic_wav": {
+    "channels": 1,
+    "frames": 3200,
+    "rate": 8000,
+    "sample_width": 2,
+    "sha256": "0bcb50b1ed406035d4f2af3587db7ff86fb858564e454c3bfed1ba0c29626580"
+  },
+  "target": 1
+}
