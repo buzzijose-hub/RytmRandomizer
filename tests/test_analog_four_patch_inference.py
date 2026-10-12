@@ -777,7 +777,7 @@ def test_native_dependency_import_failure_is_categorical(monkeypatch: pytest.Mon
 @pytest.mark.parametrize("frozen", (False, True, "true"))
 @pytest.mark.parametrize("cache_dir", (None, "parent-owned-cache"))
 def test_worker_configuration_is_lazy_child_only_and_frozen_safe(
-    monkeypatch: pytest.MonkeyPatch, frozen: object, cache_dir: str | None
+    monkeypatch: pytest.MonkeyPatch, frozen: object, cache_dir: str | None, tmp_path: Path
 ) -> None:
     from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
 
@@ -787,9 +787,10 @@ def test_worker_configuration_is_lazy_child_only_and_frozen_safe(
     for name in inference._NATIVE_AUDIO_THREAD_ENV_VARS:
         monkeypatch.setenv(name, "17")
     before = set(sys.modules)
-    inference._configure_native_audio_worker(cache_dir)
+    cache_path = str(tmp_path / cache_dir) if cache_dir is not None else None
+    inference._configure_native_audio_worker(cache_path)
     assert os.environ.get("NUMBA_DISABLE_JIT") == ("0" if frozen is True else None)
-    assert os.environ.get("NUMBA_CACHE_DIR") == (cache_dir if frozen is True else None)
+    assert os.environ.get("NUMBA_CACHE_DIR") == (cache_path if frozen is True else None)
     assert all(os.environ[name] == "1" for name in inference._NATIVE_AUDIO_THREAD_ENV_VARS)
     assert not (set(sys.modules) - before) & {"librosa", "numpy", "mido", "rtmidi"}
 

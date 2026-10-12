@@ -24,6 +24,7 @@ const a4Page = argument('--a4-page', 'FILTER');
 const a4Fields = argument('--a4-fields', 'Filter1 Frequency,filter2_resonance').split(',');
 const a4SourceHash = argument('--a4-source-sha256', null);
 const includePad2 = args.includes('--pad2');
+const referenceSound = args.includes('--reference-sound');
 assert(args.includes('--bundle') && args.includes('--run-root'));
 assert(path.isAbsolute(python));
 assert(smoke > 0 ? smoke <= 600 : minutes >= 90 && minutes <= 120);
@@ -178,6 +179,7 @@ async function main() {
   let browser;
   let observePending = () => [];
   try {
+    if (referenceSound) require('./reference_sound_package_journey.cjs').primeReferenceSources(repo, runRoot, python);
     for (let attempt = 0; attempt < 2; attempt++) {
       launch = processOperation('launch');
       fs.writeFileSync(path.join(runRoot, 'owned-launch.json'), JSON.stringify(launch, null, 2) + '\n');
@@ -217,6 +219,8 @@ async function main() {
       if (value.library_records) latest.library_records = value.library_records;
       if (value.show_pack_export) exported = value.show_pack_export;
       if (value.diagnostics) diagnostics = value.diagnostics;
+      if (value.reference_sound?.session) latest.reference_sound_session = value.reference_sound.session;
+      if (value.reference_sound?.sysex_base64) latest.reference_sound_export = value.reference_sound;
       if (!pending.has(value.request_id)) return;
       const operation = pending.get(value.request_id); pending.delete(value.request_id);
       const elapsed = performance.now() - operation.started;
@@ -231,6 +235,15 @@ async function main() {
       await expect(page.getByTestId('safety-rail').getByText('Connected', { exact: true })).toBeVisible({ timeout: 30000 });
       await expect(page.getByTestId('safety-rail').getByText('Hardware Off')).toBeVisible();
     };
+    if (referenceSound) {
+      const started = performance.now();
+      await require('./reference_sound_package_journey.cjs').exerciseReferenceSoundPackage({ page, latest, connected, processOperation, summary, save, reportRoot, record, digest });
+      assert.equal(rawPageErrors, 0); assert.equal(observationFailure, null);
+      summary.elapsed_seconds = (performance.now() - started) / 1000;
+      summary.passed = true; summary.phase = 'completed';
+      summary.stop_reason = 'bounded-reference-sound-package-proof-not-endurance';
+      return;
+    }
     summary.phase = 'initial-connection'; save();
     await connected();
     await page.getByTestId('profile-chips').getByRole('button').first().click();
