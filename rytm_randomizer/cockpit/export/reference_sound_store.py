@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import stat
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
 from itertools import islice
 from pathlib import Path
-from typing import Final, cast
+from typing import Final, Literal, cast
 
 from ...data.persisted_state import (
     PERSISTED_STATE_REFUSAL_METRIC_CODES,
@@ -33,6 +34,8 @@ REFERENCE_SOUND_MAX_SESSIONS: Final[int] = 64
 _DIGEST: Final[re.Pattern[str]] = re.compile(r"^[a-f0-9]{64}$")
 _SESSION_ID: Final[re.Pattern[str]] = re.compile(r"^sound-[a-f0-9]{32}$")
 _EXTENSIONS: Final[tuple[str, ...]] = ("wav", "syx")
+_PUBLICATION_LOCK_NAME: Final[str] = ".sound-publication.lock"
+_WINDOWS_PUBLICATION_LOCK: Final[bool] = os.name == "nt"
 
 
 def reference_sound_digest(value: bytes) -> str:
@@ -64,6 +67,43 @@ class ReferenceSoundStore:
 
     def __init__(self, directory: Path | None = None) -> None:
         self.directory = directory if directory is not None else default_reference_sound_dir()
+
+    @contextmanager
+    def _publication_guard(self) -> Generator[None, None, None]:
+        """A crash releases the OS lock; the inert namespace file may remain."""
+        self.directory.mkdir(parents=True, exist_ok=True)
+        path = self.directory / _PUBLICATION_LOCK_NAME
+        descriptor = os.open(
+            path,
+            os.O_CREAT
+            | os.O_RDWR
+            | getattr(os, "O_BINARY", 0)
+            | getattr(os, "O_NOFOLLOW", 0)
+            | getattr(os, "O_NOINHERIT", 0),
+            0o600,
+        )
+        with os.fdopen(descriptor, "r+b") as handle:
+            if not stat.S_ISREG(os.fstat(handle.fileno()).st_mode):
+                raise ValueError("Reference-sound publication namespace is invalid.")
+            if _WINDOWS_PUBLICATION_LOCK:
+                import msvcrt  # noqa: PLC0415
+
+                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl  # noqa: PLC0415
+
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            try:
+                yield
+            finally:
+                if _WINDOWS_PUBLICATION_LOCK:
+                    import msvcrt  # noqa: PLC0415
+
+                    msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+                else:
+                    import fcntl  # noqa: PLC0415
+
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
     @contextmanager
     def _guard(self, *, create: bool = False) -> Generator[None, None, None]:
@@ -122,7 +162,31 @@ class ReferenceSoundStore:
             raise ValueError("Reference-sound session is incompatible or corrupt.")
         return payload
 
-    def publish(self, payload: Mapping[str, object], artifacts: Mapping[str, object]) -> None:
+    def publish(
+        self,
+        payload: Mapping[str, object],
+        artifacts: Mapping[str, object],
+        *,
+        expected_manifest: str | None | Literal["unconditional"] = "unconditional",
+    ) -> None:
+        with self._guard(create=True), self._publication_guard():
+            session_id = require_sound_session_id(payload.get("session_id"))
+            manifest = self.directory / f"{session_id}.sound.json"
+            if expected_manifest != "unconditional":
+                current = (
+                    reference_sound_digest(reference_sound_json(self.load(session_id)))
+                    if manifest.exists()
+                    else None
+                )
+                if current != expected_manifest:
+                    raise ValueError(
+                        "Retained sound session changed while working; no replacement was published."
+                    )
+            self._publish_verified(payload, artifacts)
+
+    def _publish_verified(
+        self, payload: Mapping[str, object], artifacts: Mapping[str, object]
+    ) -> None:
         session_id = require_sound_session_id(payload.get("session_id"))
         if (
             type(payload.get("schema_version")) is not int
@@ -136,7 +200,16 @@ class ReferenceSoundStore:
             raise ValueError("Reference-sound session exceeds its manifest limit.")
         manifest = self.directory / f"{session_id}.sound.json"
         with self._guard(create=True):
-            existing = tuple(islice(self.directory.iterdir(), REFERENCE_SOUND_MAX_FILES + 1))
+            existing = tuple(
+                islice(
+                    (
+                        path
+                        for path in self.directory.iterdir()
+                        if path.name != _PUBLICATION_LOCK_NAME
+                    ),
+                    REFERENCE_SOUND_MAX_FILES + 1,
+                )
+            )
             if len(existing) > REFERENCE_SOUND_MAX_FILES:
                 raise ValueError("Reference-sound library is full; archive unused sessions.")
             manifests = tuple(path for path in existing if path.name.endswith(".sound.json"))

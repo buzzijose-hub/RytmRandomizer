@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import stat
+import sys
 import wave
 from io import BytesIO
 from pathlib import Path
+from types import ModuleType, SimpleNamespace
 
 import pytest
 from cockpit.conftest import make_reference_pcm
@@ -121,7 +124,71 @@ def test_persistence_reopens_exact_original_and_segment_without_external_source(
     assert reopened.read_artifact(digest, "wav") == audio
     assert reopened.catalog() == (_payload(),)
     store.publish(_payload(), {sound_artifact_name(digest, "wav"): audio})
-    assert len(tuple(store.directory.iterdir())) == 2
+    assert {path.name for path in store.directory.iterdir()} == {
+        sound_artifact_name(digest, "wav"),
+        f"{_payload()['session_id']}.sound.json",
+        ".sound-publication.lock",
+    }
+
+
+def test_distinct_store_writers_are_serialized_and_stale_manifest_is_refused(
+    tmp_path: Path,
+) -> None:
+    first, second = ReferenceSoundStore(tmp_path), ReferenceSoundStore(tmp_path)
+    first.publish(_payload(), {})
+    expected = reference_sound_digest(reference_sound_json(_payload()))
+    with first._publication_guard():
+        with pytest.raises(OSError):
+            second.publish({**_payload(), "favorite": True}, {}, expected_manifest=expected)
+    assert second.load(str(_payload()["session_id"])) == _payload()
+    newer = {**_payload(), "favorite": True}
+    second.publish(newer, {}, expected_manifest=expected)
+    with pytest.raises(ValueError, match="changed while working"):
+        first.publish(_payload(), {}, expected_manifest=expected)
+    assert first.load(str(_payload()["session_id"])) == newer
+    with pytest.raises(ValueError, match="changed while working"):
+        first.publish(newer, {}, expected_manifest=None)
+    with pytest.raises(ValueError, match="changed while working"):
+        first.publish(
+            {**_payload(), "session_id": "sound-" + "b" * 32}, {}, expected_manifest=expected
+        )
+
+
+def test_posix_publication_lock_contract_and_invalid_namespace_refusal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[tuple[int, int]] = []
+    module = ModuleType("fcntl")
+    module.LOCK_EX, module.LOCK_NB, module.LOCK_UN = 1, 2, 4
+    module.flock = lambda descriptor, mode: calls.append((descriptor, mode))
+    monkeypatch.setitem(sys.modules, "fcntl", module)
+    monkeypatch.setattr(store_module, "_WINDOWS_PUBLICATION_LOCK", False)
+    with ReferenceSoundStore(tmp_path)._publication_guard():
+        assert len(calls) == 1 and calls[0][1] == 3
+    assert calls[1] == (calls[0][0], 4)
+    monkeypatch.setattr(store_module.os, "fstat", lambda _fd: SimpleNamespace(st_mode=stat.S_IFDIR))
+    with pytest.raises(ValueError, match="namespace"):
+        with ReferenceSoundStore(tmp_path)._publication_guard():
+            pytest.fail("An invalid namespace must not enter publication.")
+
+
+def test_future_or_malformed_schema_preserves_all_saved_bytes(tmp_path: Path) -> None:
+    from rytm_randomizer.observability.errors import PersistedStateVersionError
+
+    store = ReferenceSoundStore(tmp_path)
+    store.publish(_payload(), {})
+    path = tmp_path / f"{_payload()['session_id']}.sound.json"
+    future = {**_payload(), "schema_version": 2}
+    future["content_sha256"] = reference_sound_digest(reference_sound_json(future))
+    path.write_bytes(reference_sound_json(future))
+    before = path.read_bytes()
+    with pytest.raises(PersistedStateVersionError):
+        store.load(str(_payload()["session_id"]))
+    assert path.read_bytes() == before
+    path.write_bytes(b"{broken")
+    with pytest.raises(DataError, match="corrupt"):
+        store.load(str(_payload()["session_id"]))
+    assert path.read_bytes() == b"{broken"
 
 
 def test_failed_publication_preserves_existing_favorite_and_all_retained_bytes(

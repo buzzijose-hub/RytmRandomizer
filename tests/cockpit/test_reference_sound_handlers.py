@@ -12,12 +12,13 @@ from cockpit.conftest import (
     TEST_WS_TOKEN,
     collect_initial_events,
     complete_handshake,
-    make_reference_sound_session,
     make_reference_pcm,
+    make_reference_sound_session,
     send_cmd,
 )
 from fastapi.testclient import TestClient
 
+from rytm_randomizer.cockpit.data import CockpitSendPlan, SendPlanPacket
 from rytm_randomizer.cockpit.export.reference_sound_session import ReferenceSoundWorkspace
 from rytm_randomizer.cockpit.ws.handlers import handle_command
 from rytm_randomizer.cockpit.ws.reference_sound_handlers import cancel_reference_sound
@@ -28,6 +29,58 @@ pytestmark = pytest.mark.fast
 
 
 _session = make_reference_sound_session
+
+
+@pytest.mark.parametrize("action", ["reopen", "segment", "select"])
+def test_failed_reference_change_preserves_existing_plan_and_success_clears_ui_confirmation(
+    tmp_path: Path,
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: tuple[bytes, str, int, tuple[str, ...]],
+    action: str,
+) -> None:
+    session, _ = _session(tmp_path, reference_sound_workspace, reference_sound_source)
+    plan = CockpitSendPlan(
+        plan_id="sendplan-abcdef0123456789",
+        candidate_id="candidate-1",
+        source_snapshot_id="snapshot-1",
+        profile_id="profile-1",
+        ready=True,
+        readiness_reason="ready",
+        safety_status="safe",
+        packets=(SendPlanPacket(2, "filter_freq", 1, 74, 64),),
+        locked_pad_ids=frozenset(),
+        blocked_reasons=(),
+    )
+    session.current_send_plan = plan
+    request = {
+        "request_id": "invalid",
+        "command": {
+            "type": "reference_sound",
+            "action": action,
+            "session_id": "sound-" + "f" * 32,
+            "start_frame": 0,
+            "frame_count": 800,
+            "candidate_id": "missing",
+        },
+    }
+    result = asyncio.run(handle_command(request, session))
+    assert not result["ok"] and session.current_send_plan is plan
+    imported = reference_sound_workspace.import_reference(make_reference_pcm(), "Reference")
+    result = asyncio.run(
+        handle_command(
+            {
+                "request_id": "valid",
+                "command": {
+                    "type": "reference_sound",
+                    "action": "reopen",
+                    "session_id": imported["session_id"],
+                },
+            },
+            session,
+        )
+    )
+    assert result["ok"] and session.current_send_plan is None
+    assert session.pending_events == [{"type": "send_plan_changed", "send_plan": None}]
 
 
 def test_actual_ws_upload_scope_generation_favorite_playback_export_and_restart(

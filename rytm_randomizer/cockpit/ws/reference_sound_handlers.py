@@ -27,7 +27,7 @@ from ..export.reference_sound_audio import REFERENCE_AUDIO_MAX_BYTES
 from ..export.reference_sound_candidates import list_reference_sound_controls
 from ..export.reference_sound_session import ReferenceSoundWorkspace, StyleAnalysisDependencyError
 from ..export.reference_sound_store import reference_sound_digest
-from .protocol import ERR_VALIDATION
+from .protocol import ERR_VALIDATION, EVENT_SEND_PLAN_CHANGED
 from .result import HandlerResult
 from .session import CockpitSession
 
@@ -59,6 +59,14 @@ def _sound_refusal(message: str) -> HandlerResult:
     return HandlerResult(ack={"ok": False, "code": ERR_VALIDATION, "message": message})
 
 
+def _sound_session_result(session: CockpitSession, payload: dict[str, object]) -> HandlerResult:
+    session.current_send_plan = None
+    return HandlerResult(
+        ack={"ok": True, "reference_sound": {"session": payload}},
+        events=[{"type": EVENT_SEND_PLAN_CHANGED, "send_plan": None}],
+    )
+
+
 async def _owned_operation(session: CockpitSession, execute: Callable[[Event], _Result]) -> _Result:
     if session.sound_cancel is not None:
         raise ValueError("Another audio operation is running; cancel it first.")
@@ -76,7 +84,13 @@ async def _owned_operation(session: CockpitSession, execute: Callable[[Event], _
         cancel.set()
         # The worker terminates within its bounded poll/cleanup interval. Await
         # ownership release rather than abandoning a publishing background task.
-        await asyncio.shield(task)
+        try:
+            await asyncio.shield(task)
+        except (KeyError, TypeError, ValueError, OSError, RuntimeError, RytmRandomizerError) as exc:
+            _logger.warning(
+                "reference_sound_cancel_cleanup_failed", extra={"error_type": type(exc).__name__}
+            )
+            get_metrics().record_error("reference_sound.cancel_cleanup_failed")
         raise
     finally:
         if session.sound_cancel is cancel:
@@ -188,14 +202,13 @@ async def _execute_reference_sound(
         )
     session_id = sound_text(cmd["session_id"])
     if action == "reopen":
-        session.current_send_plan = None
-        return _reply(session=workspace.reopen(session_id))
+        return _sound_session_result(session, workspace.reopen(session_id))
     if action == "segment":
-        session.current_send_plan = None
-        return _reply(
-            session=workspace.select_segment(
+        return _sound_session_result(
+            session,
+            workspace.select_segment(
                 session_id, sound_integer(cmd["start_frame"]), sound_integer(cmd["frame_count"])
-            )
+            ),
         )
     if action == "generate":
         source, device, target = _source(cmd, session)
@@ -228,15 +241,14 @@ async def _execute_reference_sound(
                 "Source, locks or scope changed during analysis. No candidate was published; prepare again."
             )
         payload = workspace.commit(result)
-        session.current_send_plan = None
-        return _reply(session=payload)
+        return _sound_session_result(session, payload)
     if action in ("select", "favorite"):
         favorite = cmd.get("favorite") if action == "favorite" else None
         if favorite is not None and not isinstance(favorite, bool):
             raise ValueError("Favorite must be a boolean.")
-        session.current_send_plan = None
-        return _reply(
-            session=workspace.select(session_id, sound_text(cmd["candidate_id"]), favorite=favorite)
+        return _sound_session_result(
+            session,
+            workspace.select(session_id, sound_text(cmd["candidate_id"]), favorite=favorite),
         )
     if action == "record":
         audio = _upload_bytes(cmd, session)
@@ -264,8 +276,7 @@ async def _execute_reference_sound(
             ),
         )
         payload = workspace.commit(result)
-        session.current_send_plan = None
-        return _reply(session=payload)
+        return _sound_session_result(session, payload)
     if action == "read_audio":
         payload = workspace.reopen(session_id)
         segment = sound_mapping(payload["segment"])

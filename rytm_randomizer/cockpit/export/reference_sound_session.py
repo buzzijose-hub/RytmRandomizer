@@ -68,6 +68,7 @@ class PreparedReferenceSound:
 
     payload: dict[str, object]
     artifacts: Mapping[str, bytes]
+    expected_manifest_sha256: str | None = None
 
 
 __all__ = [
@@ -131,7 +132,9 @@ class ReferenceSoundWorkspace:
             dict[str, object],
             decode_json_rejecting_duplicate_keys(reference_sound_json(prepared.payload)),
         )
-        self.store.publish(payload, prepared.artifacts)
+        self.store.publish(
+            payload, prepared.artifacts, expected_manifest=prepared.expected_manifest_sha256
+        )
         return payload
 
     @trace("reference_sound.import")
@@ -244,7 +247,10 @@ class ReferenceSoundWorkspace:
         identity = _session_identity(context)
         if (self.store.directory / f"{identity}.sound.json").exists():
             _check_cancel(cancel)
-            return PreparedReferenceSound(self.reopen(identity), {})
+            existing = self.reopen(identity)
+            return PreparedReferenceSound(
+                existing, {}, reference_sound_digest(reference_sound_json(existing))
+            )
         analysis = self._analyze(audio, cancel)
         candidates = render_reference_sound_candidates(
             source_frame, device_id, target, analysis, parameters, locks, strength
@@ -454,7 +460,9 @@ class ReferenceSoundWorkspace:
             else:
                 favorites.discard(candidate_id)
         updated = {**payload, "selected_candidate_id": candidate_id, "favorites": sorted(favorites)}
-        self.store.publish(updated, {})
+        self.store.publish(
+            updated, {}, expected_manifest=reference_sound_digest(reference_sound_json(payload))
+        )
         return updated
 
     @trace("reference_sound.compare")
@@ -493,7 +501,11 @@ class ReferenceSoundWorkspace:
         }
         updated = {**payload, "recordings": [*records, record]}
         _check_cancel(cancel)
-        return PreparedReferenceSound(updated, {sound_artifact_name(info.sha256, "wav"): recording})
+        return PreparedReferenceSound(
+            updated,
+            {sound_artifact_name(info.sha256, "wav"): recording},
+            reference_sound_digest(reference_sound_json(payload)),
+        )
 
     @trace("reference_sound.refine")
     def refine(
@@ -519,7 +531,9 @@ class ReferenceSoundWorkspace:
         score = self._score(reference, measured, candidate)
         if score.distance == 0.0:
             _check_cancel(cancel)
-            return PreparedReferenceSound(payload, {})
+            return PreparedReferenceSound(
+                payload, {}, reference_sound_digest(reference_sound_json(payload))
+            )
         feedback = plan_audio_feature_refinement(
             reference, score, measured.synthesis_features, correction_gain=correction_gain
         )
@@ -541,7 +555,9 @@ class ReferenceSoundWorkspace:
             "features": audio_synthesis_features_to_dict(feedback.corrected_features),
         }
         if any(reference_sound_json(item) == reference_sound_json(entry) for item in refinements):
-            return PreparedReferenceSound(payload, {})
+            return PreparedReferenceSound(
+                payload, {}, reference_sound_digest(reference_sound_json(payload))
+            )
         updated = {
             **payload,
             "refinements": [*refinements, entry],
@@ -552,4 +568,5 @@ class ReferenceSoundWorkspace:
         return PreparedReferenceSound(
             updated,
             {sound_artifact_name(reference_sound_digest(refined.frame), "syx"): refined.frame},
+            reference_sound_digest(reference_sound_json(payload)),
         )
