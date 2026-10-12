@@ -25,6 +25,7 @@ from ..export.reference_sound_analysis import (
 )
 from ..export.reference_sound_audio import REFERENCE_AUDIO_MAX_BYTES
 from ..export.reference_sound_candidates import list_reference_sound_controls
+from ..export.reference_sound_records import ReferenceSoundSessionPayload
 from ..export.reference_sound_session import ReferenceSoundWorkspace, StyleAnalysisDependencyError
 from ..export.reference_sound_store import reference_sound_digest
 from .protocol import ERR_VALIDATION, EVENT_SEND_PLAN_CHANGED
@@ -59,7 +60,9 @@ def _sound_refusal(message: str) -> HandlerResult:
     return HandlerResult(ack={"ok": False, "code": ERR_VALIDATION, "message": message})
 
 
-def _sound_session_result(session: CockpitSession, payload: dict[str, object]) -> HandlerResult:
+def _sound_session_result(
+    session: CockpitSession, payload: ReferenceSoundSessionPayload
+) -> HandlerResult:
     session.current_send_plan = None
     return HandlerResult(
         ack={"ok": True, "reference_sound": {"session": payload}},
@@ -75,7 +78,11 @@ async def _owned_operation(session: CockpitSession, execute: Callable[[Event], _
     # Keep the executor future private: loop-wide task cancellation must not
     # cancel its wrapper and hide a thread that is still finishing cleanup.
     context = contextvars.copy_context()
-    task = asyncio.get_running_loop().run_in_executor(None, context.run, execute, cancel)
+
+    def invoke() -> _Result:
+        return context.run(execute, cancel)
+
+    task = asyncio.get_running_loop().run_in_executor(None, invoke)
     try:
         result = await asyncio.shield(task)
         if cancel.is_set():
