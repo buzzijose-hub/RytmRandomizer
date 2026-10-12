@@ -1,6 +1,6 @@
 # Native Integration Dimensional Review
 
-Status: in-flight; scoped source review repairs closed, final gates/package pending.
+Status: in-flight (scoped source review repairs closed; final gates/package pending).
 
 Eight targeted reviews, at most two active workers. Every review is source-only
 unless a runner result below explicitly establishes software execution. None
