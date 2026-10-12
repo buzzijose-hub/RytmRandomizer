@@ -11,6 +11,7 @@
 
 import type { LiveGuiPerformanceConsoleModelDict } from '../types/live_gui_protocol';
 import type { WizardEvent } from '../types/wizard_protocol';
+import type { ReferenceSoundCommand, ReferenceSoundReply } from './referenceSound';
 
 // ---------- Domain enums (literal unions) ----------
 
@@ -1487,6 +1488,7 @@ export interface ShowBankExportCommand {
 }
 
 export type Command =
+  | ReferenceSoundCommand
   | AnalyzePatchGenomeCommand
   | ListCaptureInputsCommand
   | CaptureCurrentKitCommand
@@ -1560,6 +1562,7 @@ export interface CommandEnvelope<C extends Command = Command> {
 export interface CommandAck {
   request_id: string;
   ok: boolean;
+  reference_sound?: ReferenceSoundReply;
   // Optional contextual payload returned with the ack (e.g. new candidate after set_depth).
   candidate?: MutationCandidate;
   send_plan?: CockpitSendPlan | null;

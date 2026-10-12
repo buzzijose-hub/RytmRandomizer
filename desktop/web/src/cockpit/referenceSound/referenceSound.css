@@ -1,0 +1,55 @@
+.reference-sound { min-width: 0; grid-column: 1 / -1; }
+.reference-sound-header, .reference-sound-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.reference-sound-header h2 { margin: 0; font-size: 18px; }
+.reference-sound-header button { margin-left: auto; }
+.reference-sound-workspace { display: grid; gap: 12px; margin-top: 12px; min-width: 0; }
+.reference-sound h3 { font-size: 14px; margin: 0; }
+.reference-sound label { display: grid; gap: 4px; font-size: 12px; min-width: 0; }
+.reference-sound input, .reference-sound select, .reference-sound button {
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  min-height: 28px;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 4px 8px;
+  font: inherit;
+}
+.reference-sound input[type=checkbox], .reference-sound input[type=radio] {
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
+  padding: 0;
+  accent-color: var(--accent);
+}
+.reference-sound button { cursor: pointer; }
+.reference-sound button:disabled { cursor: default; opacity: 0.6; }
+.reference-sound-inputs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.reference-sound-source { display: grid; align-content: start; gap: 8px; min-width: 0; }
+.reference-sound input[type=number] { width: 140px; }
+.reference-sound audio { width: 100%; max-width: 480px; height: 36px; }
+.reference-sound p, .reference-sound span, .reference-sound small { overflow-wrap: anywhere; }
+.reference-sound p { margin: 0; }
+.reference-sound-error { color: var(--danger); font-size: 12px; }
+.reference-sound-table-scroll { overflow-x: auto; min-width: 0; max-height: 360px; }
+.reference-sound-table { border-collapse: collapse; width: 100%; text-align: left; font-size: 12px; }
+.reference-sound-table caption { text-align: left; padding: 4px 0 8px; color: var(--text-dim); }
+.reference-sound-table th, .reference-sound-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; overflow-wrap: anywhere; }
+.reference-sound-table th { font-weight: 600; }
+.reference-sound-table thead { position: sticky; top: 0; background: var(--panel); }
+.reference-sound-candidates { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 0; border: 0; margin: 0; }
+.reference-sound-candidates legend { font-size: 14px; font-weight: 600; padding: 0 0 8px; }
+.reference-sound-candidates label { grid-template-columns: 24px minmax(0, 1fr); align-items: center; padding: 8px; border-bottom: 1px solid var(--border); }
+.reference-sound-candidates label:has(:checked) { border-bottom-color: var(--accent); }
+.reference-sound-candidates label span, .reference-sound-candidates label small { grid-column: 2; }
+.reference-sound-candidates strong { overflow-wrap: anywhere; }
+@media (max-width: 800px) {
+  .reference-sound-inputs { grid-template-columns: minmax(0, 1fr); }
+  .reference-sound-candidates { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
