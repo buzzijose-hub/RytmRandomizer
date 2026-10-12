@@ -46,6 +46,8 @@ No hardware, firmware or protected merge occurred.
 | Normal publication hooks | Whole lint/typing,898 architecture cases and697 non-fast cases including685 frozen parity pass; no bypass. |
 | New path-alert regression |202 passed/3 warnings2.51s;21 additional cases reject malformed record/session IDs before filesystem access. No production changes. |
 | Source CI |Test38318732424/required-checks success23:20:01Z; source096. CodeQL aggregate alerts remain separately pending. |
+| Defensive guard frozen5db6e6de |11843 passed/5 skipped/6 warnings817.27s; started23:31:57.7725259Z, ended23:45:36.8620176Z. All76 touched production files100%line/branch; project99.74%line/99.42%pure branch. |
+| Reviewed matrix completion |381 passed/3 warnings4.25s after adding six test-only direct-DTO cases; production remains identical to frozen5db6. |
 
 The broad486501dd result did not certify subsequent review fixes; final658
 composition now passes separately. Source-bound executable journeys below pass.
@@ -99,7 +101,7 @@ from this new delivery so its first user launch starts fresh.
 
 ## Remaining Acceptance
 
-Independent triage is in progress for CodeQL alerts21-25 (five high
+Independent triage is complete for CodeQL alerts21-25 (five high
 `py/path-injection` alerts). Analysis jobs passed but the aggregate security check
 is failed; no dismissal, suppression or protected approval bypass occurred.
 Source test success is not an overall green PR. Latest Eddie review is October3
@@ -107,9 +109,11 @@ CHANGES_REQUESTED; historical Gate14/16 dispositions remain unresolved.
 Independent triage subsequently found no reachable WS traversal through the
 strict validated IDs, but identified an internal direct-record pre-I/O guard
 gap. Eight red cases reproduced it; path construction now validates and the
-writer uses that validated path before metadata/I/O. Focused composition passes
-375cases/3warnings4.33s. Fresh full verification and a replacement build are
-required for this production delta;096 remains the last accepted delivery.
+writer uses that validated path before metadata/I/O. Independent safety and
+test/parity delta reviews report no blocking findings; a Minor missing-input
+matrix recommendation is corrected. Focused composition passes381cases/3warnings
+4.25s and fresh frozen5db6 full11843cases817.27s with all76touched100%coverage.
+A replacement package remains required;096 is the last accepted delivery.
 The six-file studio experiment requires operator preflight and a separately
 reviewed supervised query-acquisition path, not an unarmed report workaround.
 

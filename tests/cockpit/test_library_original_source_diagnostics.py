@@ -392,13 +392,24 @@ def test_library_get_refuses_untrusted_ids_before_filesystem_access(
 
 
 @pytest.mark.parametrize("operation", ("path", "write"))
-@pytest.mark.parametrize("record_id", ("../PRIVATE_PATH", "C:\\PRIVATE_PATH", "id/escape", "id\n"))
+@pytest.mark.parametrize(
+    "record_id",
+    (
+        "../PRIVATE_PATH",
+        "C:\\PRIVATE_PATH",
+        "id/escape",
+        "id\n",
+        "/PRIVATE_PATH",
+        "..\\PRIVATE_PATH",
+        None,
+    ),
+)
 def test_direct_library_record_refuses_invalid_identity_before_filesystem_access(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, operation: str, record_id: str
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, operation: str, record_id: object
 ) -> None:
     store = LibraryStore(tmp_path / "library")
     record = LibraryRecord(
-        record_id=record_id,
+        record_id=record_id,  # type: ignore[arg-type]
         device_id="analog_rytm_mk2",
         kit_name="LOCAL RECORD",
         fingerprint="0123456789abcdef",

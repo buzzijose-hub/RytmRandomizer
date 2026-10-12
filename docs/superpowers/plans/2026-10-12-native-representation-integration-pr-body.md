@@ -47,7 +47,12 @@ frozen-worker24.687s and normal launcher4.326s acceptance with MIDIoff and clean
 Additional path-alert regression202cases/3warnings2.51s passes;21 added cases
 refuse malformed IDs before filesystem access. Source CI38318732424 and
 required-checks passed; separate CodeQL aggregatealerts21-25 remain failed and
-under independent triage. No alerts are dismissed to manufacture green status.
+awaiting required human disposition after independent triage found no reachable
+WS traversal. The separate direct-DTO pre-I/O guard gap is reproduced and fixed;
+frozen5db6 full11843passed/5skips/6warnings817.27s/all76touched100%coverage and
+final381focused cases4.25s pass. Independent safety/test delta reviews are closed.
+New Windows replacement acceptance for this production delta is pending;096
+remains preserved. No alerts are dismissed to manufacture green status.
 
 - [x] Local pytest passes (full suite).
 - [x] `tests/architecture/` passes.
@@ -56,6 +61,7 @@ under independent triage. No alerts are dismissed to manufacture green status.
 - [x] 685/685 V1.34 parity items byte-identical.
 - [x] No new dead code (vulture --min-confidence 80).
 - [x] Exact-source new Windows package and affected native journeys pass.
+- [ ] Replacement Windows package for the later5db6 direct-record guard delta passes.
 - [x] Fresh test CI/required-checks complete on build source096be3ed.
 - [ ] CodeQL path-injection alerts21-25 resolved or independently dispositioned through required human review.
 - [ ] Protected human approval; latest Eddie review remains October3 CHANGES_REQUESTED.

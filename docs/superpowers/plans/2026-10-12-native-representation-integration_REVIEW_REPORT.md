@@ -67,6 +67,9 @@ validates every caller and the writer resolves that validated path before any
 I/O. The composed reader/library/WS/favorite suite passes375cases/3warnings4.33s.
 Twenty-one additional malformed public-ID cases prove rejection before file
 lookup. No schema, native representation, source identity or output gate changes.
-The production repair requires fresh full-source and packaged acceptance;
-the previously tested096 delivery remains preserved meanwhile. No suppression,
+Independent safety delta review closes the demonstrated gap; test/parity delta
+review reports no blockers and one optional negative-input matrix gap, now
+corrected with six additional cases. Final focused381cases pass4.25s. Frozen
+5db6e6de full11843cases passes817.27s/all76touched100%coverage. Packaged replacement
+acceptance remains required;096 stays preserved meanwhile. No suppression,
 dismissal, false-green claim or protected merge is authorized by this report.
