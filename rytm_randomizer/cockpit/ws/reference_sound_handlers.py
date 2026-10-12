@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import binascii
+import contextvars
 import secrets
 from collections.abc import Callable
 from threading import Event
@@ -71,7 +72,10 @@ async def _owned_operation(session: CockpitSession, execute: Callable[[Event], _
         raise ValueError("Another audio operation is running; cancel it first.")
     cancel = Event()
     session.sound_cancel = cancel
-    task = asyncio.create_task(asyncio.to_thread(execute, cancel))
+    # Keep the executor future private: loop-wide task cancellation must not
+    # cancel its wrapper and hide a thread that is still finishing cleanup.
+    context = contextvars.copy_context()
+    task = asyncio.get_running_loop().run_in_executor(None, context.run, execute, cancel)
     try:
         result = await asyncio.shield(task)
         if cancel.is_set():
@@ -83,13 +87,27 @@ async def _owned_operation(session: CockpitSession, execute: Callable[[Event], _
         cancel.set()
         # The worker terminates within its bounded poll/cleanup interval. Await
         # ownership release rather than abandoning a publishing background task.
-        try:
-            await asyncio.shield(task)
-        except (KeyError, TypeError, ValueError, OSError, RuntimeError, RytmRandomizerError) as exc:
-            _logger.warning(
-                "reference_sound_cancel_cleanup_failed", extra={"error_type": type(exc).__name__}
-            )
-            get_metrics().record_error("reference_sound.cancel_cleanup_failed")
+        while True:
+            try:
+                await asyncio.shield(task)
+                break
+            except asyncio.CancelledError:
+                # A second disconnect/cancel must not abandon the same worker.
+                continue
+            except (
+                KeyError,
+                TypeError,
+                ValueError,
+                OSError,
+                RuntimeError,
+                RytmRandomizerError,
+            ) as exc:
+                _logger.warning(
+                    "reference_sound_cancel_cleanup_failed",
+                    extra={"error_type": type(exc).__name__},
+                )
+                get_metrics().record_error("reference_sound.cancel_cleanup_failed")
+                break
         raise
     finally:
         if session.sound_cancel is cancel:

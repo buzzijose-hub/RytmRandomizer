@@ -969,7 +969,7 @@ def test_native_analysis_worker_serializes_success_and_bounded_failures(
         ("audio_read_failed", "BoundaryError", "audio_read_failed"),
         ("validation", "ValueError", None),
         ("inference_failed", "BoundaryError", "inference_failed"),
-        ("interrupted", "KeyboardInterrupt", None),
+        ("interrupted", "BoundaryError", "interrupted"),
     ],
 )
 def test_native_analysis_failure_reconstruction_is_bounded(

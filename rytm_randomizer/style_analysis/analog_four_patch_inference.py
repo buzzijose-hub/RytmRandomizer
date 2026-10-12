@@ -518,7 +518,15 @@ def _raise_native_analysis_failure(
     if failure.error_code == "validation":
         raise ValueError(failure.message)
     if failure.error_code == "interrupted":
-        raise KeyboardInterrupt(failure.message or "native audio analysis interrupted")
+        # Child signals are worker failures, not operator signals in this process.
+        raise BoundaryError(
+            "native audio analysis worker interrupted",
+            context={
+                "error_code": "interrupted",
+                "fingerprint": failure.fingerprint,
+                "worker_error_type": failure.error_type,
+            },
+        )
     raise BoundaryError(
         failure.message or "native audio analysis worker failed",
         context={

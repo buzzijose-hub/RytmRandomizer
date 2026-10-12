@@ -21,7 +21,10 @@ from fastapi.testclient import TestClient
 from rytm_randomizer.cockpit.data import CockpitSendPlan, SendPlanPacket
 from rytm_randomizer.cockpit.export.reference_sound_session import ReferenceSoundWorkspace
 from rytm_randomizer.cockpit.ws.handlers import handle_command
-from rytm_randomizer.cockpit.ws.reference_sound_handlers import cancel_reference_sound
+from rytm_randomizer.cockpit.ws.reference_sound_handlers import (
+    _owned_operation,
+    cancel_reference_sound,
+)
 from rytm_randomizer.cockpit.ws.server import create_app
 from rytm_randomizer.style_analysis.extractor import AudioFeatureAnalysis
 
@@ -29,6 +32,81 @@ pytestmark = pytest.mark.fast
 
 
 _session = make_reference_sound_session
+
+
+@pytest.mark.parametrize("worker_fails", [False, True])
+def test_repeated_task_cancellation_keeps_worker_fence_until_terminal_result(
+    tmp_path: Path,
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: tuple[bytes, str, int, tuple[str, ...]],
+    worker_fails: bool,
+) -> None:
+    session, _ = _session(tmp_path, reference_sound_workspace, reference_sound_source)
+    entered, release = Event(), Event()
+
+    def delayed(cancel: Event) -> int:
+        entered.set()
+        assert release.wait(5)
+        assert cancel.is_set()
+        if worker_fails:
+            raise RuntimeError("test-owned worker cleanup failed")
+        return 1
+
+    async def exercise() -> None:
+        pending = asyncio.create_task(_owned_operation(session, delayed))
+        assert await asyncio.to_thread(entered.wait, 2)
+        cancel = session.sound_cancel
+        pending.cancel()
+        await asyncio.sleep(0)
+        pending.cancel()
+        await asyncio.sleep(0)
+        assert session.sound_cancel is cancel and cancel is not None and cancel.is_set()
+        assert not pending.done()
+        with pytest.raises(ValueError, match="Another audio operation"):
+            await _owned_operation(session, lambda _cancel: 2)
+        release.set()
+        with pytest.raises(asyncio.CancelledError):
+            await pending
+        assert session.sound_cancel is None
+        assert await _owned_operation(session, lambda _cancel: 2) == 2
+
+    try:
+        asyncio.run(exercise())
+    finally:
+        release.set()
+
+
+@pytest.mark.parametrize("child_signal", ["KeyboardInterrupt", "SystemExit"])
+def test_child_interrupt_is_categorical_and_parent_can_continue(
+    tmp_path: Path,
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: tuple[bytes, str, int, tuple[str, ...]],
+    child_signal: str,
+) -> None:
+    from rytm_randomizer.observability.errors import BoundaryError
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    session, _ = _session(tmp_path, reference_sound_workspace, reference_sound_source)
+
+    def interrupted(_cancel: Event) -> int:
+        inference._raise_native_analysis_failure(
+            inference._NativeAnalysisFailure(
+                error_code="interrupted",
+                error_type=child_signal,
+                message="private worker context",
+                fingerprint="a4.audio_patch.worker_interrupted",
+            )
+        )
+        raise AssertionError("Child interruption must refuse the operation")
+
+    async def exercise() -> None:
+        with pytest.raises(BoundaryError) as failure:
+            await _owned_operation(session, interrupted)
+        assert failure.value.context["error_code"] == "interrupted"
+        assert session.sound_cancel is None
+        assert await _owned_operation(session, lambda _cancel: 42) == 42
+
+    asyncio.run(exercise())
 
 
 @pytest.mark.parametrize("action", ["reopen", "segment", "select"])
