@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import os
 import runpy
 import subprocess
 import sys
@@ -128,6 +129,105 @@ def test_existing_shutdown_watchdog_remains_functional(
     _entry()["_watch_stdin"]()
     assert events[:2] == ["watchdog", "SIGINT"]
     assert events[2:] == ([0] if signal_fault else [])
+
+
+@pytest.mark.parametrize("platform", ("linux", "win32"))
+def test_stdin_polling_falls_back_for_non_pipe_streams(
+    monkeypatch: pytest.MonkeyPatch, platform: str
+) -> None:
+    msvcrt = ModuleType("msvcrt")
+    monkeypatch.setitem(sys.modules, "msvcrt", msvcrt)
+    monkeypatch.setattr(sys, "platform", platform)
+    monkeypatch.setattr(sys, "stdin", io.StringIO(""))
+    assert _entry()["_wait_for_windows_stdin_pipe"]() is False
+
+
+def test_shutdown_watcher_uses_polling_pipe_without_blocking_line_read(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import signal
+    import threading
+    from types import SimpleNamespace
+
+    namespace = _entry()
+    namespace["_wait_for_windows_stdin_pipe"] = lambda: True
+    monkeypatch.setattr(sys, "stdin", object())
+    monkeypatch.setattr(
+        threading, "Timer", lambda *_args, **_kwargs: SimpleNamespace(start=lambda: None)
+    )
+    signals: list[int] = []
+    monkeypatch.setattr(signal, "raise_signal", lambda value: signals.append(value))
+    namespace["_watch_stdin"]()
+    assert signals == [signal.SIGINT]
+
+
+class _WindowsFunction:
+    def __init__(self, action):
+        self.action = action
+
+    def __call__(self, *args):
+        return self.action(*args)
+
+
+@pytest.mark.parametrize("ending", ("sentinel", "broken", "empty"))
+def test_windows_stdin_polling_reads_only_available_bytes_and_handles_shutdown(
+    monkeypatch: pytest.MonkeyPatch, ending: str
+) -> None:
+    import ctypes
+    import time
+    from ctypes import wintypes
+    from types import SimpleNamespace
+
+    events: list[object] = []
+    chunks = [b"ignored\nRYTM_SIDECAR_", b"SHUTDOWN\r\n"]
+    availability = [0, len(chunks[0]), len(chunks[1])]
+    if ending != "sentinel":
+        chunks = [b"ignored\n", b""]
+        availability = [0, len(chunks[0]), 1]
+
+    def peek(_handle, _buffer, _size, _read, available, _left):
+        if ending == "broken" and len(availability) == 1:
+            return False
+        ctypes.cast(available, ctypes.POINTER(wintypes.DWORD)).contents.value = availability.pop(0)
+        events.append("peek")
+        return True
+
+    def read(descriptor: int, size: int) -> bytes:
+        assert descriptor == 42 and size > 0
+        chunk = chunks.pop(0)
+        assert len(chunk) <= size
+        events.append("read")
+        return chunk
+
+    kernel = SimpleNamespace(
+        GetFileType=_WindowsFunction(lambda handle: 3),
+        PeekNamedPipe=_WindowsFunction(peek),
+    )
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(sys, "stdin", SimpleNamespace(fileno=lambda: 42))
+    msvcrt = ModuleType("msvcrt")
+    msvcrt.get_osfhandle = lambda descriptor: 99
+    monkeypatch.setitem(sys.modules, "msvcrt", msvcrt)
+    monkeypatch.setattr(ctypes, "WinDLL", lambda *_args, **_kwargs: kernel, raising=False)
+    monkeypatch.setattr(time, "sleep", lambda delay: events.append(("sleep", delay)))
+    monkeypatch.setattr(os, "read", read)
+    assert _entry()["_wait_for_windows_stdin_pipe"]() is True
+    assert events[:3] == ["peek", ("sleep", 0.05), "peek"]
+    assert events.count("read") == (1 if ending == "broken" else 2)
+
+
+def test_windows_regular_file_stdin_retains_line_reader(monkeypatch: pytest.MonkeyPatch) -> None:
+    import ctypes
+    from types import SimpleNamespace
+
+    kernel = SimpleNamespace(GetFileType=_WindowsFunction(lambda _handle: 1))
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(sys, "stdin", SimpleNamespace(fileno=lambda: 42))
+    msvcrt = ModuleType("msvcrt")
+    msvcrt.get_osfhandle = lambda _descriptor: 99
+    monkeypatch.setitem(sys.modules, "msvcrt", msvcrt)
+    monkeypatch.setattr(ctypes, "WinDLL", lambda *_args, **_kwargs: kernel, raising=False)
+    assert _entry()["_wait_for_windows_stdin_pipe"]() is False
 
 
 def test_audio_packaging_is_explicit_and_preserves_lazy_dependencies(tmp_path: Path) -> None:

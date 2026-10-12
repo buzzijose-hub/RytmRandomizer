@@ -158,18 +158,66 @@ import os
 import signal
 import sys
 import threading
+import time
 
 SHUTDOWN_SENTINEL = {SHUTDOWN_SENTINEL!r}
 _FORCE_EXIT_GRACE_SECS = {_FORCE_EXIT_GRACE_SECS!r}
+
+
+def _wait_for_windows_stdin_pipe() -> bool:
+    """Poll pipe bytes without leaving a synchronous ReadFile pending.
+
+    A spawned frozen child inherits the pipe's file object. Python's startup
+    seeks its standard streams, which Windows serializes behind a pending
+    parent read. A blocking stdin watcher therefore deadlocks child startup.
+    """
+
+    if sys.platform != "win32":
+        return False
+    import ctypes
+    import msvcrt
+    from ctypes import wintypes
+
+    try:
+        descriptor = sys.stdin.fileno()
+        handle = msvcrt.get_osfhandle(descriptor)
+    except (AttributeError, OSError, ValueError):
+        return False
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel.GetFileType.argtypes = [wintypes.HANDLE]
+    kernel.GetFileType.restype = wintypes.DWORD
+    if kernel.GetFileType(handle) != 3:  # FILE_TYPE_PIPE; consoles/files do not block seeks.
+        return False
+    kernel.PeekNamedPipe.argtypes = [
+        wintypes.HANDLE, ctypes.c_void_p, wintypes.DWORD,
+        ctypes.c_void_p, ctypes.POINTER(wintypes.DWORD), ctypes.c_void_p,
+    ]
+    kernel.PeekNamedPipe.restype = wintypes.BOOL
+    pending = b""
+    while True:
+        available = wintypes.DWORD()
+        if not kernel.PeekNamedPipe(handle, None, 0, None, ctypes.byref(available), None):
+            return True  # Broken pipe/EOF retains the shell-loss shutdown contract.
+        if not available.value:
+            time.sleep(0.05)
+            continue
+        chunk = os.read(descriptor, min(available.value, 4096))
+        if not chunk:
+            return True
+        lines = (pending + chunk).split(b"\\n")
+        pending = lines.pop()[-4096:]
+        if any(line.strip() == SHUTDOWN_SENTINEL.encode("ascii") for line in lines):
+            return True
 
 
 def _watch_stdin() -> None:
     """Block until the shell writes the sentinel (or closes the pipe)."""
 
     try:
-        for line in sys.stdin:
-            if line.strip() == SHUTDOWN_SENTINEL:
-                break
+        if not _wait_for_windows_stdin_pipe():
+            for line in sys.stdin:
+                if line.strip() == SHUTDOWN_SENTINEL:
+                    break
     except Exception:  # noqa: BLE001 — any stdin fault means the shell is gone
         pass
     # Graceful first: SIGINT drives uvicorn's normal shutdown path. The
