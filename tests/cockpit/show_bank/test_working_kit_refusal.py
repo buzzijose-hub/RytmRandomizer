@@ -15,7 +15,7 @@ from rytm_randomizer.cockpit.show_bank.forge import (
     capture_reference,
 )
 from rytm_randomizer.cockpit.show_bank.store import validate_show_bank_capture_frame
-from rytm_randomizer.observability.errors import DataError
+from rytm_randomizer.observability.errors import WorkingKitSourceRefusalError
 
 from .conftest import build_show_bank_harness
 
@@ -66,9 +66,9 @@ def test_working_capture_cannot_be_adopted_or_imported_as_an_indexed_source(tmp_
             retained=None,
         ),
     )
-    with pytest.raises(DataError) as failure:
+    with pytest.raises(WorkingKitSourceRefusalError) as failure:
         validate_show_bank_capture_frame(claimed, working.frame)
-    assert failure.value.context["category"] == "framing"
+    assert failure.value.context["reason"] == "working_kit_read_only"
     assert _files(harness.store.root) == before
     assert workspace.bank(harness.bank_id) == bank
 

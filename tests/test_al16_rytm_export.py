@@ -176,7 +176,7 @@ def test_current_al02_provenance_refresh_is_explicit_and_stays_blocked() -> None
     path = _REPO_ROOT / "output/al16/AL02_LOCK_RYTM_manifest.json"
     assert (
         hashlib.sha256(path.read_bytes()).hexdigest()
-        == "48980a380dc47dae59aca26432a965956a024e425d893093452e63149ade3ec8"
+        == "c7915ef20c3fe00a89a03829c4959b1a4e551bde9d1f108fe9b1f1a076f72730"
     )
     current = json.loads(path.read_text(encoding="utf-8"))
     historical = json.loads(
@@ -188,8 +188,19 @@ def test_current_al02_provenance_refresh_is_explicit_and_stays_blocked() -> None
     assert current["output_emitted"] is False and current["intentionally_changed_raw_bytes"] == 0
     current.pop("build_timestamp")
     historical.pop("build_timestamp")
-    current["generator_dependency_sha256"].pop("rytm_randomizer/devices/__init__.py")
-    historical["generator_dependency_sha256"].pop("rytm_randomizer/devices/__init__.py")
+    changed_dependencies = {
+        path
+        for path in current["generator_dependency_sha256"]
+        if current["generator_dependency_sha256"][path]
+        != historical["generator_dependency_sha256"][path]
+    }
+    assert changed_dependencies == {
+        "rytm_randomizer/devices/__init__.py",
+        "rytm_randomizer/observability/errors.py",
+    }
+    for path in changed_dependencies:
+        current["generator_dependency_sha256"].pop(path)
+        historical["generator_dependency_sha256"].pop(path)
     assert current == historical
 
 

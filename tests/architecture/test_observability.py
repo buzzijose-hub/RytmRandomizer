@@ -321,6 +321,8 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         "StateError",
         "DataError",
         "BoundaryError",
+        # Closed indexed-source policy refusal is defined in the central taxonomy.
+        "WorkingKitSourceRefusalError",
         "ConfigError",
         # AL16 offline exporter: one typed BoundaryError carrying a bounded
         # failure reason instead of classifying human-readable prose.
@@ -491,6 +493,17 @@ def _raised_class_names(path: Path) -> list[tuple[int, str]]:
         else:  # pragma: no cover - ``raise <complex expression>``
             out.append((node.lineno, ast.unparse(exc)))
     return out
+
+
+def test_working_source_refusal_registration_is_a_real_closed_taxonomy_member() -> None:
+    from rytm_randomizer.observability.errors import BoundaryError, WorkingKitSourceRefusalError
+
+    assert "WorkingKitSourceRefusalError" in _TAXONOMY_NAMES
+    assert issubclass(WorkingKitSourceRefusalError, BoundaryError)
+    assert issubclass(WorkingKitSourceRefusalError, ValueError)
+    refusal = WorkingKitSourceRefusalError()
+    assert refusal.context == {"reason": "working_kit_read_only"}
+    assert refusal.fingerprint == "boundary.kit.working_source_refused"
 
 
 def test_raises_use_taxonomy_or_validation_stdlib() -> None:

@@ -33,6 +33,7 @@ from ...data.analog_four_midi import (
 )
 from ...data.analog_four_saved_kit_layout import A4_KIT_SYNTH_TRACK_COUNT
 from ...guardrails.input_validation import require_int
+from ...snapshot.elektron_u14 import decode_elektron_u14, encode_elektron_u14
 
 
 def _require_f1_value(value: object, maximum: int, name: str) -> int:
@@ -62,13 +63,15 @@ def parsed_wire14_to_native(wire14: int) -> int:
 def split_wire14(wire14: int) -> tuple[int, int]:
     """Split a validated fourteen-bit scalar into two inert data bytes."""
     wire14 = _require_f1_value(wire14, A4_F1_WIRE14_MAX, "wire14")
-    return wire14 >> 7, wire14 & A4_F1_DATA_BYTE_MAX
+    encoded = encode_elektron_u14(wire14)
+    return encoded[0], encoded[1]
 
 
 def join_parsed_bytes(msb: int, lsb: int) -> int:
     """Concatenate parsed bytes; this alone is not a native parser model."""
-    return (_require_f1_value(msb, A4_F1_DATA_BYTE_MAX, "msb") << 7) | _require_f1_value(
-        lsb, A4_F1_DATA_BYTE_MAX, "lsb"
+    return decode_elektron_u14(
+        _require_f1_value(msb, A4_F1_DATA_BYTE_MAX, "msb"),
+        _require_f1_value(lsb, A4_F1_DATA_BYTE_MAX, "lsb"),
     )
 
 
