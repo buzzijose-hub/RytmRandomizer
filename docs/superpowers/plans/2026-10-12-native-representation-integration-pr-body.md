@@ -41,8 +41,13 @@ production files100%line/branch, project99.42%pure-branch with99%floor unchanged
 Earlier486501dd's acceptance is separately retained. Focused review composition
 24passed; latest boundary/taxonomy/u14 cases271passed. Frontend1294/81files/all
 fourcoverage100%; pinned Pyright all76 modules zero errors/warnings. Whole
-Ruff/Black/isort/Vulture80 clean. New Windows package/native acceptance and fresh
-published CI remain pending and are not marked satisfied.
+Ruff/Black/isort/Vulture80 clean. Build096 has identical production source and
+passes actual affected native37.433s/22commands, both-device41.498s/47commands,
+frozen-worker24.687s and normal launcher4.326s acceptance with MIDIoff and cleanup.
+Additional path-alert regression202cases/3warnings2.51s passes;21 added cases
+refuse malformed IDs before filesystem access. Source CI38318732424 and
+required-checks passed; separate CodeQL aggregatealerts21-25 remain failed and
+under independent triage. No alerts are dismissed to manufacture green status.
 
 - [x] Local pytest passes (full suite).
 - [x] `tests/architecture/` passes.
@@ -50,8 +55,9 @@ published CI remain pending and are not marked satisfied.
 - [x] Coverage stays >=95% pure-branch.
 - [x] 685/685 V1.34 parity items byte-identical.
 - [x] No new dead code (vulture --min-confidence 80).
-- [ ] Exact-source new Windows package and affected native journeys pass.
-- [ ] Fresh CI/required-checks complete on the published source.
+- [x] Exact-source new Windows package and affected native journeys pass.
+- [x] Fresh test CI/required-checks complete on build source096be3ed.
+- [ ] CodeQL path-injection alerts21-25 resolved or independently dispositioned through required human review.
 - [ ] Protected human approval; latest Eddie review remains October3 CHANGES_REQUESTED.
 
 ## Plan-requirements conformance
@@ -98,7 +104,9 @@ The earlier reference-sound plan/delivery remains preserved and separately accou
 
 ## Reviewer notes
 
-Consolidated dimensional review will be posted separately. Static research,
+Consolidated dimensional review is posted at https://github.com/buzzijose-hub/RytmRandomizer/pull/254#issuecomment-6134107254.
+Delivery source096be3ed and binary hashes/native acceptance are in the run report;
+later documentation/test-only changes do not alter those binaries. Static research,
 synthetic audio, fixtures and software tests are not physical validation.
 Working-state synchronization, instrument recordings/application/save/reload,
 manual recovery and show rehearsal remain pending. No protected merge is requested

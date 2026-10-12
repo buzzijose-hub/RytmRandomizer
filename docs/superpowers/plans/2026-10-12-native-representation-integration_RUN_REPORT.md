@@ -1,12 +1,14 @@
 # Native Representation Run Report
 
-> Status: in-flight (implementation and verification pending).
+> Status: in-flight (offline delivery accepted; security disposition, hardware and protected approval pending).
 
 Start: 2026-10-12T20:01:07Z. Ceiling: 2026-10-13T04:01:07Z. Eight hours is a
 working budget, not a completion definition. Source `658c8f9f8dcba361720b52c4e8d0aac5674372c0`
-is frozen for final verification on `codex/studio-rytm-mapping`, existing PR254.
-The prior audio-enabled `64d5c619` delivery is unchanged. No new package has yet
-been accepted at this checkpoint. No hardware, firmware or protected merge occurred.
+was verified on `codex/studio-rytm-mapping`, existing PR254. Build source
+`096be3ed94ecd7d76722321f51c1251fbe477feb` has identical production code;
+only documentation/indexing changed. Its Windows delivery is accepted for the
+tested offline scope. The prior audio-enabled `64d5c619` delivery is unchanged.
+No hardware, firmware or protected merge occurred.
 
 ## Implemented
 
@@ -41,10 +43,13 @@ been accepted at this checkpoint. No hardware, firmware or protected merge occur
 | Frozen658c8f9f typing/lint | Strict Pyright1.1.411 all76 modules zero errors/warnings; Ruff, Black, isort and Vulture80 clean. |
 | Final658c8f9f full suite | 11813 passed/5 skipped/6 warnings824.40s. Started22:25:53.6098263Z; ended22:39:39.8838587Z. |
 | Current coverage gates | Gate1 all76 touched production files100%lines/branches; project99.74%lines/99.42%pure branches; ratchet99% unchanged. |
+| Normal publication hooks | Whole lint/typing,898 architecture cases and697 non-fast cases including685 frozen parity pass; no bypass. |
+| New path-alert regression |202 passed/3 warnings2.51s;21 additional cases reject malformed record/session IDs before filesystem access. No production changes. |
+| Source CI |Test38318732424/required-checks success23:20:01Z; source096. CodeQL aggregate alerts remain separately pending. |
 
 The broad486501dd result did not certify subsequent review fixes; final658
-composition now passes separately. A source-bound executable journey remains
-required. Static and
+composition now passes separately. Source-bound executable journeys below pass.
+Static and
 synthetic fixtures never establish physical application, freshness or recovery.
 
 ## Review Repairs
@@ -63,12 +68,48 @@ Gate17 and documentation repair deltas are independently closed. Protected
 human approval and historical PR254 timing/execution exceptions are not
 retroactively certified by this working block.
 
+## Windows Delivery
+
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-096be3ed94ec`
+contains the audio-enabled standalone runtime, hash-checking `Launch-Offline.ps1`
+and source-bound `studio-procedure/DELIVERY-RECEIPT.md`. Installer run38318760273
+succeeded; portable artifact11778345583 binds source096. Shell SHA256
+`57d6d2f4bf05331e1cc04fff36f07a06cb73788b8419b29395ed86eff2620544`;
+sidecar `dfef364fbf0e1d6239e3c2ed37185c8f6e661c4aeb794276d6591eb00577ac72`;
+launcher `6914604f9b307be68aeffc12c00e9ddcdc4c1261e14ada29619b5c0f345c0b2c`.
+
+Actual packaged affected native journey passes37.433s/22commands/zero failures:
+indexed/working separation, legal maximum protection, odd word16257/label63.50/
+wire8128/lost-bit1, eight candidates, exact bytes/favorite and disarmed restart
+recall. Nine explicit checks and600px overflow/screenshots pass. The both-device
+reference-sound journey passes41.498s/47commands/zero failures; each device has
+nine candidates, one supplied synthetic recording, refinement and retained
+favorite. Each journey uses one startup attempt and one test-owned backend
+restart; shell remains alive, token rotates, cleanup is verified.
+
+Frozen isolated audio worker proof passes24.687s with developer environment
+paths cleared. Ordinary launcher backend readiness3.322s and independent
+authenticated UI connection4.326s pass (mock, one client,queue13/256/zero drops).
+Seven native resource samples:306.62-600.13MiB owned private memory, at most10
+processes,minimum13.12GiBfree RAM,pending-command high water4. These short journeys
+are not a new90-minute endurance certification. Sanitized summaries, telemetry
+and screenshots are delivered; profiles/tokens/runtime state remain private.
+Owned processes and listeners are stopped; the normal launch state was removed
+from this new delivery so its first user launch starts fresh.
+
 ## Remaining Acceptance
 
-Finish final gates, update the existing PR with the exact canonical checklist,
-build a Windows-only source-bound package, verify hashes/bundled runtime, and run
-the affected native UI journey plus both-device reference-sound journey with
-MIDI disabled. Record actual process/handle/memory samples and confirmed cleanup.
+Independent triage is in progress for CodeQL alerts21-25 (five high
+`py/path-injection` alerts). Analysis jobs passed but the aggregate security check
+is failed; no dismissal, suppression or protected approval bypass occurred.
+Source test success is not an overall green PR. Latest Eddie review is October3
+CHANGES_REQUESTED; historical Gate14/16 dispositions remain unresolved.
+Independent triage subsequently found no reachable WS traversal through the
+strict validated IDs, but identified an internal direct-record pre-I/O guard
+gap. Eight red cases reproduced it; path construction now validates and the
+writer uses that validated path before metadata/I/O. Focused composition passes
+375cases/3warnings4.33s. Fresh full verification and a replacement build are
+required for this production delta;096 remains the last accepted delivery.
 The six-file studio experiment requires operator preflight and a separately
 reviewed supervised query-acquisition path, not an unarmed report workaround.
 
@@ -85,4 +126,7 @@ are sequential, pytest workers capped at2, frontend workers at1 and native
 browser ownership at1. Free RAM sampled13.6-13.8GiB; new native QA stops below
 6GiB free or above3GiB owned private memory. Worktrees are archived recoverably
 after composition; ignored evidence is preserved outside the code tree.
-End time, total elapsed and stop reason will be recorded after delivery.
+Two documentation-hook refusals were corrected without bypass. Package testing
+ran23:02:19Z-23:04:39Z, then frozen-worker and ordinary-launch checks sequentially.
+End time, total elapsed and stop reason will be recorded after security triage
+and delivery documentation closeout. No new endurance claim is made.

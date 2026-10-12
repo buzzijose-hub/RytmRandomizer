@@ -778,8 +778,9 @@ class LibraryStore:
         )
 
     def _record_path(self, record_id: str) -> Path:
-        """Filesystem path for one (already validated) record id."""
+        """Filesystem path for one validated record id, including direct callers."""
 
+        record_id = _validate_record_id(record_id)
         return self._library_dir / f"{record_id}{_RECORD_SUFFIX}"
 
     def _write_record(
@@ -787,6 +788,7 @@ class LibraryStore:
     ) -> None:
         """Persist one record atomically (sibling tempfile + rename)."""
 
+        record_path = self._record_path(record.record_id)
         # ``to_dict()`` is also the on-wire ack shape, so the persisted
         # envelope is stamped here (disk only) rather than in the DTO —
         # adding a field to the wire payload would change the WS contract.
@@ -816,7 +818,7 @@ class LibraryStore:
             else:
                 _validate_record_source_frame(record, frame)
                 artifacts[destination] = frame
-        artifacts[self._record_path(record.record_id)] = encoded
+        artifacts[record_path] = encoded
         new_count = sum(not os.path.lexists(path) for path in artifacts)
         if new_count > LIBRARY_MAX_FILES:
             raise _LibrarySourceError("size", "library directory exceeds the file count bound")

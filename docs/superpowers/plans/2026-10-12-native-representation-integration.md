@@ -1,6 +1,6 @@
 # Native Representation Integration
 
-> Status: in-flight (offline implementation; hardware and protected approval pending).
+> Status: in-flight (tested offline096 delivery; security disposition, hardware and protected approval pending).
 
 ## Mission And Baseline
 

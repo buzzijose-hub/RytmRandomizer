@@ -361,6 +361,84 @@ def test_public_record_id_refusals_never_echo_operator_inputs(
     _assert_redacted(source_logs, "PRIVATE_PATH", "PRIVATE_ID")
 
 
+@pytest.mark.parametrize("strict", (False, True))
+@pytest.mark.parametrize(
+    "record_id",
+    (
+        "../PRIVATE_PATH",
+        "/PRIVATE_PATH",
+        "C:\\PRIVATE_PATH",
+        "valid_id/../PRIVATE_PATH",
+        "valid_id\\PRIVATE_PATH",
+        "valid_id\n",
+        None,
+    ),
+)
+def test_library_get_refuses_untrusted_ids_before_filesystem_access(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, strict: bool, record_id: object
+) -> None:
+    store = LibraryStore(tmp_path / "library")
+
+    def forbidden_access(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("invalid record identity reached the filesystem")
+
+    with monkeypatch.context() as scoped:
+        scoped.setattr(Path, "stat", forbidden_access)
+        scoped.setattr(Path, "iterdir", forbidden_access)
+        scoped.setattr(library_module.os.path, "lexists", forbidden_access)
+        with pytest.raises(ValueError, match="invalid library record_id"):
+            store.get(record_id, strict_original_source=strict)  # type: ignore[arg-type]
+    assert tuple(tmp_path.iterdir()) == ()
+
+
+@pytest.mark.parametrize("operation", ("path", "write"))
+@pytest.mark.parametrize("record_id", ("../PRIVATE_PATH", "C:\\PRIVATE_PATH", "id/escape", "id\n"))
+def test_direct_library_record_refuses_invalid_identity_before_filesystem_access(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, operation: str, record_id: str
+) -> None:
+    store = LibraryStore(tmp_path / "library")
+    record = LibraryRecord(
+        record_id=record_id,
+        device_id="analog_rytm_mk2",
+        kit_name="LOCAL RECORD",
+        fingerprint="0123456789abcdef",
+        captured_at="2026-10-12T00:00:00+00:00",
+        tags=(),
+        payload_hex="00203c",
+    )
+
+    def forbidden_access(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("invalid direct record identity reached the filesystem")
+
+    with monkeypatch.context() as scoped:
+        scoped.setattr(Path, "stat", forbidden_access)
+        scoped.setattr(Path, "iterdir", forbidden_access)
+        scoped.setattr(Path, "mkdir", forbidden_access)
+        with pytest.raises(ValueError, match="invalid library record_id"):
+            if operation == "path":
+                store._record_path(record.record_id)
+            else:
+                store._write_record(record, overwrite=False)
+    assert tuple(tmp_path.iterdir()) == ()
+
+
+def test_valid_direct_library_record_still_publishes_under_configured_root(tmp_path: Path) -> None:
+    store = LibraryStore(tmp_path / "library")
+    record = LibraryRecord(
+        record_id="valid_record-1",
+        device_id="analog_rytm_mk2",
+        kit_name="LOCAL RECORD",
+        fingerprint="0123456789abcdef",
+        captured_at="2026-10-12T00:00:00+00:00",
+        tags=(),
+        payload_hex="00203c",
+    )
+    store._write_record(record, overwrite=False)
+    assert store.get(record.record_id) == record
+    assert store._record_path(record.record_id) == store.library_dir / "valid_record-1.json"
+    assert {path.name for path in store.library_dir.iterdir()} == {"valid_record-1.json"}
+
+
 def test_other_library_validation_messages_are_path_and_id_free(tmp_path: Path) -> None:
     store = LibraryStore(tmp_path / "library", captures_dir=tmp_path / "PRIVATE_CAPTURES")
     with pytest.raises(ValueError, match="does not exist") as refusal:

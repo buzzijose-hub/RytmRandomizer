@@ -4,15 +4,22 @@ Last updated: 2026-10-12. This file is a hand-authored snapshot and is meant to 
 
 ## Current Snapshot
 
-The October 12 native-representation integration is in flight on PR #254's
-assembly branch. A4 F1 and separate Rytm LFO contracts, passive `0x52`/`0x58`
+The October 12 native-representation integration has a tested offline Windows
+delivery on PR #254's assembly branch. A4 F1 and separate Rytm LFO contracts, passive `0x52`/`0x58`
 classification, exact replay-compatible display projection, saved-source
 refusal boundaries and the six-file comparison command are implemented.
 Final production source `658c8f9f` passes11813 cases/5 skips/6 warnings824.40s;
 all76 touched production files100%line/branch and project99.42%pure-branch.
 Eight dimensional reviews are complete; accepted findings are corrected.
 Pinned strict typing, lint and dead-code gates pass; frontend1294 cases/all
-four coverage dimensions100%. A new source-bound Windows package is pending.
+four coverage dimensions100%. The new source-bound `096be3ed94ec` package is at
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-096be3ed94ec`.
+Actual affected UI37.433s/22commands, both-device UI41.498s/47commands and frozen
+worker24.687s pass with cleanup; normal launcher authenticates UI4.326s. Native
+samples306.62-600.13MiB,10processes,minimum13.12GiBfree; not new endurance proof.
+Source test CI/required-checks pass; separate CodeQL path alerts21-25 are under
+independent triage, not dismissed. Latest Eddie review remains October3
+CHANGES_REQUESTED; protected approval and historical Gate14/16 remain pending.
 No real MIDI/USB operation occurred. Working-state synchronization, precision,
 automatic restore and show readiness remain unverified. See the
 [integration map](NATIVE_REPRESENTATION_INTEGRATION.md) and

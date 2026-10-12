@@ -263,6 +263,34 @@ def test_session_ids_never_become_arbitrary_paths(value: str) -> None:
 
 
 @pytest.mark.parametrize(
+    "session_id",
+    (
+        "../PRIVATE_PATH",
+        "/PRIVATE_PATH",
+        "C:\\PRIVATE_PATH",
+        "sound-" + "a" * 32 + "/../PRIVATE_PATH",
+        "sound-" + "a" * 32 + "\\PRIVATE_PATH",
+        "sound-" + "a" * 32 + "\n",
+        None,
+    ),
+)
+def test_session_load_refuses_untrusted_ids_before_filesystem_access(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, session_id: object
+) -> None:
+    store = ReferenceSoundStore(tmp_path / "reference-sounds")
+
+    def forbidden_access(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("invalid session identity reached the filesystem")
+
+    with monkeypatch.context() as scoped:
+        scoped.setattr(Path, "stat", forbidden_access)
+        scoped.setattr(store_module.os, "open", forbidden_access)
+        with pytest.raises(ValueError, match="Choose an existing reference-sound session"):
+            store.load(session_id)  # type: ignore[arg-type]
+    assert tuple(tmp_path.iterdir()) == ()
+
+
+@pytest.mark.parametrize(
     "digest,extension", [("../escape", "wav"), ("a" * 64, "json"), ("A" * 64, "syx")]
 )
 def test_artifact_paths_require_hashes_and_known_extensions(digest: str, extension: str) -> None:

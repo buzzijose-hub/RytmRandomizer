@@ -1,6 +1,6 @@
 # Native Integration Dimensional Review
 
-Status: in-flight (scoped source review repairs closed; final gates/package pending).
+Status: in-flight (scoped source repairs and offline package accepted; new security triage and protected approval pending).
 
 Eight targeted reviews, at most two active workers. Every review is source-only
 unless a runner result below explicitly establishes software execution. None
@@ -39,10 +39,34 @@ work; recovery is manual. Old package acceptance is not inherited by this build.
 - Latest boundary/taxonomy/u14/error cases:271 passed/3warnings6.22s.
 - Strict pinned typing and whole lint/dead-code checks are clean on frozen658.
 - Final658 full coverage passes11813 cases; Gate1 all76 touched files100%line/branch.
-  New executable/native acceptance is pending.
+  Exact096 executable/native acceptance passes; see the run report and source-bound receipt.
 
 No unresolved Critical/Important/Minor source findings remain in the completed
-reviews. This is not an overall Ready-to-merge decision: normal-hook publication,
-package evidence, historical Gate14/16 disposition and protected human approval
+reviews. A subsequent CodeQL aggregate check reports five high path-injection
+alerts21-25 requiring independent triage; analysis-job success is not alert
+clearance. No alert was dismissed. This is not an overall Ready-to-merge decision:
+security disposition, historical Gate14/16 disposition and protected human approval
 must be evaluated separately. Hardware precision, freshness, application/save/
 reload/recovery and show readiness remain unverified.
+
+## Subsequent CodeQL Triage
+
+Independent read-only review inspected analysis1939595637 and alerts21-25.
+Reported WS flows use configured storage roots, strict whole-string library
+IDs (`[A-Za-z0-9][A-Za-z0-9_-]{0,127}`) and sound-session IDs
+(`sound-[a-f0-9]{32}`) before file access. No reachable WS traversal was found;
+guard-model false positives are the review assessment, not an alert dismissal.
+The generic bounded reader is not a root-policy sanitizer. Local ancestor/
+junction tampering is separate from these validated-ID flows and is not
+certified safe by this triage.
+
+The reviewer found a narrower direct-DTO defensive gap: `_record_path` assumed
+validation and `_write_record` could perform metadata checks first. Eight red
+regressions reproduced it; the valid-record control passed. The helper now
+validates every caller and the writer resolves that validated path before any
+I/O. The composed reader/library/WS/favorite suite passes375cases/3warnings4.33s.
+Twenty-one additional malformed public-ID cases prove rejection before file
+lookup. No schema, native representation, source identity or output gate changes.
+The production repair requires fresh full-source and packaged acceptance;
+the previously tested096 delivery remains preserved meanwhile. No suppression,
+dismissal, false-green claim or protected merge is authorized by this report.

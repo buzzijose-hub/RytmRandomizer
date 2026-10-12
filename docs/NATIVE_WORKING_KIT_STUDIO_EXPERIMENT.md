@@ -1,8 +1,15 @@
 # A4 Saved Versus Working KIT Studio Experiment
 
 Status: prepared; no physical observation or query has been performed by this
-software session. The tested package and launcher must be taken from its
-source-bound delivery receipt. Prior verified packages remain preserved.
+software session. The tested Windows delivery is source `096be3ed94ec` at
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-096be3ed94ec`.
+Its `studio-procedure/DELIVERY-RECEIPT.md` records binary hashes and actual
+offline acceptance. Prior verified packages remain preserved.
+
+```powershell
+Set-Location "C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-studio-096be3ed94ec"
+.\Launch-Offline.ps1 -Hidden:$false
+```
 
 ## One Preflight
 
@@ -49,9 +56,9 @@ hardware transmission command. It writes JSON to stdout; it does not overwrite
 inputs. Origin is a declaration, not a physical certification.
 
 ```powershell
-Set-Location "C:\Users\Jose Buzzi\Documents\RytmRandomizer"
+Set-Location "C:\Users\Jose Buzzi\.codex\worktrees\rytm-studio-mapping\RytmRandomizer"
 $env:RYTM_RAND_MIDI_BACKEND = "off"
-.\.venv\Scripts\python.exe -m rytm_randomizer.cli a4-working-kit-compare `
+& "C:\Users\Jose Buzzi\Documents\RytmRandomizer\.venv\Scripts\python.exe" -m rytm_randomizer.cli a4-working-kit-compare `
   --manual-baseline "output\local\a4-working-kit\01_manual_B.syx" `
   --indexed-baseline "output\local\a4-working-kit\02_indexed_after_edit_B.syx" `
   --working-first "output\local\a4-working-kit\03_working_U.syx" `
@@ -62,8 +69,8 @@ $env:RYTM_RAND_MIDI_BACKEND = "off"
   --evidence-origin operator_supplied_files
 ```
 
-Use the exact delivered source checkout from the receipt if the primary
-checkout has not yet been updated. The report includes SHA-256 identities,
+This command uses the verified assembly checkout, not the unchanged primary
+checkout. The report includes SHA-256 identities,
 source kinds/slots/format versions, all four exact F1 words and labels, every
 raw/body difference and separate repeat/save/recovery checks. Optional
 `--baseline-label` and `--changed-label` compare recorded forward labels only;

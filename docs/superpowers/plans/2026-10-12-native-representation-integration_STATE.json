@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "phase": "packaging",
+  "phase": "package_validation",
   "started_at": "2026-10-12T20:01:07Z",
-  "updated_at": "2026-10-12T22:40:54Z",
-  "source_commit": "658c8f9f8dcba361720b52c4e8d0aac5674372c0",
+  "updated_at": "2026-10-12T23:25:22Z",
+  "source_commit": "096be3ed94ecd7d76722321f51c1251fbe477feb",
   "reference_pr": 254,
   "midi_disabled": true,
   "completed": [
@@ -26,12 +26,19 @@
     "final658 full11813 passed5 skipped824.40 seconds",
     "Gate1 all76 integration-touched production files100 percent line branch",
     "whole-package branch99.42 percent ratchet99 unchanged",
-    "all8 source dimension reviews complete4Important1Minor fixes closed"
+    "all8 source dimension reviews complete4Important1Minor fixes closed",
+    "normal hooks and exact096 Windows build38318760273 passed",
+    "source-bound shell sidecar and offline launcher hashes verified",
+    "actual native representation37.433seconds22commands zero failures with restart cleanup",
+    "both-device packaged reference journey41.498seconds47commands zero failures with restart cleanup",
+    "frozen audio worker24.687seconds and normal launcher authenticated UI4.326seconds passed",
+    "sanitized delivery evidence and confirmed owned listener process cleanup",
+    "source test CI38318732424 required-checks passed",
+    "202 path and adjacent regression cases passed including21 before-filesystem refusals"
   ],
   "pending": [
-    "new packaged source-kind and precision UI journey",
-    "normal-hook publication and fresh CI review status",
-    "exact source new Windows package and affected executable journeys",
-    "protected human review and physical evidence"
+    "independent CodeQL21-25 path-injection triage and required human disposition",
+    "delivery documentation closeout and exact elapsed accounting",
+    "protected human review historicalGate14Gate16 disposition and physical evidence"
   ]
 }
