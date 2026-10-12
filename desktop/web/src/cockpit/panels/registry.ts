@@ -5,6 +5,7 @@ import type {
   PanelSpecDict,
 } from '../../types/live_gui_protocol';
 import { ShowKitForgePanel } from '../showKitForge/ShowKitForgePanel';
+import { ReferenceSoundPanel } from '../referenceSound/ReferenceSoundPanel';
 import { analyzerPanelSpec } from './analyzerPanel';
 import { ConnectionDoctorPanel } from './ConnectionDoctorPanel';
 import { KitMorphPanel } from './KitMorphPanel';
@@ -74,6 +75,7 @@ export const PANEL_REGISTRY: ReadonlyArray<PanelManifestEntry> = [
     component: PanelRenderer,
   },
   { kind: 'store-slice', id: 'mutation-parameters', region: 'bottom', component: MutationParametersPanel },
+  { kind: 'store-slice', id: 'reference-sound', region: 'bottom', component: ReferenceSoundPanel },
   { kind: 'store-slice', id: 'live-midi-monitor', region: 'bottom', component: LiveMidiMonitorPanel },
   { kind: 'store-slice', id: 'connection-doctor', region: 'bottom', component: ConnectionDoctorPanel },
   { kind: 'store-slice', id: 'library', region: 'bottom', component: LibraryPanel },
