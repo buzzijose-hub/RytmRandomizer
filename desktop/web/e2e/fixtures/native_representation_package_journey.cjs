@@ -71,7 +71,7 @@ from rytm_randomizer.cockpit.export.reference_sound_store import ReferenceSoundS
 from rytm_randomizer.cockpit.export.reference_sound_session import ReferenceSoundWorkspace
 from rytm_randomizer.cockpit.export.reference_sound_display import reference_sound_operator_session
 from rytm_randomizer.data.analog_four_kit_fields import format_a4_fixed_8_8
-from rytm_randomizer.devices import get_analog_four_native_field_capability
+from rytm_randomizer.devices import get_analog_four_native_field_capability, resolve_saved_kit_capture_capability
 root, state = map(Path,sys.argv[1:])
 request = json.load(sys.stdin)
 view = request['view']
@@ -87,17 +87,25 @@ native = get_analog_four_native_field_capability()
 source_frame = store.read_artifact(stored['context']['source_sha256'],'syx')
 assert sha256(source_frame).hexdigest() == request['sources'][0]['frame_sha256']
 assert native.read_native_fields(source_frame).value('filter1_frequency',1).encoded_native == 16257
+codec = resolve_saved_kit_capture_capability('analog_four_mk2').capability
+source_body = codec.decode_saved_kit_capture(source_frame).unpacked
+assert int.from_bytes(source_body[128:130],'big') == 16257
 records = []
 for candidate in stored['candidates']:
     frame = workspace.candidate(stored['session_id'],candidate['candidate_id']).frame
     assert sha256(frame).hexdigest() == candidate['frame_sha256']
     value = native.read_native_fields(frame).value('filter1_frequency',1)
+    candidate_body = codec.decode_saved_kit_capture(frame).unpacked
+    changed = [index for index,pair in enumerate(zip(source_body,candidate_body,strict=True)) if pair[0] != pair[1]]
+    assert set(changed).issubset({128,129})
+    assert int.from_bytes(candidate_body[128:130],'big') == value.encoded_native
+    assert codec.encode_saved_kit_capture(codec.decode_saved_kit_capture(frame)) == frame
     for change in candidate['changes']:
         assert change['parameter'] == 'filter1_frequency'
         assert change['source_display'] == format_a4_fixed_8_8(16257)
         assert change['rendered_value'] == value.encoded_native
         assert change['rendered_display'] == format_a4_fixed_8_8(value.encoded_native)
-    records.append(dict(candidate_id=candidate['candidate_id'],frame_sha256=candidate['frame_sha256'],native=value.encoded_native,stored_rendered_labels=[change['rendered_display'] for change in candidate['changes']]))
+    records.append(dict(candidate_id=candidate['candidate_id'],frame_sha256=candidate['frame_sha256'],native=value.encoded_native,changed_body_offsets=changed,stored_rendered_labels=[change['rendered_display'] for change in candidate['changes']]))
 assert sha256((root / '${ORIGINAL_FILE}').read_bytes()).hexdigest() == '${ORIGINAL_SHA256}'
 print(json.dumps(dict(manifest_sha256=sha256((directory / (stored['session_id']+'.sound.json')).read_bytes()).hexdigest(),source_sha256=stored['context']['source_sha256'],favorites=stored['favorites'],candidates=records,original_unchanged=True)))
 `;
