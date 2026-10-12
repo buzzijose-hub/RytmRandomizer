@@ -202,6 +202,17 @@ test('scope proof requires a fresh event and exact cells, not a matching old len
   assert.equal(context.observe(5, 4, [], []), true);
 });
 
+test('rehearsal wire scope preserves the selected alias rather than the native candidate key', () => {
+  const expected = source.match(/^    const expectedScope = .*;$/m)?.[0];
+  assert(expected, 'The actual rehearsal scope expectation is required');
+  const context = vm.createContext({ a4Track: 3, a4Fields: ['Filter1 Frequency', 'filter2_resonance'] });
+  new vm.Script(expected + ';globalThis.cells=expectedScope;').runInContext(context);
+  assert.deepEqual(JSON.parse(JSON.stringify(context.cells)), [
+    { item_id: 3, parameter_key: 'Filter1 Frequency' },
+    { item_id: 3, parameter_key: 'filter2_resonance' },
+  ]);
+});
+
 test('favorite replacement waits for its delayed confirmation instead of a visibility snapshot', async () => {
   const start = source.indexOf('async function markRehearsalFavorite(');
   const end = source.indexOf('\nconst powershell', start);

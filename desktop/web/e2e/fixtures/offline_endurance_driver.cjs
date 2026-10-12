@@ -327,7 +327,7 @@ async function main() {
     }
     const sourceIdentity = bank().entries.map(entry => [entry.rytm_source.sysex.frame_sha256, entry.analog_four_source.sysex.frame_sha256]);
     const cueIds = bank().entries.map(entry => entry.entry_id);
-    const expectedScope = a4Fields.map(field => ({ item_id: a4Track, parameter_key: field === 'Filter1 Frequency' ? 'filter1_frequency' : field }));
+    const expectedScope = a4Fields.map(field => ({ item_id: a4Track, parameter_key: field }));
     summary.phase = 'missing-package-refusal'; save();
     const beforeMissing = structuredClone(bank());
     await forge.getByLabel('Import package ID').fill('missing-endurance-package');
