@@ -27,12 +27,36 @@ from rytm_randomizer.cockpit.ws.reference_sound_handlers import (
     cancel_reference_sound,
 )
 from rytm_randomizer.cockpit.ws.server import create_app
+from rytm_randomizer.observability.metrics import get_metrics
 from rytm_randomizer.style_analysis.extractor import AudioFeatureAnalysis
 
 pytestmark = pytest.mark.fast
 
 
 _session = make_reference_sound_session
+
+
+def test_executor_submission_failure_releases_the_fence_and_allows_fresh_work(
+    tmp_path: Path,
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: tuple[bytes, str, int, tuple[str, ...]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session, _ = _session(tmp_path, reference_sound_workspace, reference_sound_source)
+
+    def failed_submit(*_args: object) -> asyncio.Future[int]:
+        raise RuntimeError("test-owned executor is unavailable")
+
+    async def exercise() -> None:
+        loop = asyncio.get_running_loop()
+        with monkeypatch.context() as patch:
+            patch.setattr(loop, "run_in_executor", failed_submit)
+            with pytest.raises(RuntimeError, match="executor is unavailable"):
+                await _owned_operation(session, lambda _cancel: 1)
+        assert session.sound_cancel is None
+        assert await _owned_operation(session, lambda _cancel: 2) == 2
+
+    asyncio.run(exercise())
 
 
 def test_action_group_boundaries_refuse_foreign_actions_without_touching_retained_state(
@@ -84,6 +108,7 @@ def test_actual_websocket_disconnect_cancels_and_drains_the_owned_audio_worker(
             finished.set()
 
     reference_sound_workspace.analyzer = delayed
+    cleanup_errors = get_metrics().errors_by_kind["reference_sound.cancel_cleanup_failed"]
     _, device, target, parameters = reference_sound_source
     before = {
         item.name: item.read_bytes()
@@ -114,6 +139,7 @@ def test_actual_websocket_disconnect_cancels_and_drains_the_owned_audio_worker(
             assert session.sound_cancel is not None
         assert finished.wait(2)
     assert session.sound_cancel is None
+    assert get_metrics().errors_by_kind["reference_sound.cancel_cleanup_failed"] == cleanup_errors
     assert {
         item.name: item.read_bytes()
         for item in reference_sound_workspace.store.directory.iterdir()

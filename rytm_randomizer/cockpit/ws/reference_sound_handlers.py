@@ -98,47 +98,51 @@ async def _owned_operation(session: CockpitSession, execute: Callable[[Event], _
         raise ValueError("Another audio operation is running; cancel it first.")
     cancel = Event()
     session.sound_cancel = cancel
-    # Keep the executor future private: loop-wide task cancellation must not
-    # cancel its wrapper and hide a thread that is still finishing cleanup.
-    context = contextvars.copy_context()
-
-    def invoke() -> _Result:
-        return context.run(execute, cancel)
-
-    task = asyncio.get_running_loop().run_in_executor(None, invoke)
     try:
-        result = await asyncio.shield(task)
-        if cancel.is_set():
-            raise BoundaryError(
-                "Audio operation was cancelled.", context={"error_code": "interrupted"}
-            )
-        return result
-    except asyncio.CancelledError:
-        cancel.set()
-        # The worker terminates within its bounded poll/cleanup interval. Await
-        # ownership release rather than abandoning a publishing background task.
-        while True:
-            try:
-                await asyncio.shield(task)
-                break
-            except asyncio.CancelledError:
-                # A second disconnect/cancel must not abandon the same worker.
-                continue
-            except (
-                KeyError,
-                TypeError,
-                ValueError,
-                OSError,
-                RuntimeError,
-                RytmRandomizerError,
-            ) as exc:
-                _logger.warning(
-                    "reference_sound_cancel_cleanup_failed",
-                    extra={"error_type": type(exc).__name__},
+        # A private executor future survives loop-wide task cancellation.
+        context = contextvars.copy_context()
+
+        def invoke() -> _Result:
+            return context.run(execute, cancel)
+
+        task = asyncio.get_running_loop().run_in_executor(None, invoke)
+        try:
+            result = await asyncio.shield(task)
+            if cancel.is_set():
+                raise BoundaryError(
+                    "Audio operation was cancelled.", context={"error_code": "interrupted"}
                 )
-                get_metrics().record_error("reference_sound.cancel_cleanup_failed")
-                break
-        raise
+            return result
+        except asyncio.CancelledError:
+            cancel.set()
+            # Drain despite repeat cancellation before releasing ownership.
+            while True:
+                try:
+                    await asyncio.shield(task)
+                    break
+                except asyncio.CancelledError:
+                    continue
+                except (
+                    KeyError,
+                    TypeError,
+                    ValueError,
+                    OSError,
+                    RuntimeError,
+                    RytmRandomizerError,
+                ) as exc:
+                    if reference_sound_failure_reason(exc) == "interrupted":
+                        _logger.info(
+                            "reference_sound_cancel_cleanup_completed",
+                            extra={"reason": "interrupted"},
+                        )
+                    else:
+                        _logger.warning(
+                            "reference_sound_cancel_cleanup_failed",
+                            extra={"error_type": type(exc).__name__},
+                        )
+                        get_metrics().record_error("reference_sound.cancel_cleanup_failed")
+                    break
+            raise
     finally:
         if session.sound_cancel is cancel:
             session.sound_cancel = None
