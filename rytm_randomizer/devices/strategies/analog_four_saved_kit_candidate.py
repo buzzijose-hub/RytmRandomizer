@@ -18,6 +18,7 @@ from ...data.analog_four_sysex_calibration import (
     AnalogFourSysexFieldCalibration,
     analog_four_sysex_calibration_for,
 )
+from ...observability.errors import WorkingKitSourceRefusalError
 from ...snapshot import extract_sysex_payloads
 from .analog_four_kit_fields import A4Kit
 from .analog_four_saved_kit_codec import (
@@ -97,9 +98,7 @@ def validate_analog_four_candidate_source(
         )
     decoded = decode_analog_four_saved_kit_payload(payload, require_trailer=True)
     if decoded.source_kind is AnalogFourKitSourceKind.WORKING_RAM and not allow_working:
-        raise ValueError(
-            "Working KIT response is passive evidence; an indexed KIT source is required"
-        )
+        raise WorkingKitSourceRefusalError()
     reencoded = encode_analog_four_saved_kit_payload(decoded.prefix, decoded.unpacked)
     if reencoded.payload != payload:
         raise ValueError("Analog Four candidate source must round-trip byte-identically")

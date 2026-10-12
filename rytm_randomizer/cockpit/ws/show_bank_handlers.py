@@ -16,7 +16,11 @@ from ...guardrails.input_validation import (
     require_text,
     require_text_tuple,
 )
-from ...observability.errors import DataError, PersistedStateVersionError
+from ...observability.errors import (
+    DataError,
+    PersistedStateVersionError,
+    WorkingKitSourceRefusalError,
+)
 from ...observability.logging import get_logger
 from ..capture import decode_kit_capture_frame
 from ..data import (
@@ -106,6 +110,8 @@ _GENERATION_TARGETS_REASON: Final[str] = "operator_targets_expanded"
 def local_artifact_failure_message(exc: BaseException) -> str | None:
     """Project existing public failure metadata without exception text or artifact names."""
 
+    if type(exc) is WorkingKitSourceRefusalError:
+        return WorkingKitSourceRefusalError.recovery_message
     if isinstance(exc, PersistedStateVersionError):
         return LOCAL_ARTIFACT_RECOVERY_MESSAGES["schema"]
     if isinstance(exc, DataError):

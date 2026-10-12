@@ -73,7 +73,7 @@ from typing import Final, Protocol, SupportsInt, cast, runtime_checkable
 
 from ...devices import get_device
 from ...guardrails.input_validation import canonical_json_bytes, require_float, require_text
-from ...observability.errors import RytmRandomizerError
+from ...observability.errors import RytmRandomizerError, WorkingKitSourceRefusalError
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...observability.tracing import operation
@@ -3415,6 +3415,8 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
             # stdlib exceptions have none and are journalled by the
             # structured log only.
             fingerprint = _exc_fingerprint(exc)
+            if type(exc) is WorkingKitSourceRefusalError:
+                _metrics.record_error(WorkingKitSourceRefusalError.fingerprint)
             if fingerprint is not None:
                 # ``_label`` equals ``cmd_type`` on every path that reaches
                 # a handler (a non-string type never resolves a handler).
