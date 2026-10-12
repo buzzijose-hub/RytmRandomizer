@@ -1,5 +1,7 @@
 """Passive export facade for canonical measured-audio persistence adapters."""
 
+from __future__ import annotations
+
 from ...style_analysis.reference_sound_analysis import (
     sound_analysis_from_dict,
     sound_analysis_to_dict,

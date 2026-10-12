@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import tempfile
 from collections.abc import Callable, Mapping
-from dataclasses import asdict, dataclass, replace
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from threading import Event
-from typing import Final, cast
+from types import MappingProxyType
 
 from ...data.reference_sound_candidates import REFERENCE_SOUND_SAVED_COMMANDS
 from ...devices import resolve_saved_kit_capture_capability
@@ -31,12 +31,9 @@ from ...style_analysis.extractor import (
 from .reader import decode_json_rejecting_duplicate_keys
 from .reference_sound_analysis import (
     sound_analysis_from_dict,
-    sound_analysis_to_dict,
     sound_features_from_dict,
     sound_integer,
-    sound_mapping,
     sound_number,
-    sound_string_tuple,
     sound_text,
 )
 from .reference_sound_audio import inspect_reference_audio, select_reference_segment
@@ -44,6 +41,26 @@ from .reference_sound_candidates import (
     ReferenceSoundCandidate,
     render_reference_sound_candidates,
     render_refined_reference_sound_candidate,
+)
+from .reference_sound_records import (
+    REFERENCE_SOUND_MAX_RECORDINGS,
+    REFERENCE_SOUND_MAX_REFINEMENTS,
+    REFERENCE_SOUND_METRIC,
+    ReferenceSoundContextPayload,
+    ReferenceSoundRecordingPayload,
+    ReferenceSoundRefinementPayload,
+    ReferenceSoundSegmentIdentity,
+    ReferenceSoundSessionPayload,
+    ReferenceSoundSource,
+    narrow_sound_device_id,
+    require_sound_digest,
+    require_sound_title,
+    sound_analysis_payload,
+    sound_candidate_from_dict,
+    sound_context_from_dict,
+    sound_delta_payload,
+    sound_segment_payload,
+    sound_session_from_dict,
 )
 from .reference_sound_store import (
     REFERENCE_SOUND_SCHEMA,
@@ -54,21 +71,40 @@ from .reference_sound_store import (
 )
 from .writer import atomic_write
 
-REFERENCE_SOUND_MAX_REFINEMENTS: Final[int] = 3
-REFERENCE_SOUND_MAX_RECORDINGS: Final[int] = 16
-REFERENCE_SOUND_METRIC: Final[str] = (
-    "weighted normalized 11-feature L1 distance; score = round(100 * (1 - distance)); not a probability or verified sound match"
-)
 SoundAnalyzer = Callable[[Path, Event], AudioFeatureAnalysis]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class PreparedReferenceSound:
     """Worker result; only its owning event-loop action may publish it."""
 
-    payload: dict[str, object]
+    payload_bytes: bytes = field(repr=False)
     artifacts: Mapping[str, bytes]
     expected_manifest_sha256: str | None = None
+
+    def __init__(
+        self,
+        payload: Mapping[str, object],
+        artifacts: Mapping[str, bytes],
+        expected_manifest_sha256: str | None = None,
+    ) -> None:
+        encoded = reference_sound_json(sound_session_from_dict(payload))
+        copied = dict(artifacts)
+        if any(type(name) is not str or type(data) is not bytes for name, data in copied.items()):
+            raise ValueError("Prepared sound artifacts require names and immutable bytes.")
+        expected = (
+            None
+            if expected_manifest_sha256 is None
+            else require_sound_digest(expected_manifest_sha256)
+        )
+        object.__setattr__(self, "payload_bytes", encoded)
+        object.__setattr__(self, "artifacts", MappingProxyType(copied))
+        object.__setattr__(self, "expected_manifest_sha256", expected)
+
+    @property
+    def payload(self) -> ReferenceSoundSessionPayload:
+        """Return a fresh validated value, never an alias of the worker snapshot."""
+        return sound_session_from_dict(decode_json_rejecting_duplicate_keys(self.payload_bytes))
 
 
 __all__ = [
@@ -91,16 +127,7 @@ def _check_cancel(cancel: Event) -> None:
         )
 
 
-def _record_list(value: object) -> tuple[Mapping[str, object], ...]:
-    if (
-        not isinstance(value, list)
-        or len(cast(list[object], value)) > REFERENCE_SOUND_MAX_RECORDINGS
-    ):
-        raise ValueError("Reference-sound record list is invalid.")
-    return tuple(sound_mapping(item) for item in cast(list[object], value))
-
-
-def _session_identity(context: Mapping[str, object]) -> str:
+def _session_identity(context: ReferenceSoundContextPayload | ReferenceSoundSegmentIdentity) -> str:
     return "sound-" + reference_sound_digest(reference_sound_json(context))[:32]
 
 
@@ -127,35 +154,33 @@ class ReferenceSoundWorkspace:
             raise ValueError("Audio analysis does not match the retained segment.")
         return analysis
 
-    def commit(self, prepared: PreparedReferenceSound) -> dict[str, object]:
-        payload = cast(
-            dict[str, object],
-            decode_json_rejecting_duplicate_keys(reference_sound_json(prepared.payload)),
-        )
+    def _load(self, session_id: str) -> ReferenceSoundSessionPayload:
+        return sound_session_from_dict(self.store.load(session_id))
+
+    def commit(self, prepared: PreparedReferenceSound) -> ReferenceSoundSessionPayload:
+        payload = prepared.payload
         self.store.publish(
             payload, prepared.artifacts, expected_manifest=prepared.expected_manifest_sha256
         )
         return payload
 
     @trace("reference_sound.import")
-    def import_reference(self, original: bytes, title: str) -> dict[str, object]:
-        title = sound_text(title).strip()
-        if not title or len(title) > 120 or any(ord(character) < 32 for character in title):
-            raise ValueError("Use a short reference title without control characters.")
+    def import_reference(self, original: bytes, title: str) -> ReferenceSoundSessionPayload:
+        title = require_sound_title(sound_text(title).strip())
         info = inspect_reference_audio(original)
         segment = select_reference_segment(
             original, start_frame=0, frame_count=min(info.frame_count, info.sample_rate * 8)
         )
-        context: dict[str, object] = {
+        context: ReferenceSoundSegmentIdentity = {
             "original": info.sha256,
             "start_frame": 0,
             "frame_count": segment.frame_count,
         }
-        payload: dict[str, object] = {
+        payload: ReferenceSoundSessionPayload = {
             "schema_version": REFERENCE_SOUND_SCHEMA,
             "session_id": _session_identity(context),
             "title": title,
-            "segment": segment.to_dict(),
+            "segment": sound_segment_payload(segment),
             "context": None,
             "analysis": None,
             "candidates": [],
@@ -173,9 +198,9 @@ class ReferenceSoundWorkspace:
         )
         return payload
 
-    def _segment_bytes(self, payload: Mapping[str, object]) -> bytes:
-        segment = sound_mapping(payload["segment"])
-        original = sound_mapping(segment["original"])
+    def _segment_bytes(self, payload: ReferenceSoundSessionPayload) -> bytes:
+        segment = payload["segment"]
+        original = segment["original"]
         audio = self.store.read_artifact(sound_text(original["sha256"]), "wav")
         selected = select_reference_segment(
             audio,
@@ -192,23 +217,23 @@ class ReferenceSoundWorkspace:
     @trace("reference_sound.segment")
     def select_segment(
         self, session_id: str, start_frame: int, frame_count: int
-    ) -> dict[str, object]:
-        current = self.store.load(session_id)
+    ) -> ReferenceSoundSessionPayload:
+        current = self._load(session_id)
         self._segment_bytes(current)
-        old = sound_mapping(sound_mapping(current["segment"])["original"])
+        old = current["segment"]["original"]
         original = self.store.read_artifact(sound_text(old["sha256"]), "wav")
         segment = select_reference_segment(
             original, start_frame=start_frame, frame_count=frame_count
         )
-        identity = {
+        identity: ReferenceSoundSegmentIdentity = {
             "original": segment.original.sha256,
             "start_frame": start_frame,
             "frame_count": frame_count,
         }
-        payload: dict[str, object] = {
+        payload: ReferenceSoundSessionPayload = {
             **current,
             "session_id": _session_identity(identity),
-            "segment": segment.to_dict(),
+            "segment": sound_segment_payload(segment),
             "context": None,
             "analysis": None,
             "candidates": [],
@@ -233,17 +258,20 @@ class ReferenceSoundWorkspace:
         strength: float,
         cancel: Event,
     ) -> PreparedReferenceSound:
-        current = self.store.load(session_id)
+        current = self._load(session_id)
         audio = self._segment_bytes(current)
-        context: dict[str, object] = {
-            "segment_sha256": reference_sound_digest(audio),
-            "source_sha256": reference_sound_digest(source_frame),
-            "device_id": device_id,
-            "target": target,
-            "parameters": list(parameters),
-            "locks": list(locks),
-            "strength": strength,
-        }
+        source = ReferenceSoundSource(source_frame, narrow_sound_device_id(device_id), target)
+        context = sound_context_from_dict(
+            {
+                "segment_sha256": reference_sound_digest(audio),
+                "source_sha256": source.sha256,
+                "device_id": source.device_id,
+                "target": source.target,
+                "parameters": list(parameters),
+                "locks": list(locks),
+                "strength": strength,
+            }
+        )
         identity = _session_identity(context)
         if (self.store.directory / f"{identity}.sound.json").exists():
             _check_cancel(cancel)
@@ -255,12 +283,12 @@ class ReferenceSoundWorkspace:
         candidates = render_reference_sound_candidates(
             source_frame, device_id, target, analysis, parameters, locks, strength
         )
-        payload = {
+        payload: ReferenceSoundSessionPayload = {
             **current,
             "session_id": identity,
             "context": context,
-            "analysis": sound_analysis_to_dict(analysis),
-            "candidates": [item.to_dict() for item in candidates],
+            "analysis": sound_analysis_payload(analysis),
+            "candidates": [sound_candidate_from_dict(item.to_dict()) for item in candidates],
             "recordings": [],
             "refinements": [],
             "favorites": [],
@@ -277,10 +305,12 @@ class ReferenceSoundWorkspace:
         return PreparedReferenceSound(payload, artifacts)
 
     def _verified_candidates(
-        self, payload: Mapping[str, object]
+        self, payload: ReferenceSoundSessionPayload
     ) -> tuple[ReferenceSoundCandidate, ...]:
         audio = self._segment_bytes(payload)
-        context = sound_mapping(payload["context"])
+        context = payload["context"]
+        if context is None or payload["analysis"] is None:
+            raise ValueError("Generate source-bound candidates before using this session.")
         if context["segment_sha256"] != reference_sound_digest(audio) or payload[
             "session_id"
         ] != _session_identity(context):
@@ -291,15 +321,13 @@ class ReferenceSoundWorkspace:
         source = self.store.read_artifact(sound_text(context["source_sha256"]), "syx")
         device = sound_text(context["device_id"])
         target = sound_integer(context["target"])
-        parameters = sound_string_tuple(context["parameters"])
-        locks = sound_string_tuple(context["locks"])
+        parameters = tuple(context["parameters"])
+        locks = tuple(context["locks"])
         strength = sound_number(context["strength"])
         candidates = render_reference_sound_candidates(
             source, device, target, analysis, parameters, locks, strength
         )
-        refinements = _record_list(payload["refinements"])
-        if len(refinements) > REFERENCE_SOUND_MAX_REFINEMENTS:
-            raise ValueError("Reference-sound refinement limit exceeded.")
+        refinements = payload["refinements"]
         for item in refinements:
             parent = next(
                 (
@@ -312,7 +340,7 @@ class ReferenceSoundWorkspace:
             recording = next(
                 (
                     record
-                    for record in _record_list(payload["recordings"])
+                    for record in payload["recordings"]
                     if record["candidate_id"] == item["parent_id"]
                     and record["audio_sha256"] == item["recording_sha256"]
                 ),
@@ -348,7 +376,7 @@ class ReferenceSoundWorkspace:
         for item in candidates:
             if self.store.read_artifact(reference_sound_digest(item.frame), "syx") != item.frame:
                 raise ValueError("Retained candidate differs from canonical generation.")
-        for record in _record_list(payload["recordings"]):
+        for record in payload["recordings"]:
             parent = next(
                 (
                     candidate
@@ -379,7 +407,7 @@ class ReferenceSoundWorkspace:
 
     def _verified_recording(
         self,
-        record: Mapping[str, object],
+        record: ReferenceSoundRecordingPayload,
         candidate: ReferenceSoundCandidate,
         reference: AudioFeatureAnalysis,
     ) -> AudioFeatureAnalysis:
@@ -394,33 +422,34 @@ class ReferenceSoundWorkspace:
         measured = sound_analysis_from_dict(record["features"])
         if measured.audio_sha256 != reference_sound_digest(audio):
             raise ValueError("Recording measurements differ from retained audio.")
+        retained_score = sound_integer(record["score"])
+        retained_distance = sound_number(record["distance"])
         score = self._score(reference, measured, candidate)
         if (
             record["metric"] != REFERENCE_SOUND_METRIC
-            or record["score"] != score.similarity
-            or record["distance"] != score.distance
+            or retained_score != score.similarity
+            or retained_distance != score.distance
             or reference_sound_json({"deltas": record["feature_deltas"]})
-            != reference_sound_json({"deltas": [asdict(item) for item in score.feature_deltas]})
+            != reference_sound_json(
+                {"deltas": [sound_delta_payload(item) for item in score.feature_deltas]}
+            )
         ):
             raise ValueError("Recording score disagrees with the defined feature metric.")
         return measured
 
     @trace("reference_sound.reopen")
-    def reopen(self, session_id: str) -> dict[str, object]:
-        payload = self.store.load(session_id)
+    def reopen(self, session_id: str) -> ReferenceSoundSessionPayload:
+        payload = self._load(session_id)
         self._segment_bytes(payload)
         if payload["context"] is not None:
             candidates = self._verified_candidates(payload)
             ids = {item.candidate_id for item in candidates}
-            if (
-                payload["selected_candidate_id"] not in ids
-                or not set(sound_string_tuple(payload["favorites"])) <= ids
-            ):
+            if payload["selected_candidate_id"] not in ids or not set(payload["favorites"]) <= ids:
                 raise ValueError("Session selection or favorite references a missing candidate.")
         return payload
 
     def candidate(self, session_id: str, candidate_id: str) -> ReferenceSoundCandidate:
-        payload = self.store.load(session_id)
+        payload = self._load(session_id)
         for candidate in self._verified_candidates(payload):
             if candidate.candidate_id == candidate_id:
                 return candidate
@@ -452,10 +481,10 @@ class ReferenceSoundWorkspace:
 
     def select(
         self, session_id: str, candidate_id: str, *, favorite: object = None
-    ) -> dict[str, object]:
+    ) -> ReferenceSoundSessionPayload:
         self.candidate(session_id, candidate_id)
         payload = self.reopen(session_id)
-        favorites = set(sound_string_tuple(payload["favorites"]))
+        favorites = set(payload["favorites"])
         if favorite is not None:
             if not isinstance(favorite, bool):
                 raise ValueError("Favorite must be true or false.")
@@ -463,7 +492,11 @@ class ReferenceSoundWorkspace:
                 favorites.add(candidate_id)
             else:
                 favorites.discard(candidate_id)
-        updated = {**payload, "selected_candidate_id": candidate_id, "favorites": sorted(favorites)}
+        updated: ReferenceSoundSessionPayload = {
+            **payload,
+            "selected_candidate_id": candidate_id,
+            "favorites": sorted(favorites),
+        }
         self.store.publish(
             updated, {}, expected_manifest=reference_sound_digest(reference_sound_json(payload))
         )
@@ -486,24 +519,24 @@ class ReferenceSoundWorkspace:
         info = inspect_reference_audio(recording)
         if info.seconds > 8.0:
             raise ValueError("Use a candidate recording up to eight seconds.")
-        records = _record_list(payload["recordings"])
+        records = payload["recordings"]
         if len(records) >= REFERENCE_SOUND_MAX_RECORDINGS:
             raise ValueError("Recording limit reached; start a new bounded session.")
         analysis = self._analyze(recording, cancel)
         reference = sound_analysis_from_dict(payload["analysis"])
         score = self._score(reference, analysis, candidate)
-        record: dict[str, object] = {
+        record: ReferenceSoundRecordingPayload = {
             "candidate_id": candidate_id,
             "candidate_sha256": candidate_sha256,
             "audio_sha256": info.sha256,
-            "features": sound_analysis_to_dict(analysis),
+            "features": sound_analysis_payload(analysis),
             "distance": score.distance,
             "score": score.similarity,
             "metric": REFERENCE_SOUND_METRIC,
-            "feature_deltas": [asdict(item) for item in score.feature_deltas],
+            "feature_deltas": [sound_delta_payload(item) for item in score.feature_deltas],
             "physical_validation": False,
         }
-        updated = {**payload, "recordings": [*records, record]}
+        updated: ReferenceSoundSessionPayload = {**payload, "recordings": [*records, record]}
         _check_cancel(cancel)
         return PreparedReferenceSound(
             updated,
@@ -517,13 +550,11 @@ class ReferenceSoundWorkspace:
     ) -> PreparedReferenceSound:
         payload = self.reopen(session_id)
         candidate = self.candidate(session_id, candidate_id)
-        refinements = _record_list(payload["refinements"])
+        refinements = payload["refinements"]
         if len(refinements) >= REFERENCE_SOUND_MAX_REFINEMENTS:
             raise ValueError("Three refinement rounds reached; audition the retained alternatives.")
         records = tuple(
-            item
-            for item in _record_list(payload["recordings"])
-            if item["candidate_id"] == candidate_id
+            item for item in payload["recordings"] if item["candidate_id"] == candidate_id
         )
         if not records:
             raise ValueError("Supply a recording of this exact candidate before refinement.")
@@ -541,18 +572,20 @@ class ReferenceSoundWorkspace:
         feedback = plan_audio_feature_refinement(
             reference, score, measured.synthesis_features, correction_gain=correction_gain
         )
-        context = sound_mapping(payload["context"])
+        context = payload["context"]
+        if context is None:
+            raise ValueError("Refinement requires a retained source context.")
         source = self.store.read_artifact(sound_text(context["source_sha256"]), "syx")
         refined = render_refined_reference_sound_candidate(
             source,
             sound_text(context["device_id"]),
             sound_integer(context["target"]),
             replace(reference, synthesis_features=feedback.corrected_features),
-            sound_string_tuple(context["parameters"]),
-            sound_string_tuple(context["locks"]),
+            tuple(context["parameters"]),
+            tuple(context["locks"]),
             sound_number(context["strength"]),
         )
-        entry: dict[str, object] = {
+        entry: ReferenceSoundRefinementPayload = {
             "parent_id": candidate_id,
             "recording_sha256": measured.audio_sha256,
             "gain": correction_gain,
@@ -562,10 +595,10 @@ class ReferenceSoundWorkspace:
             return PreparedReferenceSound(
                 payload, {}, reference_sound_digest(reference_sound_json(payload))
             )
-        updated = {
+        updated: ReferenceSoundSessionPayload = {
             **payload,
             "refinements": [*refinements, entry],
-            "candidates": [*_record_list(payload["candidates"]), refined.to_dict()],
+            "candidates": [*payload["candidates"], sound_candidate_from_dict(refined.to_dict())],
             "selected_candidate_id": refined.candidate_id,
         }
         _check_cancel(cancel)
