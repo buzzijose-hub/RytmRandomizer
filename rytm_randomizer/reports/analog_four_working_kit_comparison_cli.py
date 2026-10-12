@@ -68,7 +68,9 @@ class AnalogFourWorkingKitComparisonCliArguments:
     changed_label: str | None
 
 
-def _parse_args(argv: Sequence[str]) -> dict[str, object]:
+def _parse_working_compare_options(argv: Sequence[str]) -> dict[str, object]:
+    if not argv:
+        return {"arguments": None}
     values: dict[str, str] = {}
     index = 0
     while index < len(argv):
@@ -107,7 +109,10 @@ def _format_argument_error(_exc: Exception) -> str:
     return _ARGUMENT_ERROR
 
 
-def _handle_report(arguments: AnalogFourWorkingKitComparisonCliArguments) -> int:
+def _handle_report(arguments: AnalogFourWorkingKitComparisonCliArguments | None) -> int:
+    if arguments is None:
+        sys.stdout.write(USAGE + "\n")
+        return 0
     try:
         report = build_analog_four_working_kit_comparison_report(
             arguments.files,
@@ -127,7 +132,7 @@ def _handle_report(arguments: AnalogFourWorkingKitComparisonCliArguments) -> int
 ANALOG_FOUR_WORKING_KIT_COMPARISON_CLI_COMMAND: Final[CliCommand] = make_parsed_cli_command(
     name="a4-working-kit-compare",
     summary="Compare pre-edit manual B, post-edit indexed B and working U from supplied files; chronology unverified.",
-    args_parser=_parse_args,
+    args_parser=_parse_working_compare_options,
     handler=_handle_report,
     error_formatter=_format_argument_error,
 )

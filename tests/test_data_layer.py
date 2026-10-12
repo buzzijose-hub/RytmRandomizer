@@ -39,6 +39,22 @@ pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
+
+def test_native_representation_exports_keep_distinct_parameter_contracts():
+    assert data.A4_F1_NATIVE_MAX == 32766
+    assert data.A4_F1_NATIVE_SCALE == 256
+    assert data.A4_F1_KIT_BODY_OFFSETS == (128, 478, 828, 1178)
+    assert data.A4_KIT_PROTOCOL_VERSION == (1, 1)
+    assert data.A4_KIT_STORAGE_MARKER == b"\x00\x00\x00\x0b"
+    assert data.A4_WORKING_KIT_OBJECT_BYTE == 0x58
+    assert data.RYTM_LFO_DEPTH_CONTRACT.native_max == 32767
+    assert data.RYTM_LFO_DEPTH_CONTRACT.native_center == 16384
+    assert data.RYTM_LFO_DEPTH_CONTRACT.units_per_whole == 128
+    assert data.RYTM_LFO_DEPTH_CONTRACT.coupled_word_offset == 108
+    assert data.RYTM_LFO_DEPTH_PROVENANCE.evidence_kind == "static-only"
+    assert data.RYTM_LFO_DEPTH_PROVENANCE.os_version == "1.72"
+
+
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 

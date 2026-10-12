@@ -45,9 +45,9 @@ from .reference_sound_audio import (
 )
 from .reference_sound_candidates import (
     ReferenceSoundCandidate,
-    require_reference_sound_generation_source,
     render_reference_sound_candidates,
     render_refined_reference_sound_candidate,
+    require_reference_sound_generation_source,
 )
 from .reference_sound_errors import (
     REFERENCE_SOUND_FAILURE_MESSAGES,

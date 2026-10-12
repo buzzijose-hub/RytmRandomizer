@@ -1372,6 +1372,40 @@ sound payload through both native-envelope and family codecs. It writes a local
 file only. Actual application, audible quality, hardware saving and manual
 reload/recovery remain separate physical acceptance requirements.
 
+### Parameter Representation And Passive Working KITs
+
+`data/analog_four_f1_contract.py` and `data/rytm_lfo_depth_contract.py` own
+separate immutable facts/provenance. Their Device strategies provide pure
+conversions and partial observation models, not senders, queue receipts or
+freshness grants. F1's truncated forward device label is distinct from its
+native word, exact Q8.8 coordinate and lossy NRPN14 value. Rytm LFO's signed
+center/display and CC reset/merge rules are not borrowed from A4.
+
+The existing A4 family codec preserves its nine-byte unframed header,
+MSB-first packing and 2410-byte body. Full captures validate supported protocol,
+storage markers, four Sound bindings, canonical padding, integrity and F1
+domain. Indexed `0x52` and working `0x58` bodies use unchanged coordinates;
+their raw frames and identities remain distinct. Working frames are retained
+passively but cannot be mutated/exported as indexed sources or supply saved
+favorite/preflight evidence. Show-bank adoption, retention/import, recapture and
+preflight consume the public indexed-source validator, not a body hash or
+caller-supplied layout label alone.
+
+`cockpit/export/reference_sound_display.py` projects operator labels outside
+persisted v1 records. Stored labels, protection wording, native-fields-v1
+sampling and exact replay remain compatible. The Show Kit Forge candidate view
+also displays forward F1 labels while retaining exact native values. No event
+keys or seven-bit sender shapes are changed.
+
+`devices/strategies/analog_four_working_kit_comparison.py` inspects six supplied
+experiment frames through the registered capture capability.
+`reports/analog_four_working_kit_comparison.py` performs bounded file reads;
+its CLI adapter uses the existing passive command registry. Exact raw/body
+hashes, all differences, F1 label/word agreement and repeated/save/recovery
+checks are reported. Origin/chronology remain operator declarations; hardware,
+query, send, restoration and complete-KIT authority are always false.
+See the [integration map](NATIVE_REPRESENTATION_INTEGRATION.md).
+
 ## 6.5 Cockpit WebSocket security contract (post CODE_REVIEW.md sweep, 2026-05)
 
 The cockpit sidecar exposes a single `/ws` endpoint on `127.0.0.1:4317`. "Loopback only"

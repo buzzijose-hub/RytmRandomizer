@@ -4,7 +4,19 @@ Last updated: 2026-10-12. This file is a hand-authored snapshot and is meant to 
 
 ## Current Snapshot
 
-The reference-sound integration is in flight on PR #254's assembly branch.
+The October 12 native-representation integration is in flight on PR #254's
+assembly branch. A4 F1 and separate Rytm LFO contracts, passive `0x52`/`0x58`
+classification, exact replay-compatible display projection, saved-source
+refusal boundaries and the six-file comparison command are implemented.
+Focused integration passes 853 cases; the subsequent indexed-authority and
+replay checks pass 272 cases. Broad coverage, dimensional review and a new
+source-bound Windows package are being verified, not certified here yet.
+No real MIDI/USB operation occurred. Working-state synchronization, precision,
+automatic restore and show readiness remain unverified. See the
+[integration map](NATIVE_REPRESENTATION_INTEGRATION.md) and
+[studio experiment](NATIVE_WORKING_KIT_STUDIO_EXPERIMENT.md).
+
+The previously delivered reference-sound workflow below remains available.
 Both device paths now produce source-preserving local KIT candidates rather
 than Rytm proposals only. Exact PCM segments, scope/locks, recording comparison,
 bounded refinement and disarmed local favorite/reopen are implemented. The

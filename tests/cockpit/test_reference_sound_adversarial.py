@@ -1329,7 +1329,7 @@ def test_refinement_rechecks_feedback_patch_when_candidate_lookup_drifts(
     )
     assert reference_sound_digest(alternative.frame) != payload["recordings"][0]["candidate_sha256"]
     # A stale resolver still returns codec-valid bytes, but not this recording's patch.
-    monkeypatch.setattr(workspace, "candidate", lambda session_id, requested_id: alternative)
+    monkeypatch.setattr(workspace, "candidate", lambda _session_id, _requested_id: alternative)
     before = _files(workspace.store.directory)
     with pytest.raises(ValueError, match="different patch"):
         workspace.refine(payload["session_id"], candidate_id, correction_gain=0.5, cancel=Event())

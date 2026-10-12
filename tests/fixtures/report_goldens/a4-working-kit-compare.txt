@@ -1,0 +1,2 @@
+Usage: a4-working-kit-compare --manual-baseline FILE --indexed-baseline FILE --working-first FILE --working-repeat FILE --post-save FILE --recovered FILE --track {1,2,3,4} --evidence-origin {synthetic,operator_supplied_files} [--baseline-label LABEL] [--changed-label LABEL]
+Manual baseline: pre-edit indexed 0x52 B. Indexed baseline: post-unsaved-edit, pre-SAVE queried 0x52 expected to remain B. Chronology is operator-supplied, not verified by files. Output is JSON inspection only.

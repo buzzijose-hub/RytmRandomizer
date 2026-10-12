@@ -1106,6 +1106,15 @@ dev server, Rust hot-reload, and the sidecar all spin up together.
 
 ## Reference Sound Rehearsal
 
+The October 12 native-representation follow-up is being verified separately;
+launch details belong to its source-bound delivery receipt. Do not substitute
+the previous delivery's acceptance for new package checks. In that follow-up,
+A4 source options distinguish indexed KIT bank responses from working-RAM
+inspection evidence. F1 labels are forward-truncated, not Hz or unique native
+identities. Working responses and legal words beyond the existing mutation
+domain remain protected. The six-file report and exact physical follow-up are
+documented in [the studio experiment](NATIVE_WORKING_KIT_STUDIO_EXPERIMENT.md).
+
 The new **Reference sound** workspace is for one short sound. It is distinct
 from the description compiler and song/profile wizard. The prior `6e098f85`
 rehearsal package does not contain this feature or its audio dependencies.

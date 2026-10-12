@@ -81,6 +81,13 @@ fresh paired preflight still require operator-present evidence.
 
 ## What's NEW relative to typical Python projects
 
+- Native words, mathematical coordinates, device labels and wire values are
+  separate contracts. Preserve v1 replay labels/protection text; project device
+  labels only for the operator. A working A4 `0x58` response is passive evidence,
+  never an indexed source or saved-state readiness grant. Use the raw-frame
+  indexed validator at every saved-source boundary; see
+  [the integration map](docs/NATIVE_REPRESENTATION_INTEGRATION.md).
+
 This repo has unusually strict invariants because it talks to physical hardware (Elektron Analog Rytm MK2). Key surprises that bite agents who skip the read order:
 
 - **685/505 distinction.** "685 parity tests" = pytest items; "505 goldens" = JSON files (parametrized).

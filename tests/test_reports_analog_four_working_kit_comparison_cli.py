@@ -232,9 +232,25 @@ def test_missing_source_and_invalid_frame_return_private_status2_and_preserve_so
     assert invalid.read_bytes() == bytes(2770)
 
 
-def test_empty_invocation_is_private_status2(capsys: pytest.CaptureFixture[str]) -> None:
-    assert cli.main(["a4-working-kit-compare"]) == 2
-    assert capsys.readouterr().err == "Error: invalid a4-working-kit-compare arguments.\n"
+def test_empty_invocation_prints_only_usage_without_a_comparison(
+    capsys: pytest.CaptureFixture[str], monkeypatch
+) -> None:
+    def forbidden(*args, **kwargs):
+        pytest.fail("usage cannot read experiment files")
+
+    monkeypatch.setattr(adapter, "build_analog_four_working_kit_comparison_report", forbidden)
+    assert cli.main(["a4-working-kit-compare"]) == 0
+    output = capsys.readouterr()
+    assert output.err == ""
+    assert output.out == adapter.USAGE + "\n"
+
+
+def test_help_is_registered_and_passive(capsys: pytest.CaptureFixture[str]) -> None:
+    assert cli.main(["a4-working-kit-compare", "--help"]) == 0
+    output = capsys.readouterr()
+    assert output.err == ""
+    assert "No MIDI/USB enumeration" in output.out
+    assert "All six files" in output.out
 
 
 @pytest.mark.parametrize(

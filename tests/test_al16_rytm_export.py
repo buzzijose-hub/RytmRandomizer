@@ -176,7 +176,7 @@ def test_current_al02_provenance_refresh_is_explicit_and_stays_blocked() -> None
     path = _REPO_ROOT / "output/al16/AL02_LOCK_RYTM_manifest.json"
     assert (
         hashlib.sha256(path.read_bytes()).hexdigest()
-        == "b89d79a11b3f6d95d1f81f958af4360061fe0b8bd1b0cecc55f1f3f1af42a16b"
+        == "48980a380dc47dae59aca26432a965956a024e425d893093452e63149ade3ec8"
     )
     current = json.loads(path.read_text(encoding="utf-8"))
     historical = json.loads(

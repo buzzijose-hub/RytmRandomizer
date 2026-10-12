@@ -53,5 +53,7 @@ Memories about the human's hardware setup, personal preferences across multiple 
 
 ### Reference (where to look up things)
 
+- [Native representation and provenance](project_native_representation_provenance.md) - parameter-specific labels/native/wire values, replay compatibility, and working versus indexed saved-state boundaries.
+
 - [Pre-push hook Windows shim](reference_pre_push_hook_windows_shim.md) — `.githooks/pre-push` Windows Store python detection was fixed in PR #110; pre-PR-110 worktrees need `--no-verify` for non-code pushes.
 - [Shared agent memory pattern](reference_shared_agent_memory_pattern.md) — how to make memory shareable across Claude Code + Codex + any agent (the very pattern this directory implements). Read this when extending the system.

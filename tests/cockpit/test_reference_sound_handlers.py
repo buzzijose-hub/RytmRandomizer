@@ -274,11 +274,11 @@ def test_failed_reference_change_preserves_existing_plan_and_success_clears_ui_c
     assert session.pending_events == [{"type": "send_plan_changed", "send_plan": None}]
 
 
+@pytest.mark.usefixtures("offline_hardware_denied")
 def test_actual_ws_upload_scope_generation_favorite_playback_export_and_restart(
     tmp_path: Path,
     reference_sound_workspace: ReferenceSoundWorkspace,
     reference_sound_source: tuple[bytes, str, int, tuple[str, ...]],
-    offline_hardware_denied: None,
 ) -> None:
     session, source_id = _session(tmp_path, reference_sound_workspace, reference_sound_source)
     _, device, target, parameters = reference_sound_source

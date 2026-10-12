@@ -1062,6 +1062,16 @@ listed in `scripts/apply-branch-protection.sh`.
 
 ## Hardware safety boundaries
 
+Native representation contracts are parameter-specific: use the A4 F1 and
+ordinary Rytm LFO Depth data/strategy owners, not a generic screen-to-wire
+conversion. Operator labels must not rewrite persisted candidate replay DTOs.
+Working A4 `0x58` frames may be retained and inspected, but cannot become indexed
+sources, saved favorite recaptures or show-time preflight evidence, even when
+their body hashes match. The existing indexed-source validator enforces this
+from raw frames independently of caller metadata. See the
+[integration map](docs/NATIVE_REPRESENTATION_INTEGRATION.md) and
+[bounded studio experiment](docs/NATIVE_WORKING_KIT_STUDIO_EXPERIMENT.md).
+
 The package has explicit hardware-safety boundaries that **must not regress**:
 
 - **Passive default.** `rytm-randomizer` with no `--arm` flag must NEVER open a real MIDI port. The CLI's default exercises `MockMidiSender` only.

@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "phase": "integrating",
+  "phase": "verifying",
   "started_at": "2026-10-12T20:01:07Z",
-  "updated_at": "2026-10-12T20:35:32Z",
-  "source_commit": "0fbd06d0",
+  "updated_at": "2026-10-12T21:24:45Z",
+  "source_commit": "e7265b9ac9f169553d096285295e9c52de3c14cc",
   "reference_pr": 254,
   "midi_disabled": true,
   "completed": [
@@ -12,11 +12,14 @@
     "isolated A4 F1 and Rytm LFO helpers merged",
     "working response classification and semantic source checks",
     "117 source and handler composition checks passed",
-    "52 display retention and exact restart replay checks passed"
+    "52 display retention and exact restart replay checks passed",
+    "853 focused semantic architecture and new data-only snapshot checks passed; old fixtures unchanged",
+    "272 integrated indexed-authority and replay checks passed",
+    "six-file passive experiment comparator and registry CLI integrated",
+    "working sources refused from saved-source adoption import recapture and preflight"
   ],
   "pending": [
-    "source kind and precision UI regression coverage",
-    "bounded saved versus unsaved comparison handoff",
+    "new packaged source-kind and precision UI journey",
     "full coverage typing lint parity architecture and dimensional review",
     "exact source new Windows package and affected executable journeys",
     "protected human review and physical evidence"

@@ -2930,6 +2930,20 @@ def _require_help_text(value: object, *, key: str) -> str:
 
 
 HELP_TEXT = {
+    "a4-working-kit-compare": """A4 working-KIT comparison: passive supplied-file inspection
+
+Usage:
+  python -m rytm_randomizer.cli a4-working-kit-compare --manual-baseline FILE --indexed-baseline FILE --working-first FILE --working-repeat FILE --post-save FILE --recovered FILE --track {1,2,3,4} --evidence-origin {synthetic,operator_supplied_files} [--baseline-label LABEL] [--changed-label LABEL]
+
+The manual baseline is pre-edit indexed B. The indexed baseline is retained
+after the unsaved panel edit and before SAVE, expected to remain B while the
+working response contains U. Files do not attest operator chronology, pending
+freshness, atomicity, installed firmware or recovery on an instrument.
+
+With no options, prints usage only. With inputs, prints exact hashes, F1
+words/labels, every raw/body difference and separate repeat/save/recovery checks
+as JSON. All six files, track and evidence origin are mandatory for comparison.
+No MIDI/USB enumeration, port opening, query, sending or device write occurs.""",
     "--help": """RytmRandomizer passive CLI
 
 Usage:

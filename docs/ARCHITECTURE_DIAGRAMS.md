@@ -3436,6 +3436,34 @@ for the isolated fixture contract.
 
 ## Reference Sound Workflow
 
+### Native Representation And Source-Kind Boundary
+
+```mermaid
+flowchart LR
+    Facts[Separate immutable A4 F1 / Rytm LFO contracts] --> Helpers[Typed Device representation helpers]
+    Frames[Exact supplied raw KIT frames] --> Codec[Existing family codec / unchanged coordinates]
+    Codec --> Indexed[0x52 indexed source validation]
+    Codec --> Working[0x58 working RAM / inspect only]
+    Working --> Retained[Raw retention / source-kind provenance]
+    Indexed --> Candidate[Existing scoped candidate / exact native words]
+    Candidate --> Replay[Unchanged v1 DTO / strict favorite replay]
+    Candidate --> Projection[Operator-only forward label projection]
+    Helpers --> Projection
+    Projection --> UI[Native values / device labels / wire loss]
+    SixFiles[Six explicit experiment files] --> Compare[Passive comparison / every raw and body difference]
+    Codec --> Compare
+    Helpers --> Compare
+    Compare --> Report[No query / send / restore / hardware grant]
+```
+
+Working frames cannot supply indexed sources or saved favorite/preflight
+evidence, including the no-change/fully locked case. Body equality does not
+establish source kind, pending-edit freshness, atomicity or installed firmware.
+The [studio experiment](NATIVE_WORKING_KIT_STUDIO_EXPERIMENT.md) requires
+separate operator observations and manual recovery.
+
+### Reference Audio Workflow
+
 ```mermaid
 flowchart LR
     UI[Reference sound panel] --> WS[Authenticated reference_sound command / bounded upload]

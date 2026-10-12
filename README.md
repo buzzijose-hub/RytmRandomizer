@@ -125,16 +125,25 @@ never enumerates, opens, or writes a MIDI port.
 <a id="export-pipeline"></a>
 ## Export Pipeline
 
-**Reference sound workflow (integration acceptance pending):** import and retain a
+**Reference sound workflow (physical acceptance pending):** import and retain a
 short PCM WAV, select an exact segment and original Rytm/A4 KIT, scope supported
 controls, inspect eight source-preserving local candidates, retain favorites,
 compare supplied audition recordings and perform bounded refinement. Export uses
 an explicit scratch slot; it does not transmit. Existing native protection and
 live-send limits remain. This is heuristic reference-to-discovery, not an exact
 reproduction claim or a trained instrument renderer. The previous verified
-Windows rehearsal build is preserved and does not include this feature. See the
+Windows rehearsal builds are preserved; audio-enabled source `64d5c619` already
+includes this workflow. The October 12 representation integration is being
+verified separately and does not inherit that build's acceptance. See the
 [reference-sound procedure](docs/COCKPIT_QUICKSTART.md#reference-sound-rehearsal)
 and [active plan](docs/superpowers/plans/2026-10-11-reference-sound-workflow.md).
+
+**Native representation:** A4 F1 device labels, exact native words and lossy
+wire values remain distinct. Working-RAM KIT responses are inspect-only, never
+indexed sources or saved-state evidence. The file-only `a4-working-kit-compare`
+command reports a bounded six-frame experiment without querying hardware.
+See the [integration map](docs/NATIVE_REPRESENTATION_INTEGRATION.md) and
+[studio experiment](docs/NATIVE_WORKING_KIT_STUDIO_EXPERIMENT.md).
 
 <div align="center">
 <img src="docs/assets/export-pipeline.svg" alt="Export pipeline — ProfileModel through pack, sign, atomic write, verify, to a portable .rymp file" width="100%" />
