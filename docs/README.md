@@ -58,11 +58,11 @@ lives under `docs/archive/` and is historical — safe to skip on first pass.
 - **[hardware-validation/2026-08-28-a4-filter1-frequency-saved-kit-evidence.md](hardware-validation/2026-08-28-a4-filter1-frequency-saved-kit-evidence.md)** — durable hash-pinned interpretation of the saved-kit Filter 1 Frequency evidence.
 - **[hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md)** — exact blank-observation checklist for the next Rytm/A4 operator-present session.
 
-## Historical material
-
 Native integration: [implemented/missing/unverified map](NATIVE_REPRESENTATION_INTEGRATION.md),
 [saved-versus-working studio experiment](NATIVE_WORKING_KIT_STUDIO_EXPERIMENT.md),
 and [active plan](superpowers/plans/2026-10-12-native-representation-integration.md).
+
+## Historical material
 
 See **[archive/](archive/)** for historical material moved out of the active set by WS-M1:
 - Codex modularization briefs (`CODEX_*`) — work completed in 2026-05.

@@ -17,8 +17,12 @@ Reassessment at 2026-10-12 22:09 UTC; final reviewed delivery remains pending.
 | Versioning | Raw IDs/coordinates, native-fields-v1 bounds and old label/reason text preserved. Integer-zero depth persistence defect reproduced and normalized through an existing validator; strict schemas are not relaxed. |
 | Extension | New parameter contracts require their own evidence and owner, not generic fixed-point assumptions or adjacent-offset guesses. |
 
-Three dimensional reviews report no findings (architecture, safety, type hygiene).
-Two Important findings are accepted and remain open until genuine legacy replay
-and source-kind observability tests pass. Static reviews do not certify runtime
-or physical behavior. Historical PR254 timing/execution exceptions are not
-retroactively approved; protected human review remains required.
+All eight dimensional reviews are complete. Four Important findings (genuine
+legacy replay, source-kind diagnostics, u14 reuse and command-map freshness)
+and one Minor index-placement finding were accepted and corrected. Actual old
+replay/refusal/depth composition passes24 cases; latest boundary/taxonomy/u14
+proof passes271. Reviewers independently closed the reuse/docs deltas.
+Static reviews do not certify runtime or physical behavior. Final658 full
+coverage passes11813 cases and all76 touched files100%line/branch; a new package
+is still required. Historical PR254 timing/execution
+exceptions are not retroactively approved; protected human review remains required.

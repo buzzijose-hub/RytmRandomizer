@@ -1274,6 +1274,10 @@ flowchart LR
         A4AudioPatchRefine["analog-four-audio-patch-refine<br/>one render -> accept or one corrected candidate"]
     end
 
+    subgraph A4InspectionCmds["Passive A4 source-kind inspection"]
+        A4WorkingCompare["a4-working-kit-compare<br/>six supplied frames; JSON inspection only"]
+    end
+
     subgraph RytmLocalCmds["Passive Analog Rytm local-file commands"]
         AL16RytmExport["al16-rytm-kit-export<br/>recipe + initialized kit -> verified evidence"]
         AL16RytmMappingEvidence["al16-rytm-mapping-evidence<br/>initialized + configured kits -> review packet"]
@@ -1291,6 +1295,7 @@ flowchart LR
     CLI --> BrowseCmds
     CLI --> StyleBrowseCmds
     CLI --> A4LocalCmds
+    CLI --> A4InspectionCmds
     CLI --> RytmLocalCmds
     CLI --> RIO145LocalCmds
 
@@ -1304,6 +1309,10 @@ flowchart LR
     BrowseCmds --> RegistryCore["registry.py<br/>profile_lookup.py<br/>inspection.py"]
     StyleBrowseCmds --> ReportsPkg
     A4LocalCmds --> A4ExportPipeline["cockpit/export/<br/>saved-kit writer + batch + rank + bounded refinement"]
+    A4WorkingCompare --> WorkingRegistry["cli_registry.py<br/>registered passive CliCommand"]
+    WorkingRegistry --> WorkingAdapter["reports/analog_four_working_kit_comparison_cli.py"]
+    WorkingAdapter --> WorkingReport["bounded file report / all raw and body differences"]
+    WorkingReport --> WorkingCapture["registered Device capture capability<br/>no query / send / restore grant"]
     RytmLocalCmds --> RytmExportAdapter["cockpit/export/al16_rytm_cli.py<br/>arguments + process status"]
     RytmExportAdapter --> RytmExportService["cockpit/export/al16_rytm_kit.py<br/>fail-closed audit + atomic evidence"]
     AL16RytmMappingEvidence --> RytmMappingAdapter["cockpit/export/al16_rytm_mapping_closure_cli.py<br/>passive arguments + atomic JSON output"]
@@ -2074,6 +2083,7 @@ flowchart LR
         A4PatchCorpus["analog-four-patch-corpus-report"]
         A4PatchSendPlan["analog-four-patch-send-plan-report"]
         A4SavedKitExport["analog-four-saved-kit-export --source K --output O --filter2-resonance T:V [...]"]
+        A4WorkingCompare["a4-working-kit-compare<br/>six files + explicit track/origin"]
         AL16RytmExport["al16-rytm-kit-export --reference K --recipe R --destination-slot N --output O"]
         RIO145Commands["rio145-*<br/>inspect / diff / roundtrip / A4+Rytm build+return / OXI manifest"]
         AL16RytmMappingEvidence["al16-rytm-mapping-evidence --reference K --configured C --recipe R --gap-manifest G --expected-gap-manifest-sha256 H --report O"]
@@ -2136,6 +2146,10 @@ flowchart LR
     CliRegistry -->|"registered passive command:<br/>analog-four-patch-corpus-report"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-patch-send-plan-report"| CLI
     CliRegistry -->|"registered local-file command:<br/>analog-four-saved-kit-export"| CLI
+    CliRegistry -->|"registered passive comparison command:<br/>a4-working-kit-compare"| CLI
+    A4WorkingCompare --> WorkingAdapter["reports/analog_four_working_kit_comparison_cli.py"]
+    WorkingAdapter --> WorkingReport["bounded supplied-file report<br/>all hashes/differences and repeat/save/recovery checks"]
+    WorkingReport --> WorkingCapture["registered Device capture capability<br/>no query / send / restore authority"]
     CliRegistry -->|"registered passive local-file commands:<br/>six rio145-* commands"| CLI
     CliRegistry -->|"registered passive command:<br/>al16-rytm-mapping-evidence"| CLI
     CliRegistry -->|"registered passive-hardware command:<br/>analog-four-audio-patch-batch"| CLI
@@ -2165,6 +2179,7 @@ flowchart LR
 **Current nuance:**
 
 - The `cli.py` is visibility-first. No active execution / send / hardware-test command is wired here.
+- `a4-working-kit-compare` routes the existing registry to a bounded supplied-file adapter/report and canonical capture capability. It distinguishes indexed52/working58, exact words/labels and all differences; it cannot acquire replies or promote physical freshness/recovery.
 - `device-support-inventory-report` exposes canonical catalog, saved-file, transport/precision and physical-proof dimensions independently. It never grants output authority, promotes offsets, discovers a port or establishes show readiness.
 - `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The A4 manifest reader validates the complete stored CC/NRPN plan before the app constructs the provider; the passive CLI, local SysEx writer, batch generator, eight-candidate DNA workspace, ranker, bounded render refinement, and local-model copilot never open a port.
 - `audio-patch-dna` decodes the source audio once, displays exactly eight fixed candidate directions, and writes deterministic comparison artifacts. Only an explicit `--select` paired with `--source-kit` invokes the existing passive A4 file exporter, using the precomputed selected candidate without a second audio decode.

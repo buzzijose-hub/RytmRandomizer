@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "phase": "integrating",
+  "phase": "packaging",
   "started_at": "2026-10-12T20:01:07Z",
-  "updated_at": "2026-10-12T22:09:03Z",
-  "source_commit": "486501dd08e6f6731c8bf1798e8dc37306b537e5",
+  "updated_at": "2026-10-12T22:40:54Z",
+  "source_commit": "658c8f9f8dcba361720b52c4e8d0aac5674372c0",
   "reference_pr": 254,
   "midi_disabled": true,
   "completed": [
@@ -20,13 +20,17 @@
     "486501dd full coverage 11790 passed 5 skipped 811.98 seconds",
     "frontend 1294 tests all coverage dimensions 100 percent",
     "strict Pyright77 modules zero errors warnings",
-    "integer-zero depth persistence defect reproduced and focused fix 31 passed"
+    "integer-zero depth persistence defect reproduced and focused fix 31 passed",
+    "genuine pre-change favorite replay and refusal depth composition24 passed",
+    "canonical u14 reuse taxonomy boundary271 passed",
+    "final658 full11813 passed5 skipped824.40 seconds",
+    "Gate1 all76 integration-touched production files100 percent line branch",
+    "whole-package branch99.42 percent ratchet99 unchanged",
+    "all8 source dimension reviews complete4Important1Minor fixes closed"
   ],
   "pending": [
-    "immutable actual e30 mutable and protected favorites and restart export proof",
-    "typed showbank working-source diagnostics and journal counter regression",
     "new packaged source-kind and precision UI journey",
-    "full coverage typing lint parity architecture and dimensional review",
+    "normal-hook publication and fresh CI review status",
     "exact source new Windows package and affected executable journeys",
     "protected human review and physical evidence"
   ]

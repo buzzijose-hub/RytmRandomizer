@@ -8,9 +8,11 @@ The October 12 native-representation integration is in flight on PR #254's
 assembly branch. A4 F1 and separate Rytm LFO contracts, passive `0x52`/`0x58`
 classification, exact replay-compatible display projection, saved-source
 refusal boundaries and the six-file comparison command are implemented.
-Focused integration passes 853 cases; the subsequent indexed-authority and
-replay checks pass 272 cases. Broad coverage, dimensional review and a new
-source-bound Windows package are being verified, not certified here yet.
+Final production source `658c8f9f` passes11813 cases/5 skips/6 warnings824.40s;
+all76 touched production files100%line/branch and project99.42%pure-branch.
+Eight dimensional reviews are complete; accepted findings are corrected.
+Pinned strict typing, lint and dead-code gates pass; frontend1294 cases/all
+four coverage dimensions100%. A new source-bound Windows package is pending.
 No real MIDI/USB operation occurred. Working-state synchronization, precision,
 automatic restore and show readiness remain unverified. See the
 [integration map](NATIVE_REPRESENTATION_INTEGRATION.md) and
