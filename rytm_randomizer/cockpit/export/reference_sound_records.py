@@ -12,15 +12,15 @@ from ...snapshot.mutation_scope import registered_mutation_ids
 from ...style_analysis.analog_four_patch_render_rank import AnalogFourRenderFeatureDelta
 from ...style_analysis.extractor import (
     AudioDnaEvidencePayload,
-    AudioFeatureAnalysis,
     AudioSynthesisFeaturesPayload,
-    audio_dna_evidence_to_dict,
     audio_synthesis_features_to_dict,
 )
-from ...style_analysis.feature_report import FeatureReportPayload, feature_report_to_dict
+from ...style_analysis.feature_report import FeatureReportPayload
 from ..data.stage import ANALOG_FOUR_DEVICE_ID, ANALOG_RYTM_DEVICE_ID, StageDeviceId
 from .reference_sound_analysis import (
+    ReferenceSoundAnalysisPayload,
     sound_analysis_from_dict,
+    sound_analysis_to_dict,
     sound_features_from_dict,
     sound_integer,
     sound_number,
@@ -95,12 +95,6 @@ class ReferenceSoundContextPayload(TypedDict):
     parameters: list[str]
     locks: list[str]
     strength: float
-
-
-class ReferenceSoundAnalysisPayload(TypedDict):
-    report: FeatureReportPayload
-    features: AudioSynthesisFeaturesPayload
-    evidence: AudioDnaEvidencePayload
 
 
 class ReferenceSoundChangePayload(TypedDict):
@@ -317,20 +311,12 @@ def sound_context_from_dict(value: object) -> ReferenceSoundContextPayload:
     }
 
 
-def sound_analysis_payload(analysis: AudioFeatureAnalysis) -> ReferenceSoundAnalysisPayload:
-    return {
-        "report": feature_report_to_dict(analysis.feature_report),
-        "features": audio_synthesis_features_to_dict(analysis.synthesis_features),
-        "evidence": audio_dna_evidence_to_dict(analysis.dna_evidence),
-    }
-
-
 def _analysis(value: object) -> ReferenceSoundAnalysisPayload:
     data = _record(value, ReferenceSoundAnalysisPayload.__required_keys__)
     _record(data["report"], FeatureReportPayload.__required_keys__)
     _record(data["features"], AudioSynthesisFeaturesPayload.__required_keys__)
     _record(data["evidence"], AudioDnaEvidencePayload.__required_keys__)
-    return sound_analysis_payload(sound_analysis_from_dict(data))
+    return sound_analysis_to_dict(sound_analysis_from_dict(data))
 
 
 def _features(value: object) -> AudioSynthesisFeaturesPayload:
