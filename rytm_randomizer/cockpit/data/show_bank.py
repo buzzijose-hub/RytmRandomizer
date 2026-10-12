@@ -34,6 +34,7 @@ from ...guardrails.input_validation import (
     require_boolean,
     require_exact_keys,
     require_finite_number_field,
+    require_float,
     require_integer_field,
     require_integer_tuple,
     require_object,
@@ -668,6 +669,7 @@ class ShowKitRecipe:
 
     def __post_init__(self) -> None:
         _validate_text(self.profile_id, "profile_id", maximum=_MAX_NAME)
+        object.__setattr__(self, "depth", require_float(self.depth, "depth", ValueError))
         if self.depth_preset not in SHOW_KIT_DEPTH_PRESET_VALUES:
             raise ValueError("unsupported show-kit depth preset")
         if not math.isfinite(self.depth) or not _MIN_DEPTH <= self.depth <= _MAX_DEPTH:

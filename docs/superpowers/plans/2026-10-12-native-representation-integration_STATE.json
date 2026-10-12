@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "phase": "verifying",
+  "phase": "integrating",
   "started_at": "2026-10-12T20:01:07Z",
-  "updated_at": "2026-10-12T21:24:45Z",
-  "source_commit": "e7265b9ac9f169553d096285295e9c52de3c14cc",
+  "updated_at": "2026-10-12T22:09:03Z",
+  "source_commit": "486501dd08e6f6731c8bf1798e8dc37306b537e5",
   "reference_pr": 254,
   "midi_disabled": true,
   "completed": [
@@ -16,9 +16,15 @@
     "853 focused semantic architecture and new data-only snapshot checks passed; old fixtures unchanged",
     "272 integrated indexed-authority and replay checks passed",
     "six-file passive experiment comparator and registry CLI integrated",
-    "working sources refused from saved-source adoption import recapture and preflight"
+    "working sources refused from saved-source adoption import recapture and preflight",
+    "486501dd full coverage 11790 passed 5 skipped 811.98 seconds",
+    "frontend 1294 tests all coverage dimensions 100 percent",
+    "strict Pyright77 modules zero errors warnings",
+    "integer-zero depth persistence defect reproduced and focused fix 31 passed"
   ],
   "pending": [
+    "immutable actual e30 mutable and protected favorites and restart export proof",
+    "typed showbank working-source diagnostics and journal counter regression",
     "new packaged source-kind and precision UI journey",
     "full coverage typing lint parity architecture and dimensional review",
     "exact source new Windows package and affected executable journeys",
