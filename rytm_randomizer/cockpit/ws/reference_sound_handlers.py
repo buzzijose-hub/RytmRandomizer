@@ -23,7 +23,7 @@ from ..export.reference_sound_analysis import (
     sound_string_tuple,
     sound_text,
 )
-from ..export.reference_sound_audio import REFERENCE_AUDIO_MAX_BYTES
+from ..export.reference_sound_audio import REFERENCE_AUDIO_MAX_BYTES, REFERENCE_AUDIO_MIN_BYTES
 from ..export.reference_sound_candidates import list_reference_sound_controls
 from ..export.reference_sound_records import ReferenceSoundSessionPayload
 from ..export.reference_sound_session import ReferenceSoundWorkspace, StyleAnalysisDependencyError
@@ -156,35 +156,13 @@ def _operator_context(session: CockpitSession) -> tuple[object, ...]:
     )
 
 
-async def _execute_reference_sound(
-    cmd: dict[str, object], session: CockpitSession
-) -> HandlerResult:  # noqa: PLR0911 - bounded command action router
+def _sound_upload(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     action = sound_text(cmd["action"])
-    if action == "cancel":
-        cancel_reference_sound(session)
-        return _reply(cancelled=True)
-    if session.sound_cancel is not None:
-        return _sound_refusal("Audio analysis is running. Cancel it before changing this session.")
-    workspace = _sound_workspace(session)
-    if action == "list":
-        summaries: list[dict[str, object]] = []
-        for item in workspace.store.catalog():
-            summary = {
-                key: item[key] for key in ("session_id", "title", "segment", "context", "favorites")
-            }
-            summary["candidate_count"] = len(
-                require_sequence(item["candidates"], "retained candidates", ValueError)
-            )
-            summary["recording_count"] = len(
-                require_sequence(item["recordings"], "retained recordings", ValueError)
-            )
-            summaries.append(summary)
-        return _reply(sessions=summaries)
     if action == "upload_begin":
         if session.sound_upload_id is not None:
             raise ValueError("Cancel the unfinished upload before choosing another file.")
         size = sound_integer(cmd["size"])
-        if not 44 <= size <= REFERENCE_AUDIO_MAX_BYTES:
+        if not REFERENCE_AUDIO_MIN_BYTES <= size <= REFERENCE_AUDIO_MAX_BYTES:
             raise ValueError("Choose an uncompressed PCM WAV up to 16 MiB.")
         session.sound_upload_id = secrets.token_hex(16)
         session.sound_upload_size = size
@@ -214,9 +192,30 @@ async def _execute_reference_sound(
         return _reply(upload_id=session.sound_upload_id, received=len(session.sound_upload))
     if action == "upload_finish":
         audio = _upload_bytes(cmd, session)
-        result = workspace.import_reference(audio, sound_text(cmd["title"]))
+        result = _sound_workspace(session).import_reference(audio, sound_text(cmd["title"]))
         cancel_reference_sound(session)
         return _reply(session=result)
+    raise ValueError("Reference-sound upload action is not supported.")
+
+
+def _sound_inputs(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    action = sound_text(cmd["action"])
+    if action in ("upload_begin", "upload_chunk", "upload_finish"):
+        return _sound_upload(cmd, session)
+    if action == "list":
+        summaries: list[dict[str, object]] = []
+        for item in _sound_workspace(session).store.catalog():
+            summary = {
+                key: item[key] for key in ("session_id", "title", "segment", "context", "favorites")
+            }
+            summary["candidate_count"] = len(
+                require_sequence(item["candidates"], "retained candidates", ValueError)
+            )
+            summary["recording_count"] = len(
+                require_sequence(item["recordings"], "retained recordings", ValueError)
+            )
+            summaries.append(summary)
+        return _reply(sessions=summaries)
     if action == "controls":
         frame, device, target = _source(cmd, session)
         return _reply(
@@ -224,16 +223,15 @@ async def _execute_reference_sound(
                 item.to_dict() for item in list_reference_sound_controls(frame, device, target)
             ]
         )
+    raise ValueError("Reference-sound input action is not supported.")
+
+
+async def _sound_analysis_operation(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    action = sound_text(cmd["action"])
+    workspace = _sound_workspace(session)
     session_id = sound_text(cmd["session_id"])
-    if action == "reopen":
-        return _sound_session_result(session, workspace.reopen(session_id))
-    if action == "segment":
-        return _sound_session_result(
-            session,
-            workspace.select_segment(
-                session_id, sound_integer(cmd["start_frame"]), sound_integer(cmd["frame_count"])
-            ),
-        )
     if action == "generate":
         source, device, target = _source(cmd, session)
         parameters = sound_string_tuple(cmd["parameters"])
@@ -243,8 +241,9 @@ async def _execute_reference_sound(
             ANALOG_FOUR_DEVICE_ID: session.a4_track_locks,
         }
         if target in lock_sets.get(device, set()):
-            return _sound_refusal(
-                "The selected pad/track is locked. Unlock it explicitly before generation."
+            raise BoundaryError(
+                "The selected pad/track is locked. Unlock it explicitly before generation.",
+                context={"error_code": "target_locked"},
             )
         owner_context = _operator_context(session)
         result = await _owned_operation(
@@ -261,19 +260,12 @@ async def _execute_reference_sound(
             ),
         )
         if owner_context != _operator_context(session) or _source(cmd, session)[0] != source:
-            return _sound_refusal(
-                "Source, locks or scope changed during analysis. No candidate was published; prepare again."
+            raise BoundaryError(
+                "Source, locks or scope changed during analysis. No candidate was published; prepare again.",
+                context={"error_code": "stale_generation_context"},
             )
         payload = workspace.commit(result)
         return _sound_session_result(session, payload)
-    if action in ("select", "favorite"):
-        favorite = cmd.get("favorite") if action == "favorite" else None
-        if favorite is not None and not isinstance(favorite, bool):
-            raise ValueError("Favorite must be a boolean.")
-        return _sound_session_result(
-            session,
-            workspace.select(session_id, sound_text(cmd["candidate_id"]), favorite=favorite),
-        )
     if action == "record":
         audio = _upload_bytes(cmd, session)
         result = await _owned_operation(
@@ -299,8 +291,9 @@ async def _execute_reference_sound(
             ANALOG_FOUR_DEVICE_ID: session.a4_track_locks,
         }
         if target in lock_sets.get(device, set()):
-            return _sound_refusal(
-                "The selected pad/track is locked. Unlock it explicitly before refinement."
+            raise BoundaryError(
+                "The selected pad/track is locked. Unlock it explicitly before refinement.",
+                context={"error_code": "target_locked"},
             )
         owner_context = _operator_context(session)
         result = await _owned_operation(
@@ -313,11 +306,43 @@ async def _execute_reference_sound(
             ),
         )
         if owner_context != _operator_context(session):
-            return _sound_refusal(
-                "Locks or scope changed during refinement. No candidate was published; prepare again."
+            raise BoundaryError(
+                "Locks or scope changed during refinement. No candidate was published; prepare again.",
+                context={"error_code": "stale_refinement_context"},
             )
         payload = workspace.commit(result)
         return _sound_session_result(session, payload)
+    raise ValueError("Reference-sound analysis action is not supported.")
+
+
+def _sound_retention(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    action = sound_text(cmd["action"])
+    workspace = _sound_workspace(session)
+    session_id = sound_text(cmd["session_id"])
+    if action == "reopen":
+        return _sound_session_result(session, workspace.reopen(session_id))
+    if action == "segment":
+        return _sound_session_result(
+            session,
+            workspace.select_segment(
+                session_id, sound_integer(cmd["start_frame"]), sound_integer(cmd["frame_count"])
+            ),
+        )
+    if action in ("select", "favorite"):
+        favorite = cmd.get("favorite") if action == "favorite" else None
+        if favorite is not None and not isinstance(favorite, bool):
+            raise ValueError("Favorite must be a boolean.")
+        return _sound_session_result(
+            session,
+            workspace.select(session_id, sound_text(cmd["candidate_id"]), favorite=favorite),
+        )
+    raise ValueError("Reference-sound retention action is not supported.")
+
+
+def _sound_outputs(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    action = sound_text(cmd["action"])
+    workspace = _sound_workspace(session)
+    session_id = sound_text(cmd["session_id"])
     if action == "read_audio":
         payload = workspace.reopen(session_id)
         segment = sound_mapping(payload["segment"])
@@ -360,6 +385,24 @@ async def _execute_reference_sound(
             destination_slot=destination,
         )
     raise ValueError("Reference-sound action is not supported.")
+
+
+async def _execute_reference_sound(
+    cmd: dict[str, object], session: CockpitSession
+) -> HandlerResult:
+    action = sound_text(cmd["action"])
+    if action == "cancel":
+        cancel_reference_sound(session)
+        return _reply(cancelled=True)
+    if session.sound_cancel is not None:
+        return _sound_refusal("Audio analysis is running. Cancel it before changing this session.")
+    if action in ("list", "controls", "upload_begin", "upload_chunk", "upload_finish"):
+        return _sound_inputs(cmd, session)
+    if action in ("generate", "record", "refine"):
+        return await _sound_analysis_operation(cmd, session)
+    if action in ("reopen", "segment", "select", "favorite"):
+        return _sound_retention(cmd, session)
+    return _sound_outputs(cmd, session)
 
 
 async def handle_reference_sound(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:

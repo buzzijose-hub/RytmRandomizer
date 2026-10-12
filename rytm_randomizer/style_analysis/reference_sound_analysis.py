@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping
-from typing import cast
+from typing import Final, cast
 
 from ..guardrails.schema import Confidence, SourceType
 from .extractor import (
@@ -16,6 +16,10 @@ from .extractor import (
 )
 from .feature_report import FeatureReport, feature_report_to_dict
 
+_MAX_SOUND_TEXT_LENGTH: Final[int] = 1024
+_MAX_SOUND_SCOPE_FIELDS: Final[int] = 256
+_MAX_SOUND_ENERGY_ARC: Final[int] = 32
+
 
 def sound_mapping(value: object) -> Mapping[str, object]:
     if not isinstance(value, dict):
@@ -24,7 +28,7 @@ def sound_mapping(value: object) -> Mapping[str, object]:
 
 
 def sound_text(value: object) -> str:
-    if not isinstance(value, str) or not value or len(value) > 1024:
+    if not isinstance(value, str) or not value or len(value) > _MAX_SOUND_TEXT_LENGTH:
         raise ValueError("Reference-sound record has an invalid text field.")
     return value
 
@@ -42,7 +46,7 @@ def sound_integer(value: object) -> int:
 
 
 def sound_string_tuple(value: object) -> tuple[str, ...]:
-    if not isinstance(value, list) or len(cast(list[object], value)) > 256:
+    if not isinstance(value, list) or len(cast(list[object], value)) > _MAX_SOUND_SCOPE_FIELDS:
         raise ValueError("Reference-sound controls must be a bounded list.")
     values = tuple(sound_text(item) for item in cast(list[object], value))
     if len(set(values)) != len(values):
@@ -82,7 +86,7 @@ def sound_analysis_from_dict(value: object) -> AudioFeatureAnalysis:
     report = sound_mapping(data["report"])
     evidence = sound_mapping(data["evidence"])
     arc = report["energy_arc"]
-    if not isinstance(arc, list) or len(cast(list[object], arc)) > 32:
+    if not isinstance(arc, list) or len(cast(list[object], arc)) > _MAX_SOUND_ENERGY_ARC:
         raise ValueError("Reference-sound energy measurements are invalid.")
     frequency = evidence["dominant_frequency_hz"]
     note = evidence["dominant_note"]

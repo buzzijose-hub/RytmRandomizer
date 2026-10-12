@@ -41,6 +41,20 @@ async function reopen(h: ReturnType<typeof soundHarness>) {
 }
 
 describe('actual reference sound workspace', () => {
+  it('exposes only recorded alternatives in a measured ranking and reopens the exact selected alternative', async () => {
+    const h = soundHarness();
+    await prepareSound(h);
+    await h.model.record(audioFile());
+    const session = h.model.snapshot().session!;
+    h.setSession({ ...session, recordings: [{ ...session.recordings[0]!, candidate_id: 'candidate-2' }] });
+    mount(h); await reopen(h);
+    const ranking = screen.getByRole('table', { name: /Supplied recording ranking/ });
+    expect(within(ranking).getAllByRole('row')).toHaveLength(2);
+    fireEvent.click(within(ranking).getByRole('button', { name: 'Compare candidate-2' }));
+    await waitFor(() => expect(screen.getByRole('radio', { name: /2. Alternative 2/ })).toBeChecked());
+    expect(h.calls.some(({ command }) => command.type === 'reference_sound' && command.action === 'select' && command.candidate_id === 'candidate-2')).toBe(true);
+    expect(h.calls.every(({ command }) => !['arm', 'send', 'save'].includes(command.type))).toBe(true);
+  });
   it('is reachable through Cockpit, separate from the existing four-candidate description compiler', async () => {
     const h = soundHarness();
     render(<Cockpit client={h.fake.asClient()} />);

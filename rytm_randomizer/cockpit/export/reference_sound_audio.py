@@ -9,6 +9,9 @@ from io import BytesIO
 from typing import Final
 
 REFERENCE_AUDIO_MAX_BYTES: Final[int] = 16 * 1024 * 1024
+REFERENCE_AUDIO_MIN_BYTES: Final[int] = 44
+REFERENCE_AUDIO_MIN_SAMPLE_RATE: Final[int] = 8000
+REFERENCE_AUDIO_MAX_SAMPLE_RATE: Final[int] = 96000
 REFERENCE_AUDIO_MAX_SECONDS: Final[float] = 120.0
 REFERENCE_SEGMENT_MAX_SECONDS: Final[float] = 8.0
 REFERENCE_SEGMENT_MIN_SECONDS: Final[float] = 0.05
@@ -59,7 +62,10 @@ class ReferenceAudioSegment:
 
 def inspect_reference_audio(original: object) -> ReferenceAudioInfo:
     """Validate PCM before any native decoder or sample allocation is reached."""
-    if not isinstance(original, bytes) or not 44 <= len(original) <= REFERENCE_AUDIO_MAX_BYTES:
+    if (
+        not isinstance(original, bytes)
+        or not REFERENCE_AUDIO_MIN_BYTES <= len(original) <= REFERENCE_AUDIO_MAX_BYTES
+    ):
         raise ValueError("Use a PCM WAV between 44 bytes and 16 MiB.")
     try:
         with wave.open(BytesIO(original), "rb") as audio:
@@ -71,7 +77,7 @@ def inspect_reference_audio(original: object) -> ReferenceAudioInfo:
                 audio.getcomptype() != "NONE"
                 or channels not in (1, 2)
                 or width not in (2, 3, 4)
-                or not 8000 <= rate <= 96000
+                or not REFERENCE_AUDIO_MIN_SAMPLE_RATE <= rate <= REFERENCE_AUDIO_MAX_SAMPLE_RATE
                 or not 0 < count / rate <= REFERENCE_AUDIO_MAX_SECONDS
             ):
                 raise ValueError(

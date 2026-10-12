@@ -8,6 +8,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from threading import Event
 from types import MappingProxyType
+from typing import Final
 
 from ...data.reference_sound_candidates import REFERENCE_SOUND_SAVED_COMMANDS
 from ...devices import resolve_saved_kit_capture_capability
@@ -36,7 +37,11 @@ from .reference_sound_analysis import (
     sound_number,
     sound_text,
 )
-from .reference_sound_audio import inspect_reference_audio, select_reference_segment
+from .reference_sound_audio import (
+    REFERENCE_SEGMENT_MAX_SECONDS,
+    inspect_reference_audio,
+    select_reference_segment,
+)
 from .reference_sound_candidates import (
     ReferenceSoundCandidate,
     render_reference_sound_candidates,
@@ -69,6 +74,8 @@ from .reference_sound_store import (
     reference_sound_json,
     sound_artifact_name,
 )
+
+_MAX_KIT_DESTINATION_SLOT: Final[int] = 127
 from .writer import atomic_write
 
 SoundAnalyzer = Callable[[Path, Event], AudioFeatureAnalysis]
@@ -370,6 +377,8 @@ class ReferenceSoundWorkspace:
                     strength,
                 ),
             )
+        if len({item.candidate_id for item in candidates}) != len(candidates):
+            raise ValueError("Retained refinement contains duplicate candidate identities.")
         expected = reference_sound_json({"candidates": [item.to_dict() for item in candidates]})
         if expected != reference_sound_json({"candidates": payload["candidates"]}):
             raise ValueError("Candidate values or policy changed; generate a fresh candidate.")
@@ -417,7 +426,7 @@ class ReferenceSoundWorkspace:
         ):
             raise ValueError("Recorded feedback identity or evidence status is invalid.")
         audio = self.store.read_artifact(sound_text(record["audio_sha256"]), "wav")
-        if inspect_reference_audio(audio).seconds > 8.0:
+        if inspect_reference_audio(audio).seconds > REFERENCE_SEGMENT_MAX_SECONDS:
             raise ValueError("Retained recording exceeds the bounded comparison window.")
         measured = sound_analysis_from_dict(record["features"])
         if measured.audio_sha256 != reference_sound_digest(audio):
@@ -458,7 +467,7 @@ class ReferenceSoundWorkspace:
     def export_patch(self, session_id: str, candidate_id: str, destination_slot: object) -> bytes:
         """Export only to an explicit zero-based scratch slot, with exact payload proof."""
         slot = sound_integer(destination_slot)
-        if not 0 <= slot <= 127:
+        if not 0 <= slot <= _MAX_KIT_DESTINATION_SLOT:
             raise ValueError("Choose a scratch KIT slot in 0..127 before export.")
         candidate = self.candidate(session_id, candidate_id)
         source = ElektronNativeObjectMessage.from_bytes(candidate.frame)
@@ -517,7 +526,7 @@ class ReferenceSoundWorkspace:
         if candidate_sha256 != reference_sound_digest(candidate.frame):
             raise ValueError("Recording is associated with a different candidate patch.")
         info = inspect_reference_audio(recording)
-        if info.seconds > 8.0:
+        if info.seconds > REFERENCE_SEGMENT_MAX_SECONDS:
             raise ValueError("Use a candidate recording up to eight seconds.")
         records = payload["recordings"]
         if len(records) >= REFERENCE_SOUND_MAX_RECORDINGS:
@@ -592,6 +601,11 @@ class ReferenceSoundWorkspace:
             "features": audio_synthesis_features_to_dict(feedback.corrected_features),
         }
         if any(reference_sound_json(item) == reference_sound_json(entry) for item in refinements):
+            return PreparedReferenceSound(
+                payload, {}, reference_sound_digest(reference_sound_json(payload))
+            )
+        if any(item["candidate_id"] == refined.candidate_id for item in payload["candidates"]):
+            _check_cancel(cancel)
             return PreparedReferenceSound(
                 payload, {}, reference_sound_digest(reference_sound_json(payload))
             )

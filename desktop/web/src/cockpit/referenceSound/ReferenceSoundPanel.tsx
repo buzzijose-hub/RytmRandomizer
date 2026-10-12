@@ -189,7 +189,7 @@ export function ReferenceSoundWorkspace(): JSX.Element {
               onChange={(event) => setScratchSlot(event.target.value)} /></label>
             <button type="button" disabled={busy || unavailable || !scratchSlotValid}
               onClick={() => void model.download(Number(scratchSlot) - 1)}>Download .syx</button>
-            <span className="panel-meta">{candidate.frame_size} bytes / SHA-256 {candidate.frame_sha256}</span>
+            <span className="panel-meta">Candidate at source destination: {candidate.frame_size} bytes / SHA-256 {candidate.frame_sha256}</span>
           </div>
           <div className="reference-sound-table-scroll"><table className="reference-sound-table">
             <caption>Exact native changes</caption>
@@ -237,9 +237,10 @@ export function ReferenceSoundWorkspace(): JSX.Element {
         </>}
         {session.recordings.length > 0 && <div className="reference-sound-table-scroll"><table className="reference-sound-table">
           <caption>Supplied recording ranking / weighted normalized 11-feature L1 distance / not a probability</caption>
-          <thead><tr><th scope="col">Candidate</th><th scope="col">Recording SHA-256</th><th scope="col">Distance (lower is closer)</th><th scope="col">Score / 100</th></tr></thead>
+          <thead><tr><th scope="col">Candidate</th><th scope="col">Recording SHA-256</th><th scope="col">Distance (lower is closer)</th><th scope="col">Score / 100</th><th scope="col">Compare</th></tr></thead>
           <tbody>{[...session.recordings].sort((left, right) => left.distance - right.distance).map((item, index) => <tr key={`${item.audio_sha256}-${index}`}>
             <th scope="row">{item.candidate_id}</th><td>{item.audio_sha256}</td><td>{item.distance}</td><td>{item.score}</td>
+            <td><button type="button" disabled={busy || unavailable} onClick={() => void model.select(item.candidate_id)}>Compare {item.candidate_id}</button></td>
           </tr>)}</tbody>
         </table></div>}
       </>}

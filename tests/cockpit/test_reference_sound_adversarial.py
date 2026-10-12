@@ -865,6 +865,39 @@ def test_recording_and_refinement_limits_and_duplicate_refinement_preserve_retai
     assert _files(workspace.store.directory) == before
 
 
+def test_refining_a_refined_parent_with_repeated_feedback_never_duplicates_candidates(
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: Source,
+) -> None:
+    workspace = reference_sound_workspace
+    initial = _recorded(workspace, _generated(workspace, reference_sound_source))
+    refined = workspace.commit(
+        workspace.refine(
+            initial["session_id"],
+            initial["selected_candidate_id"],
+            correction_gain=0.5,
+            cancel=Event(),
+        )
+    )
+    assert len(refined["candidates"]) == 9
+    feedback = _recorded(workspace, refined)
+    before = _files(workspace.store.directory)
+    repeated = workspace.refine(
+        feedback["session_id"],
+        feedback["selected_candidate_id"],
+        correction_gain=0.5,
+        cancel=Event(),
+    )
+    assert repeated.payload == feedback and not repeated.artifacts
+    assert len(feedback["refinements"]) == 1
+    assert len({item["candidate_id"] for item in feedback["candidates"]}) == len(
+        feedback["candidates"]
+    )
+    assert workspace.commit(repeated) == feedback
+    assert workspace.reopen(feedback["session_id"]) == feedback
+    assert _files(workspace.store.directory) == before
+
+
 def test_zero_distance_feedback_is_noop_and_long_recording_is_refused(
     reference_sound_workspace: ReferenceSoundWorkspace,
     reference_sound_source: Source,
