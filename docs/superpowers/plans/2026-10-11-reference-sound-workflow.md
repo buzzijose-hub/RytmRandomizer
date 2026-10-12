@@ -53,7 +53,9 @@ one PR comment. No competing or stacked PR. Reuse #254, direct integration base.
 All six plain-Git implementation worktrees above (including the typed-record
 worker) were verified clean and fully integrated, then removed on October12.
 Needed ignored coverage/UI reports and private frozen evidence were preserved
-under assembly `output/local/OCT12-private-worker-evidence`; no unrelated
+first under assembly `output/local/OCT12-private-worker-evidence`, then moved
+byte-identically outside the active source tree to
+`C:/Users/Jose Buzzi/.codex/private-artifacts/reference-sound-20261012/worker-evidence`; no unrelated
 worktree or operator delivery was removed. The assembly remains the owner for
 resumption; historical branch/commit identities above remain recoverable.
 
