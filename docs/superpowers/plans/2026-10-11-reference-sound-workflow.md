@@ -50,6 +50,13 @@ workers run concurrently; main owns immediate contract and integration work.
 Review fan-out is one dimension per agent, at most two active, consolidated into
 one PR comment. No competing or stacked PR. Reuse #254, direct integration base.
 
+All six plain-Git implementation worktrees above (including the typed-record
+worker) were verified clean and fully integrated, then removed on October12.
+Needed ignored coverage/UI reports and private frozen evidence were preserved
+under assembly `output/local/OCT12-private-worker-evidence`; no unrelated
+worktree or operator delivery was removed. The assembly remains the owner for
+resumption; historical branch/commit identities above remain recoverable.
+
 ### Integration Checkpoint
 
 Runtime `ef3cb85b` and candidate `12fc7272` are merged. Retained-session source
