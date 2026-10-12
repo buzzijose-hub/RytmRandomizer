@@ -166,6 +166,26 @@ def test_distinct_store_writers_are_serialized_and_stale_manifest_is_refused(
         )
 
 
+def test_windows_publication_lock_contract_releases_on_success_and_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[tuple[int, int, int]] = []
+    module = ModuleType("msvcrt")
+    module.LK_NBLCK, module.LK_UNLCK = 2, 0
+    module.locking = lambda descriptor, mode, size: calls.append((descriptor, mode, size))
+    monkeypatch.setitem(sys.modules, "msvcrt", module)
+    monkeypatch.setattr(store_module, "_WINDOWS_PUBLICATION_LOCK", True)
+    store = ReferenceSoundStore(tmp_path)
+    with store._publication_guard():
+        assert len(calls) == 1 and calls[0][1:] == (2, 1)
+    assert calls[1] == (calls[0][0], 0, 1)
+    with pytest.raises(RuntimeError, match="test-owned failure"):
+        with store._publication_guard():
+            raise RuntimeError("test-owned failure")
+    assert calls[-1][1:] == (0, 1)
+    assert len(calls) == 4
+
+
 def test_posix_publication_lock_contract_and_invalid_namespace_refusal(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

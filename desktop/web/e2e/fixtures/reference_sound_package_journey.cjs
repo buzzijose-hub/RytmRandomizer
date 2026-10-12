@@ -76,8 +76,12 @@ async function exerciseReferenceSoundPackage({ page, latest, connected, processO
     await panel.getByRole('button', { name: 'Refine candidate (0/3)', exact: true }).click();
     await expect.poll(() => latest.reference_sound_session?.refinements.length, { timeout: 65_000 }).toBe(1);
     await panel.getByLabel('Scratch KIT slot (1-128)', { exact: true }).fill('128');
+    const beforeExport = latest.reference_sound_export;
+    const intendedCandidate = latest.reference_sound_session.selected_candidate_id;
     await panel.getByRole('button', { name: 'Download .syx', exact: true }).click();
-    await expect.poll(() => latest.reference_sound_export?.destination_slot).toBe(127);
+    await expect.poll(() => latest.reference_sound_export !== beforeExport &&
+      latest.reference_sound_export?.candidate_id === intendedCandidate &&
+      latest.reference_sound_export?.destination_slot === 127).toBe(true);
     const exported = latest.reference_sound_export;
     const frame = Buffer.from(exported.sysex_base64, 'base64');
     assert.equal(digest(frame), exported.sha256);

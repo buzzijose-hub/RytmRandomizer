@@ -25,6 +25,7 @@ const a4Fields = argument('--a4-fields', 'Filter1 Frequency,filter2_resonance').
 const a4SourceHash = argument('--a4-source-sha256', null);
 const includePad2 = args.includes('--pad2');
 const referenceSound = args.includes('--reference-sound');
+const startupAttempts = Number(argument('--startup-attempts', '2'));
 assert(args.includes('--bundle') && args.includes('--run-root'));
 assert(path.isAbsolute(python));
 assert(smoke > 0 ? smoke <= 600 : minutes >= 90 && minutes <= 120);
@@ -32,6 +33,7 @@ assert(intervalSeconds >= 10 && intervalSeconds <= 180);
 // Four cues remain below the existing 64-candidate entry limit for 120 minutes.
 assert(smoke > 0 || intervalSeconds >= 30);
 assert(Number.isInteger(a4Track) && a4Track >= 1 && a4Track <= 4);
+assert(Number.isInteger(startupAttempts) && startupAttempts >= 1 && startupAttempts <= 2);
 assert(a4Fields.length > 0 && a4Fields.length <= 8);
 assert(!runRoot.startsWith(bundle + path.sep), 'QA credentials must be outside delivery');
 assert(!fs.existsSync(runRoot), 'Use a new isolated QA namespace');
@@ -119,6 +121,7 @@ if($r.operation -eq 'launch'){
   $listener.Start();$debug=$listener.LocalEndpoint.Port;$listener.Stop()
   $env:RYTM_RAND_MIDI_BACKEND='off';$env:RYTM_RAND_UPDATES='off'
   Remove-Item Env:RYTM_RAND_SIDECAR_BIN -ErrorAction SilentlyContinue
+  Remove-Item Env:PYTHONPATH,Env:PYTHONHOME,Env:VIRTUAL_ENV -ErrorAction SilentlyContinue
   $env:RYTM_RAND_WS_PORT="$ws"
   $env:RYTM_RAND_WS_TOKEN_FILE=Join-Path $r.state 'ws-token.txt'
   $env:RYTM_RAND_ARM_SECRET_FILE=Join-Path $r.state 'arm-secret.txt'
@@ -180,7 +183,7 @@ async function main() {
   let observePending = () => [];
   try {
     if (referenceSound) require('./reference_sound_package_journey.cjs').primeReferenceSources(repo, runRoot, python);
-    for (let attempt = 0; attempt < 2; attempt++) {
+    for (let attempt = 0; attempt < startupAttempts; attempt++) {
       launch = processOperation('launch');
       fs.writeFileSync(path.join(runRoot, 'owned-launch.json'), JSON.stringify(launch, null, 2) + '\n');
       save();
@@ -194,7 +197,7 @@ async function main() {
       summary.setup_interruptions.push({ reason: 'debug_listener_unavailable', attempt, at: new Date().toISOString() });
       processOperation('stop'); launch = null;
     }
-    assert(launch, 'Both isolated WebView startup attempts refused debugging');
+    assert(launch, 'Configured isolated WebView startup attempts refused debugging');
     browser = await chromium.connectOverCDP(`http://127.0.0.1:${launch.debug_port}`);
     const page = browser.contexts().flatMap(context => context.pages()).find(candidate => candidate.url().includes('tauri.localhost'));
     assert(page); page.setDefaultTimeout(15000);

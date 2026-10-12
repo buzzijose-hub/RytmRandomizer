@@ -113,6 +113,7 @@ def test_actual_guardrail_refusal_emits_one_fixed_reason_log_and_counter(
             "recording_sha256": "f" * 64,
         }
     monkeypatch.setattr(handlers._logger, "handlers", [caplog.handler])
+    monkeypatch.setattr(handlers._logger, "propagate", False)
     before = get_metrics().errors_by_kind[f"reference_sound.{reason}"]
     result = asyncio.run(handlers.handle_reference_sound(command, session))
     assert result.ack is not None and result.ack["reason"] == reason
@@ -143,6 +144,7 @@ def test_each_reason_has_a_fixed_private_wire_message_log_and_metric(
 
     monkeypatch.setattr(handlers, "_execute_reference_sound", fail)
     monkeypatch.setattr(handlers._logger, "handlers", [caplog.handler])
+    monkeypatch.setattr(handlers._logger, "propagate", False)
     before = get_metrics().errors_by_kind[f"reference_sound.{reason}"]
     result = asyncio.run(handlers.handle_reference_sound({"action": "list"}, session))
     assert result.ack == {
