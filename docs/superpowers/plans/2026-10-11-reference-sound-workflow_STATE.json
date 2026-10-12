@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "phase": "package_validation",
+  "phase": "hardware_validation_pending",
   "source_commit": "64d5c6193ce227a033f61cd09d497b13ac1fa992",
   "reference_pr": 254,
   "midi_disabled": true,
   "started_at": "2026-10-12T03:42:18Z",
-  "updated_at": "2026-10-12T09:56:10Z",
+  "updated_at": "2026-10-12T11:31:17Z",
   "completed": [
     "both-device native source-preserving alternatives",
     "exact original and segment retention",
@@ -23,10 +23,11 @@
     "strict single-start native both-device journey and exact restart recall",
     "unchanged normal offline launcher connection proof",
     "fresh successful PR CI at 63c5ccf2",
-    "delivery receipt and focused first studio test"
+    "delivery receipt and focused first studio test",
+    "90 minute new-package bank rehearsal 180 cycles and two owned recoveries",
+    "maximum legal segment frozen both-device proof and owned cleanup"
   ],
   "pending": [
-    "separately measured new-package sustained rehearsal",
     "protected human review of final head",
     "actual instrument recordings and recovery rehearsal"
   ]

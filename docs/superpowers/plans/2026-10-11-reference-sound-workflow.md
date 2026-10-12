@@ -1,6 +1,6 @@
 # Reference Sound Workflow
 
-> Status: in-flight (packaged software verified; sustained run and physical acceptance pending).
+> Status: in-flight (declared offline software scope delivered; physical acceptance pending).
 
 ## Mission And Baseline
 
@@ -93,8 +93,12 @@ on both devices, including exact disarmed recall after restart. Its unchanged
 offline launcher connects in 5.402s. Native QA cold-profile setup is repaired in
 test-only `75ac5c32`; failed/retried earlier attempts stay separate. CI succeeds
 at test-only `63c5ccf2`; production remains byte-identical to the build source.
-The new sustained rehearsal, protected human review and physical acceptance
-are separate pending gates. Both old and new Windows deliveries are preserved.
+The new sustained bank rehearsal passes5400.0078683s/180cycles/two recoveries,
+with 180 canonical exports and owned cleanup. The maximum legal8s/96kHz/stereo
+32bit frozen both-device proof passes27.640s with unchanged deadlines. Bank
+endurance, synthetic reference proofs and physical acoustic acceptance remain
+distinct. Protected human review and physical acceptance are pending; both old
+and new Windows deliveries are preserved.
 
 ## Architecture And Acceptance
 

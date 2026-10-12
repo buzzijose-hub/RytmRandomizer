@@ -22,8 +22,14 @@ Its exact-source bundled worker proof passes24.578s, strict native both-device
 journey passes40.558s (one startup,47commands,zero failures), and unchanged
 offline launcher connects5.402s. The later test-only QA commits do not change
 those production binaries. Fresh CI at `63c5ccf2` passes; protected human review
-and physical recordings/application/recovery remain pending. The new timed
-rehearsal is accounted separately; short proofs are not endurance acceptance.
+and physical recordings/application/recovery remain pending. The new bank
+rehearsal passes5400.0078683s/180cycles with two backend recoveries,180 export
+proofs and confirmed cleanup. Sampled private memory483.64-607.35MiB,
+10processes,minimumfree13.03GiB; queue13/256/zero drops,history2. The173negative
+importACKs are planned missing/occupied-ID refusals, not unexpected errors.
+Maximum legal8s/96kHz/stereo32bit frozen analysis passes27.640s on both paths.
+These tests remain distinct from the strict Reference sound journey and
+actual acoustic acceptance; production and deadlines are unchanged.
 No MIDI/USB operations or protected merges occurred. The older delivery below
 is preserved. See the new delivery's `studio-procedure/DELIVERY-RECEIPT.md` and
 the [active plan](superpowers/plans/2026-10-11-reference-sound-workflow.md).

@@ -69,8 +69,15 @@ without retries or deadline inflation in the final proof.
 Fresh PR CI run38221193854 succeeds at63c5ccf2. Test-only63c5/75ac commits leave
 production byte-identical to package source64d5. The latest human review remains
 Eddie's October3 CHANGES_REQUESTED; no protected merge or approval bypass.
-The separately timed new-package rehearsal is in progress/pending its result.
-End time and stop reason will be recorded after owned cleanup. Physical
+The separately timed new-package bank rehearsal passes5400.0078683s/180cycles
+with two owned recoveries and 180 export proofs. Four cues retain188candidates;
+173 deliberately refused import requests (one missing and172occupied-ID checks)
+preserve prior work. Sampled private memory483.64-607.35MiB,10processes,
+handles3918-4021,minimumfree13.03GiB,queue13/256/zero drops,history2,journal0-1.
+Maximum legal8s/96kHz/stereo32bit frozen both-device proof passes27.640s,exit0,
+with developer paths removed and owned shutdown. Both are synthetic/offline
+evidence, not physical audio renders. All owned trial processes/listeners are
+stopped; final publication accounting remains. Physical
 completion requires real instrument recordings plus application/save/reload/
 recovery tests; software fixtures and synthetic audio cannot establish it.
 

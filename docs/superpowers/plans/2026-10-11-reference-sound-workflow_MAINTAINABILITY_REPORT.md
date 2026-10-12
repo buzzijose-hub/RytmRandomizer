@@ -4,7 +4,8 @@
 
 Reassessment began at integrated source `e13a7d51` and was closed against final
 production `92b64b9c`, packaged at `64d5c619`. Source coverage, Windows delivery
-and CI are verified; sustained rehearsal and physical acceptance remain separate.
+and CI are verified; sustained bank rehearsal and maximum-input frozen proof
+pass separately. Physical acceptance remains pending.
 This does not retroactively certify PR #254's historical Gate 14/16 deviations.
 
 | Dimension | Result Versus Pre-Code Audit |
@@ -27,5 +28,5 @@ The final source gate passes11,457tests685.46s, all63touched modules100%line/bra
 the frontend passes1292tests31.51s with allfourcoverage measures100%. The redundant
 overflow catch noted earlier was removed, with integer JSON identity retained.
 Exact packaged UI passes and fresh63c5 CI succeeds. The remaining gates are
-the separately timed rehearsal result, protected human approval and actual
-instrument/recovery rehearsal.
+protected human approval and actual instrument/recovery rehearsal. Timed bank
+rehearsal passes90minutes/180cycles; maximum-input frozen proof27.640s passes.
