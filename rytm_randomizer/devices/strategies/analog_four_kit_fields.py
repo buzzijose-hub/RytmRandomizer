@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Final
 
+from ...data.analog_four_f1_contract import A4_F1_NATIVE_MAX
 from ...data.analog_four_kit_fields import (
     A4_BIPOLAR_FIELDS,
     A4_FIXED_8_8_RAW_MAX,
@@ -527,6 +528,8 @@ class A4Sound:
             or not 0 <= raw <= A4_FIXED_8_8_RAW_MAX
         ):
             raise ElektronKitFieldError("raw Q8.8 value must be an integer in 0x0000..0x7FFF")
+        if field == "filter1_frequency" and raw > A4_F1_NATIVE_MAX:
+            raise ElektronKitFieldError("F1 native value must be in 0..32766")
         offset = self.offset(field)
         self._data[offset] = (raw >> 8) & 0xFF
         self._data[offset + 1] = raw & 0xFF

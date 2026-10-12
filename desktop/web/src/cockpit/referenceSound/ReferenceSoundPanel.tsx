@@ -4,7 +4,7 @@ import { useCockpitStore } from '../../state';
 import { useCockpitClient } from '../context';
 import { ANALOG_FOUR_TRACKS } from '../devices';
 import {
-  currentSoundRecordings, nativeSources, ReferenceSoundModel, segmentIsValid, selectedSound,
+  currentSoundRecordings, nativeSourceLabel, nativeSources, ReferenceSoundModel, segmentIsValid, selectedSound,
 } from './referenceSoundModel';
 
 import './referenceSound.css';
@@ -129,7 +129,7 @@ export function ReferenceSoundWorkspace(): JSX.Element {
             <select value={view.sourceId} disabled={busy || unavailable} onChange={(event) => void model.chooseSource(event.target.value, view.deviceId, view.target)}>
               <option value="">Choose original native KIT</option>
               {sources.filter((item) => item.device_id === view.deviceId).map((item) =>
-                <option value={item.record_id} key={item.record_id}>{item.kit_name} / {item.record_id}</option>)}
+                <option value={item.record_id} key={item.record_id}>{nativeSourceLabel(item)}</option>)}
             </select>
           </label>
           <label>{view.deviceId === 'analog_four_mk2' ? 'Target track' : 'Target pad'}

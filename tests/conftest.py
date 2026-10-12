@@ -371,6 +371,9 @@ def analog_four_saved_kit_frame(
     from rytm_randomizer.data.analog_four_saved_kit_layout import (
         A4_KIT_OBJECT_TRACK_SOUND_SIZE,
         A4_KIT_OBJECT_TRACKS_OFFSET,
+        A4_KIT_STORAGE_MARKER,
+        A4_KIT_SYNTH_TRACK_COUNT,
+        A4_SOUND_STORAGE_TRAILER,
     )
     from rytm_randomizer.devices.strategies.analog_four_offset_manifest import (
         A4_CHECKSUM_PACKED_OFFSET,
@@ -387,15 +390,22 @@ def analog_four_saved_kit_frame(
     from rytm_randomizer.snapshot.envelope import pack_elektron_7bit as pack
 
     unpacked = bytearray(A4_SAVED_KIT_UNPACKED_SIZE if unpacked_size is None else unpacked_size)
+    if len(unpacked) >= len(A4_KIT_STORAGE_MARKER):
+        unpacked[:4] = A4_KIT_STORAGE_MARKER
     unpacked[A4_KIT_NAME_OFFSET : A4_KIT_NAME_OFFSET + A4_KIT_NAME_LENGTH] = name[
         :A4_KIT_NAME_LENGTH
     ].ljust(A4_KIT_NAME_LENGTH, b"\x00")
     # Valid native Sound headers make this fixture usable by the canonical
     # typed saved-KIT accessor. Apply deliberate malformed overrides afterward.
     sound_header = A4_SOUND_SIGNATURE + A4_SOUND_FORMAT_MARKER
-    for offset in range(A4_KIT_OBJECT_TRACKS_OFFSET, len(unpacked), A4_KIT_OBJECT_TRACK_SOUND_SIZE):
+    for track in range(A4_KIT_SYNTH_TRACK_COUNT):
+        offset = A4_KIT_OBJECT_TRACKS_OFFSET + track * A4_KIT_OBJECT_TRACK_SOUND_SIZE
         if offset + A4_KIT_OBJECT_TRACK_SOUND_SIZE <= len(unpacked):
             unpacked[offset : offset + len(sound_header)] = sound_header
+            trailer_start = offset + A4_KIT_OBJECT_TRACK_SOUND_SIZE - len(A4_SOUND_STORAGE_TRAILER)
+            unpacked[trailer_start : trailer_start + len(A4_SOUND_STORAGE_TRAILER)] = (
+                A4_SOUND_STORAGE_TRAILER
+            )
     for offset, value in (unpacked_overrides or {}).items():
         unpacked[offset] = value
 

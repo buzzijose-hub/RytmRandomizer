@@ -2,7 +2,7 @@ import { Blob as NodeBlob } from 'node:buffer';
 import { webcrypto } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { assertSoundContext, currentSoundRecordings, nativeSources, selectedSound, segmentIsValid, SOUND_ANALYSIS_TIMEOUT_MS, SOUND_CHUNK_BYTES, SOUND_MAX_BYTES } from '../../src/cockpit/referenceSound/referenceSoundModel';
+import { assertSoundContext, currentSoundRecordings, nativeSourceLabel, nativeSources, selectedSound, segmentIsValid, SOUND_ANALYSIS_TIMEOUT_MS, SOUND_CHUNK_BYTES, SOUND_MAX_BYTES } from '../../src/cockpit/referenceSound/referenceSoundModel';
 import type { CommandAck } from '../../src/ws/protocol';
 import type { ReferenceSoundContext, ReferenceSoundSession } from '../../src/ws/referenceSound';
 import { audioFile, patchBytes, prepareSound, sha, soundAck, soundControls, soundHarness, soundSession, soundSummary, sourceRecord, wav } from './referenceSoundTestSupport';
@@ -14,6 +14,18 @@ beforeEach(() => {
   vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
 });
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+describe('native source response labels are presentation, not authority', () => {
+  it('distinguishes indexed and working A4 headers without claiming firmware or freshness', () => {
+    const record = { ...sourceRecord, device_id: 'analog_four_mk2' };
+    expect(nativeSourceLabel({ ...record, payload_hex: '00203c06005201010000' })).toContain('indexed KIT bank');
+    expect(nativeSourceLabel({ ...record, payload_hex: '00203c06005801011400' })).toContain('working RAM; freshness unverified');
+    expect(nativeSourceLabel({ ...record, payload_hex: '00203c06005901010000' })).toContain('unclassified');
+    expect(nativeSourceLabel({ ...record, payload_hex: '00203c06005802010000' })).toContain('unclassified');
+    expect(nativeSourceLabel({ ...record, payload_hex: '00203c06015801010000' })).toContain('unclassified');
+    expect(nativeSourceLabel(sourceRecord)).toBe(`${sourceRecord.kit_name} / ${sourceRecord.record_id}`);
+  });
+});
 
 describe('reference sound retained workflow', () => {
   it('uses bounded upload offsets, exact source metadata, eight server alternatives and long worker deadlines', async () => {

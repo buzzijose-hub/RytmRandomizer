@@ -5,23 +5,34 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar, Final
 
+from ...data.analog_four_f1_contract import A4_F1_KIT_BODY_OFFSETS, A4_F1_NATIVE_MAX
+from ...data.analog_four_kit_fields import A4_SOUND_FORMAT_MARKER, A4_SOUND_SIGNATURE
 from ...data.analog_four_saved_kit_layout import (
     A4_CHECKSUM_PACKED_OFFSET,
     A4_FAMILY_BYTE,
     A4_KIT_NAME_LENGTH,
     A4_KIT_NAME_OFFSET,
     A4_KIT_OBJECT_BYTE,
+    A4_KIT_OBJECT_TRACK_SOUND_SIZE,
+    A4_KIT_OBJECT_TRACKS_OFFSET,
+    A4_KIT_PROTOCOL_VERSION,
+    A4_KIT_STORAGE_MARKER,
+    A4_KIT_SYNTH_TRACK_COUNT,
     A4_PACKED_PAYLOAD_OFFSET,
     A4_SAVED_KIT_HEADER_SIZE_WITHOUT_F0,
     A4_SAVED_KIT_LENGTH_ADJUSTMENT,
     A4_SAVED_KIT_PACKED_SIZE,
     A4_SAVED_KIT_TRAILER_SIZE,
     A4_SAVED_KIT_UNPACKED_SIZE,
+    A4_SOUND_STORAGE_TRAILER,
+    A4_WORKING_KIT_OBJECT_BYTE,
+    AnalogFourKitSourceKind,
 )
 from ...observability.errors import BoundaryError
 from ...snapshot import (
     ELEKTRON_MFR_ID,
     Elektron7BitMaskOrder,
+    pack_elektron_7bit,
     read_ascii_name,
     unpack_elektron_7bit,
 )
@@ -53,6 +64,15 @@ class AnalogFourSavedKitPayload:
     packed_length: int
     kit_name: str
     trailer_validated: bool
+
+    @property
+    def source_kind(self) -> AnalogFourKitSourceKind:
+        """Classify the response without asserting queue freshness or atomicity."""
+        return (
+            AnalogFourKitSourceKind.INDEXED_BANK
+            if self.prefix[_COMMAND_INDEX] == A4_KIT_OBJECT_BYTE
+            else AnalogFourKitSourceKind.WORKING_RAM
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,8 +120,34 @@ def _validate_prefix(prefix: bytes) -> None:
         raise AnalogFourSavedKitCodecError("SysEx manufacturer is not Elektron")
     if prefix[len(ELEKTRON_MFR_ID)] != A4_FAMILY_BYTE:
         raise AnalogFourSavedKitCodecError("SysEx family is not Analog Four")
-    if prefix[_COMMAND_INDEX] != A4_KIT_OBJECT_BYTE:
+    if any(value > 127 for value in prefix):
+        raise AnalogFourSavedKitCodecError("Analog Four KIT header is outside the MIDI data domain")
+    if prefix[4] != 0 or tuple(prefix[6:8]) != A4_KIT_PROTOCOL_VERSION:
+        raise AnalogFourSavedKitCodecError("Analog Four KIT device/protocol version is unsupported")
+    if prefix[_COMMAND_INDEX] not in (A4_KIT_OBJECT_BYTE, A4_WORKING_KIT_OBJECT_BYTE):
         raise AnalogFourSavedKitCodecError("Analog Four SysEx object is not a saved kit")
+
+
+def _validate_kit_structure(unpacked: bytes) -> None:
+    """Reject checksumming fallback data before it can claim semantic availability."""
+    if unpacked[:4] != A4_KIT_STORAGE_MARKER:
+        raise AnalogFourSavedKitCodecError("Analog Four KIT storage version is unsupported")
+    for index in range(A4_KIT_SYNTH_TRACK_COUNT):
+        start = A4_KIT_OBJECT_TRACKS_OFFSET + index * A4_KIT_OBJECT_TRACK_SOUND_SIZE
+        sound = unpacked[start : start + A4_KIT_OBJECT_TRACK_SOUND_SIZE]
+        if sound[:4] != A4_SOUND_SIGNATURE:
+            raise AnalogFourSavedKitCodecError("Analog Four Sound binding magic is unavailable")
+        if sound[4:8] != A4_SOUND_FORMAT_MARKER:
+            raise AnalogFourSavedKitCodecError("Analog Four Sound storage version is unsupported")
+        if sound[-4:] != A4_SOUND_STORAGE_TRAILER:
+            raise AnalogFourSavedKitCodecError("Analog Four Sound binding trailer is unavailable")
+    if any(
+        int.from_bytes(unpacked[offset : offset + 2], "big") > A4_F1_NATIVE_MAX
+        for offset in A4_F1_KIT_BODY_OFFSETS
+    ):
+        raise AnalogFourSavedKitCodecError(
+            "Analog Four F1 native word is outside the supported domain"
+        )
 
 
 def decode_analog_four_saved_kit_payload(
@@ -150,6 +196,14 @@ def decode_analog_four_saved_kit_payload(
         raise AnalogFourSavedKitCodecError(
             "Analog Four saved-kit unpacked payload is too short for kit name"
         )
+    if trailer_validated:
+        if pack_elektron_7bit(unpacked, mask_order=Elektron7BitMaskOrder.MSB_FIRST) != packed:
+            raise AnalogFourSavedKitCodecError("Analog Four KIT packing padding is noncanonical")
+        _validate_kit_structure(unpacked)
+    elif prefix[_COMMAND_INDEX] == A4_WORKING_KIT_OBJECT_BYTE:
+        raise AnalogFourSavedKitCodecError(
+            "Working KIT response requires complete integrity validation"
+        )
     kit_name = _clean_saved_kit_name(
         read_ascii_name(unpacked, A4_KIT_NAME_OFFSET, A4_KIT_NAME_LENGTH)
     )
@@ -175,6 +229,8 @@ def encode_analog_four_saved_kit_payload(
         raise AnalogFourSavedKitCodecError(
             "Analog Four saved-kit body has an unexpected unpacked length"
         )
+
+    _validate_kit_structure(unpacked)
 
     try:
         encoded = encode_elektron_packed_payload(

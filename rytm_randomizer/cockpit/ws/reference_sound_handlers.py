@@ -25,12 +25,16 @@ from ..export.reference_sound_analysis import (
 )
 from ..export.reference_sound_audio import REFERENCE_AUDIO_MAX_BYTES, REFERENCE_AUDIO_MIN_BYTES
 from ..export.reference_sound_candidates import list_reference_sound_controls
+from ..export.reference_sound_display import (
+    reference_sound_operator_control,
+    reference_sound_operator_session,
+)
 from ..export.reference_sound_errors import (
     REFERENCE_SOUND_FAILURE_MESSAGES,
     ReferenceSoundFailureReason,
     reference_sound_failure_reason,
 )
-from ..export.reference_sound_records import ReferenceSoundSessionPayload
+from ..export.reference_sound_records import ReferenceSoundSessionPayload, sound_session_from_dict
 from ..export.reference_sound_session import ReferenceSoundWorkspace
 from ..export.reference_sound_store import reference_sound_digest
 from .protocol import ERR_VALIDATION, EVENT_SEND_PLAN_CHANGED
@@ -58,6 +62,12 @@ def _sound_workspace(session: CockpitSession) -> ReferenceSoundWorkspace:
 
 
 def _reply(**values: object) -> HandlerResult:
+    if "session" in values:
+        # Display-only projection: the store and strict replay retain v1 exact
+        # mathematical text, native words, candidate IDs and artifact bytes.
+        values["session"] = reference_sound_operator_session(
+            sound_session_from_dict(values["session"])
+        )
     return HandlerResult(ack={"ok": True, "reference_sound": values})
 
 
@@ -88,7 +98,7 @@ def _sound_session_result(
 ) -> HandlerResult:
     session.current_send_plan = None
     return HandlerResult(
-        ack={"ok": True, "reference_sound": {"session": payload}},
+        ack={"ok": True, "reference_sound": {"session": reference_sound_operator_session(payload)}},
         events=[{"type": EVENT_SEND_PLAN_CHANGED, "send_plan": None}],
     )
 
@@ -247,7 +257,8 @@ def _sound_inputs(cmd: dict[str, object], session: CockpitSession) -> HandlerRes
         frame, device, target = _source(cmd, session)
         return _reply(
             controls=[
-                item.to_dict() for item in list_reference_sound_controls(frame, device, target)
+                reference_sound_operator_control(item)
+                for item in list_reference_sound_controls(frame, device, target)
             ]
         )
     raise ValueError("Reference-sound input action is not supported.")

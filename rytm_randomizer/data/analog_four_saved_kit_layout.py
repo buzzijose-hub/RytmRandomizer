@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+from enum import Enum
 from typing import Final
 
 A4_FAMILY_BYTE: Final[int] = 0x06
 A4_CANDIDATE_KIT_TYPE_BYTE: Final[int] = 0x07
 A4_KIT_OBJECT_BYTE: Final[int] = 0x52
+A4_WORKING_KIT_OBJECT_BYTE: Final[int] = 0x58
+A4_KIT_PROTOCOL_VERSION: Final[tuple[int, int]] = (1, 1)
+A4_KIT_STORAGE_MARKER: Final[bytes] = bytes((0, 0, 0, 11))
+A4_SOUND_STORAGE_TRAILER: Final[bytes] = bytes.fromhex("ba be fa ce")
 A4_SAVED_KIT_HEADER_SIZE_WITHOUT_F0: Final[int] = 9
 A4_SAVED_KIT_TRAILER_SIZE_WITHOUT_F7: Final[int] = 4
 A4_SAVED_KIT_LENGTH_ADJUSTMENT: Final[int] = 5
@@ -26,6 +31,15 @@ A4_KIT_SYNTH_TRACK_COUNT: Final[int] = 4
 
 A4_SNAPSHOT_LAYOUT_CANDIDATE: Final[str] = "candidate"
 A4_SNAPSHOT_LAYOUT_SAVED_KIT: Final[str] = "saved_kit"
+A4_SNAPSHOT_LAYOUT_WORKING_KIT: Final[str] = "working_kit"
+
+
+class AnalogFourKitSourceKind(str, Enum):
+    """Response origin, not firmware identity or working-state freshness."""
+
+    INDEXED_BANK = "indexed_kit_bank"
+    WORKING_RAM = "working_kit_ram"
+    CANDIDATE = "candidate_unverified"
 
 
 def wire_address_to_track_raw_offset(address: int) -> int:
@@ -57,6 +71,11 @@ __all__ = [
     "A4_KIT_OBJECT_TRACK_SOUND_SIZE",
     "A4_KIT_SYNTH_TRACK_COUNT",
     "A4_KIT_OBJECT_BYTE",
+    "A4_WORKING_KIT_OBJECT_BYTE",
+    "A4_KIT_PROTOCOL_VERSION",
+    "A4_KIT_STORAGE_MARKER",
+    "A4_SOUND_STORAGE_TRAILER",
+    "AnalogFourKitSourceKind",
     "A4_PACKED_PAYLOAD_OFFSET",
     "A4_SAVED_KIT_HEADER_SIZE_WITHOUT_F0",
     "A4_SAVED_KIT_LENGTH_ADJUSTMENT",
@@ -68,5 +87,6 @@ __all__ = [
     "A4_SAVED_KIT_OBJECT_SIZE",
     "A4_SNAPSHOT_LAYOUT_CANDIDATE",
     "A4_SNAPSHOT_LAYOUT_SAVED_KIT",
+    "A4_SNAPSHOT_LAYOUT_WORKING_KIT",
     "wire_address_to_track_raw_offset",
 ]

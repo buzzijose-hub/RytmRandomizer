@@ -18,6 +18,7 @@ from threading import Event, Lock
 from typing import Final, Literal, Protocol, TypedDict, runtime_checkable
 
 from ...data import RYTM_MACHINE_PROFILES
+from ...data.analog_four_saved_kit_layout import A4_SNAPSHOT_LAYOUT_WORKING_KIT
 from ...devices import (
     AnalogFourKitSnapshot,
     RegisteredSavedKitCaptureCapability,
@@ -260,14 +261,17 @@ def _decode_capture_result(
             layout_items=layout_items,
         )
     if device_id == ANALOG_FOUR_DEVICE_ID and isinstance(snapshot, AnalogFourKitSnapshot):
+        working = snapshot.snapshot_layout == A4_SNAPSHOT_LAYOUT_WORKING_KIT
         layout_items = tuple(
             KitCaptureLayoutItem(
                 index=index,
                 label=f"T{index}",
-                status="mutation_ready",
+                status="captured_mapping_pending" if working else "mutation_ready",
                 detail=(
-                    "Filter 1 Frequency is verified for offline captured-kit "
-                    "mutation; every other parameter remains mapping-blocked"
+                    "Working KIT RAM response: freshness, pending edits and atomicity are unverified; passive evidence only"
+                    if working
+                    else "Indexed KIT bank response; native field eligibility is source-dependent. "
+                    "Protocol/storage versions do not identify installed firmware; no live output authority."
                 ),
             )
             for index in sorted(A4_LANE_POLICY.available_ids)
@@ -280,7 +284,11 @@ def _decode_capture_result(
             frame_bytes=len(frame),
             captured_at=captured_at,
             snapshot_layout=snapshot.snapshot_layout,
-            parameter_readiness="filter1_frequency_offline_ready",
+            parameter_readiness=(
+                "exact_kit_anchor_offsets_candidate"
+                if working
+                else "filter1_frequency_offline_ready"
+            ),
             snapshot=snapshot,
             frame=bytes(frame),
             layout_items=layout_items,

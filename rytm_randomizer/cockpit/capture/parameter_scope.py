@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from ...data.analog_rytm_midi import ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER
+from ...data.rytm_lfo_depth_contract import RYTM_LFO_DEPTH_CONTRACT
 from ...devices import get_analog_four_native_field_capability
 from ...snapshot.mutation_scope import registered_mutation_ids
 from ..data import Snapshot
@@ -77,12 +78,16 @@ def _rytm_controls(snapshot: Snapshot) -> list[PerformanceParameterControl]:
                     "minimum": None if mapping is None else mapping.value_min,
                     "maximum": None if mapping is None else mapping.value_max,
                     "native_precision": (
-                        "retained source integer; encoding unavailable"
-                        if mapping is None
+                        "legacy control integer; LFO native 0..32767 / center16384; odd NRPN loss; coarse-only observations partial; paired output unverified"
+                        if mapping is not None and mapping is RYTM_LFO_DEPTH_CONTRACT.midi_mapping
                         else (
-                            "retained integer / paired conversion unverified"
-                            if paired
-                            else "CC7 projection"
+                            "retained source integer; encoding unavailable"
+                            if mapping is None
+                            else (
+                                "retained integer / paired conversion unverified"
+                                if paired
+                                else "CC7 projection"
+                            )
                         )
                     ),
                     "mutation_supported": mutable,
@@ -119,6 +124,8 @@ def _a4_controls(capture: KitCaptureResult | None) -> list[PerformanceParameterC
             mutable = cell is not None and cell.mutable
             encoding = metadata.native_encoding.value
             precision = f"{encoding}; quantum {metadata.display_quantum or 'not established'}"
+            if metadata.parameter == "filter1_frequency":
+                precision += "; F1 label truncated, not Hz; odd native bit lost by NRPN; CC18 retains low byte"
             if metadata.enum_values:
                 precision += "; legal native codes " + ",".join(
                     str(code) for code, _name in metadata.enum_values
@@ -134,7 +141,7 @@ def _a4_controls(capture: KitCaptureResult | None) -> list[PerformanceParameterC
                         metadata.parameter, metadata.parameter.replace("_", " ").upper()
                     ),
                     "value": None if cell is None else cell.encoded_native,
-                    "display_value": None if cell is None else cell.screen_value,
+                    "display_value": None if cell is None else cell.device_screen_label,
                     "minimum": None if domain is None else domain.minimum,
                     "maximum": None if domain is None else domain.maximum,
                     "native_precision": precision,

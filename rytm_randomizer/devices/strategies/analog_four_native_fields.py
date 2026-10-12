@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import hashlib
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import Enum
 from typing import Final, Literal, TypeGuard
 
+from ...data.analog_four_f1_contract import A4_F1_NATIVE_MAX
 from ...data.analog_four_kit_fields import (
     A4_BIPOLAR_FIELDS,
     A4_FIXED_8_8_SCALE,
@@ -26,7 +27,9 @@ from ...data.analog_four_saved_kit_layout import (
     A4_KIT_OBJECT_TRACK_SOUND_SIZE,
     A4_KIT_OBJECT_TRACKS_OFFSET,
     A4_KIT_SYNTH_TRACK_COUNT,
+    AnalogFourKitSourceKind,
 )
+from .analog_four_f1_representation import native_to_screen as a4_f1_native_to_screen
 from .analog_four_kit_fields import (
     A4_MOD_DEPTH_ZERO,
     A4_PITCH_UNITS_PER_SEMITONE,
@@ -199,6 +202,13 @@ class AnalogFourNativeValue:
     protection_reason: str | None
 
     @property
+    def device_screen_label(self) -> str | None:
+        """F1's forward label; legacy screen_value retains exact replay text."""
+        if self.parameter == "filter1_frequency" and self.source_value_known:
+            return a4_f1_native_to_screen(self.encoded_native)
+        return self.screen_value
+
+    @property
     def parameter(self) -> str:
         return self.metadata.parameter
 
@@ -262,6 +272,12 @@ def _read_value(
     except ValueError:
         domain = None
         reason = reason or "source_value_outside_established_domain"
+        if metadata.parameter == "filter1_frequency" and 0 <= raw <= A4_F1_NATIVE_MAX:
+            # Keep native-fields-v1 sampling/replay unchanged while recognizing
+            # the larger legal passive domain from the scoped static contract.
+            screen = format_a4_fixed_8_8(raw)
+            known = True
+            reason = "outside_existing_f1_mutation_evidence"
     return AnalogFourNativeValue(
         metadata, track, raw, screen, offsets, native_bytes, domain, known, reason
     )
@@ -285,7 +301,7 @@ class AnalogFourNativeReadback:
 
 def read_analog_four_native_fields(source_sysex: bytes) -> AnalogFourNativeReadback:
     """Read exact native cells; unknown values remain immutable source evidence."""
-    source = validate_analog_four_candidate_source(source_sysex)
+    source = validate_analog_four_candidate_source(source_sysex, allow_working=True)
     kit = A4Kit.from_bytes(source.unpacked)
     for track in _TRACKS.track_ids:
         kit.sound(track - 1)
@@ -294,7 +310,15 @@ def read_analog_four_native_fields(source_sysex: bytes) -> AnalogFourNativeReadb
         hashlib.sha256(source_sysex).hexdigest(),
         source.kit_name,
         tuple(
-            _read_value(metadata, track, source.unpacked)
+            (
+                replace(
+                    _read_value(metadata, track, source.unpacked),
+                    domain=None,
+                    protection_reason="working_kit_freshness_unverified",
+                )
+                if source.source_kind is AnalogFourKitSourceKind.WORKING_RAM
+                else _read_value(metadata, track, source.unpacked)
+            )
             for track in _TRACKS.track_ids
             for metadata in fields
         ),

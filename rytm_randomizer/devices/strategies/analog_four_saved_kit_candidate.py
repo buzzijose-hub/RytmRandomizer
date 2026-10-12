@@ -11,6 +11,7 @@ from ...data.analog_four_saved_kit_layout import (
     A4_PACKED_PAYLOAD_OFFSET,
     A4_SAVED_KIT_LENGTH_ADJUSTMENT,
     A4_SAVED_KIT_TRAILER_SIZE,
+    AnalogFourKitSourceKind,
 )
 from ...data.analog_four_sysex_calibration import (
     A4_SYSEX_CALIBRATION_STATUS_OFFLINE_CAPTURED_KIT_MUTATION_VALIDATED,
@@ -80,7 +81,9 @@ class AnalogFourSavedKitCandidateResult:
     hardware_send_validated: Literal[False] = field(default=False, init=False)
 
 
-def validate_analog_four_candidate_source(source_sysex: bytes) -> AnalogFourSavedKitPayload:
+def validate_analog_four_candidate_source(
+    source_sysex: bytes, *, allow_working: bool = False
+) -> AnalogFourSavedKitPayload:
     """Require one exact framed source through the canonical saved-KIT codec."""
     if not source_sysex or source_sysex[0] != _SYSEX_START or source_sysex[-1] != _SYSEX_END:
         raise ValueError("Analog Four saved kit must be supplied as a framed F0/F7 SysEx file")
@@ -93,6 +96,10 @@ def validate_analog_four_candidate_source(source_sysex: bytes) -> AnalogFourSave
             "Analog Four candidate source must contain exactly one isolated SysEx frame"
         )
     decoded = decode_analog_four_saved_kit_payload(payload, require_trailer=True)
+    if decoded.source_kind is AnalogFourKitSourceKind.WORKING_RAM and not allow_working:
+        raise ValueError(
+            "Working KIT response is passive evidence; an indexed KIT source is required"
+        )
     reencoded = encode_analog_four_saved_kit_payload(decoded.prefix, decoded.unpacked)
     if reencoded.payload != payload:
         raise ValueError("Analog Four candidate source must round-trip byte-identically")

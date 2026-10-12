@@ -40,6 +40,18 @@ export function nativeSources(records: readonly LibraryRecord[]): LibraryRecord[
     (record.device_id === 'analog_rytm_mk2' || record.device_id === 'analog_four_mk2'));
 }
 
+export function nativeSourceLabel(record: LibraryRecord): string {
+  // Header-only presentation. The server validates source bytes and authority.
+  if (record.device_id !== 'analog_four_mk2') return `${record.kit_name} / ${record.record_id}`;
+  const header = record.payload_hex.slice(0, 18).toLowerCase();
+  let kind = 'response kind unclassified';
+  if (header.startsWith('00203c0600') && header.slice(12, 16) === '0101') {
+    if (header.slice(10, 12) === '52') kind = 'indexed KIT bank';
+    if (header.slice(10, 12) === '58') kind = 'working RAM; freshness unverified';
+  }
+  return `${record.kit_name} / ${kind} / ${record.record_id}`;
+}
+
 export function selectedSound(view: ReferenceSoundView): ReferenceSoundCandidate | undefined {
   return view.stale ? undefined : view.session?.candidates.find(
     (candidate) => candidate.candidate_id === view.session?.selected_candidate_id,
