@@ -315,7 +315,7 @@ def test_build_script_entry_stub_is_deterministic_module_equivalent() -> None:
 
 
 def test_build_script_pyinstaller_command_shape(tmp_path: Path) -> None:
-    """One-file build, canonical name, app collected, audio stack excluded."""
+    """One-file build, canonical name, app collected, bounded audio stack included."""
 
     build_script = _load_build_script()
     entry = tmp_path / "rytm_sidecar_entry.py"
@@ -330,7 +330,13 @@ def test_build_script_pyinstaller_command_shape(tmp_path: Path) -> None:
     assert "rytm_randomizer" in collected
     assert "uvicorn" in collected and "websockets" in collected
     excluded = [command[i + 1] for i, arg in enumerate(command) if arg == "--exclude-module"]
-    assert "librosa" in excluded
+    assert "librosa" not in excluded
+    assert "numba" not in excluded
+    assert "llvmlite" not in excluded
+    hidden = [command[i + 1] for i, arg in enumerate(command) if arg == "--hidden-import"]
+    assert "librosa.core.audio" in hidden and "librosa.onset" in hidden
+    assert "soundfile" in hidden and "soxr" in hidden
+    assert "--collect-data" in command
     assert command[-1] == str(entry)
 
 

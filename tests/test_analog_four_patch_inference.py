@@ -4,12 +4,20 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import math
 import os
 import pickle
+import struct
+import sys
+import tempfile
+import threading
+import time
+import wave
 from collections.abc import Iterator
 from contextlib import contextmanager
 from multiprocessing.connection import Connection
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -93,7 +101,8 @@ def test_isolated_analysis_wrapper_records_native_audio_analysis(
     expected = _analysis()
     observed: list[Path] = []
 
-    def fake_run(path: Path):
+    def fake_run(path: Path, *, cancel_event=None):
+        assert cancel_event is None
         observed.append(path)
         return expected
 
@@ -106,6 +115,7 @@ def test_isolated_analysis_wrapper_records_native_audio_analysis(
 def _successful_native_analysis_worker(_path: str, sender: Connection) -> None:
     from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
 
+    assert "mido" not in sys.modules and "rtmidi" not in sys.modules
     sender.send(inference._NativeAnalysisMessage(analysis=_analysis()))
     sender.close()
 
@@ -113,6 +123,27 @@ def _successful_native_analysis_worker(_path: str, sender: Connection) -> None:
 def _hard_exit_native_analysis_worker(_path: str, sender: Connection) -> None:
     sender.close()
     os._exit(73)
+
+
+def _slow_native_analysis_worker(_path: str, sender: Connection) -> None:
+    time.sleep(10.0)
+    sender.close()
+
+
+def _missing_dependency_native_analysis_worker(_path: str, sender: Connection) -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    inference._send_native_analysis_failure(sender, ImportError("private/native/location"))
+    sender.close()
+
+
+def _frozen_native_analysis_worker(path: str, sender: Connection) -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    sys.frozen = True
+    with tempfile.TemporaryDirectory(prefix="frozen-audio-test-cache-") as cache:
+        inference._native_audio_analysis_worker(path, sender, cache)
+    assert "mido" not in sys.modules and "rtmidi" not in sys.modules
 
 
 class _FakeConnection:
@@ -460,6 +491,412 @@ def test_isolated_native_analysis_classifies_abrupt_child_exit() -> None:
     assert exc_info.value.context["fingerprint"] == "a4.audio_patch.native_analysis_failed"
 
 
+def test_spawned_worker_cancellation_terminates_without_publish() -> None:
+    from rytm_randomizer.observability.errors import BoundaryError
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    cancel = threading.Event()
+    timer = threading.Timer(0.25, cancel.set)
+    timer.start()
+    started = time.monotonic()
+    try:
+        with pytest.raises(BoundaryError, match="cancelled") as caught:
+            inference._run_native_audio_analysis_process(
+                Path("parent-owned.wav"), worker=_slow_native_analysis_worker, cancel_event=cancel
+            )
+    finally:
+        timer.cancel()
+        timer.join()
+    assert time.monotonic() - started < 5.0
+    assert caught.value.context["error_code"] == "interrupted"
+    assert not any(
+        process.name == "a4-native-audio-analysis"
+        for process in inference.multiprocessing.active_children()
+    )
+
+
+def test_spawned_worker_timeout_and_dependency_failures_are_categorical() -> None:
+    from rytm_randomizer.observability.errors import BoundaryError
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    with pytest.raises(BoundaryError, match="timed out"):
+        inference._run_native_audio_analysis_process(
+            Path("parent-owned.wav"), worker=_slow_native_analysis_worker, timeout=0.05
+        )
+    with pytest.raises(inference.StyleAnalysisDependencyError) as caught:
+        inference._run_native_audio_analysis_process(
+            Path("parent-owned.wav"), worker=_missing_dependency_native_analysis_worker
+        )
+    assert str(caught.value) == "audio analysis dependencies are unavailable"
+    assert "private" not in str(caught.value)
+
+
+def test_cancellation_before_spawn_is_inert_and_records_interruption(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.observability.errors import BoundaryError
+    from rytm_randomizer.observability.metrics import get_metrics, reset_metrics
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    cancel = threading.Event()
+    cancel.set()
+    monkeypatch.setattr(
+        inference.multiprocessing, "get_context", lambda _kind: pytest.fail("must not spawn")
+    )
+    reset_metrics()
+    with pytest.raises(BoundaryError, match="cancelled") as caught:
+        inference.analyze_analog_four_patch_audio_analysis_isolated(
+            Path("not-read.wav"), cancel=cancel
+        )
+    assert caught.value.context["error_code"] == "interrupted"
+    assert get_metrics().a4_patch_inference_errors_by_code["interrupted"] == 1
+
+
+def test_public_isolated_apis_forward_parent_event(monkeypatch: pytest.MonkeyPatch) -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    cancel = threading.Event()
+    seen: list[threading.Event | None] = []
+
+    def analyze(_path: Path, *, cancel_event: threading.Event | None):
+        seen.append(cancel_event)
+        return _analysis()
+
+    monkeypatch.setattr(inference, "_run_native_audio_analysis_process", analyze)
+    path = Path("retained.wav")
+    assert inference.analyze_analog_four_patch_audio_analysis_isolated(path, cancel=cancel)
+    assert inference.analyze_analog_four_patch_audio_isolated(path, cancel=cancel) == _features()
+    assert (
+        inference.build_analog_four_audio_patch_genome_isolated(path, cancel=cancel).audio_features
+        == _features()
+    )
+    assert seen == [cancel, cancel, cancel]
+
+
+@pytest.mark.parametrize("timeout", (0.0, -1.0, float("inf"), float("nan"), True))
+def test_native_analysis_rejects_unbounded_timeout(timeout: float) -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    with pytest.raises(ValueError, match="finite and positive"):
+        inference._run_native_audio_analysis_process(Path("not-read.wav"), timeout=timeout)
+
+
+def test_native_analysis_rejects_non_event_cancellation() -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    with pytest.raises(TypeError, match="threading.Event"):
+        inference._run_native_audio_analysis_process(
+            Path("not-read.wav"), cancel_event=object()  # type: ignore[arg-type]
+        )
+
+
+def test_cancellation_races_result_and_parent_resources_are_closed() -> None:
+    from rytm_randomizer.observability.errors import BoundaryError
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    cancel = threading.Event()
+
+    class CancelledResult(_FakeConnection):
+        def poll(self, timeout: float | None = None) -> bool:
+            cancel.set()
+            return super().poll(timeout)
+
+    receiver = CancelledResult(incoming=inference._NativeAnalysisMessage(analysis=_analysis()))
+    sender = _FakeConnection()
+    process = _FakeProcess(alive=True)
+    context = _FakeProcessContext(receiver, sender, process)
+    with pytest.raises(BoundaryError, match="cancelled"):
+        inference._run_native_audio_analysis_process(
+            Path("retained.wav"), process_context=context, cancel_event=cancel  # type: ignore[arg-type]
+        )
+    assert receiver.closed and sender.closed and process.closed
+    assert process.terminated
+    assert receiver.poll_timeouts and receiver.poll_timeouts[0] <= 0.05
+
+
+def test_cancelled_wait_can_complete_or_exhaust_deadline(monkeypatch: pytest.MonkeyPatch) -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    cancel = threading.Event()
+    receiver = _FakeConnection(incoming=inference._NativeAnalysisMessage(analysis=_analysis()))
+    assert (
+        inference._wait_for_native_analysis_result(
+            receiver, _FakeProcess(), timeout=1.0, cancel_event=cancel
+        )
+        == _analysis()
+    )
+
+    ticks = iter((0.0, 0.0, 0.1))
+    monkeypatch.setattr(inference.time, "monotonic", lambda: next(ticks))
+    no_result = _FakeConnection(poll_result=False)
+    assert inference._poll_native_analysis_result(no_result, 0.1, cancel) is False
+    assert no_result.poll_timeouts == [0.05]
+
+
+def test_cancelled_after_child_exit_does_not_publish() -> None:
+    from rytm_randomizer.observability.errors import BoundaryError
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    cancel = threading.Event()
+
+    class CancellingJoin(_FakeProcess):
+        def join(self, timeout: float | None = None) -> None:
+            super().join(timeout)
+            cancel.set()
+
+    receiver = _FakeConnection(incoming=inference._NativeAnalysisMessage(analysis=_analysis()))
+    with pytest.raises(BoundaryError, match="cancelled"):
+        inference._wait_for_native_analysis_result(
+            receiver, CancellingJoin(), timeout=1.0, cancel_event=cancel  # type: ignore[arg-type]
+        )
+
+
+def test_native_file_bounds_are_checked_before_spawn(tmp_path: Path) -> None:
+    from rytm_randomizer.observability.errors import BoundaryError
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    missing = tmp_path / "private-path.wav"
+    with pytest.raises(BoundaryError, match="could not be read") as caught:
+        inference._run_native_audio_analysis_process(missing)
+    assert "private-path" not in str(caught.value)
+    for path in (tmp_path, tmp_path / "empty.wav", tmp_path / "too-big.wav"):
+        if path != tmp_path:
+            with path.open("wb") as stream:
+                stream.truncate(
+                    0 if path.name == "empty.wav" else inference.NATIVE_AUDIO_MAX_BYTES + 1
+                )
+        with pytest.raises(ValueError, match="bounds"):
+            inference._run_native_audio_analysis_process(path)
+    allowed = tmp_path / "max-size.wav"
+    with allowed.open("wb") as stream:
+        stream.truncate(inference.NATIVE_AUDIO_MAX_BYTES)
+    inference._validate_native_audio_file(allowed)
+
+
+@pytest.mark.parametrize(
+    ("frames", "samplerate", "channels"),
+    (
+        (0, 8_000, 1),
+        (64_001, 8_000, 1),
+        (8, 7_999, 1),
+        (8, 96_001, 1),
+        (8, 8_000, 0),
+        (8, 8_000, 3),
+    ),
+)
+def test_native_header_bounds_reject_before_decode(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, frames: int, samplerate: int, channels: int
+) -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    path = tmp_path / "retained.wav"
+    path.write_bytes(b"header")
+    monkeypatch.setattr(
+        inference,
+        "_native_audio_info",
+        lambda _path: SimpleNamespace(frames=frames, samplerate=samplerate, channels=channels),
+    )
+    with pytest.raises(ValueError, match="bounds"):
+        inference._validate_native_audio_input(path)
+
+
+@pytest.mark.parametrize("width", (2, 3, 4))
+@pytest.mark.parametrize("channels", (1, 2))
+def test_native_header_accepts_exact_retained_pcm_domain(
+    tmp_path: Path, width: int, channels: int
+) -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    path = tmp_path / "segment.wav"
+    with wave.open(str(path), "wb") as stream:
+        stream.setnchannels(channels)
+        stream.setsampwidth(width)
+        stream.setframerate(96_000)
+        stream.writeframes(bytes(4_800 * width * channels))
+    inference._validate_native_audio_input(path)
+
+
+def test_native_header_exact_duration_ceiling_and_corrupt_input(tmp_path: Path) -> None:
+    from rytm_randomizer.observability.errors import BoundaryError
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    path = tmp_path / "segment.wav"
+    with wave.open(str(path), "wb") as stream:
+        stream.setnchannels(1)
+        stream.setsampwidth(2)
+        stream.setframerate(8_000)
+        stream.writeframes(bytes(64_000 * 2))
+    inference._validate_native_audio_input(path)
+    path.write_bytes(b"private corrupt audio contents")
+    with pytest.raises(BoundaryError, match="could not be read") as caught:
+        inference.analyze_analog_four_patch_audio_analysis_isolated(path)
+    assert caught.value.context["error_code"] == "audio_read_failed"
+    assert "private" not in str(caught.value)
+
+
+def test_frozen_worker_measures_actual_synthetic_audio_without_midi(tmp_path: Path) -> None:
+    import hashlib
+
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    path = tmp_path / "tone.wav"
+    sample_rate = 16_000
+    samples = tuple(
+        int(16_000 * math.sin(2.0 * math.pi * 440.0 * index / sample_rate))
+        for index in range(sample_rate // 2)
+    )
+    with wave.open(str(path), "wb") as stream:
+        stream.setnchannels(1)
+        stream.setsampwidth(2)
+        stream.setframerate(sample_rate)
+        stream.writeframes(struct.pack(f"<{len(samples)}h", *samples))
+    analysis = inference._run_native_audio_analysis_process(
+        path, worker=_frozen_native_analysis_worker
+    )
+    assert analysis.audio_sha256 == hashlib.sha256(path.read_bytes()).hexdigest()
+    assert analysis.dna_evidence.dominant_frequency_hz is not None
+    assert 410.0 <= analysis.dna_evidence.dominant_frequency_hz <= 470.0
+    assert analysis.dna_evidence.dominant_note == "A4"
+    assert analysis.feature_report.confidence == Confidence.HIGH
+    assert path.exists()
+
+
+def test_native_dependency_import_failure_is_categorical(monkeypatch: pytest.MonkeyPatch) -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    def missing(name: str):
+        assert name == "soundfile"
+        raise ImportError("private DLL path")
+
+    monkeypatch.setattr(inference.importlib, "import_module", missing)
+    with pytest.raises(inference.StyleAnalysisDependencyError) as caught:
+        inference._native_audio_info(Path("retained.wav"))
+    assert "private" not in str(caught.value)
+
+
+@pytest.mark.parametrize("frozen", (False, True, "true"))
+@pytest.mark.parametrize("cache_dir", (None, "parent-owned-cache"))
+def test_worker_configuration_is_lazy_child_only_and_frozen_safe(
+    monkeypatch: pytest.MonkeyPatch, frozen: object, cache_dir: str | None
+) -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    monkeypatch.setattr(sys, "frozen", frozen, raising=False)
+    monkeypatch.delenv("NUMBA_DISABLE_JIT", raising=False)
+    monkeypatch.delenv("NUMBA_CACHE_DIR", raising=False)
+    for name in inference._NATIVE_AUDIO_THREAD_ENV_VARS:
+        monkeypatch.setenv(name, "17")
+    before = set(sys.modules)
+    inference._configure_native_audio_worker(cache_dir)
+    assert os.environ.get("NUMBA_DISABLE_JIT") == ("0" if frozen is True else None)
+    assert os.environ.get("NUMBA_CACHE_DIR") == (cache_dir if frozen is True else None)
+    assert all(os.environ[name] == "1" for name in inference._NATIVE_AUDIO_THREAD_ENV_VARS)
+    assert not (set(sys.modules) - before) & {"librosa", "numpy", "mido", "rtmidi"}
+
+
+@pytest.mark.parametrize("outcome", ("success", "timeout", "cancel", "spawn-failure"))
+def test_frozen_runtime_owns_and_removes_each_worker_cache(
+    monkeypatch: pytest.MonkeyPatch, outcome: str
+) -> None:
+    from rytm_randomizer.observability.errors import BoundaryError
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    cancel = threading.Event()
+    receiver = _FakeConnection(
+        incoming=inference._NativeAnalysisMessage(analysis=_analysis()),
+        poll_result=outcome != "timeout",
+    )
+    sender = _FakeConnection()
+    process = _FakeProcess(
+        alive=True, start_error=OSError("denied") if outcome == "spawn-failure" else None
+    )
+    cache_paths: list[Path] = []
+
+    class Context(_FakeProcessContext):
+        def Process(self, **kwargs: object) -> _FakeProcess:
+            args = kwargs["args"]
+            assert isinstance(args, tuple) and len(args) == 3
+            assert args[:2] == ("retained.wav", sender)
+            cache = Path(args[2])
+            assert cache.is_dir()
+            cache_paths.append(cache)
+            if outcome == "cancel":
+                cancel.set()
+            return process
+
+    context = Context(receiver, sender, process)
+    if outcome == "success":
+        assert (
+            inference._run_native_audio_analysis_process(
+                Path("retained.wav"),
+                process_context=context,
+                timeout=0.001,
+                cancel_event=cancel,  # type: ignore[arg-type]
+            )
+            == _analysis()
+        )
+    else:
+        with pytest.raises(BoundaryError):
+            inference._run_native_audio_analysis_process(
+                Path("retained.wav"),
+                process_context=context,
+                timeout=0.001,
+                cancel_event=cancel,  # type: ignore[arg-type]
+            )
+    assert len(cache_paths) == 1 and not cache_paths[0].exists()
+    assert receiver.closed and sender.closed and process.closed
+
+
+@pytest.mark.parametrize(
+    "exception", (OSError("private"), ValueError("private"), RuntimeError("private"))
+)
+def test_native_failure_messages_do_not_echo_input(exception: Exception) -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    sender = _FakeConnection()
+    inference._send_native_analysis_failure(sender, exception)
+    message = sender.sent[0]
+    assert isinstance(message, inference._NativeAnalysisMessage)
+    assert message.failure is not None
+    assert "private" not in message.failure.message
+
+
+def test_metadata_decoder_failure_is_categorical_in_parent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.observability.errors import BoundaryError
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    def unreadable(_path: str) -> object:
+        raise OSError("private path")
+
+    monkeypatch.setattr(
+        inference.importlib, "import_module", lambda _name: SimpleNamespace(info=unreadable)
+    )
+    with pytest.raises(BoundaryError, match="could not be decoded") as caught:
+        inference._native_audio_info(Path("private.wav"))
+    assert "private" not in str(caught.value)
+
+
+def test_predecoded_inference_public_api_and_invalid_scalar_domains() -> None:
+    from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
+
+    actual = inference.build_analog_four_audio_patch_genome_from_analysis(
+        _analysis(), track=2, candidate_count=1
+    )
+    assert actual.audio_features == _features()
+    assert actual.genome.selected_track == 2
+    with pytest.raises(TypeError, match="AudioFeatureAnalysis"):
+        inference.build_analog_four_audio_patch_genome_from_analysis(object())  # type: ignore[arg-type]
+    for column in (True, "1", 0, 5):
+        with pytest.raises((TypeError, ValueError)):
+            inference.build_analog_four_inference_feature_values(_features(), column=column)
+    spec = next(iter(inference.ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER.values()))
+    with pytest.raises(TypeError, match="Mapping"):
+        inference.evaluate_analog_four_inference_spec(spec, [])
+
+
 def test_native_analysis_message_requires_exactly_one_result() -> None:
     from rytm_randomizer.style_analysis import analog_four_patch_inference as inference
 
@@ -484,6 +921,8 @@ def test_native_analysis_worker_serializes_success_and_bounded_failures(
     from rytm_randomizer.style_analysis.extractor import StyleAnalysisDependencyError
 
     success_sender = _FakeConnection()
+    monkeypatch.setattr(inference, "_validate_native_audio_input", lambda _path: None)
+    monkeypatch.setattr(inference, "_configure_native_audio_worker", lambda _cache: None)
     monkeypatch.setattr(inference, "analyze_audio_snapshot", lambda _path: _analysis())
     inference._native_audio_analysis_worker(
         "parent-owned.wav",
@@ -906,7 +1345,7 @@ def test_isolated_public_inference_uses_process_result_and_records_boundary(
     monkeypatch.setattr(
         inference,
         "_run_native_audio_analysis_process",
-        lambda _path: _analysis(),
+        lambda _path, *, cancel_event: _analysis(),
     )
     result = inference.build_analog_four_audio_patch_genome_isolated(
         Path("parent-owned.wav"),

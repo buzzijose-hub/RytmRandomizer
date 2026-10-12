@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
+import importlib
+import math
 import multiprocessing
+import os
+import stat
+import sys
+import tempfile
 import time
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
+from contextlib import ExitStack
 from dataclasses import dataclass, replace
 from multiprocessing.process import BaseProcess
 from pathlib import Path
+from threading import Event
 from typing import Final, Protocol, TypeAlias, TypedDict, TypeVar, cast
 
 from ..data.analog_four_audio_inference import (
@@ -57,6 +65,16 @@ _NATIVE_CLEANUP_ERROR_KIND: Final[str] = "a4_native_analysis_cleanup"
 _NATIVE_CLEANUP_FINGERPRINT: Final[str] = "a4.audio_patch.native_cleanup_failed"
 _NATIVE_ANALYSIS_TIMEOUT_SECONDS: Final[float] = 60.0
 _NATIVE_ANALYSIS_EXIT_TIMEOUT_SECONDS: Final[float] = 2.0
+_NATIVE_ANALYSIS_POLL_SECONDS: Final[float] = 0.05
+NATIVE_AUDIO_MAX_BYTES: Final[int] = 16 * 1024 * 1024
+NATIVE_AUDIO_MAX_SECONDS: Final[float] = 8.0
+_NATIVE_AUDIO_MAX_SAMPLE_RATE: Final[int] = 96_000
+_NATIVE_AUDIO_THREAD_ENV_VARS: Final[tuple[str, ...]] = (
+    "OPENBLAS_NUM_THREADS",
+    "OMP_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "NUMBA_NUM_THREADS",
+)
 _logger = get_logger(__name__)
 _InferenceResult = TypeVar("_InferenceResult")
 
@@ -139,21 +157,32 @@ def analyze_analog_four_patch_audio(path: Path) -> AnalogFourPatchAudioFeatures:
     )
 
 
-def analyze_analog_four_patch_audio_isolated(path: Path) -> AnalogFourPatchAudioFeatures:
+def analyze_analog_four_patch_audio_isolated(
+    path: Path, *, cancel: Event | None = None
+) -> AnalogFourPatchAudioFeatures:
     """Measure A4 synthesis evidence with native decoding in a child process."""
 
     return _recorded_a4_inference(
         path,
-        lambda: _audio_features_from_analysis(_run_native_audio_analysis_process(path)),
+        lambda: _audio_features_from_analysis(
+            _run_native_audio_analysis_process(path, cancel_event=cancel)
+        ),
     )
 
 
-def analyze_analog_four_patch_audio_analysis_isolated(path: Path) -> AudioFeatureAnalysis:
-    """Return the complete shared analysis with native decoding isolated."""
+def analyze_analog_four_patch_audio_analysis_isolated(
+    path: Path, *, cancel: Event | None = None
+) -> AudioFeatureAnalysis:
+    """Analyze an immutable, <=16 MiB, <=8 second snapshot in a spawned worker.
+
+    The caller retains the snapshot until this call returns. Cancellation is
+    parent-only, terminates the worker and raises a categorical BoundaryError
+    with ``error_code="interrupted"``; the event is never sent to the child.
+    """
 
     return _recorded_a4_inference(
         path,
-        lambda: _run_native_audio_analysis_process(path),
+        lambda: _run_native_audio_analysis_process(path, cancel_event=cancel),
     )
 
 
@@ -170,7 +199,7 @@ def _a4_inference_error_code(exc: BaseException) -> AnalogFourPatchInferenceErro
             "validation",
         ):
             return error_code
-    if isinstance(exc, StyleAnalysisDependencyError):
+    if isinstance(exc, (StyleAnalysisDependencyError, ImportError)):
         return "dependency_missing"
     if isinstance(exc, OSError):
         return "audio_read_failed"
@@ -255,11 +284,19 @@ def _send_native_analysis_failure(
     sender: _NativeAnalysisConnection,
     exc: BaseException,
 ) -> None:
+    error_code = _a4_inference_error_code(exc)
+    messages: dict[AnalogFourPatchInferenceErrorCode, str] = {
+        "dependency_missing": "audio analysis dependencies are unavailable",
+        "audio_read_failed": "audio snapshot could not be read",
+        "validation": "audio snapshot is invalid or exceeds analysis bounds",
+        "interrupted": "native audio analysis interrupted",
+        "inference_failed": "native audio analysis worker failed",
+    }
     failure = _NativeAnalysisFailure(
-        error_code=_a4_inference_error_code(exc),
+        error_code=error_code,
         error_type=type(exc).__name__,
-        message=str(exc),
-        fingerprint=getattr(exc, "fingerprint", _INFERENCE_FAILURE_FINGERPRINT),
+        message=messages[error_code],
+        fingerprint=_INFERENCE_FAILURE_FINGERPRINT,
     )
     try:
         sender.send(_NativeAnalysisMessage(failure=failure))
@@ -270,16 +307,104 @@ def _send_native_analysis_failure(
 def _native_audio_analysis_worker(
     audio_path: str,
     sender: _NativeAnalysisConnection,
+    cache_dir: str | None = None,
 ) -> None:
     try:
+        _configure_native_audio_worker(cache_dir)
+        _validate_native_audio_input(Path(audio_path))
         analysis = analyze_audio_snapshot(Path(audio_path))
         sender.send(_NativeAnalysisMessage(analysis=analysis))
     except (KeyboardInterrupt, SystemExit) as exc:
         _send_native_analysis_failure(sender, exc)
-    except (KeyError, OSError, RuntimeError, TypeError, ValueError) as exc:
+    except (
+        AttributeError,
+        BoundaryError,
+        ImportError,
+        KeyError,
+        OSError,
+        RuntimeError,
+        TypeError,
+        ValueError,
+    ) as exc:
         _send_native_analysis_failure(sender, exc)
     finally:
         _close_native_analysis_resource(sender, resource_kind="worker_sender")
+
+
+class _AudioInfo(Protocol):
+    frames: int
+    samplerate: int
+    channels: int
+
+
+class _AudioInfoApi(Protocol):
+    @abstractmethod
+    def info(self, path: str) -> _AudioInfo: ...
+
+
+def _configure_native_audio_worker(cache_dir: str | None = None) -> None:
+    for name in _NATIVE_AUDIO_THREAD_ENV_VARS:
+        os.environ[name] = "1"
+    # Librosa's gufuncs require compiled Numba signatures even with DISABLE_JIT.
+    # Frozen workers use a parent-owned cache, never shared compiled artifacts.
+    if getattr(sys, "frozen", False) is True:
+        os.environ["NUMBA_DISABLE_JIT"] = "0"
+        if cache_dir is not None:
+            os.environ["NUMBA_CACHE_DIR"] = cache_dir
+
+
+def _validate_native_audio_file(path: Path) -> None:
+    try:
+        info = path.stat()
+    except OSError as exc:
+        raise BoundaryError(
+            "audio snapshot could not be read",
+            context={
+                "error_code": "audio_read_failed",
+                "fingerprint": "a4.audio_patch.native_analysis_failed",
+            },
+        ) from exc
+    if not stat.S_ISREG(info.st_mode) or not 0 < info.st_size <= NATIVE_AUDIO_MAX_BYTES:
+        raise ValueError("audio snapshot is invalid or exceeds analysis bounds")
+
+
+def _native_audio_info(path: Path) -> _AudioInfo:
+    try:
+        soundfile = cast(_AudioInfoApi, importlib.import_module("soundfile"))
+    except (ImportError, OSError) as exc:
+        raise StyleAnalysisDependencyError("audio analysis dependencies are unavailable") from exc
+    try:
+        return soundfile.info(str(path))
+    except (OSError, RuntimeError) as exc:
+        raise BoundaryError(
+            "audio snapshot could not be decoded",
+            context={
+                "error_code": "audio_read_failed",
+                "fingerprint": "a4.audio_patch.native_analysis_failed",
+            },
+        ) from exc
+
+
+def _validate_native_audio_input(path: Path) -> None:
+    _validate_native_audio_file(path)
+    info = _native_audio_info(path)
+    if (
+        not 1 <= info.channels <= 2
+        or not 8_000 <= info.samplerate <= _NATIVE_AUDIO_MAX_SAMPLE_RATE
+        or not 0 < info.frames <= NATIVE_AUDIO_MAX_SECONDS * info.samplerate
+    ):
+        raise ValueError("audio snapshot is invalid or exceeds analysis bounds")
+
+
+def _check_native_analysis_cancelled(cancel_event: Event | None) -> None:
+    if cancel_event is not None and cancel_event.is_set():
+        raise BoundaryError(
+            "native audio analysis cancelled",
+            context={
+                "error_code": "interrupted",
+                "fingerprint": "a4.audio_patch.native_analysis_cancelled",
+            },
+        )
 
 
 def _terminate_native_analysis_process(process: BaseProcess) -> None:
@@ -454,9 +579,10 @@ def _wait_for_native_analysis_result(
     process: BaseProcess,
     *,
     timeout: float,
+    cancel_event: Event | None = None,
 ) -> AudioFeatureAnalysis:
     try:
-        result_ready = receiver.poll(timeout)
+        result_ready = _poll_native_analysis_result(receiver, timeout, cancel_event)
     except (KeyboardInterrupt, SystemExit):
         _terminate_native_analysis_process_safely(process)
         raise
@@ -482,7 +608,27 @@ def _wait_for_native_analysis_result(
         )
     analysis = _receive_native_analysis_message(receiver, process)
     _join_native_analysis_process(process)
+    _check_native_analysis_cancelled(cancel_event)
     return analysis
+
+
+def _poll_native_analysis_result(
+    receiver: _NativeAnalysisConnection,
+    timeout: float,
+    cancel_event: Event | None,
+) -> bool:
+    if cancel_event is None:
+        return receiver.poll(timeout)
+    deadline = time.monotonic() + timeout
+    while True:
+        _check_native_analysis_cancelled(cancel_event)
+        remaining = deadline - time.monotonic()
+        if remaining <= 0.0:
+            return False
+        ready = receiver.poll(min(remaining, _NATIVE_ANALYSIS_POLL_SECONDS))
+        _check_native_analysis_cancelled(cancel_event)
+        if ready:
+            return True
 
 
 def _receive_native_analysis_message(
@@ -531,9 +677,42 @@ def _run_native_audio_analysis_process(
     worker: _NativeAnalysisWorker = _native_audio_analysis_worker,
     process_context: _NativeAnalysisProcessContext | None = None,
     timeout: float = _NATIVE_ANALYSIS_TIMEOUT_SECONDS,
+    cancel_event: Event | None = None,
 ) -> AudioFeatureAnalysis:
     """Run native decoding in a spawned child and return its bounded result."""
 
+    if isinstance(timeout, bool) or not math.isfinite(timeout) or timeout <= 0.0:
+        raise ValueError("native analysis timeout must be finite and positive")
+    if cancel_event is not None:
+        require_runtime_type(cancel_event, Event, "cancel_event must be a threading.Event")
+    _check_native_analysis_cancelled(cancel_event)
+    if worker is _native_audio_analysis_worker and process_context is None:
+        _validate_native_audio_file(path)
+    with ExitStack() as resources:
+        cache_dir = None
+        if getattr(sys, "frozen", False) is True and worker is _native_audio_analysis_worker:
+            cache_dir = resources.enter_context(
+                tempfile.TemporaryDirectory(prefix="rytm-audio-worker-cache-")
+            )
+        return _spawn_native_audio_analysis_process(
+            path,
+            worker=worker,
+            process_context=process_context,
+            timeout=timeout,
+            cancel_event=cancel_event,
+            cache_dir=cache_dir,
+        )
+
+
+def _spawn_native_audio_analysis_process(
+    path: Path,
+    *,
+    worker: _NativeAnalysisWorker,
+    process_context: _NativeAnalysisProcessContext | None,
+    timeout: float,
+    cancel_event: Event | None,
+    cache_dir: str | None,
+) -> AudioFeatureAnalysis:
     context = process_context or cast(
         _NativeAnalysisProcessContext,
         multiprocessing.get_context("spawn"),
@@ -541,7 +720,7 @@ def _run_native_audio_analysis_process(
     receiver, sender = context.Pipe(duplex=False)
     process = context.Process(
         target=worker,
-        args=(str(path), sender),
+        args=(str(path), sender) if cache_dir is None else (str(path), sender, cache_dir),
         name="a4-native-audio-analysis",
     )
     started = False
@@ -554,6 +733,7 @@ def _run_native_audio_analysis_process(
             receiver,
             process,
             timeout=timeout,
+            cancel_event=cancel_event,
         )
     except (KeyboardInterrupt, SystemExit) as exc:
         primary_interruption = exc
@@ -604,13 +784,14 @@ def build_analog_four_audio_patch_genome_isolated(
     *,
     track: int = 1,
     candidate_count: int = ANALOG_FOUR_PATCH_CANDIDATE_MAX,
+    cancel: Event | None = None,
 ) -> AnalogFourAudioPatchGenome:
     """Infer A4 candidates while containing native audio work in a child."""
 
     return _recorded_a4_inference(
         path,
         lambda: _build_analog_four_audio_patch_genome_from_analysis(
-            _run_native_audio_analysis_process(path),
+            _run_native_audio_analysis_process(path, cancel_event=cancel),
             track=track,
             candidate_count=candidate_count,
         ),
