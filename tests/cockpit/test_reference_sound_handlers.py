@@ -12,47 +12,22 @@ from cockpit.conftest import (
     TEST_WS_TOKEN,
     collect_initial_events,
     complete_handshake,
-    make_default_snapshot,
+    make_reference_sound_session,
     make_reference_pcm,
     send_cmd,
 )
 from fastapi.testclient import TestClient
 
-from rytm_randomizer.cockpit.capture import decode_kit_capture_frame
-from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.export.reference_sound_session import ReferenceSoundWorkspace
-from rytm_randomizer.cockpit.history import HistoryStore
-from rytm_randomizer.cockpit.library.store import LibraryStore
-from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws.handlers import handle_command
 from rytm_randomizer.cockpit.ws.reference_sound_handlers import cancel_reference_sound
 from rytm_randomizer.cockpit.ws.server import create_app
-from rytm_randomizer.cockpit.ws.session import CockpitSession
 from rytm_randomizer.style_analysis.extractor import AudioFeatureAnalysis
 
 pytestmark = pytest.mark.fast
 
 
-def _session(
-    tmp_path: Path,
-    workspace: ReferenceSoundWorkspace,
-    source: tuple[bytes, str, int, tuple[str, ...]],
-) -> tuple[CockpitSession, str]:
-    initial = make_default_snapshot()
-    history = HistoryStore()
-    history.initial(initial)
-    library = LibraryStore(tmp_path / "library")
-    record = library.retain_source(
-        decode_kit_capture_frame(source[1], source[0]), origin="file_import"
-    )
-    session = CockpitSession(
-        ProfileRegistry(tmp_path / "profiles"),
-        history,
-        MockDeviceAdapter(initial),
-        library_store=library,
-        reference_sounds=workspace,
-    )
-    return session, record.record_id
+_session = make_reference_sound_session
 
 
 def test_actual_ws_upload_scope_generation_favorite_playback_export_and_restart(

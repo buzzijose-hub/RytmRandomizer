@@ -60,10 +60,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 from rytm_randomizer.cockpit.capture import KitCaptureResult, KitCaptureService
+from rytm_randomizer.cockpit.capture import decode_kit_capture_frame
 from rytm_randomizer.cockpit.data import PadState, Snapshot
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.device.connection import set_active_connection_manager
 from rytm_randomizer.cockpit.history import HistoryStore
+from rytm_randomizer.cockpit.library.store import LibraryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws.protocol import (
     HELLO_FRAME_TYPE,
@@ -76,6 +78,28 @@ from rytm_randomizer.style_analysis.extractor import AudioFeatureAnalysis
 
 if TYPE_CHECKING:
     from rytm_randomizer.cockpit.export.reference_sound_session import ReferenceSoundWorkspace
+
+
+def make_reference_sound_session(
+    tmp_path: Path,
+    workspace: ReferenceSoundWorkspace,
+    source: tuple[bytes, str, int, tuple[str, ...]],
+) -> tuple[CockpitSession, str]:
+    initial = make_default_snapshot()
+    history = HistoryStore()
+    history.initial(initial)
+    library = LibraryStore(tmp_path / "library")
+    record = library.retain_source(
+        decode_kit_capture_frame(source[1], source[0]), origin="file_import"
+    )
+    session = CockpitSession(
+        ProfileRegistry(tmp_path / "profiles"),
+        history,
+        MockDeviceAdapter(initial),
+        library_store=library,
+        reference_sounds=workspace,
+    )
+    return session, record.record_id
 
 
 def make_reference_pcm(
