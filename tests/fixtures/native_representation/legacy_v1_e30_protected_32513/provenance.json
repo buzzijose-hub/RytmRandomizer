@@ -1,0 +1,115 @@
+{
+  "all_loaded_application_modules_verified_against_git": 147,
+  "analysis_substitution": "Only analyzer callback replaced; exact old audio_patch_dna_analysis dataclasses, with actual WAV digest",
+  "application_modules": [
+    {
+      "path": "rytm_randomizer/cockpit/export/reference_sound_session.py",
+      "sha256": "ff627416284e529748ca4a50d99e8244ef429ec22bf56e1f80063891a6892499"
+    },
+    {
+      "path": "rytm_randomizer/cockpit/export/reference_sound_store.py",
+      "sha256": "5f47b2d6d804129239ce4a3b6c8a8abc571f768dcaaae94261900189907ec453"
+    },
+    {
+      "path": "rytm_randomizer/cockpit/export/reference_sound_candidates.py",
+      "sha256": "ab8a8b53e650378e658b7e9ff6672bbba50a71a3239b2cad7b7c585befafdb3f"
+    },
+    {
+      "path": "rytm_randomizer/devices/strategies/analog_four_saved_kit_codec.py",
+      "sha256": "546973eab21c8a70f70861521553506a0c3a8746989c3dbb257500e6667a86b2"
+    },
+    {
+      "path": "rytm_randomizer/devices/strategies/analog_four_native_fields.py",
+      "sha256": "3399ee35f175d437a2285879ca66de2bc8ed48342292dcbcfb73256ecf5ce6e3"
+    },
+    {
+      "path": "rytm_randomizer/devices/strategies/analog_four_kit_fields.py",
+      "sha256": "85e9eb7705702f3e4fedd247f406c5ef48dcdc2bba05a9e7e9acfa4402884c2f"
+    },
+    {
+      "path": "rytm_randomizer/style_analysis/extractor.py",
+      "sha256": "ceebf7b1e3ebb7f8cd5efda24259e3aa511e01f6c4dcc608d53e79acf3e57390"
+    }
+  ],
+  "artifact_sha256": {
+    "exports/3c8c8f5e10869601b2f191f55085d22273b477cd80eb191b4d39a196ef518ffd.syx": "447e87b5a1f8c93c220cd7c59d4c8e4ef1c429e3e6a340ddde6efeac7223b719",
+    "exports/3f423d625466071f4887feb0870e43e2a35869957abc7f8ba5c36f4cd1d177fc.syx": "447e87b5a1f8c93c220cd7c59d4c8e4ef1c429e3e6a340ddde6efeac7223b719",
+    "exports/557d887d425a8fc72fe3e631e00a2c1f3d9bdd4df96573fe23fbe4732261c094.syx": "447e87b5a1f8c93c220cd7c59d4c8e4ef1c429e3e6a340ddde6efeac7223b719",
+    "exports/9553f97d5ff9819cfa8d6f65d5656d62115a8fbc22d1962a83d625c3bf9420d8.syx": "447e87b5a1f8c93c220cd7c59d4c8e4ef1c429e3e6a340ddde6efeac7223b719",
+    "exports/b0532adecce630622047577d345803133a4a25af009855173696ef46519c7907.syx": "447e87b5a1f8c93c220cd7c59d4c8e4ef1c429e3e6a340ddde6efeac7223b719",
+    "exports/b720ccc611eeeb1708418788ee67f39d8e2806de6e12c26e0d0e5557cebfe3a8.syx": "447e87b5a1f8c93c220cd7c59d4c8e4ef1c429e3e6a340ddde6efeac7223b719",
+    "exports/c4f1a39903970958f3d79c60927260fe3842a33ff28a718d02603fc7504e5509.syx": "447e87b5a1f8c93c220cd7c59d4c8e4ef1c429e3e6a340ddde6efeac7223b719",
+    "exports/ccdd2c8133bea1a7ef75af10cf1a77379466b1a9ea0bc315bc58701b8399f847.syx": "447e87b5a1f8c93c220cd7c59d4c8e4ef1c429e3e6a340ddde6efeac7223b719",
+    "store/0bcb50b1ed406035d4f2af3587db7ff86fb858564e454c3bfed1ba0c29626580.wav": "0bcb50b1ed406035d4f2af3587db7ff86fb858564e454c3bfed1ba0c29626580",
+    "store/35e3507c08f601c2c73173393df1ca146fb20d8ea9c4eff87da72495cb435ce0.syx": "35e3507c08f601c2c73173393df1ca146fb20d8ea9c4eff87da72495cb435ce0",
+    "store/sound-39ef93955fd27033e5cd9cf48536ddb5.sound.json": "75474617fc091d96fd4d5a5b2a69fd2bf89cc2ff4e5af299c43f39548e8c3594",
+    "store/sound-e90f1518bf08069aeb2c21d6326491d8.sound.json": "0ccb73c222c691ad761d47871fa7631670d3518a51bf043f8e245ec423f880bb"
+  },
+  "candidate_ids": [
+    "b0532adecce630622047577d345803133a4a25af009855173696ef46519c7907",
+    "c4f1a39903970958f3d79c60927260fe3842a33ff28a718d02603fc7504e5509",
+    "b720ccc611eeeb1708418788ee67f39d8e2806de6e12c26e0d0e5557cebfe3a8",
+    "557d887d425a8fc72fe3e631e00a2c1f3d9bdd4df96573fe23fbe4732261c094",
+    "3f423d625466071f4887feb0870e43e2a35869957abc7f8ba5c36f4cd1d177fc",
+    "9553f97d5ff9819cfa8d6f65d5656d62115a8fbc22d1962a83d625c3bf9420d8",
+    "3c8c8f5e10869601b2f191f55085d22273b477cd80eb191b4d39a196ef518ffd",
+    "ccdd2c8133bea1a7ef75af10cf1a77379466b1a9ea0bc315bc58701b8399f847"
+  ],
+  "capture_script_sha256": "c629323dbc4795d687969fea7ebbdbc79a11084671c276021855ee72adbfc83c",
+  "evidence_kind": "software-only synthetic replay witness",
+  "export_slot": 18,
+  "favorite_candidate_id": "b0532adecce630622047577d345803133a4a25af009855173696ef46519c7907",
+  "fixture_schema": "native-reference-sound-legacy-v1",
+  "hardware_authority": false,
+  "helper_definitions": [
+    {
+      "path": "tests/conftest.py",
+      "sha256": "898ff8915705ab51e0931213c2139fed18064a487071b0248dc88a3e472cd4c7"
+    },
+    {
+      "path": "tests/cockpit/conftest.py",
+      "sha256": "a50505d00226c95761cafa1e1bb682f19d57de5179771516be674713ea21b150"
+    }
+  ],
+  "locks": [],
+  "original_source": {
+    "file": "a4_init_retained.syx",
+    "sha256": "50c753f3a2acd73ca77e2930e9b9658ea62bbe51f7cb9f7644e6f8ff2689cc5e"
+  },
+  "parameters": [
+    "filter1_frequency"
+  ],
+  "physical_validation": false,
+  "response_kind": 82,
+  "session_id": "sound-e90f1518bf08069aeb2c21d6326491d8",
+  "source_commit": "e30cc84cbb9c745654632f71ac827e05007ce320",
+  "source_control": {
+    "domain": null,
+    "mutable": false,
+    "offsets": [
+      128,
+      129
+    ],
+    "output_authority": "local-file-only",
+    "parameter": "filter1_frequency",
+    "reasons": [
+      "source_value_outside_established_domain"
+    ],
+    "send_supported": false,
+    "source_display": null,
+    "source_value": 32513,
+    "units": "unsigned-big-endian-q8.8"
+  },
+  "source_native": 32513,
+  "source_native_domain": null,
+  "source_sha256": "35e3507c08f601c2c73173393df1ca146fb20d8ea9c4eff87da72495cb435ce0",
+  "strength": 0.5,
+  "synthetic_wav": {
+    "channels": 1,
+    "frames": 3200,
+    "rate": 8000,
+    "sample_width": 2,
+    "sha256": "0bcb50b1ed406035d4f2af3587db7ff86fb858564e454c3bfed1ba0c29626580"
+  },
+  "target": 1
+}
