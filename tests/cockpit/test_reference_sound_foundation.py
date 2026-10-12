@@ -68,7 +68,19 @@ def test_segment_retains_original_identity_and_exact_interleaved_samples() -> No
 
 @pytest.mark.parametrize("width", [2, 3, 4])
 def test_supported_pcm_widths_preserve_segment_bytes(width: int) -> None:
-    assert inspect_reference_audio(_wav(width=width)).sample_width == width
+    samples = tuple(
+        (-1 if index % 2 else 1) * (index % 101 + 1) * (1 << (width * 8 - 9))
+        for index in range(1600)
+    )
+    original = _wav(width=width, channels=2, sample_values=samples)
+    selected = select_reference_segment(original, start_frame=128, frame_count=512)
+    assert inspect_reference_audio(original).sample_width == width
+    assert selected.original.sha256 == reference_sound_digest(original)
+    expected = b"".join(value.to_bytes(width, "little", signed=True) for value in samples[256:1280])
+    with wave.open(BytesIO(selected.wav), "rb") as part:
+        assert part.getsampwidth() == width and part.getnchannels() == 2
+        assert part.getnframes() == 512
+        assert part.readframes(512) == expected
 
 
 @pytest.mark.parametrize(

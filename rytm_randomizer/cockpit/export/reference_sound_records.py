@@ -224,10 +224,7 @@ def _records(
 
 
 def _sound_record_number(value: object) -> float:
-    try:
-        checked = sound_number(value)
-    except OverflowError as exc:
-        raise ValueError("Reference-sound numeric field is too large.") from exc
+    checked = sound_number(value)
     # Preserve integer JSON spellings: source/context identity and CAS hash them.
     return value if isinstance(value, int) else checked
 

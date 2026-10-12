@@ -106,7 +106,12 @@ def make_reference_sound_session(
 
 
 def make_reference_pcm(
-    *, rate: int = 8000, channels: int = 1, width: int = 2, frames: int = 800
+    *,
+    rate: int = 8000,
+    channels: int = 1,
+    width: int = 2,
+    frames: int = 800,
+    sample_values: tuple[int, ...] | None = None,
 ) -> bytes:
     """Small exact PCM fixture; not instrument or acoustic-quality evidence."""
     buffer = BytesIO()
@@ -114,9 +119,15 @@ def make_reference_pcm(
         audio.setframerate(rate)
         audio.setnchannels(channels)
         audio.setsampwidth(width)
-        audio.writeframes(
-            (struct.pack("<h", 1200) if width == 2 else b"\0" * width) * frames * channels
-        )
+        if sample_values is not None:
+            assert len(sample_values) == frames * channels
+            audio.writeframes(
+                b"".join(value.to_bytes(width, "little", signed=True) for value in sample_values)
+            )
+        else:
+            audio.writeframes(
+                (struct.pack("<h", 1200) if width == 2 else b"\0" * width) * frames * channels
+            )
     return buffer.getvalue()
 
 

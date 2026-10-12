@@ -16,7 +16,7 @@ pytestmark = pytest.mark.fast
 
 @pytest.fixture
 def qa() -> ModuleType:
-    path = Path(__file__).parents[1] / "Scripts" / "verify_reference_sound_package.py"
+    path = Path(__file__).parents[1] / "scripts" / "verify_reference_sound_package.py"
     spec = importlib.util.spec_from_file_location("reference_sound_qa_cleanup", path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
