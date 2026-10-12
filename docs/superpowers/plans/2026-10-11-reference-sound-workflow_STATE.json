@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "phase": "verifying",
-  "source_commit": "7cf12e1a2719ffb5fcefec07b600e8ae6c1ebbcf",
+  "source_commit": "92b64b9cfdc647eaca83006415af2e1a5591656b",
   "reference_pr": 254,
   "midi_disabled": true,
   "started_at": "2026-10-12T03:42:18Z",
-  "updated_at": "2026-10-12T07:12:00Z",
+  "updated_at": "2026-10-12T07:29:00Z",
   "completed": [
     "both-device native source-preserving alternatives",
     "exact original and segment retention",

@@ -51,3 +51,22 @@ Final package hashes, executable journey, fresh CI/review status, end time and
 stop reason will be recorded in the exact delivery receipt. Physical completion
 requires real instrument recordings plus application/save/reload/recovery tests;
 software fixtures and synthetic comparison audio cannot establish it.
+
+## Fresh-Export Onboarding Check
+
+At committed documentation snapshot `00a3753b`, exported only tracked repository
+guidance to a clean local QA directory with `git archive`, without user-home
+memory or developer runtime state. Five questions are answered by that export:
+
+1. Where are the owners? The architecture responsibility table names handlers,
+   records, errors, analysis facade/lower serializer and prepared publication.
+2. What can change? The quickstart names the six Rytm common bindings and the
+   source-dependent A4 subset, with machines/tuning/selectors/unknown bytes held.
+3. How does the Windows runtime analyze without developer Python? The installer
+   guide names the bundled stack, lazy-loader/source hooks and early freeze support.
+4. What are the bounds and recovery? The quickstart gives WAV/segment limits,
+   16 recordings, three refinements, 64 sessions, 256 MiB and the 60s deadline;
+   complete-copy recovery preserves shared content-addressed artifacts.
+5. What remains physical? The same guidance distinguishes local files/favorites
+   from hardware SAVE/restore and requires instrument recordings, exact dump
+   comparison and manual baseline recovery. No hardware authority is inferred.
