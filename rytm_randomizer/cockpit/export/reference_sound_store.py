@@ -17,12 +17,16 @@ from ...data.persisted_state import (
     classify_payload,
     require_schema_version,
 )
-from ...observability.errors import DataError, PersistedStateVersionError
+from ...observability.errors import BoundaryError, DataError, PersistedStateVersionError
 from ...observability.metrics import get_metrics
 from ..data import canonical_json_bytes
 from ..profiles.paths import default_profiles_dir
 from .reader import decode_json_rejecting_duplicate_keys, read_bounded_artifact
 from .reference_sound_audio import REFERENCE_AUDIO_MAX_BYTES
+from .reference_sound_errors import (
+    REFERENCE_SOUND_FAILURE_MESSAGES,
+    reference_sound_error_context,
+)
 from .writer import atomic_write_set, guard_atomic_write_tree
 
 REFERENCE_SOUND_STORE_ID: Final[str] = "reference_sound_store"
@@ -145,11 +149,19 @@ class ReferenceSoundStore:
             if decision.code == "persisted_state.schema_newer_than_app":
                 raise PersistedStateVersionError(
                     "Reference-sound schema was written by a newer app; keep the saved files and use a compatible app.",
-                    context={"store_id": REFERENCE_SOUND_STORE_ID, **decision.detail},
+                    context={
+                        "store_id": REFERENCE_SOUND_STORE_ID,
+                        **decision.detail,
+                        "error_code": "schema_newer",
+                    },
                 )
             raise DataError(
                 "Reference-sound session is corrupt or incompatible; recover its manifest.",
-                context={"category": "schema", "reason": decision.code},
+                context={
+                    "category": "schema",
+                    "reason": decision.code,
+                    "error_code": "session_corrupt",
+                },
             )
         payload = cast(dict[str, object], value)
         checksum = payload.pop("content_sha256", None)
@@ -179,8 +191,9 @@ class ReferenceSoundStore:
                     else None
                 )
                 if current != expected_manifest:
-                    raise ValueError(
-                        "Retained sound session changed while working; no replacement was published."
+                    raise BoundaryError(
+                        REFERENCE_SOUND_FAILURE_MESSAGES["session_changed"],
+                        context=reference_sound_error_context("session_changed"),
                     )
             self._publish_verified(payload, artifacts)
 
@@ -197,7 +210,10 @@ class ReferenceSoundStore:
         document["content_sha256"] = reference_sound_digest(reference_sound_json(payload))
         encoded = reference_sound_json(document)
         if len(encoded) > REFERENCE_SOUND_MAX_MANIFEST_BYTES:
-            raise ValueError("Reference-sound session exceeds its manifest limit.")
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES["manifest_limit"],
+                context=reference_sound_error_context("manifest_limit"),
+            )
         manifest = self.directory / f"{session_id}.sound.json"
         with self._guard(create=True):
             existing = tuple(
@@ -211,11 +227,15 @@ class ReferenceSoundStore:
                 )
             )
             if len(existing) > REFERENCE_SOUND_MAX_FILES:
-                raise ValueError("Reference-sound library is full; archive unused sessions.")
+                raise BoundaryError(
+                    REFERENCE_SOUND_FAILURE_MESSAGES["storage_limit"],
+                    context=reference_sound_error_context("storage_limit"),
+                )
             manifests = tuple(path for path in existing if path.name.endswith(".sound.json"))
             if not manifest.exists() and len(manifests) >= REFERENCE_SOUND_MAX_SESSIONS:
-                raise ValueError(
-                    "Reference-sound session limit reached; archive an unused session."
+                raise BoundaryError(
+                    REFERENCE_SOUND_FAILURE_MESSAGES["session_limit"],
+                    context=reference_sound_error_context("session_limit"),
                 )
             writes: dict[Path, bytes] = {}
             for name, data in artifacts.items():
@@ -233,13 +253,19 @@ class ReferenceSoundStore:
                 else:
                     writes[path] = data
             if len(existing) + len(writes) + int(not manifest.exists()) > REFERENCE_SOUND_MAX_FILES:
-                raise ValueError("Reference-sound file limit reached.")
+                raise BoundaryError(
+                    REFERENCE_SOUND_FAILURE_MESSAGES["storage_limit"],
+                    context=reference_sound_error_context("storage_limit"),
+                )
             total = sum(path.stat(follow_symlinks=False).st_size for path in existing)
             if (
                 total + sum(len(data) for data in writes.values()) + len(encoded)
                 > REFERENCE_SOUND_MAX_TOTAL_BYTES
             ):
-                raise ValueError("Reference-sound storage limit reached; archive unused sessions.")
+                raise BoundaryError(
+                    REFERENCE_SOUND_FAILURE_MESSAGES["storage_limit"],
+                    context=reference_sound_error_context("storage_limit"),
+                )
             writes[manifest] = encoded
             atomic_write_set(writes, overwrite=True, redact_diagnostics=True)
 
@@ -248,5 +274,8 @@ class ReferenceSoundStore:
             return ()
         paths = tuple(islice(self.directory.glob("*.sound.json"), REFERENCE_SOUND_MAX_SESSIONS + 1))
         if len(paths) > REFERENCE_SOUND_MAX_SESSIONS:
-            raise ValueError("Reference-sound catalog exceeds its supported limit.")
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES["session_limit"],
+                context=reference_sound_error_context("session_limit"),
+            )
         return tuple(self.load(path.name.removesuffix(".sound.json")) for path in sorted(paths))

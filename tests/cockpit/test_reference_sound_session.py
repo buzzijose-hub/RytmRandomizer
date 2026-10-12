@@ -225,7 +225,7 @@ def test_wrong_recording_candidate_or_missing_recording_preserves_session(
             recording=make_reference_pcm(),
             cancel=Event(),
         )
-    with pytest.raises(ValueError, match="Supply a recording"):
+    with pytest.raises(BoundaryError, match="Supply a recording"):
         workspace.refine(session_id, candidate_id, correction_gain=0.5, cancel=Event())
     assert workspace.reopen(session_id) == payload
 

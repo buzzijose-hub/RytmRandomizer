@@ -12,13 +12,14 @@ import shutil
 import socket
 import struct
 import subprocess
+import sys
 import tempfile
 import time
 import urllib.error
 import urllib.request
 import wave
 from pathlib import Path
-from typing import cast
+from typing import BinaryIO, cast
 
 from websockets.sync.client import connect
 
@@ -46,6 +47,65 @@ def synthetic_reference(frequency: float) -> bytes:
         )
         audio.writeframes(b"".join(samples))
     return buffer.getvalue()
+
+
+def _wait_owned_sidecar_exit(process: subprocess.Popen[bytes], timeout: float) -> bool:
+    try:
+        process.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return False
+    return True
+
+
+def _stop_owned_sidecar(process: subprocess.Popen[bytes]) -> None:
+    """Bound shutdown to this Popen handle, including a kill/reap fallback."""
+    try:
+        if process.poll() is not None:
+            return
+        if process.stdin is not None:
+            try:
+                process.stdin.write(b"RYTM_SIDECAR_SHUTDOWN\n")
+                process.stdin.flush()
+            except (OSError, ValueError):
+                pass
+        if _wait_owned_sidecar_exit(process, 12):
+            return
+        for stop in (process.terminate, process.kill):
+            try:
+                stop()
+            except OSError:
+                if process.poll() is not None:
+                    return
+            if _wait_owned_sidecar_exit(process, 5):
+                return
+        raise RuntimeError("Owned sidecar did not stop after bounded shutdown and kill.")
+    finally:
+        if process.stdin is not None:
+            try:
+                process.stdin.close()
+            except (OSError, ValueError):
+                pass
+
+
+def _finish_owned_sidecar(
+    process: subprocess.Popen[bytes], log: BinaryIO, backend_log: Path, receipt: Path
+) -> None:
+    """Preserve private diagnostics even when shutdown fails, without masking QA failure."""
+    primary_error = sys.exception()
+    try:
+        _stop_owned_sidecar(process)
+    except (OSError, RuntimeError):
+        if primary_error is None:
+            raise RuntimeError(
+                "Owned sidecar shutdown failed; package proof is incomplete."
+            ) from None
+        primary_error.add_note("Owned sidecar shutdown failed; package proof is incomplete.")
+    finally:
+        try:
+            log.flush()
+        finally:
+            receipt.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(backend_log, receipt.parent / "backend-private.log")
 
 
 def run(binary: Path, receipt: Path) -> dict[str, object]:
@@ -254,18 +314,7 @@ def run(binary: Path, receipt: Path) -> dict[str, object]:
                             "Favorite was not retained on reopen.",
                         )
             finally:
-                if process.poll() is None:
-                    if process.stdin is not None:
-                        process.stdin.write(b"RYTM_SIDECAR_SHUTDOWN\n")
-                        process.stdin.flush()
-                    try:
-                        process.wait(timeout=12)
-                    except subprocess.TimeoutExpired:
-                        process.terminate()
-                        process.wait(timeout=5)
-                log.flush()
-                receipt.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(owned / "backend.log", receipt.parent / "backend-private.log")
+                _finish_owned_sidecar(process, log, owned / "backend.log", receipt)
             exit_code = process.returncode
         result: dict[str, object] = {
             "binary_sha256": hashlib.sha256(binary.read_bytes()).hexdigest(),

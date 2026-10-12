@@ -152,8 +152,9 @@ def test_original_saved_slot_is_protected_before_transferable_export(
     payload = _generated(workspace, reference_sound_source)
     source = ElektronNativeObjectMessage.from_bytes(reference_sound_source[0])
     before = _files(workspace.store.directory)
-    with pytest.raises(ValueError, match="source slot is protected"):
+    with pytest.raises(BoundaryError, match="source slot is protected") as refused:
         workspace.export_patch(payload["session_id"], payload["selected_candidate_id"], source.slot)
+    assert refused.value.context["error_code"] == "scratch_slot_protected"
     assert _files(workspace.store.directory) == before
     safe = workspace.export_patch(
         payload["session_id"], payload["selected_candidate_id"], (source.slot + 1) % 128
@@ -839,8 +840,9 @@ def test_recording_and_refinement_limits_and_duplicate_refinement_preserve_retai
         )
     assert len(refined["refinements"]) == 3
     before = _files(workspace.store.directory)
-    with pytest.raises(ValueError, match="Three refinement"):
+    with pytest.raises(BoundaryError, match="Three refinement") as refused:
         workspace.refine(session_id, candidate_id, correction_gain=1.0, cancel=Event())
+    assert refused.value.context["error_code"] == "refinement_limit"
     assert _files(workspace.store.directory) == before
     for frames in range(802, 817):
         payload = workspace.commit(
@@ -854,7 +856,7 @@ def test_recording_and_refinement_limits_and_duplicate_refinement_preserve_retai
         )
     assert len(payload["recordings"]) == 16
     before = _files(workspace.store.directory)
-    with pytest.raises(ValueError, match="Recording limit"):
+    with pytest.raises(BoundaryError, match="Recording limit") as refused:
         workspace.compare(
             session_id,
             candidate_id,
@@ -862,6 +864,7 @@ def test_recording_and_refinement_limits_and_duplicate_refinement_preserve_retai
             recording=make_reference_pcm(frames=900),
             cancel=Event(),
         )
+    assert refused.value.context["error_code"] == "recording_limit"
     assert _files(workspace.store.directory) == before
 
 
@@ -906,7 +909,7 @@ def test_zero_distance_feedback_is_noop_and_long_recording_is_refused(
     payload = _generated(workspace, reference_sound_source)
     candidate = workspace.candidate(payload["session_id"], payload["selected_candidate_id"])
     before = _files(workspace.store.directory)
-    with pytest.raises(ValueError, match="eight seconds"):
+    with pytest.raises(BoundaryError, match="eight seconds") as refused:
         workspace.compare(
             payload["session_id"],
             candidate.candidate_id,
@@ -914,6 +917,7 @@ def test_zero_distance_feedback_is_noop_and_long_recording_is_refused(
             recording=make_reference_pcm(frames=64001),
             cancel=Event(),
         )
+    assert refused.value.context["error_code"] == "recording_too_long"
     assert _files(workspace.store.directory) == before
     measured = workspace.commit(
         workspace.compare(

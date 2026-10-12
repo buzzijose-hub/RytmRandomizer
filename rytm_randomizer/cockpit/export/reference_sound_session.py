@@ -47,6 +47,10 @@ from .reference_sound_candidates import (
     render_reference_sound_candidates,
     render_refined_reference_sound_candidate,
 )
+from .reference_sound_errors import (
+    REFERENCE_SOUND_FAILURE_MESSAGES,
+    reference_sound_error_context,
+)
 from .reference_sound_records import (
     REFERENCE_SOUND_MAX_RECORDINGS,
     REFERENCE_SOUND_MAX_REFINEMENTS,
@@ -174,7 +178,13 @@ class ReferenceSoundWorkspace:
     @trace("reference_sound.import")
     def import_reference(self, original: bytes, title: str) -> ReferenceSoundSessionPayload:
         title = require_sound_title(sound_text(title).strip())
-        info = inspect_reference_audio(original)
+        try:
+            info = inspect_reference_audio(original)
+        except ValueError as exc:
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES["audio_invalid"],
+                context=reference_sound_error_context("audio_invalid"),
+            ) from exc
         segment = select_reference_segment(
             original, start_frame=0, frame_count=min(info.frame_count, info.sample_rate * 8)
         )
@@ -229,9 +239,15 @@ class ReferenceSoundWorkspace:
         self._segment_bytes(current)
         old = current["segment"]["original"]
         original = self.store.read_artifact(sound_text(old["sha256"]), "wav")
-        segment = select_reference_segment(
-            original, start_frame=start_frame, frame_count=frame_count
-        )
+        try:
+            segment = select_reference_segment(
+                original, start_frame=start_frame, frame_count=frame_count
+            )
+        except ValueError as exc:
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES["segment_invalid"],
+                context=reference_sound_error_context("segment_invalid"),
+            ) from exc
         identity: ReferenceSoundSegmentIdentity = {
             "original": segment.original.sha256,
             "start_frame": start_frame,
@@ -468,13 +484,17 @@ class ReferenceSoundWorkspace:
         """Export only to an explicit zero-based scratch slot, with exact payload proof."""
         slot = sound_integer(destination_slot)
         if not 0 <= slot <= _MAX_KIT_DESTINATION_SLOT:
-            raise ValueError("Choose a scratch KIT slot in 0..127 before export.")
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES["scratch_slot_invalid"],
+                context=reference_sound_error_context("scratch_slot_invalid"),
+            )
         candidate = self.candidate(session_id, candidate_id)
         source = ElektronNativeObjectMessage.from_bytes(candidate.frame)
         command = REFERENCE_SOUND_SAVED_COMMANDS[candidate.device_id]
         if source.command == command and source.slot == slot:
-            raise ValueError(
-                "Choose a different scratch KIT slot; the original saved source slot is protected."
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES["scratch_slot_protected"],
+                context=reference_sound_error_context("scratch_slot_protected"),
             )
         targeted = replace(source.with_slot(slot), command=command)
         frame = targeted.to_bytes()
@@ -525,12 +545,24 @@ class ReferenceSoundWorkspace:
         candidate = self.candidate(session_id, candidate_id)
         if candidate_sha256 != reference_sound_digest(candidate.frame):
             raise ValueError("Recording is associated with a different candidate patch.")
-        info = inspect_reference_audio(recording)
+        try:
+            info = inspect_reference_audio(recording)
+        except ValueError as exc:
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES["audio_invalid"],
+                context=reference_sound_error_context("audio_invalid"),
+            ) from exc
         if info.seconds > REFERENCE_SEGMENT_MAX_SECONDS:
-            raise ValueError("Use a candidate recording up to eight seconds.")
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES["recording_too_long"],
+                context=reference_sound_error_context("recording_too_long"),
+            )
         records = payload["recordings"]
         if len(records) >= REFERENCE_SOUND_MAX_RECORDINGS:
-            raise ValueError("Recording limit reached; start a new bounded session.")
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES["recording_limit"],
+                context=reference_sound_error_context("recording_limit"),
+            )
         analysis = self._analyze(recording, cancel)
         reference = sound_analysis_from_dict(payload["analysis"])
         score = self._score(reference, analysis, candidate)
@@ -561,12 +593,18 @@ class ReferenceSoundWorkspace:
         candidate = self.candidate(session_id, candidate_id)
         refinements = payload["refinements"]
         if len(refinements) >= REFERENCE_SOUND_MAX_REFINEMENTS:
-            raise ValueError("Three refinement rounds reached; audition the retained alternatives.")
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES["refinement_limit"],
+                context=reference_sound_error_context("refinement_limit"),
+            )
         records = tuple(
             item for item in payload["recordings"] if item["candidate_id"] == candidate_id
         )
         if not records:
-            raise ValueError("Supply a recording of this exact candidate before refinement.")
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES["recording_required"],
+                context=reference_sound_error_context("recording_required"),
+            )
         record = records[-1]
         if record["candidate_sha256"] != reference_sound_digest(candidate.frame):
             raise ValueError("Recorded feedback belongs to a different patch.")
