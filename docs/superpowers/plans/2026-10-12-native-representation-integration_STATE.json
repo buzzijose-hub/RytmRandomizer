@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "phase": "hardware_validation_pending",
+  "phase": "integrating",
   "started_at": "2026-10-12T20:01:07Z",
-  "updated_at": "2026-10-13T01:03:07Z",
+  "updated_at": "2026-10-13T01:31:00Z",
   "source_commit": "f67059ba844f34dfcec62d2b3d2a8d16f50ac9a9",
   "reference_pr": 254,
   "midi_disabled": true,
@@ -46,10 +46,13 @@
     "both-device finalreference45.101seconds47commands zero failures exact recall export",
     "frozenfinalworker35.579seconds and normalfinalUI10.014seconds passed cleanup",
     "finalnative sevenresourcesamples311.95to589.01MiB minimum11.96GiBfree max10processes",
-    "sourceCI38326500759 required-checks succeeded and all8postpush dimension reviews closed"
+    "sourceCI38326500759 required-checks succeeded and all8postpush dimension reviews closed",
+    "October13 independent CodeQL reported-flow review and373focused cases pass",
+    "28 commandboundary malformed-ID cases preserve files plan and disarmed state; validator-disabled2failure mutation proof",
+    "GitHub accepted5falsepositive dispositions and actual aggregate115079424161 passes without gate changes"
   ],
   "pending": [
-    "CodeQL21-25 required human disposition no dismissals or suppressions",
+    "read-only prepared-packet inspection delta and source-bound package verification",
     "protected human review historicalGate14Gate16 disposition and physical evidence"
   ]
 }

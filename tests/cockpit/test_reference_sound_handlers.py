@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import os
 from pathlib import Path
 from threading import Event
 
@@ -34,6 +35,73 @@ pytestmark = pytest.mark.fast
 
 
 _session = make_reference_sound_session
+
+
+@pytest.mark.parametrize("action", ("controls", "reopen"))
+@pytest.mark.parametrize(
+    "identity",
+    (
+        "../PRIVATE_PATH",
+        "/PRIVATE_PATH",
+        "C:\\PRIVATE_PATH",
+        "valid_id/../PRIVATE_PATH",
+        "valid_id\\PRIVATE_PATH",
+        "sound-" + "a" * 32 + "\n",
+        None,
+    ),
+)
+@pytest.mark.usefixtures("offline_hardware_denied")
+def test_reference_sound_commands_refuse_path_ids_before_io_and_preserve_state(
+    tmp_path: Path,
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: tuple[bytes, str, int, tuple[str, ...]],
+    monkeypatch: pytest.MonkeyPatch,
+    action: str,
+    identity: object,
+) -> None:
+    session, _ = _session(tmp_path, reference_sound_workspace, reference_sound_source)
+    retained = reference_sound_workspace.import_reference(make_reference_pcm(), "Saved reference")
+    _, device, target, _ = reference_sound_source
+    plan = CockpitSendPlan(
+        plan_id="sendplan-abcdef0123456789",
+        candidate_id="candidate-1",
+        source_snapshot_id="snapshot-1",
+        profile_id="profile-1",
+        ready=True,
+        readiness_reason="ready",
+        safety_status="safe",
+        packets=(SendPlanPacket(2, "flt", 1, 74, 64),),
+        locked_pad_ids=frozenset(),
+        blocked_reasons=(),
+    )
+    session.current_send_plan = plan
+    assert session.library_store is not None
+    roots = (session.library_store.library_dir, reference_sound_workspace.store.directory)
+    before = {path: path.read_bytes() for root in roots for path in root.iterdir()}
+    command: dict[str, object] = {"type": "reference_sound", "action": action}
+    if action == "controls":
+        command.update(source_record_id=identity, device_id=device, target=target)
+    else:
+        command["session_id"] = identity
+
+    def forbidden_access(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("untrusted command identity reached the filesystem")
+
+    with monkeypatch.context() as scoped:
+        scoped.setattr(Path, "stat", forbidden_access)
+        scoped.setattr(Path, "iterdir", forbidden_access)
+        scoped.setattr(Path, "mkdir", forbidden_access)
+        scoped.setattr(os, "open", forbidden_access)
+        scoped.setattr(os.path, "lexists", forbidden_access)
+        ack = asyncio.run(
+            handle_command({"request_id": "path-refusal", "command": command}, session)
+        )
+    assert ack["ok"] is False
+    assert "PRIVATE_PATH" not in str(ack)
+    assert session.current_send_plan is plan
+    assert session.armed_apply is None and session.sound_cancel is None
+    assert {path: path.read_bytes() for root in roots for path in root.iterdir()} == before
+    assert reference_sound_workspace.reopen(str(retained["session_id"])) == retained
 
 
 def test_executor_submission_failure_releases_the_fence_and_allows_fresh_work(

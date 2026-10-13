@@ -1,6 +1,38 @@
 # Native Representation Integration
 
-> Status: in-flight (tested offlinef670 delivery; security disposition, hardware and protected approval pending).
+> Status: in-flight (CodeQL disposition verified; bounded rehearsal inspection repair, hardware and protected approval pending).
+
+## October 13 Focused Rehearsal Follow-Up
+
+The operator reprioritized security disposition and the existing rehearsal
+path, not more native research or reference-sound feature expansion. At
+01:19:32Z the clean assembly head was7370d407. Analysis1940077933 still
+reported five path alerts. Independent review and373 composed cases support
+false-positive disposition of those restricted client-ID flows; normal GitHub
+disposition changed the actual aggregate115079424161 tosuccess at01:26Z.
+The local-root/junction limitation remains explicit in the
+[security report](../../security/2026-10-13-codeql-path-disposition.md).
+
+One actionable handoff gap remains: prepared packet values are not visible in
+the existing confirmation. A contained read-only table will reuse the exact
+server `CockpitSendPlan` in the Safety Rail before arming and in confirmation.
+No packet filtering, mutation, scope, arm, send or recovery authority changes.
+An isolated worker owns those frontend files; the assembly owns security tests
+and handoff documentation. One heavy local job at a time, no live MIDI/USB.
+
+Before-code delta audit: naming is exact-plan inspection, not a second planner;
+coupling stays on the existing protocol; channel presentation is explicitly
+one-based while wire values remain zero-based; no new environment variable,
+dependency, catalog, state schema, storage or transport. Focused tests must
+show exact packets, blocked plans, stale replacements and unchanged authority.
+Then run frontend coverage/type/lint, normal hooks, source CI, and verify the
+source-bound Windows package using fake ports. Preserve f670 and its settings.
+Rollback is the frontend-only inspection delta, not any hardware gate.
+
+The next physical gate is **one Rytm Pad2 four-control10% candidate**, fresh
+source, exact ready-plan inspection, explicit arm/confirm, DISARM, manual KIT
+reload and fresh exact baseline. A4 working-query research is not a prerequisite.
+Operator-present launch/capture/output and recovery remain unperformed.
 
 ## Mission And Baseline
 

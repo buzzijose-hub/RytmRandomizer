@@ -1,6 +1,6 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-10-12. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-10-13. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
 
@@ -27,14 +27,23 @@ now measure16257 and11712 each one line/contained in144px cells, with local
 scrolling and no page overflow. New frontend1294cases/81files104.25s/all100%
 coverage/type/lint/build pass. Screenshots inspected; older8d/096/64d5 preserved.
 Exactf670 source CI38326500759/required-checks and Windows build38326547294 pass.
-CodeQL alerts21-25 remain failed/undismissed. Independent triage is complete:
-no reachable WS traversal found through strict IDs; human disposition of the
-guard-model assessment/local-root threat model is pending. Latest Eddie review remains October3
+CodeQL alerts21-25 are dispositioned as false positives after independent
+reported-flow review and373 focused cases, including28 before-I/O command
+refusals and a two-failure validator-removal probe. The actual aggregate
+115079424161 passes; no workflow/protection/severity changed. Trusted local
+root/ancestor limits remain explicit in the
+[security disposition](security/2026-10-13-codeql-path-disposition.md).
+A narrow read-only prepared-packet inspection repair is underway for the
+earliest Pad2 rehearsal; f670 remains preserved and verified offline.
+Latest Eddie review remains October3
 CHANGES_REQUESTED; protected approval and historical Gate14/16 remain pending.
 No real MIDI/USB operation occurred. Physical working-state synchronization, precision,
 automatic restore and show readiness remain unverified. See the
 [integration map](NATIVE_REPRESENTATION_INTEGRATION.md) and
-[studio experiment](NATIVE_WORKING_KIT_STUDIO_EXPERIMENT.md).
+[studio experiment](NATIVE_WORKING_KIT_STUDIO_EXPERIMENT.md). The first physical
+test is the existing four-control Pad2 audition/reload gate, not that later
+A4 working-query experiment. General A4/BOTH, CY Ride, paired precision and
+automatic restoration remain held.
 
 The previously delivered reference-sound workflow below remains available.
 Both device paths now produce source-preserving local KIT candidates rather

@@ -1,7 +1,7 @@
 # Show Kit Forge Remaining Studio Checklist
 
 Prepared: 2026-09-04
-Updated guidance: 2026-10-12 (no new physical observations recorded)
+Updated guidance: 2026-10-13 (no new physical observations recorded)
 
 Status: **pending operator-present hardware validation**
 
@@ -11,6 +11,16 @@ save attestation, or a semantic match must not be rewritten as an unobserved
 hardware result.
 
 ## Next Studio Session: One Bounded Rehearsal
+
+**Start with [Guarded Live Pad 2 Proof](#guarded-live-pad-2-proof), then stop
+after its recovered baseline.** The reference-sound file proof and A4 working
+query experiment come later; neither is a prerequisite for this first test.
+Use the exact source/binary hashes and operator-present launch block in the
+latest `studio-procedure/DELIVERY-RECEIPT.md`. `Launch-Offline.ps1` deliberately
+forces MIDI off, even if `auto` was set beforehand; it cannot perform capture
+or physical audition. Do not modify it or close another user's app by PID.
+The supervised launch uses existing `auto` input composition, stays disarmed,
+and still requires a separate in-UI exact Rytm output arm/confirmation.
 
 ### Reference Sound File Proof
 
@@ -68,13 +78,20 @@ receipt, not an older running server. Close FL Studio/Overbridge before the
 session. Record both firmware versions, configured track channels, unique
 exact port names, backed-up source files and operator-selected disposable
 source/favorite slots in the table below. Do not overwrite a show KIT.
+Confirm the physical Rytm Pad2 track receives **MIDI channel2**; the existing
+planner uses zero-based channel1 and does not discover the instrument's channel
+configuration. A4 stays locked and no A4 output is selected. Disconnect conflicting
+routes only under the operator's control; do not assume a port number is stable.
 
 1. Start disarmed. Capture and explicitly retain the saved source KITs; verify
    their identities. Cancel an input capture once and confirm the source is
    unchanged. No output authority is needed for these steps.
 2. On the new parameter-scope build, select **Pad 2 rehearsal**. Confirm exactly
    Filter Frequency, AMP Decay, Overdrive and Reverb Send are selected; other
-   parameters, other pads and all A4 tracks are excluded/locked. Start at 10%
+   parameters, other pads and all A4 tracks are excluded/locked. Explicitly set
+   Show Kit Forge's **Custom depth to10%**, candidate count to **1**, and record
+   the seed. The preset's session-depth setting is separate from Forge's depth;
+   verify the resulting candidate actually reports10%. Start at 10%
    and inspect every row of the exact plan before arming. The previous `fa43`
    copy has only whole-pad scope and must not be mistaken for this build.
    Rytm filter frequency (single CC74), amp decay, overdrive and reverb send have
@@ -253,10 +270,17 @@ receipts and actual physical observations remain separate.
       source dump through the device rail. This clears the current candidate
       and prepared plan; the dump alone does not prove unsaved RAM was restored.
 - [ ] Click **Select for audition** on that candidate after the fresh capture,
-      then **Preview Rytm**. Arm only the exact Rytm output with the launch
-      token, then **Prepare exact plan**. Record the exact output port, current
-      send-plan id, affected pad ids, packet count, and message count.
+      then **Preview Rytm** and **Prepare exact plan** while still disarmed.
+      Inspect the current server plan, not a candidate from an earlier scope.
+      Arm only the exact Rytm output through **Arm...**; the native credential
+      bridge supplies the launch secret, which must not be copied into evidence.
+      Reinspect/prepare the current plan after arm if its identity changed.
+      Record output port, current plan id, pads, packets and message count.
 - [ ] Verify the plan names Pad 2 only and excludes every locked/untargeted pad.
+- [ ] Verify every visible packet is channel2 (wire channel1) and a nonempty
+      subset of the following canonical seven-bit controls. Compare its value
+      with that candidate's exact proposed value; unchanged fields need no packet.
+      Any other packet or missing inspection surface means stop, not blind SEND.
 - [ ] Require `ready=true` with no blockers before confirming SEND. If a mixed
       safe/paired candidate is blocked, retain its plan id/reasons and stop;
       `paired_control_precision_unverified` refuses the entire plan even if
@@ -280,6 +304,19 @@ receipts and actual physical observations remain separate.
 - [ ] Confirm its whole-payload fingerprint exactly equals the retained Rytm
       source whole-payload fingerprint; separately preserve the returned frame
       SHA-256.
+
+| Allowed Pad2 control | Canonical key | CC | Human MIDI channel |
+| --- | --- | --- | --- |
+| Filter Frequency | `flt` |74|2|
+| AMP Decay | `amp_decay` |80|2|
+| Overdrive | `overdrive` |81|2|
+| Reverb Send | `reverb` |83|2|
+
+No scene, performance, routing, machine, SRC, LFO, transport or persistent SAVE
+packet belongs in this test. If SEND fails or disconnects, assume possible
+partial delivery: DISARM, manually reload the saved source, observe recovery,
+capture a fresh baseline, then reselect and prepare anew. Never retry a stale
+plan. A successful software ACK alone does not establish physical application.
 
 | Rytm observation | Value |
 |---|---|

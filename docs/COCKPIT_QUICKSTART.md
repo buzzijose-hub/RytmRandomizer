@@ -865,6 +865,13 @@ device to discard live-dial changes.
 
 ### 6a. Remaining operator-present studio rehearsal
 
+The first test is the existing four-control Rytm Pad2 rehearsal below, not
+the separate A4 working-KIT query experiment. Use the latest source-bound
+delivery receipt's operator-present launch block. The offline launcher forces
+MIDI off and cannot capture or audition hardware; setting `auto` before calling
+it does not override that choice. Supervised launch remains disarmed, with
+separate explicit Rytm output arm and exact-plan confirmation still mandatory.
+
 **Pending, not performed by software verification.** Work in disposable
 projects/KIT slots, preserve the real show project separately, use a safe
 monitoring level, and keep one output path active at a time. No exhaustive
@@ -905,7 +912,13 @@ The first present action is input-only source capture and exact-plan inspection.
 Studio now has canonical page/parameter selection. Choose **Pad 2 rehearsal**
 to include only Filter Frequency, AMP Decay, Overdrive and Reverb Send, with
 other pads and all A4 tracks locked. Its physical validation on the new build
-is pending. An empty parameter selection means no mutations; unselected values
+is pending. Set Forge's separate **Custom depth to10%** and candidate count to
+**1**; verify the candidate's recorded depth and seed rather than assuming the
+preset changed Forge's generation settings. Verify Rytm Pad2 receives human
+MIDI channel2 (the existing planner uses wire channel1). Inspect every prepared
+packet against the canonical `flt`/74, `amp_decay`/80, `overdrive`/81 and
+`reverb`/83 keys/CCs and the exact proposed values. No other packet belongs in
+this test. An empty parameter selection means no mutations; unselected values
 remain exact before generation. A full-pad candidate is still not guaranteed
 to be SEND-ready; changed paired Rytm LFO Depth blocks it as a whole.
 Rytm Filter Frequency is the single CC74 control, distinct
@@ -928,8 +941,10 @@ Adopt retained paired sources, set the scope in Stage 2, generate a candidate
 and record its id. Manually reload the immutable Rytm source KIT, then take a
 fresh matching source capture through the device rail. Capture clears the
 current candidate and plan. Re-select that candidate with **Select for
-audition**, then **Preview Rytm**. Arm only the exact Rytm output and use
-**Prepare exact plan**; inspect its current id, port, affected pads and counts.
+audition**, then **Preview Rytm** and **Prepare exact plan** while disarmed;
+inspect its current id and every packet in the Safety Rail. Arm only the exact
+Rytm output, then recheck its current id, port, affected pads, packet values and
+counts in confirmation. Reprepare if arm changed the plan context.
 If any row needs an unverified paired control, the whole plan stays blocked
 with `paired_control_precision_unverified`; retain the blocker and stop, even
 if some other rows could be sent. Do not bypass it with the legacy probe.

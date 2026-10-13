@@ -56,9 +56,14 @@ both-device45.101s/47commands,frozenworker35.579s andnormalUI10.014s pass with
 MIDIoff/ownedcleanup. Measured600pxword16257/11712 each one line/contained144px
 cells closes the prior8d2-line41px defect. Newfrontend1294/81files104.25s/allfour
 coverage100%,typing/lint/buildpass. Exactf670 testCI38326500759/required-checks
-succeeded; separateCodeQL115066896242 remainsfailed5highalerts21-25, human
-dispositionpending. Prior8d/096/64d5 builds preserved. No alerts are dismissed
-to manufacture green status. Launch/hash receipt is source-bound to f670.
+succeeded. The formerly failed CodeQL alerts21-25 are now independently
+dispositioned as false positives for their strict-ID command flows; actual
+aggregate115079424161 on7370 passes.373 focused cases and28 command-boundary
+refusals pass; disabling the validator in memory causes2 expected failures.
+The local-root/junction threat-model limits are recorded in the linked security
+report; no workflow/severity/protection was weakened. Prior8d/096/64d5 builds
+are preserved. The narrow prepared-packet inspection repair and its source-bound
+package acceptance are still pending; f670 stays the verified offline delivery.
 
 - [x] Local pytest passes (full suite).
 - [x] `tests/architecture/` passes.
@@ -69,7 +74,7 @@ to manufacture green status. Launch/hash receipt is source-bound to f670.
 - [x] Exact-source new Windows package and affected native journeys pass.
 - [x] Final replacement Windows package including guard and readable value tables passes.
 - [x] Fresh test CI/required-checks complete on build sourcef67059ba.
-- [ ] CodeQL path-injection alerts21-25 resolved or independently dispositioned through required human review.
+- [x] CodeQL path-injection alerts21-25 independently dispositioned with evidence; actual aggregate passes on7370.
 - [ ] Protected human approval; latest Eddie review remains October3 CHANGES_REQUESTED.
 
 ## Plan-requirements conformance
@@ -115,6 +120,10 @@ do not retroactively certify earlier work or bypass protected human approval.
 The earlier reference-sound plan/delivery remains preserved and separately accounted.
 
 ## Reviewer notes
+
+[CodeQL disposition and regression evidence](https://github.com/buzzijose-hub/RytmRandomizer/blob/codex/studio-evidence-handoff/docs/security/2026-10-13-codeql-path-disposition.md).
+The follow-up is limited to security triage and the existing Pad2 rehearsal
+path. A4 working-query research and broader feature expansion are not prerequisites.
 
 Consolidated dimensional review is posted at https://github.com/buzzijose-hub/RytmRandomizer/pull/254#issuecomment-6134107254.
 Delivery sourcef67059ba and binary hashes/native acceptance are in the run report;

@@ -171,6 +171,23 @@ physical experiment/rehearsal remain held. No hardware authorization is granted.
 
 ## Accounting
 
+### October 13 Focused Continuation
+
+Started01:19:32Z at clean7370d407. Fresh CodeQL analysis1940077933 and
+independent security review found mandatory full-match filename guards on the
+reported21-25 client-ID flows.373 focused cases/3warnings6.12s pass;28 new
+command cases preserve files/plan/disarmed state and refuse before I/O. An
+in-memory validator-removal probe fails2 device cases as expected. No production
+Python edit was necessary beyond the already delivered5db6 direct-DTO repair.
+
+Normal false-positive dispositions were accepted01:25:58Z-01:26:02Z and actual
+aggregate115079424161 became success. Scope explicitly trusts configured local
+roots/ancestors, not arbitrary local filesystem replacement/junction containment.
+No workflow/severity/protection change and no protected merge. Details are in
+the security report. The current follow-up completes one read-only prepared
+packet inspection gap and clarifies the existing Pad2 rehearsal, not new audio
+features or A4 query acquisition. Final package/delta acceptance remains pending.
+
 No computer crash or network interruption recorded in this block. Heavy jobs
 are sequential, pytest workers capped at2, frontend workers at1 and native
 browser ownership at1. Free RAM sampled13.6-13.8GiB; new native QA stops below
