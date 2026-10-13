@@ -51,8 +51,14 @@ awaiting required human disposition after independent triage found no reachable
 WS traversal. The separate direct-DTO pre-I/O guard gap is reproduced and fixed;
 frozen5db6 full11843passed/5skips/6warnings817.27s/all76touched100%coverage and
 final381focused cases4.25s pass. Independent safety/test delta reviews are closed.
-New Windows replacement acceptance for this production delta is pending;096
-remains preserved. No alerts are dismissed to manufacture green status.
+Finalf670 Windowsbuild38326547294 andactualnative39.745s/22commands/10checks,
+both-device45.101s/47commands,frozenworker35.579s andnormalUI10.014s pass with
+MIDIoff/ownedcleanup. Measured600pxword16257/11712 each one line/contained144px
+cells closes the prior8d2-line41px defect. Newfrontend1294/81files104.25s/allfour
+coverage100%,typing/lint/buildpass. Exactf670 testCI38326500759/required-checks
+succeeded; separateCodeQL115066896242 remainsfailed5highalerts21-25, human
+dispositionpending. Prior8d/096/64d5 builds preserved. No alerts are dismissed
+to manufacture green status. Launch/hash receipt is source-bound to f670.
 
 - [x] Local pytest passes (full suite).
 - [x] `tests/architecture/` passes.
@@ -61,8 +67,8 @@ remains preserved. No alerts are dismissed to manufacture green status.
 - [x] 685/685 V1.34 parity items byte-identical.
 - [x] No new dead code (vulture --min-confidence 80).
 - [x] Exact-source new Windows package and affected native journeys pass.
-- [ ] Replacement Windows package for the later5db6 direct-record guard delta passes.
-- [x] Fresh test CI/required-checks complete on build source096be3ed.
+- [x] Final replacement Windows package including guard and readable value tables passes.
+- [x] Fresh test CI/required-checks complete on build sourcef67059ba.
 - [ ] CodeQL path-injection alerts21-25 resolved or independently dispositioned through required human review.
 - [ ] Protected human approval; latest Eddie review remains October3 CHANGES_REQUESTED.
 
@@ -111,7 +117,7 @@ The earlier reference-sound plan/delivery remains preserved and separately accou
 ## Reviewer notes
 
 Consolidated dimensional review is posted at https://github.com/buzzijose-hub/RytmRandomizer/pull/254#issuecomment-6134107254.
-Delivery source096be3ed and binary hashes/native acceptance are in the run report;
+Delivery sourcef67059ba and binary hashes/native acceptance are in the run report;
 later documentation/test-only changes do not alter those binaries. Static research,
 synthetic audio, fixtures and software tests are not physical validation.
 Working-state synchronization, instrument recordings/application/save/reload,

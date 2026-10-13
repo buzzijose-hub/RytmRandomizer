@@ -1,13 +1,13 @@
 # A4 Saved Versus Working KIT Studio Experiment
 
 Status: prepared; no physical observation or query has been performed by this
-software session. The tested Windows delivery is source `096be3ed94ec` at
-`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-096be3ed94ec`.
+software session. The tested Windows delivery is source `f67059ba844f` at
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-f67059ba844f`.
 Its `studio-procedure/DELIVERY-RECEIPT.md` records binary hashes and actual
 offline acceptance. Prior verified packages remain preserved.
 
 ```powershell
-Set-Location "C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-studio-096be3ed94ec"
+Set-Location "C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-studio-f67059ba844f"
 .\Launch-Offline.ps1 -Hidden:$false
 ```
 

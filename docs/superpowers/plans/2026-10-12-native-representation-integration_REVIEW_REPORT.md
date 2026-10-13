@@ -1,6 +1,6 @@
 # Native Integration Dimensional Review
 
-Status: in-flight (scoped source repairs and offline package accepted; new security triage and protected approval pending).
+Status: in-flight (finalf670 offline package accepted; completed security triage requires human disposition and protected approval).
 
 Eight targeted reviews, at most two active workers. Every review is source-only
 unless a runner result below explicitly establishes software execution. None
@@ -39,11 +39,12 @@ work; recovery is manual. Old package acceptance is not inherited by this build.
 - Latest boundary/taxonomy/u14/error cases:271 passed/3warnings6.22s.
 - Strict pinned typing and whole lint/dead-code checks are clean on frozen658.
 - Final658 full coverage passes11813 cases; Gate1 all76 touched files100%line/branch.
-  Exact096 executable/native acceptance passes; see the run report and source-bound receipt.
+  Finalf670 executable/native acceptance passes; see the run report and source-bound receipt.
 
 No unresolved Critical/Important/Minor source findings remain in the completed
 reviews. A subsequent CodeQL aggregate check reports five high path-injection
-alerts21-25 requiring independent triage; analysis-job success is not alert
+alerts21-25; independent triage is complete, human disposition remains required.
+Analysis-job success is not alert
 clearance. No alert was dismissed. This is not an overall Ready-to-merge decision:
 security disposition, historical Gate14/16 disposition and protected human approval
 must be evaluated separately. Hardware precision, freshness, application/save/
@@ -73,3 +74,20 @@ corrected with six additional cases. Final focused381cases pass4.25s. Frozen
 5db6e6de full11843cases passes817.27s/all76touched100%coverage. Packaged replacement
 acceptance remains required;096 stays preserved meanwhile. No suppression,
 dismissal, false-green claim or protected merge is authorized by this report.
+
+## Final Post-Push Review And Package
+
+Eight separate scoped dimensions reviewed8d->f670, at most two workers active.
+Architecture/house style/parity/safety/observability/reuse/docs/remaining gates
+report no unresolved findings. Original8dMinor stale current-status wording is
+corrected. Layout test review's numeric-prefix Minor is corrected to exact whole
+token detection. Mutation/transport/Pythonsource remain unchanged from5db6.
+No diagram edge or new architectural surface is introduced by the scoped tables.
+
+Finalf670 native10checks pass39.745s, including600px16257/11712 one-line/contained
+144pxcells. Both-device45.101s/frozen35.579s/normalUI10.014s allpasswithcleanup.
+Frontend1294/allcoverage100%, sourceCI38326500759/required-checks and identified
+Windowsbuild38326547294 pass. CodeQL aggregate115066896242 stillfails5highalerts;
+owner/threat-model disposition, historicalG14/G16 and protected approval remain
+pending. Verdict: scoped source fixes closed; NOT READY for protected merge or
+hardware/show certification while those separate gates remain. No bypass.

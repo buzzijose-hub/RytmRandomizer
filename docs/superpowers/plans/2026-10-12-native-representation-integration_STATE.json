@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "phase": "packaging",
+  "phase": "hardware_validation_pending",
   "started_at": "2026-10-12T20:01:07Z",
-  "updated_at": "2026-10-12T23:46:20Z",
-  "source_commit": "5db6e6deaf4bcb70cba18283cb38c6fb424d70db",
+  "updated_at": "2026-10-13T01:03:07Z",
+  "source_commit": "f67059ba844f34dfcec62d2b3d2a8d16f50ac9a9",
   "reference_pr": 254,
   "midi_disabled": true,
   "completed": [
@@ -38,12 +38,18 @@
     "independent CodeQL triage found no reachable WS traversal but reproduced directDTO metadata guard gap",
     "directDTO guard repaired before any I/O and independent safety test delta reviews closed",
     "frozen5db6 full11843 passed5 skipped817.27seconds all76touched100percentcoverage",
-    "six optional matrix additions and final381 composed cases passed4.25seconds"
+    "six optional matrix additions and final381 composed cases passed4.25seconds",
+    "genuine600pxnativeword red16257 two lines in41px retained and table widths repaired",
+    "frontend1294tests104.25seconds allfourcoverage100percent typing lint build pass",
+    "finalf670 Windowsbuild38326547294 exactsource hashes verified",
+    "finalnative39.745seconds22commands10checks including whole-wordgeometry passed",
+    "both-device finalreference45.101seconds47commands zero failures exact recall export",
+    "frozenfinalworker35.579seconds and normalfinalUI10.014seconds passed cleanup",
+    "finalnative sevenresourcesamples311.95to589.01MiB minimum11.96GiBfree max10processes",
+    "sourceCI38326500759 required-checks succeeded and all8postpush dimension reviews closed"
   ],
   "pending": [
     "CodeQL21-25 required human disposition no dismissals or suppressions",
-    "new source-bound Windows replacement for verified5db6 guard production delta",
-    "delivery documentation closeout and exact elapsed accounting",
     "protected human review historicalGate14Gate16 disposition and physical evidence"
   ]
 }

@@ -3,11 +3,12 @@
 > Status: in-flight (offline delivery accepted; security disposition, hardware and protected approval pending).
 
 Start: 2026-10-12T20:01:07Z. Ceiling: 2026-10-13T04:01:07Z. Eight hours is a
-working budget, not a completion definition. Source `658c8f9f8dcba361720b52c4e8d0aac5674372c0`
-was verified on `codex/studio-rytm-mapping`, existing PR254. Build source
-`096be3ed94ecd7d76722321f51c1251fbe477feb` has identical production code;
-only documentation/indexing changed. Its Windows delivery is accepted for the
-tested offline scope. The prior audio-enabled `64d5c619` delivery is unchanged.
+working budget, not a completion definition. Final Windows source
+`f67059ba844f34dfcec62d2b3d2a8d16f50ac9a9` is delivered and tested for the declared
+offline scope on `codex/studio-rytm-mapping`, existing PR254. Python production
+matches fully verified `5db6e6de`; the later frontend layout has its own full
+coverage and positive packaged geometry proof. Prior8d/096/64d5 deliveries remain
+preserved with their separate receipts, including the failed8d readability check.
 No hardware, firmware or protected merge occurred.
 
 ## Implemented
@@ -70,7 +71,7 @@ Gate17 and documentation repair deltas are independently closed. Protected
 human approval and historical PR254 timing/execution exceptions are not
 retroactively certified by this working block.
 
-## Windows Delivery
+## Earlier Windows Delivery (096)
 
 `C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-096be3ed94ec`
 contains the audio-enabled standalone runtime, hash-checking `Launch-Offline.ps1`
@@ -99,7 +100,7 @@ and screenshots are delivered; profiles/tokens/runtime state remain private.
 Owned processes and listeners are stopped; the normal launch state was removed
 from this new delivery so its first user launch starts fresh.
 
-## Remaining Acceptance
+## Historical Acceptance Checkpoints (Superseded Below)
 
 Independent triage is complete for CodeQL alerts21-25 (five high
 `py/path-injection` alerts). Analysis jobs passed but the aggregate security check
@@ -136,6 +137,38 @@ AL02 still has18 critical mapping gaps and emits no SysEx/changed kit bytes.
 Its current source-bound manifest is `c7915ef20c3fe00a89a03829c4959b1a4e551bde9d1f108fe9b1f1a076f72730`;
 the latest refresh changes only the central error-taxonomy dependency hash.
 
+## Final Source-Bound Delivery
+
+Recommended folder:
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-f67059ba844f`.
+Use its `Launch-Offline.ps1`; full receipt, hashes and copied studio procedure
+are in `studio-procedure/`. Build38326547294 succeeded on exactf670, source clean
+with only declared Tauri config overrides. Portable11781770271/archiveSHA
+`e1aad565ae68957afabc560bf3201b874d9a07799dc4d1212e9b8e51324a5243`.
+ShellSHA `2dac15569361c9bb7d05eb73acbb4b1bc39fcdec0b023e520639f4bf60ef38e5`;
+sidecar `857d194cd00cf0514a5e64a1048f363138c34fdd5d0c6cb1935eca68cbcedfb5`;
+launcher `cb0ef87a03c7f4f57f8113fb0de39afe6752fa2021e4333edb9f760c5fd880c9`.
+
+Actual native39.7447s/22commands/zeroerrors/pending4/10checks passes. At600px,
+source16257 andrendered11712 each occupy one line, contained in144px cells;
+local scrolling/no page overflow and desktop/narrow screenshots pass. Old8d
+red remains failed evidence. Both-device reference45.1006s/47commands/zeroerrors
+passes, with9candidates/one favorite/one synthetic recording/one refinement per
+device, exact export/reopen and one controlled backend restart. Frozen bundled
+worker35.579s passes with developer paths cleared. Normal hash-checking launcher
+backend5.9185s/authenticatedUI10.0142s passes (mock/one client/queue current0,
+high13of256/no drops); timings are observations, not guarantees. Every owned
+process/listener is stopped and first-launch test state moved out privately.
+
+Seven native samples311.95-589.01MiB/max10processes/max4114handles/min11.96GiBfree.
+No new90-minute endurance claim. Sanitized summaries/telemetry/screens are delivered;
+credentials/profile/runtime state excluded. SourceCI38326500759/required-checks
+succeeded exactf670 at00:48:26Z. SeparateCodeQLcheck115066896242 remains failed
+with five highpath alerts21-25; no dismissal/suppression. Eightpostpush dimensions
+report no unresolved source findings; specific minor docs/test issues corrected.
+Human CodeQL/threat-model and historicalG14/G16 disposition, Eddie approval and
+physical experiment/rehearsal remain held. No hardware authorization is granted.
+
 ## Accounting
 
 No computer crash or network interruption recorded in this block. Heavy jobs
@@ -145,5 +178,9 @@ browser ownership at1. Free RAM sampled13.6-13.8GiB; new native QA stops below
 after composition; ignored evidence is preserved outside the code tree.
 Two documentation-hook refusals were corrected without bypass. Package testing
 ran23:02:19Z-23:04:39Z, then frozen-worker and ordinary-launch checks sequentially.
-End time, total elapsed and stop reason will be recorded after security triage
-and delivery documentation closeout. No new endurance claim is made.
+Software delivery/handoff checkpoint:2026-10-13T01:03:07Z, elapsed5h02m00s.
+All independent implementation, reviews, local/CI source gates and packaged
+acceptance are complete. Stop reason after final publication: remaining gates
+are protected human/security disposition and operator-present hardware evidence,
+not an exhausted budget. Final publication/end timing is recorded in the local
+delivery receipt and compact resume checkpoint. No new endurance claim is made.

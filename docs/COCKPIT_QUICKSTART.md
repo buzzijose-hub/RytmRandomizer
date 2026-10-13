@@ -1106,7 +1106,7 @@ dev server, Rust hot-reload, and the sidecar all spin up together.
 
 ## Reference Sound Rehearsal
 
-The October 12 native-representation delivery from `096be3ed94ec` passed its
+The October 12 native-representation delivery from `f67059ba844f` passed its
 actual packaged source-kind/precision, both-device reference-sound and bundled
 worker journeys with MIDI disabled. Its source-bound receipt records hashes
 and the remaining review/security and physical gates. In this delivery,
@@ -1119,13 +1119,13 @@ documented in [the studio experiment](NATIVE_WORKING_KIT_STUDIO_EXPERIMENT.md).
 The new **Reference sound** workspace is for one short sound. It is distinct
 from the description compiler and song/profile wizard. The prior `6e098f85`
 rehearsal package does not contain this feature or its audio dependencies.
-The audio-enabled source `096be3ed` package is delivered at
-`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-096be3ed94ec`.
+The audio-enabled source `f67059ba` package is delivered at
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-f67059ba844f`.
 Its receipt includes frozen-worker and actual native UI acceptance. The previous
-`64d5c619` delivery stays preserved. Offline acceptance is not show readiness.
+`8d5d42f8`, `096be3ed` and `64d5c619` deliveries stay preserved. Offline acceptance is not show readiness.
 
 ```powershell
-Set-Location "C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-studio-096be3ed94ec"
+Set-Location "C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-studio-f67059ba844f"
 .\Launch-Offline.ps1 -Hidden:$false
 ```
 

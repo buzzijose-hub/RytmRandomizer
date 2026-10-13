@@ -15,21 +15,23 @@ Pinned strict typing, lint and dead-code gates pass; frontend1294 cases/all
 four coverage dimensions100%. Later defensive source `5db6e6de` passes11843 cases/
 5 skips/6 warnings817.27s with all76 touched files100%line/branch; final expanded
 path matrix381cases4.25s passes. It validates direct library IDs before any I/O.
-The source-bound `8d5d42f8eebd` package is at
-`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-8d5d42f8eebd`.
-Its Python production equals verified5db6. Native36.074s/27commands, both-device
-UI41.247s/47commands and frozenworker25s pass with cleanup; normal launcher
-authenticates UI5.350s. Native samples315.51-607.38MiB,10processes,minimum12.92GiB
-free; not new endurance proof. Subsequent600px geometric inspection reproduces
-native16257 split into two lines in a41px cell. A contained table-width repair
-and new packaged geometric regression are in progress; replacement acceptance
-is still required. Earlier096 and64d5 deliveries remain preserved.
-Prior096 test CI/required-checks passed; current8d test matrix is running.
+The final source-bound `f67059ba844f` package is at
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-f67059ba844f`.
+Its Python production equals verified5db6. Actual native39.745s/22commands/
+10checks and both-device45.101s/47commands pass with restart/cleanup. Frozen
+worker35.579s passes; normal launcher authenticates UI10.014s (mock/one client/
+queue high13of256/no drops). Seven native samples311.95-589.01MiB/max10processes/
+4114handles/minimum11.96GiBfree, pendinghigh4; not a new endurance proof.
+The earlier8d600px red measured16257 split over two lines in41px. Fixed tables
+now measure16257 and11712 each one line/contained in144px cells, with local
+scrolling and no page overflow. New frontend1294cases/81files104.25s/all100%
+coverage/type/lint/build pass. Screenshots inspected; older8d/096/64d5 preserved.
+Exactf670 source CI38326500759/required-checks and Windows build38326547294 pass.
 CodeQL alerts21-25 remain failed/undismissed. Independent triage is complete:
 no reachable WS traversal found through strict IDs; human disposition of the
 guard-model assessment/local-root threat model is pending. Latest Eddie review remains October3
 CHANGES_REQUESTED; protected approval and historical Gate14/16 remain pending.
-No real MIDI/USB operation occurred. Working-state synchronization, precision,
+No real MIDI/USB operation occurred. Physical working-state synchronization, precision,
 automatic restore and show readiness remain unverified. See the
 [integration map](NATIVE_REPRESENTATION_INTEGRATION.md) and
 [studio experiment](NATIVE_WORKING_KIT_STUDIO_EXPERIMENT.md).
