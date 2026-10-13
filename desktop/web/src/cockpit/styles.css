@@ -269,6 +269,98 @@ html,
   opacity: 0.7;
 }
 
+.arm-dialog.exact-rytm-send-dialog {
+  box-sizing: border-box;
+  position: fixed;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1001;
+  width: min(600px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow: auto;
+}
+
+.send-confirm-details,
+.exact-rytm-plan-id {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+  min-width: 0;
+}
+
+.send-confirm-details > div {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.send-confirm-details dt,
+.exact-rytm-plan-id dt {
+  color: var(--text-dim);
+}
+
+.send-confirm-details dd,
+.exact-rytm-plan-id dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.exact-rytm-plan {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.exact-rytm-plan-scroll {
+  min-width: 0;
+  max-width: 100%;
+  max-height: 240px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.exact-rytm-plan-table {
+  width: 100%;
+  min-width: 420px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.exact-rytm-plan-table caption {
+  padding: 0 0 6px;
+  color: var(--text-dim);
+  text-align: left;
+}
+
+.exact-rytm-plan-table th,
+.exact-rytm-plan-table td {
+  box-sizing: border-box;
+  padding: 6px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.exact-rytm-plan-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+}
+
+.exact-rytm-plan-table :is(th, td):nth-child(1) { width: 40px; }
+.exact-rytm-plan-table :is(th, td):nth-child(3) { width: 64px; }
+.exact-rytm-plan-table :is(th, td):nth-child(4) { width: 40px; }
+.exact-rytm-plan-table :is(th, td):nth-child(5) { width: 76px; }
+.exact-rytm-plan-table tbody td:not(:nth-child(2)):not([colspan]) {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
 /* Wave-4 bottom stack (monitor / doctor / library panels). */
 
 .cockpit-bottom-stack {

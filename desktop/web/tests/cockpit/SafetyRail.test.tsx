@@ -3,13 +3,18 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 
+import { ActionBar } from '../../src/cockpit/ActionBar';
+import { CockpitClientProvider } from '../../src/cockpit/context';
 import { SafetyRail } from '../../src/cockpit/SafetyRail';
 import { useCockpitStore } from '../../src/state';
 import type { SendPlanReadinessReason } from '../../src/ws/protocol';
 
-import { blockedSendPlan, sendPlan, sessionLive, sessionMock } from './_fixtures';
+import {
+  blockedSendPlan, candidate, FakeCockpitClient, pad2RehearsalPlan,
+  readyDualMachineStage, sendPlan, sessionLive, sessionMock,
+} from './_fixtures';
 
 describe('SafetyRail', () => {
   beforeEach(() => {
@@ -45,6 +50,7 @@ describe('SafetyRail', () => {
     expect(screen.getByText('Operator Log')).toBeInTheDocument();
     expect(screen.getByText('WebSocket connected')).toBeInTheDocument();
     expect(screen.getByText('No send plan prepared')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
   it('renders live armed readiness counts when a send plan is ready', () => {
@@ -73,6 +79,80 @@ describe('SafetyRail', () => {
     render(<SafetyRail />);
 
     expect(screen.getByText('Blocked')).toBeInTheDocument();
+    expect(screen.getByText(blockedSendPlan.plan_id)).toBeInTheDocument();
+    expect(screen.getByRole('table')).toHaveTextContent('No packets in prepared plan.');
+  });
+
+  it.each([true, false])('shows every exact Pad 2 packet before arming when ready=%s', (ready) => {
+    const fake = new FakeCockpitClient();
+    const plan = {
+      ...pad2RehearsalPlan,
+      ready,
+      readiness_reason: ready ? 'ready' as const : 'paired_control_precision_unverified' as const,
+      blocked_reasons: ready ? [] : ['paired_control_precision_unverified' as const],
+    };
+    const passiveSession = { ...sessionLive, armed: false, midi_port: null, connection_phase: 'listening' as const };
+    act(() => {
+      const store = useCockpitStore.getState();
+      store.setConnectionStatus('connected');
+      store.setSessionStatus(passiveSession);
+      store.setDualMachineStage({
+        ...readyDualMachineStage,
+        rytm: { ...readyDualMachineStage.rytm, target_ids: plan.target_pad_ids, locked_ids: plan.locked_pad_ids, effective_ids: [2] },
+      });
+      store.setPreviewCandidate(candidate);
+      store.setSendPlan(plan);
+    });
+    const stateBeforeInspection = useCockpitStore.getState();
+    render(
+      <CockpitClientProvider client={fake.asClient()}>
+        <SafetyRail />
+        <ActionBar previewOn onTogglePreview={() => undefined} />
+      </CockpitClientProvider>,
+    );
+    const rail = screen.getByLabelText('Safety status');
+    expect(within(rail).getByText(plan.plan_id)).toBeInTheDocument();
+    const table = within(rail).getByRole('table', { name: 'Exact prepared Rytm packets' });
+    expect(within(table).getAllByRole('columnheader').map((cell) => cell.textContent)).toEqual([
+      'Pad', 'Parameter', 'Channel', 'CC', 'Value (7-bit)',
+    ]);
+    expect(within(table).getAllByRole('row').slice(1).map((row) =>
+      within(row).getAllByRole('cell').map((cell) => cell.textContent),
+    )).toEqual([
+      ['2', 'flt', '2', '74', '72'],
+      ['2', 'amp_decay', '2', '80', '0'],
+      ['2', 'overdrive', '2', '81', '127'],
+      ['2', 'reverb', '2', '83', '84'],
+    ]);
+    expect(within(rail).getByText('Hardware Off')).toBeInTheDocument();
+    expect(fake.sent).toEqual([]);
+    expect(useCockpitStore.getState()).toBe(stateBeforeInspection);
+    expect(plan.packets.map((packet) => packet.channel)).toEqual([1, 1, 1, 1]);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    if (!ready) {
+      expect(screen.getByTestId('action-send')).toBeDisabled();
+      expect(within(rail).getByRole('status')).toHaveTextContent('No part of this plan will be sent.');
+    } else {
+      expect(screen.getByTestId('action-send')).not.toBeDisabled();
+    }
+  });
+
+  it('replaces stale inspection rows and removes them when preparation is revoked', () => {
+    act(() => useCockpitStore.getState().setSendPlan(pad2RehearsalPlan));
+    render(<SafetyRail />);
+    const nextPlan = { ...sendPlan, plan_id: 'replacement-plan' };
+    act(() => useCockpitStore.getState().setSendPlan(nextPlan));
+    expect(screen.queryByText(pad2RehearsalPlan.plan_id)).not.toBeInTheDocument();
+    expect(screen.getByText(nextPlan.plan_id)).toBeInTheDocument();
+    const table = screen.getByRole('table');
+    expect(within(table).getAllByRole('row').slice(1).map((row) =>
+      within(row).getAllByRole('cell').map((cell) => cell.textContent),
+    )).toEqual([['1', 'tun', '1', '52', '35'], ['3', 'tun', '1', '52', '55']]);
+    expect(screen.queryByText('amp_decay')).not.toBeInTheDocument();
+    act(() => useCockpitStore.getState().setSendPlan(null));
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByText(nextPlan.plan_id)).not.toBeInTheDocument();
+    expect(screen.getByText('No send plan prepared')).toBeInTheDocument();
   });
 
   it('explains that a paired-control refusal blocks every packet in the plan', () => {

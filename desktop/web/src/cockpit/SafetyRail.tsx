@@ -1,6 +1,7 @@
 import { useCockpitStore } from '../state';
 import type { SendPlanReadinessReason } from '../ws/protocol';
 
+import { ExactRytmPlanInspection } from './ExactRytmSend';
 import { OperatorLogList } from './OperatorLogList';
 
 const SEND_PLAN_BLOCKER_TEXT: Readonly<Record<SendPlanReadinessReason, string>> = {
@@ -70,6 +71,7 @@ export function SafetyRail(): JSX.Element {
         {sendPlan?.blocked_reasons.filter((reason) => reason !== 'ready').map((reason) => (
           <p key={reason} role="status">{SEND_PLAN_BLOCKER_TEXT[reason]}</p>
         ))}
+        {sendPlan !== null && <ExactRytmPlanInspection sendPlan={sendPlan} />}
       </section>
 
       <section className="safety-card">
