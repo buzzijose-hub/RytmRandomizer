@@ -230,6 +230,19 @@ Composed frontend1305cases/81files121.80s passes allfourcoverage100%; type/build
 lint pass. A new source-bound Windows package and fresh complete journey remain
 required. Previous unaccepted trials are retained, not relabeled passes.
 
+A bounded mock backend composition also proves that the old Forge Preview
+button's `toggle_preview` regenerates a different candidate ID. Exact recall
+already enables preview. The button now reuses `show_bank_select_candidate`
+with the current bank/entry/exact candidate/revision, rather than changing the
+global preview/regeneration contract. The UI command-identity regression fails
+before repair;60 focused cases and1306composed cases/81files98.60s pass with
+allfourcoverage100%. A mock Select/Preview/Prepare proof preserves the exact
+ID and produces all four legal Pad2/channel1 packets while disarmed. The mocked
+browser also verifies exact recall plus both layout viewports in3.0s.
+Independent safety/abstraction reviews find no new authority or source-recovery
+guarantee. The build13eb1382 predates this button repair and is not the final
+rehearsal delivery. Freeze/build/test the completed frontend next.
+
 No computer crash or network interruption recorded in this block. Heavy jobs
 are sequential, pytest workers capped at2, frontend workers at1 and native
 browser ownership at1. Free RAM sampled13.6-13.8GiB; new native QA stops below

@@ -48,6 +48,10 @@ The existing canonical setter now updates the list only after success/freshness
 checks; no source or authority is adopted. Two red cases and five new regression
 cases prove the repair;1305frontend cases/all100%/121.80s, type/build/lint pass.
 The0bb trial is not accepted; a repaired source-bound package is still required.
+Forge Preview now reuses exact candidate recall instead of regenerating a
+different candidate. The red command-identity test and mock backend composition
+prove the defect/repair;1306frontend cases/all100%/98.60s and mocked browser
+identity/layout proof3.0s pass. No global preview or output authority changes.
 Latest Eddie review remains October3
 CHANGES_REQUESTED; protected approval and historical Gate14/16 remain pending.
 No real MIDI/USB operation occurred. Physical working-state synchronization, precision,

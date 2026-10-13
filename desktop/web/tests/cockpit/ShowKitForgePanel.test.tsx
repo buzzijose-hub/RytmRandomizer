@@ -123,6 +123,18 @@ describe('ShowKitForgePanel', () => {
     expect(fake.sent).toEqual([{ type: 'show_bank_list' }, { type: 'library_list' }]);
   });
 
+  it('previews the exact selected candidate through canonical recall instead of regeneration', async () => {
+    const fake = new FakeCockpitClient();
+    mount(fake);
+    await waitForCommand(fake, 'show_bank_list');
+    const selected = forgeEntry.candidates[0]!;
+    act(() => useCockpitStore.getState().setPreviewCandidate(selected.rytm_candidate));
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Preview Rytm' })); });
+    expect(fake.sent.at(-1)).toEqual({ type: 'show_bank_select_candidate', bank_id: 'bank-one',
+      entry_id: forgeEntry.entry_id, expected_revision: 7, candidate_id: selected.candidate_id });
+    expect(fake.sent.some(command => command.type === 'toggle_preview')).toBe(false);
+  });
+
   it.each(['refused', 'null', 'missing'] as const)('preserves the current library and bank when a source refresh reply is %s', async (outcome) => {
     const fake = new FakeCockpitClient();
     mount(fake);
@@ -1049,7 +1061,7 @@ describe('ShowKitForgePanel', () => {
     await waitForCommand(fake, 'show_bank_verify_recapture');
 
     fireEvent.click(screen.getByRole('button', { name: 'Preview Rytm' }));
-    await waitForCommand(fake, 'toggle_preview');
+    expect(await waitForCommand(fake, 'show_bank_select_candidate')).toMatchObject({ candidate_id: 'candidate-one' });
     fireEvent.click(screen.getByRole('button', { name: 'Prepare exact plan' }));
     await waitForCommand(fake, 'prepare_send_plan');
     fireEvent.click(screen.getByRole('button', { name: 'Send exact Rytm plan' }));

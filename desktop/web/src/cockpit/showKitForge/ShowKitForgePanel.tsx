@@ -1291,7 +1291,7 @@ export function ShowKitForgePanel(): JSX.Element {
                     </p>
                   )}
                 <div className="show-kit-forge-actions">
-                  <button type="button" disabled={actionDisabled || !selectedCandidateIsCurrent} onClick={() => void issue({ type: 'toggle_preview', on: true }, 'Preview active Rytm candidate')}>Preview Rytm</button>
+                  <button type="button" disabled={actionDisabled || !selectedCandidateIsCurrent} onClick={selectedCandidate === undefined ? undefined : () => void issue({ type: 'show_bank_select_candidate', bank_id: activeBank.bank_id, entry_id: activeEntry.entry_id, candidate_id: selectedCandidate.candidate_id, expected_revision: activeBank.revision }, 'Preview selected Rytm candidate')}>Preview Rytm</button>
                   <button type="button" disabled={actionDisabled || !selectedCandidateIsCurrent} onClick={() => void issue({ type: 'prepare_send_plan' }, 'Prepare exact Rytm plan')}>Prepare exact plan</button>
                   <button ref={exactSend.triggerRef} type="button" disabled={actionDisabled || exactSend.disabled} onClick={exactSend.request}>
                     {exactSend.label === 'SEND' ? 'Send exact Rytm plan' : 'Dry-run exact Rytm plan'}

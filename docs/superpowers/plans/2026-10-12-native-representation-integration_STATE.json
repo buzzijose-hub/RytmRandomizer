@@ -2,7 +2,7 @@
   "schema_version": 1,
   "phase": "verifying",
   "started_at": "2026-10-12T20:01:07Z",
-  "updated_at": "2026-10-13T02:25:23Z",
+  "updated_at": "2026-10-13T02:40:10Z",
   "source_commit": "5d46882b73084d90e4c6eaf4bdb409c77578d642",
   "reference_pr": 254,
   "midi_disabled": true,
@@ -61,10 +61,13 @@
     "5d frozenbundledsidecar bothdevice syntheticproof27.281seconds passes noMIDI developerpaths cleanup",
     "0bb successfulWindowsbuild actualfreshpackageQA exposes missinglibraryACKpublication, ownedcleanup passes",
     "twoREDlibraryfresh-emptylist tests andcontainedthree-line canonicalsetter repair aftersuccessfreshnessfences",
-    "1305frontendcases81files121.80seconds allcoverage100percent type lint build pass; independent safetytestreviews clean"
+    "1305frontendcases81files121.80seconds allcoverage100percent type lint build pass; independent safetytestreviews clean",
+    "ForgePreview regeneration identityloss reproduced bymockbackend andredUIcommandtest; existingexactrecall reused",
+    "60focused and1306composed frontendcases81files98.60seconds allcoverage100percent pass",
+    "mockSelectPreviewPrepare preservesexactID allfour legalPad2packets disarmed; mockedbrowseridentitylayout3.0seconds pass"
   ],
   "pending": [
-    "replace unaccepted0bb package afterlibraryrefresh repair and verifyactualcompleteworkflow",
+    "build finalfrontend including libraryrefresh and exactPreview and verifyactualcompletepackageworkflow",
     "protected human review historicalGate14Gate16 disposition and physical evidence"
   ]
 }

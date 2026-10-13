@@ -945,6 +945,10 @@ audition**, then **Preview Rytm** and **Prepare exact plan** while disarmed;
 inspect its current id and every packet in the Safety Rail. Arm only the exact
 Rytm output, then recheck its current id, port, affected pads, packet values and
 counts in confirmation. Reprepare if arm changed the plan context.
+Forge's **Preview Rytm** replays the exact selected candidate through the same
+validated, disarmed recall used by **Select for audition**; it does not regenerate
+another candidate. Global PREVIEW/REGEN and depth/scope edits are different:
+they can invalidate the selected cue and require reselection/fresh preparation.
 If any row needs an unverified paired control, the whole plan stays blocked
 with `paired_control_precision_unverified`; retain the blocker and stop, even
 if some other rows could be sent. Do not bypass it with the legacy probe.

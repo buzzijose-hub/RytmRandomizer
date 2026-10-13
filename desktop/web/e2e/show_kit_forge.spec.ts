@@ -62,6 +62,12 @@ test('Show Kit Forge displays paired evidence and rehearses exact offline auditi
   const forge = page.getByTestId('show-kit-forge');
   await expect(forge.getByLabel('Server banks')).toHaveValue('bank-one');
   await expect(forge.getByRole('button', { name: 'Dry-run exact Rytm plan' })).toBeEnabled();
+  await forge.getByRole('button', { name: 'Preview Rytm', exact: true }).click();
+  await expect.poll(() => sent.filter(payload => payload.command.type === 'show_bank_select_candidate').map(payload => payload.command)).toEqual([{
+    type: 'show_bank_select_candidate', bank_id: 'bank-one', entry_id: forgeEntry.entry_id,
+    candidate_id: pair.candidate_id, expected_revision: 7,
+  }]);
+  expect(sent.some(payload => payload.command.type === 'toggle_preview')).toBe(false);
   await forge.getByRole('button', { name: 'Dry-run exact Rytm plan' }).click();
   await expect.poll(() => sent.filter((payload) => payload.command.type === 'send').map((payload) => payload.command)).toEqual([{ type: 'send', send_plan_id: plan.plan_id }]);
   await expect(forge.getByRole('button', { name: 'A4 SEND blocked — offline only' })).toBeDisabled();

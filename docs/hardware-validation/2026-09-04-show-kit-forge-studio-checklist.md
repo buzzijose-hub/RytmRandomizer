@@ -276,6 +276,9 @@ receipts and actual physical observations remain separate.
       bridge supplies the launch secret, which must not be copied into evidence.
       Reinspect/prepare the current plan after arm if its identity changed.
       Record output port, current plan id, pads, packets and message count.
+- [ ] Require Forge's selected candidate ID to stay identical through its
+      Preview and PREPARE steps. Preview uses exact local recall and leaves
+      output disarmed; do not substitute the global PREVIEW/REGEN action.
 - [ ] Verify the plan names Pad 2 only and excludes every locked/untargeted pad.
 - [ ] Verify every visible packet is channel2 (wire channel1) and a nonempty
       subset of the following canonical seven-bit controls. Compare its value
