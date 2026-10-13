@@ -26,7 +26,7 @@ one-based while wire values remain zero-based; no new environment variable,
 dependency, catalog, state schema, storage or transport. Focused tests must
 show exact packets, blocked plans, stale replacements and unchanged authority.
 Final frontend1306cases/allfourcoverage100%, type/lint/build, normal898architecture/
-697parity hooks and25 driver cases pass. Source53a935d0 is published; Windows
+697nonfast tests including685parity items and25 driver cases pass. Source53a935d0 is published; Windows
 build38338316064 and sourceCI38338223170/CodeQL pass. Actual focused rehearsal
 24.141s, native46.195s, both-device reference50.517s and frozen worker25.078s
 pass with MIDIoff/owned cleanup. Fresh library publication and exact Preview

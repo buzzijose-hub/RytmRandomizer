@@ -1,6 +1,6 @@
 # Native Integration Dimensional Review
 
-Status: in-flight (finalf670 offline package accepted; completed security triage requires human disposition and protected approval).
+Status: in-flight (source53 offline rehearsal accepted and CodeQL resolved; protected approval and physical evidence pending).
 
 Eight targeted reviews, at most two active workers. Every review is source-only
 unless a runner result below explicitly establishes software execution. None

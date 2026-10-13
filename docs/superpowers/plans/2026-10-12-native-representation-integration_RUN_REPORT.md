@@ -1,6 +1,6 @@
 # Native Representation Run Report
 
-> Status: in-flight (offline delivery accepted; security disposition, hardware and protected approval pending).
+> Status: in-flight (source53 delivery and CodeQL accepted; hardware and protected approval pending).
 
 Start: 2026-10-12T20:01:07Z. Ceiling: 2026-10-13T04:01:07Z. Eight hours is a
 working budget, not a completion definition. Final Windows source
@@ -292,9 +292,15 @@ browser ownership at1. Free RAM sampled13.6-13.8GiB; new native QA stops below
 after composition; ignored evidence is preserved outside the code tree.
 Two documentation-hook refusals were corrected without bypass. Package testing
 ran23:02:19Z-23:04:39Z, then frozen-worker and ordinary-launch checks sequentially.
-Software delivery/handoff checkpoint:2026-10-13T01:03:07Z, elapsed5h02m00s.
-All independent implementation, reviews, local/CI source gates and packaged
-acceptance are complete. Stop reason after final publication: remaining gates
-are protected human/security disposition and operator-present hardware evidence,
-not an exhausted budget. Final publication/end timing is recorded in the local
-delivery receipt and compact resume checkpoint. No new endurance claim is made.
+Historical first-block checkpoint:2026-10-13T01:03:07Z, elapsed5h02m00s.
+That block stopped with security/human and hardware gates pending. The October13
+continuation above resolves the CodeQL gate and completes source53 packaged
+rehearsal acceptance. Its start01:19:32Z and final publication checkpoint are
+separate from the earlier duration; no new endurance claim is made.
+
+Current closeout checkpoint03:31:22Z (2h11m50s in this continuation). All independent
+source/build/package/handoff work is finished. Remaining requirements are
+protected human Gate14/Gate16/approval and the operator-present physical test,
+not unused working time. No PC crash/network interruption or real MIDI/USB
+operation occurred. No production diff after source53; final receipt/QA changes
+are documentation/test-only and do not warrant another rebuild.
