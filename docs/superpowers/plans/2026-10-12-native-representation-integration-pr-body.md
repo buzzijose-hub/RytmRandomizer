@@ -31,8 +31,9 @@ This is reference-to-discovery, not forensic reconstruction or a trained rendere
 
 The operator can inspect legal native words and precision loss without changing
 favorite identity or mistaking working-RAM/body equality for saved-state proof.
-The next studio session has one bounded F1 experiment, not another broad manual
-calibration sweep. Physical observations and protected approval remain pending.
+The next studio session starts with one bounded Pad2 four-control audition and
+manual recovery; F1 working-query research comes later, not as a prerequisite.
+Physical observations and protected approval remain pending.
 
 ## Test plan
 
@@ -66,7 +67,9 @@ are preserved. Read-only inspection now displays the exact server packet order,
 keys, human channels, CCs and7bit values before arm and in confirmation; no
 scope/filter/authority behavior changed.106 focused UI cases and1300 composed
 frontend cases/81files110.15s pass, allfourcoverage100%, typecheck/lint clean.
-20 ownership/driver cases pass. New source-bound package acceptance is pending;
+23 ownership/driver/verifier cases pass; complete packet equality and a visible
+ready-plan-before-restart witness close the test review findings. New source-bound
+Windowsbuild38333387800 and package acceptance are pending;
 f670 stays preserved and does not contain this new inspector.
 
 - [x] Local pytest passes (full suite).
@@ -130,8 +133,10 @@ The follow-up is limited to security triage and the existing Pad2 rehearsal
 path. A4 working-query research and broader feature expansion are not prerequisites.
 
 Consolidated dimensional review is posted at https://github.com/buzzijose-hub/RytmRandomizer/pull/254#issuecomment-6134107254.
-Delivery sourcef67059ba and binary hashes/native acceptance are in the run report;
-later documentation/test-only changes do not alter those binaries. Static research,
+Preserved delivery sourcef67059ba and binary hashes/native acceptance are in the
+run report. The new source5d46882b adds only the read-only frontend inspector to
+production; Python remains byte-identical to5db6. New binary acceptance is pending.
+Later documentation/test-only receipts do not alter their named binaries. Static research,
 synthetic audio, fixtures and software tests are not physical validation.
 Working-state synchronization, instrument recordings/application/save/reload,
 manual recovery and show rehearsal remain pending. No protected merge is requested

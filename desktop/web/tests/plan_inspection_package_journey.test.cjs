@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
-const { assertExactPad2Plan } = require('../e2e/fixtures/plan_inspection_package_journey.cjs');
+const { assertExactPad2Plan, assertPlanDeadline } = require('../e2e/fixtures/plan_inspection_package_journey.cjs');
 
 const candidate = {
   candidate_id: 'candidate-fixture',
@@ -15,6 +15,14 @@ const plan = {
     { pad_id: 2, parameter: 'flt', channel: 1, control: 74, value: 127 },
   ],
 };
+
+test('actual packaged phase deadline refuses expired and invalid budgets before later work', () => {
+  assertPlanDeadline(1000, 1, 1999);
+  assert.throws(() => assertPlanDeadline(1000, 1, 2000), assert.AssertionError);
+  for (const budget of [0, -1, 601, NaN]) {
+    assert.throws(() => assertPlanDeadline(1000, budget, 1001), assert.AssertionError);
+  }
+});
 
 test('actual packaged plan verifier requires the complete ordered candidate packet list', () => {
   assert.deepEqual(assertExactPad2Plan(plan, candidate), plan.packets);

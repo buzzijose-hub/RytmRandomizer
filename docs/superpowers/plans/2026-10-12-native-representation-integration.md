@@ -13,9 +13,9 @@ disposition changed the actual aggregate115079424161 tosuccess at01:26Z.
 The local-root/junction limitation remains explicit in the
 [security report](../../security/2026-10-13-codeql-path-disposition.md).
 
-One actionable handoff gap remains: prepared packet values are not visible in
-the existing confirmation. A contained read-only table will reuse the exact
-server `CockpitSendPlan` in the Safety Rail before arming and in confirmation.
+The actionable handoff gap was prepared packet values missing from confirmation.
+The contained read-only table now reuses the exact server `CockpitSendPlan`
+in the Safety Rail before arming and in confirmation, implemented at59175419.
 No packet filtering, mutation, scope, arm, send or recovery authority changes.
 An isolated worker owns those frontend files; the assembly owns security tests
 and handoff documentation. One heavy local job at a time, no live MIDI/USB.
@@ -25,8 +25,10 @@ coupling stays on the existing protocol; channel presentation is explicitly
 one-based while wire values remain zero-based; no new environment variable,
 dependency, catalog, state schema, storage or transport. Focused tests must
 show exact packets, blocked plans, stale replacements and unchanged authority.
-Then run frontend coverage/type/lint, normal hooks, source CI, and verify the
-source-bound Windows package using fake ports. Preserve f670 and its settings.
+Frontend1300cases/allfourcoverage100%, type/lint/build, normal898architecture/
+697parity hooks and23 driver cases pass. Source5d46882b is published; Windows
+build38333387800 and sourceCI/package acceptance are pending. Verify that
+source-bound package using fake ports; preserve f670 and its settings.
 Rollback is the frontend-only inspection delta, not any hardware gate.
 
 The next physical gate is **one Rytm Pad2 four-control10% candidate**, fresh

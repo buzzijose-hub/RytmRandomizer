@@ -2,6 +2,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { performance } = require('node:perf_hooks');
 const { expect } = require('@playwright/test');
 
 function assertExactPad2Plan(plan, candidate) {
@@ -22,12 +23,23 @@ function assertExactPad2Plan(plan, candidate) {
   return expected;
 }
 
-async function exercisePlanInspectionPackage({ page, latest, connected, processOperation, summary, save, reportRoot, record, digest }) {
+function assertPlanDeadline(started, budgetSeconds, now = performance.now()) {
+  assert(Number.isFinite(budgetSeconds) && budgetSeconds > 0 && budgetSeconds <= 600);
+  assert(now - started < budgetSeconds * 1000, 'Bounded plan inspection deadline reached');
+}
+
+async function exercisePlanInspectionPackage({ page, latest, connected, processOperation, summary, save, reportRoot, record, digest, budgetSeconds }) {
+  const started = performance.now();
+  const checkpoint = phase => {
+    assertPlanDeadline(started, budgetSeconds);
+    summary.phase = `plan-inspection-${phase}`; save();
+  };
   const checked = (name, detail = {}) => {
     const result = { name, passed: true, ...detail };
     summary.plan_inspection.checks.push(result); record({ kind: 'plan-inspection-check', ...result }); save();
   };
   summary.plan_inspection = { checks: [], screenshots: [], resources: [], physical_validation: false };
+  checkpoint('connection');
   const sample = phase => {
     const resource = processOperation('sample');
     const privateBytes = resource.processes.reduce((total, item) => total + item.private_bytes, 0);
@@ -43,6 +55,7 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
   const scope = page.getByTestId('mutation-parameters-panel');
   const rail = page.getByTestId('safety-rail');
   await page.getByTestId('profile-chips').getByRole('button').first().click();
+  checkpoint('source-adoption');
   await forge.getByLabel('Bank name', { exact: true }).fill('One Pad2 inspection');
   await forge.getByRole('button', { name: 'Create show bank', exact: true }).click();
   await expect(forge.getByRole('button', { name: 'Refresh source files', exact: true })).toBeEnabled();
@@ -60,6 +73,7 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
   await depth.press('Home');
   for (let step = 0; step < 10; step++) await depth.press('ArrowRight');
   await expect(depth).toHaveValue('0.1');
+  checkpoint('generation');
   await forge.getByRole('button', { name: 'Forge 1 candidate pairs', exact: true }).click();
   const card = forge.getByRole('article', { name: 'Candidate 1', exact: true });
   await expect(card).toBeVisible();
@@ -76,6 +90,7 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
   await card.getByRole('button', { name: 'Select for audition', exact: true }).click();
   await forge.getByRole('button', { name: 'Preview Rytm', exact: true }).click();
   await forge.getByRole('button', { name: 'Prepare exact plan', exact: true }).click();
+  checkpoint('preparation');
   await expect.poll(() => latest.send_plan_changed?.send_plan?.ready).toBe(true);
   const plan = structuredClone(latest.send_plan_changed.send_plan);
   const expectedPackets = assertExactPad2Plan(plan, candidate.rytm_candidate);
@@ -93,14 +108,28 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
   checked('exact-server-packets-before-arm-four-control-scope', { plan_id: plan.plan_id, packets: plan.packets, depth: 0.1, seed: 3000 });
   sample('prepared');
   for (const width of [1440, 600]) {
+    checkpoint(`viewport-${width}`);
     await page.setViewportSize({ width, height: 1000 });
     await table.scrollIntoViewIfNeeded();
     assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    const geometry = await table.evaluate(element => {
+      const overflow = [element, ...element.querySelectorAll('*')].filter(item => item.getBoundingClientRect().right > innerWidth + 1).map(item => item.tagName);
+      const numeric = [...element.querySelectorAll('tbody td')].filter((_, index) => index % 5 !== 1).map(cell => {
+        const range = document.createRange(); range.selectNodeContents(cell);
+        const bounds = cell.getBoundingClientRect(), rectangles = [...range.getClientRects()];
+        return { value: cell.textContent, lines: new Set(rectangles.map(rectangle => Math.round(rectangle.top))).size, contained: rectangles.every(rectangle => rectangle.left >= bounds.left && rectangle.right <= bounds.right) };
+      });
+      return { overflow, numeric };
+    });
+    assert.deepEqual(geometry.overflow, []);
+    assert(geometry.numeric.every(cell => cell.lines === 1 && cell.contained));
+    checked('packet-geometry-values-contained', { width, ...geometry });
     const name = `plan-inspection-${width}.png`;
     await page.screenshot({ path: path.join(reportRoot, name) });
     summary.plan_inspection.screenshots.push({ name, sha256: digest(fs.readFileSync(path.join(reportRoot, name))), width });
   }
   checked('desktop-and-narrow-plan-inspection-no-document-overflow');
+  checkpoint('scope-invalidation');
   await scope.getByRole('button', { name: 'Select none', exact: true }).click();
   await expect.poll(() => latest.send_plan_changed?.send_plan).toBeNull();
   await expect(table).toHaveCount(0);
@@ -116,10 +145,12 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
   await expect(table).toBeVisible();
   await expect(rail).toContainText(beforeRestart.plan_id);
   checked('ready-visible-plan-immediately-before-owned-restart', { plan_id: beforeRestart.plan_id });
+  checkpoint('owned-restart');
   const recovery = processOperation('restart-backend');
   assert(recovery.token_rotated && recovery.shell_preserved);
   summary.restarts.push({ ...recovery, at: new Date().toISOString() }); save();
   await connected();
+  checkpoint('restarted');
   await expect.poll(() => latest.send_plan_changed?.send_plan).toBeNull();
   await expect(table).toHaveCount(0);
   await expect(page.getByTestId('action-send')).toBeDisabled();
@@ -127,4 +158,4 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
   sample('restarted');
 }
 
-module.exports = { exercisePlanInspectionPackage, assertExactPad2Plan };
+module.exports = { exercisePlanInspectionPackage, assertExactPad2Plan, assertPlanDeadline };

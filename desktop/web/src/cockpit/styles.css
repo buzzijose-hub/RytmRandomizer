@@ -313,6 +313,10 @@ html,
   min-width: 0;
 }
 
+.safety-card:has(.exact-rytm-plan) {
+  grid-column: 1 / -1;
+}
+
 .exact-rytm-plan-scroll {
   min-width: 0;
   max-width: 100%;
@@ -323,7 +327,7 @@ html,
 
 .exact-rytm-plan-table {
   width: 100%;
-  min-width: 420px;
+  min-width: 0;
   table-layout: fixed;
   border-collapse: collapse;
   font-size: 12px;
@@ -340,7 +344,7 @@ html,
 .exact-rytm-plan-table th,
 .exact-rytm-plan-table td {
   box-sizing: border-box;
-  padding: 6px;
+  padding: 4px;
   border-bottom: 1px solid var(--border);
   vertical-align: top;
   overflow-wrap: anywhere;
@@ -352,10 +356,10 @@ html,
   background: var(--panel);
 }
 
-.exact-rytm-plan-table :is(th, td):nth-child(1) { width: 40px; }
+.exact-rytm-plan-table :is(th, td):nth-child(1) { width: 32px; }
 .exact-rytm-plan-table :is(th, td):nth-child(3) { width: 64px; }
-.exact-rytm-plan-table :is(th, td):nth-child(4) { width: 40px; }
-.exact-rytm-plan-table :is(th, td):nth-child(5) { width: 76px; }
+.exact-rytm-plan-table :is(th, td):nth-child(4) { width: 32px; }
+.exact-rytm-plan-table :is(th, td):nth-child(5) { width: 48px; }
 .exact-rytm-plan-table tbody td:not(:nth-child(2)):not([colspan]) {
   white-space: nowrap;
   overflow-wrap: normal;

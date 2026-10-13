@@ -260,7 +260,7 @@ async function main() {
     if (planInspection) {
       const started = performance.now();
       summary.mode = 'plan-inspection';
-      await require('./plan_inspection_package_journey.cjs').exercisePlanInspectionPackage({ page, latest, connected, processOperation, summary, save, reportRoot, record, digest });
+      await require('./plan_inspection_package_journey.cjs').exercisePlanInspectionPackage({ page, latest, connected, processOperation, summary, save, reportRoot, record, digest, budgetSeconds: smoke });
       assert.equal(rawPageErrors, 0); assert.equal(observationFailure, null);
       summary.elapsed_seconds = (performance.now() - started) / 1000;
       assert(summary.elapsed_seconds < smoke, 'Bounded plan inspection deadline reached');

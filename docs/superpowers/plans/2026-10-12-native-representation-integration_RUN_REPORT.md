@@ -195,6 +195,24 @@ production Python changed since its11843-case full verification. New Windows
 package acceptance remains pending; the preserved f670 copy is not claimed to
 contain this new inspector.
 
+The5d source's hosted browser journey reproduced a600px inspection-table
+overflow at its unchanged strict bounding-box assertion (35passed/2skipped/
+1failed). Its Windows build38333387800 succeeded but is **not an accepted
+delivery**. The frozen sidecar alone passes both-device synthetic worker proof
+27.281s, developer Python cleared/MIDIoff/owned process stopped; this does not
+close the UI failure.
+
+The contained CSS correction removes the forced420px minimum, keeps readable
+fixed numeric columns, and spans the prepared-plan card across the existing
+rail grid. No assertion, retry, skip or timeout was changed to hide the failure.
+Final fake-WebSocket browser proof passes1case/2viewports3.1s with strict
+table-footprint/numeric-cell/header-line checks and inspected screenshots.
+No Python sidecar or real MIDI is involved; the user's4317 listener is untouched.
+Frontend TS remains unchanged; the composed1300cases/81files99.73s pass allfour
+coverage100%. Type/build/lint pass.24 driver/verifier cases pass, including
+phase deadline checks added after the scoped review. Replacement package and
+hosted browser acceptance are required before handoff.
+
 No computer crash or network interruption recorded in this block. Heavy jobs
 are sequential, pytest workers capped at2, frontend workers at1 and native
 browser ownership at1. Free RAM sampled13.6-13.8GiB; new native QA stops below

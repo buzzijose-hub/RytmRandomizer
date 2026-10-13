@@ -38,6 +38,11 @@ Pad2 rehearsal: exact server rows before arm and in confirmation, with no
 scope/send/authority changes.1300 frontend cases/81files110.15s pass with all
 fourcoverage100%; typing/lint and20 driver cases pass. New source-bound package
 acceptance is pending; f670 remains preserved and does not contain the inspector.
+Hosted5d browser checks exposed a600px table overflow; that successful Windows
+build is not accepted. CSS is corrected without weakening its strict assertion.
+The new fake-WebSocket browser proof passes both viewports and numeric geometry;
+24 driver cases and unchanged frontend1300cases/all100% pass. A replacement
+package must pass before supervised handoff.
 Latest Eddie review remains October3
 CHANGES_REQUESTED; protected approval and historical Gate14/16 remain pending.
 No real MIDI/USB operation occurred. Physical working-state synchronization, precision,

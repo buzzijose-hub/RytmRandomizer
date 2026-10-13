@@ -68,6 +68,35 @@ test('Show Kit Forge displays paired evidence and rehearses exact offline auditi
   await expect(forge.getByRole('alert')).toContainText('Fingerprint mismatch');
   const desktopBounds = await forge.boundingBox();
   expect(desktopBounds!.width).toBeGreaterThan(1300);
+  const packets = page.getByTestId('safety-rail').getByRole('table', { name: 'Exact prepared Rytm packets', exact: true });
+  const assertPacketGeometry = async (): Promise<void> => {
+    await expect(packets).toBeVisible();
+    const channelLines = await packets.getByRole('columnheader', { name: 'Channel', exact: true }).evaluate((cell) => {
+      const range = document.createRange(); range.selectNodeContents(cell);
+      return new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size;
+    });
+    expect(channelLines).toBe(1);
+    for (let index = 0; index < plan.packets.length; index += 1) {
+      const packet = plan.packets[index]!;
+      const cells = packets.locator('tbody tr').nth(index).locator('td');
+      await expect(cells).toHaveText([String(packet.pad_id), packet.parameter, String(packet.channel + 1), String(packet.control), String(packet.value)]);
+      for (const column of [0, 2, 3, 4]) {
+        const geometry = await cells.nth(column).evaluate((cell) => {
+          const range = document.createRange();
+          range.selectNodeContents(cell);
+          const bounds = cell.getBoundingClientRect();
+          const rectangles = [...range.getClientRects()];
+          return { lines: new Set(rectangles.map((rect) => Math.round(rect.top))).size, contained: rectangles.every((rect) => rect.left >= bounds.left && rect.right <= bounds.right) };
+        });
+        expect(geometry).toEqual({ lines: 1, contained: true });
+      }
+    }
+    const overflow = await packets.evaluate((table) => [table, ...table.querySelectorAll('*')].filter((element) => element.getBoundingClientRect().right > window.innerWidth + 1).map((element) => element.tagName));
+    expect(overflow).toEqual([]);
+  };
+  await assertPacketGeometry();
+  await packets.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: testInfo.outputPath('packet-inspection-desktop.png') });
   await forge.locator('.show-kit-forge-header').scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath('show-kit-forge-desktop.png') });
   await forge.getByRole('heading', { name: 'Compare candidates', exact: true }).scrollIntoViewIfNeeded();
@@ -78,6 +107,9 @@ test('Show Kit Forge displays paired evidence and rehearses exact offline auditi
   await expect(forge).toBeVisible();
   const bounds = await forge.boundingBox();
   expect(bounds!.width).toBeLessThanOrEqual(600);
+  await assertPacketGeometry();
+  await packets.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: testInfo.outputPath('packet-inspection-narrow.png') });
   await page.screenshot({ path: testInfo.outputPath('show-kit-forge-narrow.png') });
   errors.assertClean();
 });
