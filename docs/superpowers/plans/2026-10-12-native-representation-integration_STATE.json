@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "phase": "verifying",
+  "phase": "hardware_validation_pending",
   "started_at": "2026-10-12T20:01:07Z",
-  "updated_at": "2026-10-13T02:40:10Z",
-  "source_commit": "5d46882b73084d90e4c6eaf4bdb409c77578d642",
+  "updated_at": "2026-10-13T03:20:50Z",
+  "source_commit": "53a935d08582f3446259afb7494d6bdb79618263",
   "reference_pr": 254,
   "midi_disabled": true,
   "completed": [
@@ -64,10 +64,17 @@
     "1305frontendcases81files121.80seconds allcoverage100percent type lint build pass; independent safetytestreviews clean",
     "ForgePreview regeneration identityloss reproduced bymockbackend andredUIcommandtest; existingexactrecall reused",
     "60focused and1306composed frontendcases81files98.60seconds allcoverage100percent pass",
-    "mockSelectPreviewPrepare preservesexactID allfour legalPad2packets disarmed; mockedbrowseridentitylayout3.0seconds pass"
+    "mockSelectPreviewPrepare preservesexactID allfour legalPad2packets disarmed; mockedbrowseridentitylayout3.0seconds pass",
+    "final53Windowsbuild38338316064 sourceclean manifest shell sidecar hashes verified",
+    "actual53focusedrehearsal24.141seconds22commands7checks sourceadopt exactpreview fullpackets scopeclear freshbootstrap restart cleanup pass",
+    "actual53native46.195seconds22commands10checks andbothdevicereference50.517seconds47commands pass cleanup",
+    "actual53frozenworker25.078seconds bothdevices devPythoncleared MIDIoff ownedexit pass",
+    "25Nodecases include actualprotocol generationaware observer/hydration no timeout retry assertion weakening",
+    "exact53WindowsfullCI11877pass5skip1635.61seconds requiredchecks38338223170 andCodeQL115103503126 succeed",
+    "offline launcher syntax and4fakeprocess refusal guards pass; manualsupervisedblock parsedonly",
+    "sourcebound deliveryreceipt andorderedPad2handoff sanitizedQA copied withoutcredentials"
   ],
   "pending": [
-    "build finalfrontend including libraryrefresh and exactPreview and verifyactualcompletepackageworkflow",
     "protected human review historicalGate14Gate16 disposition and physical evidence"
   ]
 }

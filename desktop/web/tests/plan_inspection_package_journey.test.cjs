@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
-const { assertExactPad2Plan, assertPlanDeadline } = require('../e2e/fixtures/plan_inspection_package_journey.cjs');
+const { assertExactPad2Plan, assertPlanDeadline, freshBootstrapReceived } = require('../e2e/fixtures/plan_inspection_package_journey.cjs');
 
 const candidate = {
   candidate_id: 'candidate-fixture',
@@ -22,6 +22,14 @@ test('actual packaged phase deadline refuses expired and invalid budgets before 
   for (const budget of [0, -1, 601, NaN]) {
     assert.throws(() => assertPlanDeadline(1000, budget, 1001), assert.AssertionError);
   }
+});
+
+test('replacement bootstrap requires fresh status and completion from the same new socket', () => {
+  assert.equal(freshBootstrapReceived({}, 'old'), false);
+  assert.equal(freshBootstrapReceived({ session_status_socket: 'old', bootstrap_socket: 'old' }, 'old'), false);
+  assert.equal(freshBootstrapReceived({ session_status_socket: 'new' }, 'old'), false);
+  assert.equal(freshBootstrapReceived({ session_status_socket: 'new', bootstrap_socket: 'old' }, 'old'), false);
+  assert.equal(freshBootstrapReceived({ session_status_socket: 'new', bootstrap_socket: 'new' }, 'old'), true);
 });
 
 test('actual packaged plan verifier requires the complete ordered candidate packet list', () => {

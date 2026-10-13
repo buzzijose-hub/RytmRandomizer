@@ -139,6 +139,7 @@ async function exerciseNativeRepresentationPackage({ page, latest, connected, pr
   };
   checkpoint('initial-connection');
   const appPages = page.context().browser().contexts().flatMap(context => context.pages()).filter(item => item.url().includes('tauri.localhost'));
+  evidence.packaged_page_count = appPages.length; save();
   assert.equal(appPages.length, 1, 'Exactly one owned packaged UI page is allowed');
   await connected();
   await expect(page.getByTestId('action-send')).toBeDisabled();

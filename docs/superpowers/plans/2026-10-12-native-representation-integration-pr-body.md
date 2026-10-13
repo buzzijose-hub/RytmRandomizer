@@ -37,49 +37,27 @@ Physical observations and protected approval remain pending.
 
 ## Test plan
 
-Final source658c8f9f:11813 passed/5skipped/6warnings824.40s; all76 touched
-production files100%line/branch, project99.42%pure-branch with99%floor unchanged.
-Earlier486501dd's acceptance is separately retained. Focused review composition
-24passed; latest boundary/taxonomy/u14 cases271passed. Frontend1294/81files/all
-fourcoverage100%; pinned Pyright all76 modules zero errors/warnings. Whole
-Ruff/Black/isort/Vulture80 clean. Build096 has identical production source and
-passes actual affected native37.433s/22commands, both-device41.498s/47commands,
-frozen-worker24.687s and normal launcher4.326s acceptance with MIDIoff and cleanup.
-Additional path-alert regression202cases/3warnings2.51s passes;21 added cases
-refuse malformed IDs before filesystem access. Source CI38318732424 and
-required-checks passed; separate CodeQL aggregatealerts21-25 remain failed and
-awaiting required human disposition after independent triage found no reachable
-WS traversal. The separate direct-DTO pre-I/O guard gap is reproduced and fixed;
-frozen5db6 full11843passed/5skips/6warnings817.27s/all76touched100%coverage and
-final381focused cases4.25s pass. Independent safety/test delta reviews are closed.
-Finalf670 Windowsbuild38326547294 andactualnative39.745s/22commands/10checks,
-both-device45.101s/47commands,frozenworker35.579s andnormalUI10.014s pass with
-MIDIoff/ownedcleanup. Measured600pxword16257/11712 each one line/contained144px
-cells closes the prior8d2-line41px defect. Newfrontend1294/81files104.25s/allfour
-coverage100%,typing/lint/buildpass. Exactf670 testCI38326500759/required-checks
-succeeded. The formerly failed CodeQL alerts21-25 are now independently
-dispositioned as false positives for their strict-ID command flows; actual
-aggregate115079424161 on7370 passes.373 focused cases and28 command-boundary
-refusals pass; disabling the validator in memory causes2 expected failures.
-The local-root/junction threat-model limits are recorded in the linked security
-report; no workflow/severity/protection was weakened. Prior8d/096/64d5 builds
-are preserved. Read-only inspection now displays the exact server packet order,
-keys, human channels, CCs and7bit values before arm and in confirmation; no
-scope/filter/authority behavior changed.106 focused UI cases and1300 composed
-frontend cases/81files110.15s pass, allfourcoverage100%, typecheck/lint clean.
-23 ownership/driver/verifier cases pass; complete packet equality and a visible
-ready-plan-before-restart witness close the test review findings. New source-bound
-Windowsbuild38333387800 and package acceptance are pending;
-f670 stays preserved and does not contain this new inspector.
+Final build source `53a935d08582f3446259afb7494d6bdb79618263` is delivered as
+`show-kit-forge-studio-53a935d08582`. Windowsbuild38338316064, sourceCI38338223170/
+required-checks and CodeQL115103503126 succeed. Binary hashes/launcher/manual
+operator-present procedure are in its local delivery receipt and run report.
+Earlier builds remain preserved;5d/0bb failures are not relabeled passes.
 
-The5d table overflow and0bb fresh-library publication defect were subsequently
-reproduced and repaired without hiding their failures. The fresh source library
-ACK now reaches the existing canonical store only after success/generation
-fences; sources and authority remain unchanged.1305frontend cases/allfour100%
-coverage/121.80s, type/build/lint pass. A new exact-source package must complete
-fresh adoption,10% four-control generation, exact complete plan inspection,
-scope invalidation and owned restart before delivery. Neither5d nor0bb is
-accepted as a completed rehearsal build.
+| Verification | Actual result |
+| --- | --- |
+| Exact53 Windows full |11877pass/5skip/6warnings1635.61s; Python production unchanged from verified5db6. All76touched production files retain100%line/branch; project99.42%purebranch/99%floor unchanged. |
+| Path/store/command |373pass/3warnings6.12s;28pre-I/O command refusals; validator removal catches2 failures. Five normal false-positive dispositions are independently reviewed, with trusted-local-root limits stated. |
+| Frontend |1306pass/81files98.60s/allfourcoverage100%; type/lint/build clean. |
+| Normal gates |Strict76typing/lint/898architecture/697nonfast including685frozen parity pass, no bypass. |
+| Focused browser and driver |Exact recall plus1440/600 geometry pass3.0s, no retry;25Node cases cover complete packets, failure cleanup, phase deadlines and fresh replacement-socket bootstrap. |
+| Actual packaged Pad2 rehearsal |24.141s/22commands/zero failures/7checks; fresh sources,10%seed3000, complete4packets, exact Preview, scope-clear and ready-plan-before-owned-restart/fresh disarmed bootstrap pass. |
+| Actual packaged native/ref |Native46.195s/22commands/10checks; both-device reference50.517s/47commands, exact favorites/export/reopen; isolated worker25.078s/devPython cleared. |
+| Cleanup/resources |All owned processes stopped; memory325.15-569.53MiB/max10processes/max4106handles/min9.69GiBfree/pending4. No MIDI/USB/hardware or new endurance/acoustic certification. |
+
+The contained library-refresh and exact-Preview defects are reproduced with
+red tests and fixed through existing store/recall seams. No global preview,
+packet filtering, scope or output/restore authority changed. Hardware rehearsal
+and protected human approval remain separate from software acceptance.
 
 - [x] Local pytest passes (full suite).
 - [x] `tests/architecture/` passes.
@@ -89,8 +67,8 @@ accepted as a completed rehearsal build.
 - [x] No new dead code (vulture --min-confidence 80).
 - [x] Exact-source new Windows package and affected native journeys pass.
 - [x] Final replacement Windows package including guard and readable value tables passes.
-- [x] Fresh test CI/required-checks complete on build sourcef67059ba.
-- [x] CodeQL path-injection alerts21-25 independently dispositioned with evidence; actual aggregate passes on7370.
+- [x] Fresh test CI/required-checks complete on build source53a935d0.
+- [x] CodeQL path-injection alerts21-25 independently dispositioned with evidence; actual aggregate passes on53.
 - [ ] Protected human approval; latest Eddie review remains October3 CHANGES_REQUESTED.
 
 ## Plan-requirements conformance
@@ -142,10 +120,10 @@ The follow-up is limited to security triage and the existing Pad2 rehearsal
 path. A4 working-query research and broader feature expansion are not prerequisites.
 
 Consolidated dimensional review is posted at https://github.com/buzzijose-hub/RytmRandomizer/pull/254#issuecomment-6134107254.
-Preserved delivery sourcef67059ba and binary hashes/native acceptance are in the
-run report. The new source5d46882b adds only the read-only frontend inspector to
-production; Python remains byte-identical to5db6. New binary acceptance is pending.
-Later documentation/test-only receipts do not alter their named binaries. Static research,
+Final delivery source53a935d0 and binary hashes/actual acceptance are in the run
+report. The focused frontend repairs preserve all backend source/output gates;
+Python remains byte-identical to5db6. Olderf670 and other packages/settings remain
+preserved. Later documentation/test-only receipts do not alter named binaries. Static research,
 synthetic audio, fixtures and software tests are not physical validation.
 Working-state synchronization, instrument recordings/application/save/reload,
 manual recovery and show rehearsal remain pending. No protected merge is requested

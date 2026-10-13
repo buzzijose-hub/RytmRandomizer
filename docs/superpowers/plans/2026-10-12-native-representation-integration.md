@@ -1,6 +1,6 @@
 # Native Representation Integration
 
-> Status: in-flight (CodeQL disposition verified; bounded rehearsal inspection repair, hardware and protected approval pending).
+> Status: in-flight (source53 Windows rehearsal candidate delivered and CodeQL verified; hardware and protected approval pending).
 
 ## October 13 Focused Rehearsal Follow-Up
 
@@ -25,10 +25,14 @@ coupling stays on the existing protocol; channel presentation is explicitly
 one-based while wire values remain zero-based; no new environment variable,
 dependency, catalog, state schema, storage or transport. Focused tests must
 show exact packets, blocked plans, stale replacements and unchanged authority.
-Frontend1300cases/allfourcoverage100%, type/lint/build, normal898architecture/
-697parity hooks and23 driver cases pass. Source5d46882b is published; Windows
-build38333387800 and sourceCI/package acceptance are pending. Verify that
-source-bound package using fake ports; preserve f670 and its settings.
+Final frontend1306cases/allfourcoverage100%, type/lint/build, normal898architecture/
+697parity hooks and25 driver cases pass. Source53a935d0 is published; Windows
+build38338316064 and sourceCI38338223170/CodeQL pass. Actual focused rehearsal
+24.141s, native46.195s, both-device reference50.517s and frozen worker25.078s
+pass with MIDIoff/owned cleanup. Fresh library publication and exact Preview
+repairs complete the demonstrated path; earlier5d/0bb failures stay failures.
+The source-bound delivery is `show-kit-forge-studio-53a935d08582`; older builds
+and settings are preserved. This is not hardware/show acceptance.
 Rollback is the frontend-only inspection delta, not any hardware gate.
 
 The next physical gate is **one Rytm Pad2 four-control10% candidate**, fresh

@@ -243,6 +243,48 @@ Independent safety/abstraction reviews find no new authority or source-recovery
 guarantee. The build13eb1382 predates this button repair and is not the final
 rehearsal delivery. Freeze/build/test the completed frontend next.
 
+### Accepted Rehearsal Delivery53
+
+Windowsbuild38338316064 at53a935d08582f3446259afb7494d6bdb79618263 succeeds;
+source clean before build, declared tauri.conf override only. Portable11786235867,
+114004636bytes/archivec04df6acc97591336ff00ba2375f9b2ad486fcfa8e425540bf7c8d8ced550a79.
+Shell7020032bytes/SHA5cdef8d0c5047f0e55dbac030e4389216498b6b210870df715e555febc645178;
+sidecar111658960bytes/SHAe1b642b7b808df0416c4ec04fcc536b89a8c4e0854cebcafc271c43b6bca5276.
+Delivery `show-kit-forge-studio-53a935d08582`; older packages and user state preserved.
+
+Actual complete Pad2 path passes24.1408807s/22commands/zero failures/7checks:
+fresh library/adoption, Custom10%/seed3000, unchanged A4, exact Preview and
+complete4legal CCs,1440/600contained numeric geometry, scope invalidation,
+ready visible plan before restart, replacement-socket bootstrap and disarmed
+no-plan recovery. Native46.1949267s/22commands/10checks and both-device
+reference50.5171684s/47commands pass exact favorites/recording/refinement/export/
+restart. Frozenworker25.078s passes both devices, developer Python cleared.
+All owned processes/listeners stop. Synthetic audio/software fixtures are not
+instrument evidence. Rehearsal samples325.15-569.53MiB/max10processes/4106handles/
+min9.69GiBfree/pending4; no new90-minute endurance claim.
+
+Several53 QA trials were rejected, not counted as passes: the select's exact
+label included option text, the observer retained an old socket's plan, and
+transport-connected was treated as hydrated. These QA-only corrections use the
+existing selector pattern, actual replacement-socket status/mandatory bootstrap,
+and the unchanged30s total startup readiness budget. Independent test review
+closes freshness/completeness findings; no timeout/retry/skip or assertion was
+relaxed. The final fresh namespaces pass. Source production diff vs53 is empty.
+
+Exact53 required-checks38338223170 andCodeQL115103503126 succeed. Windows full
+11877pass/5skip/6warnings1635.61s; all76touchedPython100%line/branch retained.
+Offline launcher SHA73a3ec194d3b9f502361e8b282ef34679b73f42ff69ba8622dcfd9d1a2e53a51:
+syntax plus four fake-process cases prove source/hash/busy-port refusal and
+MIDIoff launch. The real default-port launch was not attempted because the
+user's existing62376 listener is preserved. Actual executables were tested on
+isolated ports. Manual supervised block parsed only; no MIDI/USB was accessed.
+Credentials/runtime state are excluded from copied QA and delivery.
+
+Rehearsal handoff names one Pad2 candidate/confirmation followed by DISARM,
+manual KIT reload, front-panel/listening recovery and fresh exact baseline.
+No A4/BOTH/CY Ride/paired/automatic-restore promotion. Protected human approval,
+historicalG14/G16 and actual physical rehearsal remain pending.
+
 No computer crash or network interruption recorded in this block. Heavy jobs
 are sequential, pytest workers capped at2, frontend workers at1 and native
 browser ownership at1. Free RAM sampled13.6-13.8GiB; new native QA stops below

@@ -28,7 +28,11 @@ function assertPlanDeadline(started, budgetSeconds, now = performance.now()) {
   assert(now - started < budgetSeconds * 1000, 'Bounded plan inspection deadline reached');
 }
 
-async function exercisePlanInspectionPackage({ page, latest, connected, processOperation, summary, save, reportRoot, record, digest, budgetSeconds }) {
+function freshBootstrapReceived(latest, priorSocket) {
+  return typeof latest.session_status_socket === 'string' && latest.session_status_socket !== priorSocket && latest.bootstrap_socket === latest.session_status_socket;
+}
+
+async function exercisePlanInspectionPackage({ page, latest, connected, processOperation, summary, save, reportRoot, record, digest, budgetSeconds, pendingCount }) {
   const started = performance.now();
   const checkpoint = phase => {
     assertPlanDeadline(started, budgetSeconds);
@@ -39,6 +43,7 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
     summary.plan_inspection.checks.push(result); record({ kind: 'plan-inspection-check', ...result }); save();
   };
   summary.plan_inspection = { checks: [], screenshots: [], resources: [], physical_validation: false };
+  try {
   checkpoint('connection');
   const sample = phase => {
     const resource = processOperation('sample');
@@ -71,8 +76,11 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
   await forge.getByRole('button', { name: 'Adopt source files', exact: true }).click();
   await expect(forge.getByRole('heading', { name: 'Forge candidate pairs', exact: true })).toBeVisible();
   await scope.getByRole('button', { name: 'Pad 2 rehearsal', exact: true }).click();
-  await forge.getByLabel('Candidate count', { exact: true }).selectOption('1');
+  checkpoint('candidate-count');
+  await forge.getByLabel('Candidate count').selectOption('1');
+  checkpoint('candidate-seed');
   await forge.getByLabel('Starting seed', { exact: true }).fill('3000');
+  checkpoint('candidate-depth');
   const depth = forge.getByRole('slider');
   await depth.press('Home');
   for (let step = 0; step < 10; step++) await depth.press('ArrowRight');
@@ -149,17 +157,29 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
   await expect(table).toBeVisible();
   await expect(rail).toContainText(beforeRestart.plan_id);
   checked('ready-visible-plan-immediately-before-owned-restart', { plan_id: beforeRestart.plan_id });
+  const priorSocket = latest.send_plan_socket;
+  assert.equal(typeof priorSocket, 'string');
   checkpoint('owned-restart');
   const recovery = processOperation('restart-backend');
   assert(recovery.token_rotated && recovery.shell_preserved);
   summary.restarts.push({ ...recovery, at: new Date().toISOString() }); save();
   await connected();
+  await expect.poll(() => freshBootstrapReceived(latest, priorSocket)).toBe(true);
+  await expect.poll(pendingCount).toBe(0);
   checkpoint('restarted');
-  await expect.poll(() => latest.send_plan_changed?.send_plan).toBeNull();
+  assert(latest.send_plan_changed === undefined || latest.send_plan_changed.send_plan === null, 'No prepared plan may return on the new connection');
+  assert.equal(latest.session_status.armed, false);
+  assert.equal(latest.session_status.midi_port, null);
   await expect(table).toHaveCount(0);
   await expect(page.getByTestId('action-send')).toBeDisabled();
   checked('owned-restart-remains-disarmed-without-stale-plan');
   sample('restarted');
+  } catch (error) {
+    await page.screenshot({ path: path.join(reportRoot, 'plan-inspection-failure.png') });
+    summary.plan_inspection.failure_screenshot = 'plan-inspection-failure.png';
+    save();
+    throw error;
+  }
 }
 
-module.exports = { exercisePlanInspectionPackage, assertExactPad2Plan, assertPlanDeadline };
+module.exports = { exercisePlanInspectionPackage, assertExactPad2Plan, assertPlanDeadline, freshBootstrapReceived };

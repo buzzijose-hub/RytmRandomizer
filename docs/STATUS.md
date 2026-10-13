@@ -4,63 +4,47 @@ Last updated: 2026-10-13. This file is a hand-authored snapshot and is meant to 
 
 ## Current Snapshot
 
-The October 12 native-representation integration has a tested offline Windows
-delivery on PR #254's assembly branch. A4 F1 and separate Rytm LFO contracts, passive `0x52`/`0x58`
-classification, exact replay-compatible display projection, saved-source
-refusal boundaries and the six-file comparison command are implemented.
-Initial production source `658c8f9f` passes11813 cases/5 skips/6 warnings824.40s;
-all76 touched production files100%line/branch and project99.42%pure-branch.
-Eight dimensional reviews are complete; accepted findings are corrected.
-Pinned strict typing, lint and dead-code gates pass; frontend1294 cases/all
-four coverage dimensions100%. Later defensive source `5db6e6de` passes11843 cases/
-5 skips/6 warnings817.27s with all76 touched files100%line/branch; final expanded
-path matrix381cases4.25s passes. It validates direct library IDs before any I/O.
-The final source-bound `f67059ba844f` package is at
-`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-f67059ba844f`.
-Its Python production equals verified5db6. Actual native39.745s/22commands/
-10checks and both-device45.101s/47commands pass with restart/cleanup. Frozen
-worker35.579s passes; normal launcher authenticates UI10.014s (mock/one client/
-queue high13of256/no drops). Seven native samples311.95-589.01MiB/max10processes/
-4114handles/minimum11.96GiBfree, pendinghigh4; not a new endurance proof.
-The earlier8d600px red measured16257 split over two lines in41px. Fixed tables
-now measure16257 and11712 each one line/contained in144px cells, with local
-scrolling and no page overflow. New frontend1294cases/81files104.25s/all100%
-coverage/type/lint/build pass. Screenshots inspected; older8d/096/64d5 preserved.
-Exactf670 source CI38326500759/required-checks and Windows build38326547294 pass.
-CodeQL alerts21-25 are dispositioned as false positives after independent
-reported-flow review and373 focused cases, including28 before-I/O command
-refusals and a two-failure validator-removal probe. The actual aggregate
-115079424161 passes; no workflow/protection/severity changed. Trusted local
-root/ancestor limits remain explicit in the
-[security disposition](security/2026-10-13-codeql-path-disposition.md).
-A narrow read-only prepared-packet inspector is implemented for the earliest
-Pad2 rehearsal: exact server rows before arm and in confirmation, with no
-scope/send/authority changes.1300 frontend cases/81files110.15s pass with all
-fourcoverage100%; typing/lint and20 driver cases pass. New source-bound package
-acceptance is pending; f670 remains preserved and does not contain the inspector.
-Hosted5d browser checks exposed a600px table overflow; that successful Windows
-build is not accepted. CSS is corrected without weakening its strict assertion.
-The new fake-WebSocket browser proof passes both viewports and numeric geometry;
-24 driver cases and unchanged frontend1300cases/all100% pass. A replacement
-package must pass before supervised handoff.
-The0bb package's fresh workflow reveals a library-refresh ACK publication gap.
-The existing canonical setter now updates the list only after success/freshness
-checks; no source or authority is adopted. Two red cases and five new regression
-cases prove the repair;1305frontend cases/all100%/121.80s, type/build/lint pass.
-The0bb trial is not accepted; a repaired source-bound package is still required.
-Forge Preview now reuses exact candidate recall instead of regenerating a
-different candidate. The red command-identity test and mock backend composition
-prove the defect/repair;1306frontend cases/all100%/98.60s and mocked browser
-identity/layout proof3.0s pass. No global preview or output authority changes.
-Latest Eddie review remains October3
-CHANGES_REQUESTED; protected approval and historical Gate14/16 remain pending.
-No real MIDI/USB operation occurred. Physical working-state synchronization, precision,
-automatic restore and show readiness remain unverified. See the
-[integration map](NATIVE_REPRESENTATION_INTEGRATION.md) and
-[studio experiment](NATIVE_WORKING_KIT_STUDIO_EXPERIMENT.md). The first physical
-test is the existing four-control Pad2 audition/reload gate, not that later
-A4 working-query experiment. General A4/BOTH, CY Ride, paired precision and
-automatic restoration remain held.
+The October13 security/rehearsal follow-up delivers source
+`53a935d08582f3446259afb7494d6bdb79618263` on PR254:
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-53a935d08582`.
+It is READY for a supervised, backed-up single-Pad2 scratch test, **NOT SHOW-READY**.
+The exact hashes, offline launcher and operator-present procedure are in its
+`studio-procedure/DELIVERY-RECEIPT.md`. Prior deliveries/user settings are preserved.
+
+CodeQL21-25 are independently dispositioned false positives for restricted
+client-ID flows;373focused cases and28pre-I/O command refusals pass, and removing
+the validator catches2 failures. Actual53 aggregate115103503126 and source CI
+38338223170/required-checks succeed. No scanner/protection/severity/pin was
+weakened; trusted-local-root limits remain explicit in the
+[security report](security/2026-10-13-codeql-path-disposition.md). Seven separate
+default-branch dependency alerts are not resolved by this focused disposition.
+
+Exact server packets are visible before arm and in confirmation. Fresh library
+ACKs now publish through the existing store after freshness/success checks.
+Forge Preview recalls the exact selected candidate, not another regeneration.
+All source/scope/output/restore restrictions remain unchanged.1306frontend
+cases/81files98.60s pass allfourcoverage100%; type/lint/build and25driver cases
+pass. Normal gates pass strict76typing/898architecture/697nonfast including
+685frozen parity. Exact53 Windows full CI:11877pass/5skip/6warnings1635.61s;
+Python production remains byte-identical to the verified5db6 source.
+
+Actual packaged acceptance: focused rehearsal24.141s/22commands/7checks,
+native precision46.195s/22commands/10checks, both-device reference sound50.517s/
+47commands and isolated worker25.078s pass, with one startup/owned restart,
+exact values/replay, disarmed recovery and confirmed cleanup. Rehearsal memory
+325.15-569.53MiB/max10processes/max4106handles/min9.69GiBfree; pendinghigh4.
+These are bounded journeys, not new endurance/acoustic/hardware certification.
+The5d narrow-layout and0bb library failures remain failed evidence. Test observer
+and locator repairs now require fresh hydration/bootstrap without timeout or
+retry increases. No MIDI/USB access occurred; the user's older4317 app is untouched.
+
+Latest Eddie review remains October3 CHANGES_REQUESTED. Protected approval and
+historical Gate14/16 remain pending; no merge. First physical test: the
+[four-control Pad2 checklist](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md),
+10% candidate, exact ready plan, explicit Rytm arm/confirmation, DISARM, manual
+KIT reload, front-panel/listening recovery and fresh exact baseline. A4 working
+query research is not a prerequisite. General A4/BOTH, CY Ride SRC, paired
+precision, full unsaved synchronization and automatic restoration remain held.
 
 The previously delivered reference-sound workflow below remains available.
 Both device paths now produce source-preserving local KIT candidates rather

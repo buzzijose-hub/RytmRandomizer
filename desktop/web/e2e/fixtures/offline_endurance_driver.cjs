@@ -236,6 +236,9 @@ async function main() {
     cdp.on('Network.webSocketFrameReceived', event => {
       let value; try { value = JSON.parse(event.response.payloadData); } catch { return; }
       if (value.type) latest[value.type] = value;
+      if (value.type === 'session_status') latest.session_status_socket = event.requestId;
+      if (value.type === 'performance_console_changed') latest.bootstrap_socket = event.requestId;
+      if (value.type === 'send_plan_changed') latest.send_plan_socket = event.requestId;
       if (value.type === 'mutation_parameters_changed') parameterSequence++;
       if (value.library_records) latest.library_records = value.library_records;
       if (value.show_pack_export) exported = value.show_pack_export;
@@ -250,17 +253,37 @@ async function main() {
       totals.count++; totals.failures += value.ok ? 0 : 1; totals.milliseconds += elapsed; totals.maximum_ms = Math.max(totals.maximum_ms, elapsed);
       record({ kind: 'command', command: operation.command, ok: value.ok, code: value.code || null, milliseconds: elapsed });
     });
-    cdp.on('Network.webSocketClosed', () => { pending.clear(); });
+    cdp.on('Network.webSocketClosed', () => {
+      pending.clear();
+      // Bootstrap does not replay a missing plan; old-socket observations are not current state.
+      delete latest.send_plan_changed;
+      delete latest.session_status;
+      delete latest.session_status_socket;
+      delete latest.bootstrap_socket;
+    });
     const forge = page.getByTestId('show-kit-forge'), scope = page.getByTestId('mutation-parameters-panel');
     const bank = () => latest.show_bank_changed?.show_bank.banks.find(value => value.bank_id === latest.show_bank_changed.show_bank.active_bank_id);
     const connected = async () => {
-      await expect(page.getByTestId('safety-rail').getByText('Connected', { exact: true })).toBeVisible({ timeout: 30000 });
-      await expect(page.getByTestId('safety-rail').getByText('Hardware Off')).toBeVisible();
+      const deadline = performance.now() + 30000;
+      const remaining = () => Math.max(1, deadline - performance.now());
+      if (nativeRepresentation || referenceSound) {
+        summary.phase = 'connection-observation'; save();
+        summary.connection_observation = {
+          url_kind: page.url().includes('tauri.localhost') ? 'packaged' : 'unexpected',
+          rail_count: await page.getByTestId('safety-rail').count(),
+          visible_connection: await page.getByTestId('safety-rail').getByText('Connected', { exact: true }).isVisible(),
+        }; save();
+        await page.screenshot({ path: path.join(reportRoot, 'connection-observation.png') });
+      }
+      await expect(page.getByTestId('safety-rail').getByText('Connected', { exact: true })).toBeVisible({ timeout: remaining() });
+      // The transport badge precedes bootstrap; projections require hydrated source/catalog state.
+      await expect(page.getByTestId('profile-chips').getByRole('button').first()).toBeVisible({ timeout: remaining() });
+      await expect(page.getByTestId('safety-rail').getByText('Hardware Off')).toBeVisible({ timeout: remaining() });
     };
     if (planInspection) {
       const started = performance.now();
       summary.mode = 'plan-inspection';
-      await require('./plan_inspection_package_journey.cjs').exercisePlanInspectionPackage({ page, latest, connected, processOperation, summary, save, reportRoot, record, digest, budgetSeconds: smoke });
+      await require('./plan_inspection_package_journey.cjs').exercisePlanInspectionPackage({ page, latest, connected, processOperation, summary, save, reportRoot, record, digest, budgetSeconds: smoke, pendingCount: () => pending.size });
       assert.equal(rawPageErrors, 0); assert.equal(observationFailure, null);
       summary.elapsed_seconds = (performance.now() - started) / 1000;
       assert(summary.elapsed_seconds < smoke, 'Bounded plan inspection deadline reached');
