@@ -33,8 +33,11 @@ refusals and a two-failure validator-removal probe. The actual aggregate
 115079424161 passes; no workflow/protection/severity changed. Trusted local
 root/ancestor limits remain explicit in the
 [security disposition](security/2026-10-13-codeql-path-disposition.md).
-A narrow read-only prepared-packet inspection repair is underway for the
-earliest Pad2 rehearsal; f670 remains preserved and verified offline.
+A narrow read-only prepared-packet inspector is implemented for the earliest
+Pad2 rehearsal: exact server rows before arm and in confirmation, with no
+scope/send/authority changes.1300 frontend cases/81files110.15s pass with all
+fourcoverage100%; typing/lint and20 driver cases pass. New source-bound package
+acceptance is pending; f670 remains preserved and does not contain the inspector.
 Latest Eddie review remains October3
 CHANGES_REQUESTED; protected approval and historical Gate14/16 remain pending.
 No real MIDI/USB operation occurred. Physical working-state synchronization, precision,

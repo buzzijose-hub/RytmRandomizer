@@ -186,7 +186,14 @@ roots/ancestors, not arbitrary local filesystem replacement/junction containment
 No workflow/severity/protection change and no protected merge. Details are in
 the security report. The current follow-up completes one read-only prepared
 packet inspection gap and clarifies the existing Pad2 rehearsal, not new audio
-features or A4 query acquisition. Final package/delta acceptance remains pending.
+features or A4 query acquisition. The contained inspector is implemented at
+59175419: source changes are only ExactRytmSend, SafetyRail and their existing
+CSS.106 focused UI cases pass; composed frontend1300cases/81files110.15s pass
+with statements/branches/functions/lines100%. Frontend typecheck and lint pass;
+20 ownership/driver tests pass. The373 backend selection remains green. No
+production Python changed since its11843-case full verification. New Windows
+package acceptance remains pending; the preserved f670 copy is not claimed to
+contain this new inspector.
 
 No computer crash or network interruption recorded in this block. Heavy jobs
 are sequential, pytest workers capped at2, frontend workers at1 and native

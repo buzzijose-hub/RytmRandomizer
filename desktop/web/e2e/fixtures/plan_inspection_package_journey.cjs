@@ -46,10 +46,13 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
   const card = forge.getByRole('article', { name: 'Candidate 1', exact: true });
   await expect(card).toBeVisible();
   const bank = latest.show_bank_changed.show_bank.banks.find(value => value.bank_id === latest.show_bank_changed.show_bank.active_bank_id);
-  const candidate = bank.entries.find(entry => entry.entry_id === bank.active_entry_id).candidates[0];
+  const entry = bank.entries.find(value => value.entry_id === bank.active_entry_id);
+  const candidate = entry.candidates[0];
   assert.equal(candidate.recipe.depth, 0.1);
   assert.equal(candidate.recipe.seed, 3000);
-  assert(candidate.analog_four_candidate.values.every(value => value.requested_value === value.source_value));
+  assert.deepEqual(candidate.analog_four_candidate.values, []);
+  assert.equal(candidate.analog_four_candidate.semantic_fingerprint, candidate.source_a4_fingerprint);
+  assert.equal(candidate.analog_four_candidate.sysex.frame_sha256, entry.analog_four_source.sysex.frame_sha256);
   const deltas = candidate.rytm_candidate.pad_deltas.filter(delta => delta.changed_keys.length);
   assert(deltas.length > 0 && deltas.every(delta => delta.pad_id === 2 && delta.changed_keys.every(key => ['flt', 'amp_decay', 'overdrive', 'reverb'].includes(key))));
   await card.getByRole('button', { name: 'Select for audition', exact: true }).click();

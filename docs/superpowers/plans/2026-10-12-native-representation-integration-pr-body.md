@@ -62,8 +62,12 @@ aggregate115079424161 on7370 passes.373 focused cases and28 command-boundary
 refusals pass; disabling the validator in memory causes2 expected failures.
 The local-root/junction threat-model limits are recorded in the linked security
 report; no workflow/severity/protection was weakened. Prior8d/096/64d5 builds
-are preserved. The narrow prepared-packet inspection repair and its source-bound
-package acceptance are still pending; f670 stays the verified offline delivery.
+are preserved. Read-only inspection now displays the exact server packet order,
+keys, human channels, CCs and7bit values before arm and in confirmation; no
+scope/filter/authority behavior changed.106 focused UI cases and1300 composed
+frontend cases/81files110.15s pass, allfourcoverage100%, typecheck/lint clean.
+20 ownership/driver cases pass. New source-bound package acceptance is pending;
+f670 stays preserved and does not contain this new inspector.
 
 - [x] Local pytest passes (full suite).
 - [x] `tests/architecture/` passes.
