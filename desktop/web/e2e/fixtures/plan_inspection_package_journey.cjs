@@ -9,8 +9,17 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
     const result = { name, passed: true, ...detail };
     summary.plan_inspection.checks.push(result); record({ kind: 'plan-inspection-check', ...result }); save();
   };
-  summary.plan_inspection = { checks: [], screenshots: [], physical_validation: false };
+  summary.plan_inspection = { checks: [], screenshots: [], resources: [], physical_validation: false };
+  const sample = phase => {
+    const resource = processOperation('sample');
+    const privateBytes = resource.processes.reduce((total, item) => total + item.private_bytes, 0);
+    assert(resource.free_ram_bytes > 6 * 1024 ** 3, 'Resource floor reached; stop safely');
+    assert(privateBytes < 3 * 1024 ** 3, 'Owned app private-memory ceiling reached');
+    const measurement = { phase, private_bytes: privateBytes, process_count: resource.processes.length, handles: resource.processes.reduce((total, item) => total + item.handles, 0), free_ram_bytes: resource.free_ram_bytes };
+    summary.plan_inspection.resources.push(measurement); record({ kind: 'plan-inspection-resource', ...measurement }); save();
+  };
   await connected();
+  sample('connected');
   await page.setViewportSize({ width: 1440, height: 1000 });
   const forge = page.getByTestId('show-kit-forge');
   const scope = page.getByTestId('mutation-parameters-panel');
@@ -58,7 +67,7 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
     assert.equal(packet.value, deltas.find(delta => delta.pad_id === packet.pad_id).proposed_params[packet.parameter]);
     assert(Number.isInteger(packet.value) && packet.value >= 0 && packet.value <= 127);
   }
-  const table = rail.getByRole('table', { name: 'Exact prepared MIDI packets', exact: true });
+  const table = rail.getByRole('table', { name: 'Exact prepared Rytm packets', exact: true });
   await expect(table).toBeVisible();
   await expect(rail).toContainText(plan.plan_id);
   const rows = await table.locator('tbody tr').allTextContents();
@@ -70,6 +79,7 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
   }
   await expect(rail.getByText('Hardware Off', { exact: true })).toBeVisible();
   checked('exact-server-packets-before-arm-four-control-scope', { plan_id: plan.plan_id, packets: plan.packets, depth: 0.1, seed: 3000 });
+  sample('prepared');
   for (const width of [1440, 600]) {
     await page.setViewportSize({ width, height: 1000 });
     await table.scrollIntoViewIfNeeded();
@@ -91,6 +101,7 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
   await expect(table).toHaveCount(0);
   await expect(page.getByTestId('action-send')).toBeDisabled();
   checked('owned-restart-remains-disarmed-without-stale-plan');
+  sample('restarted');
 }
 
 module.exports = { exercisePlanInspectionPackage };
