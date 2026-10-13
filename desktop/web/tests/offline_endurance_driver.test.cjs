@@ -445,3 +445,6 @@ test('failed handle acquisition reports an owned survivor but ignores gone or re
   assert(!source.includes('Stop-Process -Id'), 'No terminate-by-PID fallback is allowed');
   assert(source.includes('$main=Open-OwnedProcess ($owned|Where-Object ProcessId -eq $r.shell_pid'));
 });
+
+// The established CI entry point also exercises the read-only plan verifier.
+require('./plan_inspection_package_journey.test.cjs');
