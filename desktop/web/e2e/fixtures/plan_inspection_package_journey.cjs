@@ -4,6 +4,24 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { expect } = require('@playwright/test');
 
+function assertExactPad2Plan(plan, candidate) {
+  const allowed = { flt: 74, amp_decay: 80, overdrive: 81, reverb: 83 };
+  const deltas = candidate.pad_deltas.filter(delta => delta.changed_keys.length);
+  assert(deltas.length > 0 && deltas.every(delta => delta.pad_id === 2));
+  const expected = [...deltas].sort((left, right) => left.pad_id - right.pad_id).flatMap(delta =>
+    [...delta.changed_keys].sort().map(parameter => {
+      assert(Object.hasOwn(allowed, parameter));
+      const value = delta.proposed_params[parameter];
+      assert(Number.isInteger(value) && value >= 0 && value <= 127);
+      return { pad_id: delta.pad_id, parameter, channel: delta.pad_id - 1, control: allowed[parameter], value };
+    }));
+  assert(plan.ready);
+  assert.equal(plan.candidate_id, candidate.candidate_id);
+  assert.deepEqual(plan.blocked_reasons, []);
+  assert.deepEqual(plan.packets, expected);
+  return expected;
+}
+
 async function exercisePlanInspectionPackage({ page, latest, connected, processOperation, summary, save, reportRoot, record, digest }) {
   const checked = (name, detail = {}) => {
     const result = { name, passed: true, ...detail };
@@ -60,16 +78,7 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
   await forge.getByRole('button', { name: 'Prepare exact plan', exact: true }).click();
   await expect.poll(() => latest.send_plan_changed?.send_plan?.ready).toBe(true);
   const plan = structuredClone(latest.send_plan_changed.send_plan);
-  assert.equal(plan.candidate_id, candidate.rytm_candidate.candidate_id);
-  const allowed = { flt: 74, amp_decay: 80, overdrive: 81, reverb: 83 };
-  assert(plan.packets.length > 0 && plan.packets.length <= 4);
-  assert.deepEqual(plan.blocked_reasons, []);
-  for (const packet of plan.packets) {
-    assert.equal(packet.pad_id, 2); assert.equal(packet.channel, 1);
-    assert.equal(packet.control, allowed[packet.parameter]);
-    assert.equal(packet.value, deltas.find(delta => delta.pad_id === packet.pad_id).proposed_params[packet.parameter]);
-    assert(Number.isInteger(packet.value) && packet.value >= 0 && packet.value <= 127);
-  }
+  const expectedPackets = assertExactPad2Plan(plan, candidate.rytm_candidate);
   const table = rail.getByRole('table', { name: 'Exact prepared Rytm packets', exact: true });
   await expect(table).toBeVisible();
   await expect(rail).toContainText(plan.plan_id);
@@ -97,14 +106,25 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
   await expect(table).toHaveCount(0);
   await expect(page.getByTestId('action-send')).toBeDisabled();
   checked('scope-change-removes-stale-plan-and-keeps-send-disabled');
+  await scope.getByRole('button', { name: 'Pad 2 rehearsal', exact: true }).click();
+  await card.getByRole('button', { name: 'Select for audition', exact: true }).click();
+  await forge.getByRole('button', { name: 'Preview Rytm', exact: true }).click();
+  await forge.getByRole('button', { name: 'Prepare exact plan', exact: true }).click();
+  await expect.poll(() => latest.send_plan_changed?.send_plan?.ready).toBe(true);
+  const beforeRestart = structuredClone(latest.send_plan_changed.send_plan);
+  assert.deepEqual(assertExactPad2Plan(beforeRestart, candidate.rytm_candidate), expectedPackets);
+  await expect(table).toBeVisible();
+  await expect(rail).toContainText(beforeRestart.plan_id);
+  checked('ready-visible-plan-immediately-before-owned-restart', { plan_id: beforeRestart.plan_id });
   const recovery = processOperation('restart-backend');
   assert(recovery.token_rotated && recovery.shell_preserved);
   summary.restarts.push({ ...recovery, at: new Date().toISOString() }); save();
   await connected();
+  await expect.poll(() => latest.send_plan_changed?.send_plan).toBeNull();
   await expect(table).toHaveCount(0);
   await expect(page.getByTestId('action-send')).toBeDisabled();
   checked('owned-restart-remains-disarmed-without-stale-plan');
   sample('restarted');
 }
 
-module.exports = { exercisePlanInspectionPackage };
+module.exports = { exercisePlanInspectionPackage, assertExactPad2Plan };
