@@ -72,6 +72,15 @@ ready-plan-before-restart witness close the test review findings. New source-bou
 Windowsbuild38333387800 and package acceptance are pending;
 f670 stays preserved and does not contain this new inspector.
 
+The5d table overflow and0bb fresh-library publication defect were subsequently
+reproduced and repaired without hiding their failures. The fresh source library
+ACK now reaches the existing canonical store only after success/generation
+fences; sources and authority remain unchanged.1305frontend cases/allfour100%
+coverage/121.80s, type/build/lint pass. A new exact-source package must complete
+fresh adoption,10% four-control generation, exact complete plan inspection,
+scope invalidation and owned restart before delivery. Neither5d nor0bb is
+accepted as a completed rehearsal build.
+
 - [x] Local pytest passes (full suite).
 - [x] `tests/architecture/` passes.
 - [x] Lint trio (ruff + black + isort) clean.

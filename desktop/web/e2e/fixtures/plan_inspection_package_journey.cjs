@@ -60,10 +60,14 @@ async function exercisePlanInspectionPackage({ page, latest, connected, processO
   await forge.getByRole('button', { name: 'Create show bank', exact: true }).click();
   await expect(forge.getByRole('button', { name: 'Refresh source files', exact: true })).toBeEnabled();
   await forge.getByRole('button', { name: 'Refresh source files', exact: true }).click();
+  await expect.poll(() => latest.library_records?.length).toBe(2);
+  checkpoint('source-record-selection');
   await forge.getByRole('combobox', { name: 'Rytm source file', exact: true }).selectOption({ index: 1 });
   await forge.getByRole('combobox', { name: 'Analog Four source file', exact: true }).selectOption({ index: 1 });
   const slots = forge.getByLabel('Source hardware slot (1–128)');
+  checkpoint('source-slot-declaration');
   await slots.nth(0).fill('20'); await slots.nth(1).fill('20');
+  checkpoint('source-adoption-submit');
   await forge.getByRole('button', { name: 'Adopt source files', exact: true }).click();
   await expect(forge.getByRole('heading', { name: 'Forge candidate pairs', exact: true })).toBeVisible();
   await scope.getByRole('button', { name: 'Pad 2 rehearsal', exact: true }).click();

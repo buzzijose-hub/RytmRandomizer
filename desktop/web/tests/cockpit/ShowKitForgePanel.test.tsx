@@ -109,6 +109,43 @@ describe('ShowKitForgePanel', () => {
     expect(screen.getByRole('button', { name: 'Adopt source files' })).toBeDisabled();
   });
 
+  it('publishes a fresh library-list reply into the canonical source selectors without importing again', async () => {
+    const fake = new FakeCockpitClient();
+    mount(fake);
+    await waitForCommand(fake, 'show_bank_list');
+    const records: LibraryRecord[] = [{ ...libraryRecordA, record_id: 'new-original',
+      source_frame: { artifact_name: `${'1'.repeat(64)}.syx`, sha256: '1'.repeat(64), byte_count: 2998 }, source_origin: 'file_import' }];
+    fake.ackQueue.push({ request_id: 'fresh-library', ok: true, library_records: records });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Refresh source files' })); });
+    expect(useCockpitStore.getState().libraryRecords).toEqual(records);
+    expect(within(screen.getByLabelText('Rytm source file')).getAllByRole('option').map(option => option.getAttribute('value'))).toEqual(['', 'new-original']);
+    expect(useCockpitStore.getState().showBank).toBe(showBankState);
+    expect(fake.sent).toEqual([{ type: 'show_bank_list' }, { type: 'library_list' }]);
+  });
+
+  it.each(['refused', 'null', 'missing'] as const)('preserves the current library and bank when a source refresh reply is %s', async (outcome) => {
+    const fake = new FakeCockpitClient();
+    mount(fake);
+    await waitForCommand(fake, 'show_bank_list');
+    act(() => useCockpitStore.getState().setLibraryRecords([libraryRecordA]));
+    fake.ackQueue.push({ request_id: 'no-publication', ok: outcome !== 'refused',
+      ...(outcome === 'missing' ? {} : { library_records: outcome === 'null' ? null : [libraryRecordB] }), message: 'Refresh refused' });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Refresh source files' })); });
+    expect(useCockpitStore.getState().libraryRecords).toEqual([libraryRecordA]);
+    expect(useCockpitStore.getState().showBank).toBe(showBankState);
+  });
+
+  it('accepts an authoritative empty source list without clearing retained bank data', async () => {
+    const fake = new FakeCockpitClient();
+    mount(fake);
+    await waitForCommand(fake, 'show_bank_list');
+    act(() => useCockpitStore.getState().setLibraryRecords([libraryRecordA]));
+    fake.ackQueue.push({ request_id: 'empty-library', ok: true, library_records: [] });
+    await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Refresh source files' })); });
+    expect(useCockpitStore.getState().libraryRecords).toEqual([]);
+    expect(useCockpitStore.getState().showBank).toBe(showBankState);
+  });
+
   it.each(['accept', 'refuse', 'throw'] as const)(
     'keeps refreshed bank feedback when an old library request later %s after reconnect', async (outcome) => {
       const fake = new FakeCockpitClient();
@@ -130,9 +167,10 @@ describe('ShowKitForgePanel', () => {
       const feedback = screen.getByText('Show bank refresh accepted; waiting for authoritative show bank state.');
       await act(async () => {
         if (outcome === 'throw') fail(new Error('obsolete library failure'));
-        else settle({ request_id: 'old', ok: outcome === 'accept', message: 'obsolete library failure' });
+        else settle({ request_id: 'old', ok: outcome === 'accept', message: 'obsolete library failure', library_records: [libraryRecordB] });
       });
       expect(feedback).toBeInTheDocument();
+      expect(useCockpitStore.getState().libraryRecords).toBeNull();
       expect(screen.queryByText(/obsolete library failure/)).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Import captures folder' })).toBeEnabled();
       expect(fake.sent).toEqual([{ type: 'show_bank_list' }, { type: 'library_import_captures' }, { type: 'show_bank_list' }]);

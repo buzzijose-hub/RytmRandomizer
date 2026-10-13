@@ -43,6 +43,11 @@ build is not accepted. CSS is corrected without weakening its strict assertion.
 The new fake-WebSocket browser proof passes both viewports and numeric geometry;
 24 driver cases and unchanged frontend1300cases/all100% pass. A replacement
 package must pass before supervised handoff.
+The0bb package's fresh workflow reveals a library-refresh ACK publication gap.
+The existing canonical setter now updates the list only after success/freshness
+checks; no source or authority is adopted. Two red cases and five new regression
+cases prove the repair;1305frontend cases/all100%/121.80s, type/build/lint pass.
+The0bb trial is not accepted; a repaired source-bound package is still required.
 Latest Eddie review remains October3
 CHANGES_REQUESTED; protected approval and historical Gate14/16 remain pending.
 No real MIDI/USB operation occurred. Physical working-state synchronization, precision,

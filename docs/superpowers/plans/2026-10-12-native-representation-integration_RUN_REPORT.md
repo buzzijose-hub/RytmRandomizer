@@ -213,6 +213,23 @@ coverage100%. Type/build/lint pass.24 driver/verifier cases pass, including
 phase deadline checks added after the scoped review. Replacement package and
 hosted browser acceptance are required before handoff.
 
+The0bb Windowsbuild38335015644 succeeds and both binary hashes are verified,
+but fresh packaged source selection times out after a successful `library_list`:
+ShowKitForge discarded the ACK records instead of publishing them to the existing
+library slice. It is **not accepted** for this complete rehearsal path. The
+failed private run confirms owned cleanup and no MIDI, with all five observed
+commands successful; no packet/arming command occurred.
+
+Two new tests reproduce the missing fresh/empty-list publication before the
+repair. A contained three-line client fix now calls canonical `setLibraryRecords`
+only after the existing generation fence and successful-ACK check. Five new
+cases cover success/refusal/null/missing/empty, and the old stale-reply matrix
+now carries records and asserts no publication. No source/bank/candidate adoption
+or authority changes. Independent safety/test review finds no issues.
+Composed frontend1305cases/81files121.80s passes allfourcoverage100%; type/build/
+lint pass. A new source-bound Windows package and fresh complete journey remain
+required. Previous unaccepted trials are retained, not relabeled passes.
+
 No computer crash or network interruption recorded in this block. Heavy jobs
 are sequential, pytest workers capped at2, frontend workers at1 and native
 browser ownership at1. Free RAM sampled13.6-13.8GiB; new native QA stops below

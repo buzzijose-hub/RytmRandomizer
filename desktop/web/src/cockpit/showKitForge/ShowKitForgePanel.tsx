@@ -292,6 +292,9 @@ export function ShowKitForgePanel(): JSX.Element {
           if (announceResult) announce(`${action} failed: ${detail}`);
           return ack;
         }
+        if (ack.library_records !== undefined && ack.library_records !== null) {
+          useCockpitStore.getState().setLibraryRecords(ack.library_records);
+        }
         const message =
           successMessage?.(ack) ??
           `${action} accepted; waiting for authoritative show bank state.`;
