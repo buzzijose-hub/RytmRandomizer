@@ -271,6 +271,41 @@ async function exerciseNativeRepresentationPackage({ page, latest, connected, pr
   await page.setViewportSize({ width: 600, height: 900 });
   await expect(panel.getByRole('table', { name: 'Exact native changes', exact: true })).toBeVisible();
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+  const selected = retained.candidates.find(item => item.candidate_id === retained.selected_candidate_id);
+  assert(selected);
+  const frequency = selected.changes.find(item => item.parameter === 'filter1_frequency');
+  assert(frequency);
+  const row = panel.getByRole('table', { name: 'Exact native changes', exact: true })
+    .getByRole('row').filter({ hasText: 'filter1_frequency' });
+  const wordGeometry = [];
+  evidence.narrow_word_geometry = wordGeometry;
+  for (const [column, word] of [[0, String(frequency.source_value)], [2, String(frequency.rendered_value)]]) {
+    const geometry = await row.locator('td').nth(column).evaluate((cell, value) => {
+      const walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT);
+      let node;
+      while ((node = walker.nextNode())) {
+        const token = Array.from(node.textContent.matchAll(/-?\d+(?:\.\d+)?/g)).find(item => item[0] === value);
+        if (!token) continue;
+        const start = token.index;
+        const range = document.createRange();
+        range.setStart(node, start); range.setEnd(node, start + value.length);
+        const rectangles = Array.from(range.getClientRects());
+        const bounds = cell.getBoundingClientRect();
+        return {
+          word: value,
+          lines: new Set(rectangles.map(rectangle => Math.round(rectangle.top))).size,
+          contained: rectangles.every(rectangle => rectangle.left >= bounds.left && rectangle.right <= bounds.right),
+          width: bounds.width,
+        };
+      }
+      return null;
+    }, word);
+    wordGeometry.push(geometry); save();
+    assert(geometry, 'Exact native word must remain visible in its value cell');
+    assert.equal(geometry.lines, 1, 'Native words must not split across lines');
+    assert(geometry.contained, 'Native word must fit its own value cell');
+  }
+  checked('narrow-native-words-fit-without-digit-splitting', { width: 600, words: wordGeometry });
   await screenshot('native-recall-narrow.png', panel.getByRole('table', { name: 'Exact native changes', exact: true }));
   checked('narrow-viewport-no-document-overflow', { width: 600, height: 900 });
   checkpoint('completed');

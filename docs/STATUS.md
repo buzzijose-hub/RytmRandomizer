@@ -8,17 +8,26 @@ The October 12 native-representation integration has a tested offline Windows
 delivery on PR #254's assembly branch. A4 F1 and separate Rytm LFO contracts, passive `0x52`/`0x58`
 classification, exact replay-compatible display projection, saved-source
 refusal boundaries and the six-file comparison command are implemented.
-Final production source `658c8f9f` passes11813 cases/5 skips/6 warnings824.40s;
+Initial production source `658c8f9f` passes11813 cases/5 skips/6 warnings824.40s;
 all76 touched production files100%line/branch and project99.42%pure-branch.
 Eight dimensional reviews are complete; accepted findings are corrected.
 Pinned strict typing, lint and dead-code gates pass; frontend1294 cases/all
-four coverage dimensions100%. The new source-bound `096be3ed94ec` package is at
-`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-096be3ed94ec`.
-Actual affected UI37.433s/22commands, both-device UI41.498s/47commands and frozen
-worker24.687s pass with cleanup; normal launcher authenticates UI4.326s. Native
-samples306.62-600.13MiB,10processes,minimum13.12GiBfree; not new endurance proof.
-Source test CI/required-checks pass; separate CodeQL path alerts21-25 are under
-independent triage, not dismissed. Latest Eddie review remains October3
+four coverage dimensions100%. Later defensive source `5db6e6de` passes11843 cases/
+5 skips/6 warnings817.27s with all76 touched files100%line/branch; final expanded
+path matrix381cases4.25s passes. It validates direct library IDs before any I/O.
+The source-bound `8d5d42f8eebd` package is at
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-8d5d42f8eebd`.
+Its Python production equals verified5db6. Native36.074s/27commands, both-device
+UI41.247s/47commands and frozenworker25s pass with cleanup; normal launcher
+authenticates UI5.350s. Native samples315.51-607.38MiB,10processes,minimum12.92GiB
+free; not new endurance proof. Subsequent600px geometric inspection reproduces
+native16257 split into two lines in a41px cell. A contained table-width repair
+and new packaged geometric regression are in progress; replacement acceptance
+is still required. Earlier096 and64d5 deliveries remain preserved.
+Prior096 test CI/required-checks passed; current8d test matrix is running.
+CodeQL alerts21-25 remain failed/undismissed. Independent triage is complete:
+no reachable WS traversal found through strict IDs; human disposition of the
+guard-model assessment/local-root threat model is pending. Latest Eddie review remains October3
 CHANGES_REQUESTED; protected approval and historical Gate14/16 remain pending.
 No real MIDI/USB operation occurred. Working-state synchronization, precision,
 automatic restore and show readiness remain unverified. See the

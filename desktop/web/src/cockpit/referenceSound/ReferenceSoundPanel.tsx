@@ -144,7 +144,7 @@ export function ReferenceSoundWorkspace(): JSX.Element {
       </div>
 
       {view.controls.length > 0 && <div className="reference-sound-table-scroll">
-        <table className="reference-sound-table">
+        <table className="reference-sound-table reference-sound-table--scope">
           <caption>Native field scope and protections</caption>
           <thead><tr><th scope="col">Field</th><th scope="col">Source / encoded</th><th scope="col">Units / domain</th><th scope="col">Mutate</th><th scope="col">Lock</th><th scope="col">Protection</th></tr></thead>
           <tbody>{view.controls.map((control) => <tr key={control.parameter}>
@@ -191,7 +191,7 @@ export function ReferenceSoundWorkspace(): JSX.Element {
               onClick={() => void model.download(Number(scratchSlot) - 1)}>Download .syx</button>
             <span className="panel-meta">Candidate at source destination: {candidate.frame_size} bytes / SHA-256 {candidate.frame_sha256}</span>
           </div>
-          <div className="reference-sound-table-scroll"><table className="reference-sound-table">
+          <div className="reference-sound-table-scroll"><table className="reference-sound-table reference-sound-table--changes">
             <caption>Exact native changes</caption>
             <thead><tr><th scope="col">Field</th><th scope="col">Source</th><th scope="col">Proposed</th><th scope="col">Rendered readback</th><th scope="col">Units</th><th scope="col">Rationale</th></tr></thead>
             <tbody>{candidate.changes.map((change) => <tr key={change.parameter}>

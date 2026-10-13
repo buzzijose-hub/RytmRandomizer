@@ -95,6 +95,8 @@ describe('actual reference sound workspace', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Generate eight alternatives' }));
     await waitFor(() => expect(screen.getAllByRole('radio')).toHaveLength(8));
     const changes = screen.getByRole('table', { name: 'Exact native changes' });
+    expect(changes).toHaveClass('reference-sound-table--changes');
+    expect(screen.getByRole('table', { name: 'Native field scope and protections' })).toHaveClass('reference-sound-table--scope');
     expect(changes).toHaveTextContent('64 / 64');
     expect(changes).toHaveTextContent('80 / 80');
     expect(changes).toHaveTextContent('72 / 72');

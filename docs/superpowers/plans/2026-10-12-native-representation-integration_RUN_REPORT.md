@@ -114,6 +114,19 @@ test/parity delta reviews report no blocking findings; a Minor missing-input
 matrix recommendation is corrected. Focused composition passes381cases/3warnings
 4.25s and fresh frozen5db6 full11843cases817.27s with all76touched100%coverage.
 A replacement package remains required;096 is the last accepted delivery.
+The8d replacement subsequently passed native36.074s/27commands, both-device
+41.247s/47commands, frozenworker25s and ordinarylauncher5.350s UI connection,
+allwithcleanup. Seven native samples315.51-607.38MiB/max10processes/4118handles/
+minimum12.92GiBfree. Its preserved intermediate receipt records that scope.
+Subsequent600px screenshot/DOMRange inspection found native16257 split over
+two lines in40.96875px. The measured red run is retained as failed, not combined
+with acceptance. Scope/exact-change tables now have stable widths and local
+horizontal scrolling; no mutation, persistence or transport behavior changes.
+New geometric proof requires whole numeric tokens, one line and containment.
+Frontend1294tests/81files104.25s pass/allfourcoverage100%; typing/lint/build and
+20ownership/driver tests pass. Two scoped reviews found no UI issue and one
+test substring weakness, corrected to exact token matching. The new layout
+still requires exact-source Windows and positive geometric acceptance.
 The six-file studio experiment requires operator preflight and a separately
 reviewed supervised query-acquisition path, not an unarmed report workaround.
 
