@@ -6,6 +6,13 @@ Exact source bytes, scope/locks, candidate identities, local favorites and
 recording comparison remain distinct from instrument application and recovery.
 This is reference-to-discovery, not forensic reconstruction or a trained renderer.
 
+Rytm policy is explicit: the audited expansion retains25 documented-only
+continuous SRC rows as conditionally guarded CC7-eligible under the existing
+legacy policy, not physically validated. Every CY Ride SRC row remains blocked
+for unresolved saved-slot association.224 catalog bindings are not224 hardware
+proofs. The four-control Pad2 rehearsal uses separately observed common controls;
+it does not widen SRC, paired precision, A4/BOTH or restoration authority.
+
 ## What changed
 
 - Separate A4 F1 and ordinary Rytm LFO Depth contracts, literal boundary/order/
