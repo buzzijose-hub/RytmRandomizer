@@ -12,6 +12,8 @@
     "source_kit_sha256": "d95293e5784ed604e8f460420afe19152e6262b408ba0c88ca336a1ce0364f64",
     "handoff_revision": "b62ad3e702edc83e33b9d8bdcf0831ab71254187",
     "reproduced_revision": "b9f89c3ef780823a5e21d52aedfa65397c29bdaa",
+    "baseline_gate_head": "b9f89c3ef780823a5e21d52aedfa65397c29bdaa",
+    "baseline_review_approval": "pending; software verification does not infer approval",
     "reproduced_at": "2026-10-14T15:49:51Z",
     "measurement_evidence": "Exact first 352800 PCM frames reselected from original, serialized WAV equals retained segment; fresh analyze_audio_snapshot features equal October 12 retained measurements.",
     "baseline_failure": "All 18 mutable A4 T1 controls: ElektronKitFieldError: bipolar value must be in -64..63, got 69",
