@@ -83,7 +83,7 @@ includes dimensional review and the protected human reassessment, Gate 15 captur
 the domain/diagnostic lessons, and Gate 16 uses the isolated workstreams above.
 Human approval and physical rehearsal remain explicitly pending, not waived.
 
-- [ ] Gate 1 - Repair-source full coverage pending; historical3fe88files100%, ratchet unchanged.
+- [x] Gate 1 - Fresh repair-source coverage:89files100%line/branch;99.44%project branch,99%floor unchanged.
 - [x] Gate 2 - All 685 frozen parity items unchanged.
 - [x] Gate 3 - Lint, formatting and strict touched-production typing.
 - [x] Gate 4 - No new dead code.
@@ -120,6 +120,14 @@ assertions are repaired. A fresh full coverage run is required; composed data
 from moved source lines is not the replacement acceptance artifact. Test-only
 fixture declarations and dtype/length assertions are rerun after that run.
 No new packaged delivery is accepted at this checkpoint.
+
+Final source8905cb91 full suite:12343passed/6skipped/6warnings1115.89s with two
+workers. Fresh full coverage, not a mixed-source composition, proves89 touched
+production files100%line/branch and99.44%project pure branch. The two final
+test-only cleanup files separately pass43cases/6known warnings4.45s. Normal
+default lint, Vulture80, version check and strict89-module typing pass. Real
+browser reference journey passes35.0s; final Windows packaging and acceptance
+are still separate pending work.
 
 Start: 2026-10-14 15:45 UTC (11:45 a.m. America/New_York). Session ceiling: eight
 productive hours, finish sooner on software acceptance. Studio arrival expected

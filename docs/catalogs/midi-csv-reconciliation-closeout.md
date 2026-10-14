@@ -57,10 +57,11 @@ The worker did not run full integration gates. The assembled catalog/data/
 packaging/architecture composition subsequently passed1435 cases in80.65s,
 including898architecture items, with one known short-name warning. Strict88
 production-module typing, full lint/format, Vulture80 and deterministic ledger
-check pass. Same-production composed full/focused coverage records100%lines and
-branches on88 touched runtime files and99.43%project pure branch at published3fe;
-replacement repair-source coverage remains pending. Final all-green
-full suite passes12259tests/six skips/six warnings436.47s. New
+check pass. Final repaired composition passes103CSVcases23.50s, including eight
+actual subprocess refusals for private malformed/duplicate/missing-field JSON.
+Fresh full coverage proves89 touched production files100%line/branch and99.44%
+project pure branch at unchanged99%floor. Final all-green full suite passes12343
+tests/six skips/six known warnings1115.89s. Strict89-module typing passes. New
 package and CI remain pending in the active reliability plan; the earlier
 six-failure full run is not green acceptance. No MIDI/USB enumeration,
 opening, arming or sending occurred.

@@ -77,17 +77,17 @@ canonical schema2 migration/downgrade refusal for expanded session metadata.
 Its Windows build38619518876 was cancelled before publication. The minor shared
 DSP dtype annotation mismatch is repaired with129passing real-library/diagnostic
 tests; no decoding precision or retained measurements changed. Replacement
-source verification and exact-source packaging remain pending. CodeQL passed
+source verification is complete; exact-source packaging remains pending. CodeQL passed
 on3fe with zero open branch alerts; this does not certify the next repair source.
 
 | Verification | Actual result |
 | --- | --- |
-| Python full |12259pass/6skip/6warnings436.47s, two workers. Prior coverage run12246pass/6fail/6skip1048.05s remains failed evidence;166 focused repair tests pass. |
-| Coverage |Published3fe same-production composed full+focused coverage:88 touched runtime files100%line/branch; project99.43%purebranch,99%floor unchanged. Replacement repair-source coverage is pending. |
-| Frontend |1326pass/81files51.13s/allfourcoverage100%; final typecheck/lint/build pass, existing bundle-size/import warnings retained. |
+| Python full |Final repair source8905cb91:12343pass/6skip/6warnings1115.89s, two workers. Final test-only recheck43pass4.45s. Prior12329pass/6fail/6skip coverage run remains failed evidence, not acceptance. |
+| Coverage |Fresh final full coverage:89 touched production files100%line/branch; project99.44%purebranch,99%floor unchanged. No mixed-source line data used for acceptance. |
+| Frontend |Schema2 composition1326pass/81files98.69s/allfourcoverage100%; real Python/Chromium both-device reference journey1pass35.0s, no retries/timeouts added. |
 | Catalog/architecture |1435pass/1known warning80.65s, including898architecture items;552-row deterministic ledger check passes. |
-| Normal gates |Strict88-module typing, full Python lint/format and Vulture80 plus unused-code checks pass. Frozen parity remains unchanged. |
-| Driver |35Node cases pass (25existing driver,10real-input helper); private real-input config/source hashes validated; actual new-package journeys pending. |
+| Normal gates |Strict89-module typing, default Python lint/format, Vulture80 and version check pass. Frozen parity remains unchanged; final normal push gates are recorded separately. |
+| Driver |37Node cases pass, including independent every-selected-field native readback and required-change omission witnesses; private real-input config/source hashes validated; actual new-package journeys pending. |
 | Packaged acceptance |Pending new source freeze, Windows build, actual Pad2/native/reference UI journeys and binary/launcher hashes. |
 | Hardware |No MIDI/USB enumeration/opening/arming/writes. No new physical sound-match, save/recovery or show certification. |
 
@@ -96,7 +96,7 @@ red tests and fixed through existing store/recall seams. No global preview,
 packet filtering, scope or output/restore authority changed. Hardware rehearsal
 and protected human approval remain separate from software acceptance.
 
-- [ ] Local pytest passes (repair-source full run pending; historical3fe12259pass).
+- [x] Local pytest passes (finalrepair12343pass/6skip;43finaltest-only cases also pass).
 - [x] `tests/architecture/` passes.
 - [x] Lint trio (ruff + black + isort) clean.
 - [x] Coverage stays >=95% pure-branch.
@@ -112,7 +112,7 @@ and protected human approval remain separate from software acceptance.
 
 Per [`docs/PLAN_REQUIREMENTS.md`](https://github.com/buzzijose-hub/RytmRandomizer/blob/codex/studio-evidence-handoff/docs/PLAN_REQUIREMENTS.md).
 
-- [ ] **Gate 1** — 100% branch coverage on touched files; project ≥95% pure-branch.
+- [x] **Gate 1** — 100% branch coverage on touched files; project ≥95% pure-branch.
 - [x] **Gate 2** — V1.34 parity byte-identical (505 goldens / 685 pytest items).
 - [x] **Gate 3** — lint clean and strict Pyright clean on every touched production module (`python scripts/typecheck_touched.py`).
 - [x] **Gate 4** — no new dead code (vulture --min-confidence 80).

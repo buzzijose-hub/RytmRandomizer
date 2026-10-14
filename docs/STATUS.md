@@ -23,15 +23,15 @@ offsets, selector safety, MIDI-domain conversion or SEND authority. See the
 [ledger](catalogs/midi-csv-reconciliation.md) and
 [active plan](superpowers/plans/2026-10-14-reference-sound-reliability.md).
 
-Latest focused integration passes1435catalog/architecture/data/packaging cases;
-frontend1326cases/81files passes100%allfourcoverage. Strict88-module typing,
-full Python lint/format and Vulture80 pass. Same-production composed coverage
-has88touched runtime files100%line/branch and99.43%project pure branch at published
-3fe, not the pending repair source. The final
-full run passes12259tests/six skips/six warnings436.47s. New exact-source packaged
-UI journeys remain pending. The preceding full run had12246passes and six
-failures; the166focused repair cases pass, but that failed run is not accepted
-as green. FrozenV134 and pins are intact.
+Final repair-source verification passes12343tests/6skips/6known warnings1115.89s
+with two workers;43finaltest-only cases also pass. Fresh full coverage proves89
+touched production files100%line/branch and99.44%project pure branch at unchanged
+99%floor. Strict89-module typing, default Python lint/format and Vulture80 pass.
+Schema2 frontend1326cases/81files passes100%allfourcoverage; actual both-device
+Python/Chromium reference journey passes35.0s without added retries/timeouts.
+New exact-source Windows build/packaged UI journeys remain pending. The previous
+12329pass/6fail coverage run stays failed evidence; frozen legacy expectations
+were repaired without changing their fixtures. FrozenV134 and pins are intact.
 
 Original WAVs, retained sessions, user app/data and all previous deliveries are
 preserved. Private real-input QA is a quality/persistence exercise, not a claim

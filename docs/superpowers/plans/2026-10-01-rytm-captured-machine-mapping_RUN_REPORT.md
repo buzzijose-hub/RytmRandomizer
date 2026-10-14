@@ -13,8 +13,8 @@ The starting remote checkpoint was b9f89c3e,33success/1skip and Eddie's
 October3 CHANGES_REQUESTED. Published source3fe9ed53 passed normal mechanical
 hooks and CodeQL with zero open branch alerts. Its Windows38619518876 build was
 cancelled before publication after fresh review found record-schema/reader/
-assertion/telemetry repairs. Replacement source and exact-package verification
-remain pending. No approval or protected merge is inferred.
+assertion/telemetry repairs. Replacement source verification is complete;
+exact-package verification remains pending. No approval or protected merge is inferred.
 
 Implemented signed Noise Fade inference with exact legacy replay/versioning;
 qualified pitch/octave and original-level quality diagnostics independent of
@@ -32,17 +32,16 @@ separate range/orientation/enum/unit/conflict/protection/native/physical claims.
 Descriptive metadata grants no new authoring/SEND authority. All CY Ride SRC,
 general A4/BOTH, paired precision and automatic restore remain held.
 
-Integrated focused gates:1435cases80.65s including898architecture items;
-frontend1326cases/81files51.13s/allfourcoverage100%; strict88production modules,
-full Python lint/format, Vulture80 and35Node driver/helper cases pass. Composed
-same-production coverage is100%lines/branches on86touched runtime files and
-99.43%project pure branch, unchanged99%floor. Publication recheck includes all88
-touched files;86 was the precommit count. Neither certifies the pending repair
-source. The preceding full coverage run
-had12246passes/six failures/six skips1048.05s; shared-protocol test references
-and the stale fail-closed AL02 dependency receipt were repaired. The166focused
-repair tests pass. Final full suite passes12259tests/six skips/six warnings in
-436.47s with two workers; failed runs are not reclassified. AL02 remains blocked,
+Final repair source8905cb91 passes12343tests/6skips/6known warnings1115.89s,
+two workers;43finaltest-only cases also pass4.45s. Fresh full coverage proves89
+touched production files100%line/branch and99.44%project pure branch, unchanged
+99%floor. Strict89modules, default lint/format, Vulture80 and version check pass.
+Schema2 frontend1326tests/81files98.69s/allfourcoverage100%; real Python/Chromium
+both-device reference journey passes35.0s without added retries/timeouts.37Node
+driver/helper tests include an independent every-selected-field native oracle.
+Prior failed coverage runs remain failed evidence, including12329passes/six
+schema-expectation failures. Frozen legacy data is unchanged; authenticated
+schema2 migration changes only its envelope on explicit publication. AL02 remains blocked,
 with zero raw-byte changes and no SysEx.
 Its historical manifest is archived; only the catalog dependency hash changes.
 
