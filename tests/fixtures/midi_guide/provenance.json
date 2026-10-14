@@ -1,0 +1,31 @@
+{
+  "source_identified_by_user": "https://midi.guide/d/elektron/",
+  "dataset_repository": "https://github.com/pencilresearch/midi",
+  "maintainer": "Pencil Research",
+  "source_classification": "Third-party, community-contributed MIDI CC/NRPN reference data",
+  "license_reported_by_site": "CC-BY-SA-4.0",
+  "files": [
+    {
+      "original_path": "G:/ELEKTRON/Analog Four MKII.csv",
+      "sha256": "da38d8ec8df47d4a6c39034b2f1c829475ac301c712d26c0a4b4787ae259ea69",
+      "device_page": "https://midi.guide/d/elektron/analog-four-mkii/",
+      "rows": 230
+    },
+    {
+      "original_path": "G:/ELEKTRON/Analog Rytm MKII.csv",
+      "sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "rows": 322
+    }
+  ],
+  "interpretation": [
+    "Resolves the awaiting-origin statement in audit-v2.json; use this provenance alongside that audit.",
+    "User identified the source; exact upstream CSV byte identity or commit was not independently pinned by this provenance check.",
+    "These files are not Overbridge exports or target-unit measurement receipts.",
+    "Reference metadata can inform descriptive catalogs and tests after reconciliation; it does not establish native saved-KIT offsets, live freshness, safe transport or recovery.",
+    "Preserve upstream attribution and licensing information for any imported data."
+  ],
+  "application_changed": false,
+  "midi_accessed": false,
+  "hardware_validation_granted": false
+}
