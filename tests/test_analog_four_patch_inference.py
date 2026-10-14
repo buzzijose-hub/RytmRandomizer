@@ -27,6 +27,104 @@ from rytm_randomizer.style_analysis import FeatureReport
 pytestmark = pytest.mark.fast
 
 
+def test_noise_fade_equation_uses_signed_fade_out_domain_without_saturation() -> None:
+    from rytm_randomizer.data.analog_four_audio_inference import (
+        A4_AUDIO_INFERENCE_BIPOLAR,
+        ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER,
+    )
+    from rytm_randomizer.devices import encode_bipolar
+    from rytm_randomizer.devices.strategies.elektron_kit_common import ElektronKitFieldError
+    from rytm_randomizer.style_analysis.analog_four_patch_inference import (
+        evaluate_analog_four_inference_spec,
+    )
+
+    spec = ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER["Noise Fade"]
+    assert spec.scale == A4_AUDIO_INFERENCE_BIPOLAR
+    assert spec.intercept == 10.0 and spec.output_multiplier == 1.0
+    assert [(term.feature_keys, term.coefficient) for term in spec.terms] == [(("tail",), 53.0)]
+    targets = []
+    for step in range(1001):
+        tail = step / 1000
+        unrounded = 10 + (63 - 10) * tail
+        target = evaluate_analog_four_inference_spec(spec, {"tail": tail})
+        assert 10 <= unrounded <= 63
+        assert target == round(unrounded)
+        assert encode_bipolar(target) == target + 64
+        targets.append(target)
+    assert targets == sorted(targets)
+    assert targets[0] == 10 and targets[-1] == 63
+    assert set(targets) == set(range(10, 64))
+    assert encode_bipolar(-64) == 0
+    assert encode_bipolar(0) == 64
+    assert encode_bipolar(63) == 127
+    for invalid in (-65, 64, 69):
+        with pytest.raises(ElektronKitFieldError, match="bipolar value must be"):
+            encode_bipolar(invalid)
+
+
+def test_noise_fade_measured_first8_input_and_legacy_genome_remain_explainable() -> None:
+    from rytm_randomizer.data.analog_four_audio_inference import (
+        A4_AUDIO_INFERENCE_UNIPOLAR,
+        ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER,
+        AnalogFourAudioInferenceTerm,
+    )
+    from rytm_randomizer.style_analysis.analog_four_patch_inference import (
+        build_analog_four_audio_patch_genome_from_analysis,
+        build_analog_four_inference_feature_values,
+        evaluate_analog_four_inference_spec,
+    )
+    from rytm_randomizer.style_analysis.audio_patch_dna import build_audio_patch_dna_workspace
+    from rytm_randomizer.style_analysis.audio_patch_dna_lineage import (
+        build_audio_patch_dna_lineage_audit,
+    )
+    from rytm_randomizer.style_analysis.reference_sound_analysis import sound_analysis_from_dict
+
+    fixture = json.loads(
+        (
+            Path(__file__).parent / "fixtures/audio_inference/untitled_first8_measurements.json"
+        ).read_text(encoding="utf-8")
+    )
+    analysis = sound_analysis_from_dict(fixture["analysis"])
+    assert analysis.audio_sha256 == fixture["provenance"]["segment_sha256"]
+    assert fixture["provenance"]["segment_frame_count"] == 8 * 44100
+    values = build_analog_four_inference_feature_values(analysis.synthesis_features, column=1)
+    spec = ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER["Noise Fade"]
+    old_spec = dataclasses.replace(
+        spec,
+        scale=A4_AUDIO_INFERENCE_UNIPOLAR,
+        terms=(AnalogFourAudioInferenceTerm(("tail",), 96.0),),
+    )
+    assert evaluate_analog_four_inference_spec(old_spec, values) == 69
+    assert evaluate_analog_four_inference_spec(spec, values) == 43
+
+    legacy = build_analog_four_audio_patch_genome_from_analysis(analysis, candidate_count=4)
+    fade_genes = [
+        (candidate, gene)
+        for candidate in legacy.genome.candidates
+        for gene in candidate.genes
+        if gene.value.parameter == "Noise Fade"
+    ]
+    assert fade_genes
+    for candidate, gene in fade_genes:
+        features = build_analog_four_inference_feature_values(
+            analysis.synthesis_features, column=candidate.column
+        )
+        expected = evaluate_analog_four_inference_spec(spec, features)
+        assert int(gene.value.screen_value) == expected
+        # Legacy display metadata still exposes a unipolar transport value;
+        # this regression does not certify that separate MIDI conversion.
+        assert gene.value.midi_value == expected
+
+    workspace = build_audio_patch_dna_workspace(analysis)
+    audit = build_audio_patch_dna_lineage_audit(workspace)
+    assert len(audit.candidates) == 8
+    assert all(
+        item.verification_status == "matches_candidate"
+        for candidate in audit.candidates
+        for item in candidate.inferred_parameters
+    )
+
+
 def _reference_report(*, derived_at: str = "2026-07-16T12:00:00Z") -> FeatureReport:
     return FeatureReport(
         source_type=SourceType.SINGLE_TRACK,

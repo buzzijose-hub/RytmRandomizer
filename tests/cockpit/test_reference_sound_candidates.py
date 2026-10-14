@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import FrozenInstanceError, fields, replace
 from pathlib import Path
@@ -96,6 +97,125 @@ def test_eight_candidates_are_deterministic_source_preserving_and_redecoded(
     assert len({c.candidate_id for c in candidates}) == 8
     with pytest.raises(FrozenInstanceError):
         candidates[0].target = 1  # type: ignore[misc]
+
+
+def test_noise_fade_real_measurements_render_all_18_controls_on_exact_native_grid() -> None:
+    from rytm_randomizer.data.analog_four_audio_inference import (
+        ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER,
+    )
+    from rytm_randomizer.devices import encode_bipolar
+    from rytm_randomizer.style_analysis.analog_four_patch_inference import (
+        build_analog_four_inference_feature_values,
+        evaluate_analog_four_inference_spec,
+    )
+    from rytm_randomizer.style_analysis.reference_sound_analysis import sound_analysis_from_dict
+
+    measured = json.loads(
+        (_FIXTURES.parent / "audio_inference/untitled_first8_measurements.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    analysis = sound_analysis_from_dict(measured["analysis"])
+    frame = (_FIXTURES / "A4_Test1_Init_Kit.syx").read_bytes()
+    controls = list_reference_sound_controls(frame, ANALOG_FOUR_DEVICE_ID, 1)
+    parameters = tuple(control.parameter for control in controls if control.mutable)
+    assert len(parameters) == 18 and "noise_fade" in parameters
+    candidates = render_reference_sound_candidates(
+        frame, ANALOG_FOUR_DEVICE_ID, 1, analysis, parameters, ()
+    )
+    assert len(candidates) == 8 and len({c.candidate_id for c in candidates}) == 8
+    before = ElektronNativeObjectMessage.from_bytes(frame)
+    spec = ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER["Noise Fade"]
+    for candidate in candidates:
+        values = build_analog_four_inference_feature_values(candidate.audio_features, column=1)
+        expected = evaluate_analog_four_inference_spec(spec, values)
+        fade = next(change for change in candidate.changes if change.parameter == "noise_fade")
+        assert fade.units == "centered-64-native-u7"
+        assert fade.proposed_display == fade.rendered_display == str(expected)
+        assert fade.proposed_value == fade.rendered_value == encode_bipolar(expected)
+        assert candidate.source_sha256 == hashlib.sha256(frame).hexdigest()
+        assert candidate.audio_features.audio_sha256 == measured["provenance"]["segment_sha256"]
+        assert candidate.roundtrip_redecoded and not candidate.hardware_send_validated
+        assert candidate.output_authority == "local-file-only"
+        after = ElektronNativeObjectMessage.from_bytes(candidate.frame_bytes)
+        assert after.to_bytes() == candidate.frame_bytes
+        assert replace(after, payload=before.payload) == before
+        changed = tuple(
+            index
+            for index, pair in enumerate(zip(before.payload, after.payload, strict=True))
+            if pair[0] != pair[1]
+        )
+        assert changed == candidate.changed_unpacked_offsets
+        assert set(changed).issubset(candidate.intended_unpacked_offsets)
+        assert {change.parameter for change in candidate.changes}.issubset(parameters)
+    assert candidates == render_reference_sound_candidates(
+        frame, ANALOG_FOUR_DEVICE_ID, 1, analysis, parameters, ()
+    )
+    assert frame == (_FIXTURES / "A4_Test1_Init_Kit.syx").read_bytes()
+
+
+@pytest.mark.parametrize("lock_fade", [False, True])
+def test_noise_fade_repair_preserves_narrow_and_locked_candidate_replay(
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
+    monkeypatch: pytest.MonkeyPatch,
+    lock_fade: bool,
+) -> None:
+    from rytm_randomizer.data.analog_four_audio_inference import (
+        A4_AUDIO_INFERENCE_UNIPOLAR,
+        AnalogFourAudioInferenceTerm,
+    )
+
+    frame = (_FIXTURES / "A4_Test1_Init_Kit.syx").read_bytes()
+    parameters = ("osc1_level", "filter1_frequency") + (("noise_fade",) if lock_fade else ())
+    locks = ("noise_fade",) if lock_fade else ()
+    current = render_reference_sound_candidates(
+        frame, ANALOG_FOUR_DEVICE_ID, 1, audio_patch_dna_analysis, parameters, locks
+    )
+    old_specs = dict(renderer.ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER)
+    old_specs["Noise Fade"] = replace(
+        old_specs["Noise Fade"],
+        scale=A4_AUDIO_INFERENCE_UNIPOLAR,
+        terms=(AnalogFourAudioInferenceTerm(("tail",), 96.0),),
+    )
+    monkeypatch.setattr(renderer, "ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER", old_specs)
+    old = render_reference_sound_candidates(
+        frame, ANALOG_FOUR_DEVICE_ID, 1, audio_patch_dna_analysis, parameters, locks
+    )
+    assert old == current
+    assert [candidate.to_dict() for candidate in old] == [
+        candidate.to_dict() for candidate in current
+    ]
+
+
+def test_noise_fade_repair_changes_unlocked_replay_and_requires_versioned_policy(
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rytm_randomizer.data.analog_four_audio_inference import (
+        A4_AUDIO_INFERENCE_UNIPOLAR,
+        AnalogFourAudioInferenceTerm,
+    )
+
+    frame = (_FIXTURES / "A4_Test1_Init_Kit.syx").read_bytes()
+    current = render_refined_reference_sound_candidate(
+        frame, ANALOG_FOUR_DEVICE_ID, 1, audio_patch_dna_analysis, ("noise_fade",), ()
+    )
+    old_specs = dict(renderer.ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER)
+    old_specs["Noise Fade"] = replace(
+        old_specs["Noise Fade"],
+        scale=A4_AUDIO_INFERENCE_UNIPOLAR,
+        terms=(AnalogFourAudioInferenceTerm(("tail",), 96.0),),
+    )
+    monkeypatch.setattr(renderer, "ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER", old_specs)
+    old = render_refined_reference_sound_candidate(
+        frame, ANALOG_FOUR_DEVICE_ID, 1, audio_patch_dna_analysis, ("noise_fade",), ()
+    )
+    assert old.candidate_id != current.candidate_id
+    assert old.frame_bytes != current.frame_bytes
+    assert old.source_sha256 == current.source_sha256
+    assert old.audio_features == current.audio_features
+    assert old.changes[0].proposed_display == "45"
+    assert current.changes[0].proposed_display == "29"
 
 
 @pytest.mark.parametrize("mode", ["zero", "locked", "empty"])
