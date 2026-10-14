@@ -327,12 +327,29 @@ def _library_record_v2_to_v3(payload: Mapping[str, object]) -> Mapping[str, obje
     return {**payload, "source_frame": None, "source_origin": None}
 
 
+def _reference_sound_v1_to_v2(payload: Mapping[str, object]) -> Mapping[str, object]:
+    """Preserve replay identities and absent optional evidence exactly.
+
+    Version 2 permits diagnostics, inference versions and recording ranges.
+    The policy stamps only the envelope; inventing those optional keys would
+    change legacy inference, context identities or retained evidence.
+    """
+    return dict(payload)
+
+
 _REGISTERED_STORES: Final[tuple[PersistedStateStore, ...]] = (
     PersistedStateStore(
         store_id="reference_sound_store",
-        schema_version=1,
+        schema_version=2,
         owner_module="rytm_randomizer.cockpit.export.reference_sound_store",
         description="Exact reference audio, scoped native candidates and supplied-recording feedback under {config}/reference-sounds.",
+        migrations=(
+            PersistedStateMigration(
+                1,
+                _reference_sound_v1_to_v2,
+                "Permit optional sound diagnostics without changing retained replay identities.",
+            ),
+        ),
     ),
     PersistedStateStore(
         store_id="profile_registry",

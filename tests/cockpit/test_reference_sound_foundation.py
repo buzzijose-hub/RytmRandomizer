@@ -30,6 +30,7 @@ from rytm_randomizer.cockpit.export.reference_sound_audio import (
     select_reference_segment,
 )
 from rytm_randomizer.cockpit.export.reference_sound_store import (
+    REFERENCE_SOUND_SCHEMA,
     ReferenceSoundStore,
     default_reference_sound_dir,
     reference_sound_digest,
@@ -47,7 +48,11 @@ _wav = make_reference_pcm
 
 
 def _payload() -> dict[str, object]:
-    return {"schema_version": 1, "session_id": "sound-" + "a" * 32, "favorite": False}
+    return {
+        "schema_version": REFERENCE_SOUND_SCHEMA,
+        "session_id": "sound-" + "a" * 32,
+        "favorite": False,
+    }
 
 
 def test_segment_retains_original_identity_and_exact_interleaved_samples() -> None:
@@ -210,7 +215,7 @@ def test_future_or_malformed_schema_preserves_all_saved_bytes(tmp_path: Path) ->
     store = ReferenceSoundStore(tmp_path)
     store.publish(_payload(), {})
     path = tmp_path / f"{_payload()['session_id']}.sound.json"
-    future = {**_payload(), "schema_version": 2}
+    future = {**_payload(), "schema_version": REFERENCE_SOUND_SCHEMA + 1}
     future["content_sha256"] = reference_sound_digest(reference_sound_json(future))
     path.write_bytes(reference_sound_json(future))
     before = path.read_bytes()
@@ -344,7 +349,7 @@ def test_scalar_parsers_and_default_directory() -> None:
     assert reference_sound_json({"a": 1}) == b'{"a":1}\n'
 
 
-@pytest.mark.parametrize("schema", [True, 2])
+@pytest.mark.parametrize("schema", [True, 1, REFERENCE_SOUND_SCHEMA + 1])
 def test_schema_version_must_be_the_exact_integer(tmp_path: Path, schema: object) -> None:
     with pytest.raises(ValueError, match="incompatible"):
         ReferenceSoundStore(tmp_path).publish({**_payload(), "schema_version": schema}, {})

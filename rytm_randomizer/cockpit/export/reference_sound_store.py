@@ -19,7 +19,7 @@ from ...data.persisted_state import (
 )
 from ...observability.errors import BoundaryError, DataError, PersistedStateVersionError
 from ...observability.metrics import get_metrics
-from ..data import canonical_json_bytes
+from ..data import canonical_json_bytes, require_object
 from ..profiles.paths import default_profiles_dir
 from .reader import decode_json_rejecting_duplicate_keys, read_bounded_artifact
 from .reference_sound_audio import REFERENCE_AUDIO_MAX_BYTES
@@ -141,6 +141,18 @@ class ReferenceSoundStore:
         except (ValueError, RecursionError):
             value = None
             readable = False
+        if isinstance(value, Mapping):
+            # Authenticate the original envelope before the registry can stamp
+            # a newer version. Reading never replaces the retained manifest.
+            original = dict(
+                require_object(cast(object, value), "Reference-sound manifest", ValueError)
+            )
+            checksum = original.pop("content_sha256", None)
+            if original.get("session_id") != session_id or checksum != reference_sound_digest(
+                reference_sound_json(original)
+            ):
+                raise ValueError("Reference-sound session is incompatible or corrupt.")
+            value = original
         decision = classify_payload(REFERENCE_SOUND_STORE_ID, value, readable=readable)
         if decision.refused:
             get_metrics().record_persisted_state_refusal(
@@ -163,15 +175,21 @@ class ReferenceSoundStore:
                     "error_code": "session_corrupt",
                 },
             )
-        payload = cast(dict[str, object], value)
-        checksum = payload.pop("content_sha256", None)
+        if decision.payload is None:
+            raise ValueError("Reference-sound session is incompatible or corrupt.")
+        payload = dict(decision.payload)
         if (
             type(payload.get("schema_version")) is not int
             or payload.get("schema_version") != REFERENCE_SOUND_SCHEMA
             or payload.get("session_id") != session_id
-            or checksum != reference_sound_digest(reference_sound_json(payload))
         ):
             raise ValueError("Reference-sound session is incompatible or corrupt.")
+        if decision.code == "persisted_state.migrated":
+            get_metrics().record_persisted_state_migration(
+                REFERENCE_SOUND_STORE_ID,
+                int(decision.from_version or 0),
+                int(decision.to_version or 0),
+            )
         return payload
 
     def publish(

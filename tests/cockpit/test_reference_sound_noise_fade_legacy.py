@@ -18,6 +18,7 @@ import pytest
 from rytm_randomizer.cockpit.export import reference_sound_candidates as renderer
 from rytm_randomizer.cockpit.export import reference_sound_session as session
 from rytm_randomizer.cockpit.export.reference_sound_store import (
+    REFERENCE_SOUND_SCHEMA,
     ReferenceSoundStore,
     reference_sound_digest,
     reference_sound_json,
@@ -159,7 +160,10 @@ def test_frozen_legacy_session_reopens_with_v1_renderer_without_reanalysis(
         pytest.fail("legacy reopen must use retained measurements, not an analyzer")
 
     workspace = session.ReferenceSoundWorkspace(ReferenceSoundStore(tmp_path), analyzer=no_analysis)
-    assert workspace.reopen(payload["session_id"]) == payload
+    assert workspace.reopen(payload["session_id"]) == {
+        **payload,
+        "schema_version": REFERENCE_SOUND_SCHEMA,
+    }
     assert {p.name: p.read_bytes() for p in tmp_path.iterdir()} == before
     assert len(payload["favorites"]) == 2 and len(payload["refinements"]) == 1
 
@@ -215,7 +219,10 @@ def test_current_noise_fade_generation_is_separate_v2_session_preserving_legacy(
     assert len(current["candidates"]) == 8
     assert current["context"]["source_sha256"] == context["source_sha256"]
     assert workspace.reopen(current["session_id"]) == current
-    assert workspace.reopen(payload["session_id"]) == payload
+    assert workspace.reopen(payload["session_id"]) == {
+        **payload,
+        "schema_version": REFERENCE_SOUND_SCHEMA,
+    }
     assert all((tmp_path / name).read_bytes() == raw for name, raw in before.items())
 
 

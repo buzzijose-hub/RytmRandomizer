@@ -8,7 +8,7 @@ import operator
 from dataclasses import replace
 from pathlib import Path
 from threading import Event
-from typing import get_args
+from typing import get_args, get_type_hints
 
 import pytest
 from cockpit.conftest import make_reference_pcm
@@ -25,6 +25,7 @@ from rytm_randomizer.cockpit.export.reference_sound_records import (
     ReferenceSoundSource,
     narrow_sound_device_id,
     narrow_sound_feature,
+    narrow_sound_schema_version,
     require_sound_digest,
     sound_candidate_from_dict,
     sound_context_from_dict,
@@ -39,6 +40,7 @@ from rytm_randomizer.cockpit.export.reference_sound_session import (
     ReferenceSoundWorkspace,
 )
 from rytm_randomizer.cockpit.export.reference_sound_store import (
+    REFERENCE_SOUND_SCHEMA,
     reference_sound_digest,
     reference_sound_json,
     sound_artifact_name,
@@ -136,8 +138,18 @@ def test_prepared_validates_manifest_expectation_and_session_schema(
     with pytest.raises(ValueError, match="digest"):
         PreparedReferenceSound(payload, {}, "not-a-digest")
     with pytest.raises(ValueError, match="schema"):
-        PreparedReferenceSound({**payload, "schema_version": 2}, {})
+        PreparedReferenceSound({**payload, "schema_version": REFERENCE_SOUND_SCHEMA + 1}, {})
     assert PreparedReferenceSound(payload, {}).expected_manifest_sha256 is None
+
+
+def test_public_schema_type_and_narrowing_match_registered_current_version() -> None:
+    assert get_args(get_type_hints(ReferenceSoundSessionPayload)["schema_version"]) == (
+        REFERENCE_SOUND_SCHEMA,
+    )
+    assert narrow_sound_schema_version(REFERENCE_SOUND_SCHEMA) == 2
+    for invalid in (1, 3, True, "2", None):
+        with pytest.raises(ValueError):
+            narrow_sound_schema_version(invalid)
 
 
 def test_source_constructor_is_strict_frozen_and_uses_existing_device_domains() -> None:
@@ -185,7 +197,8 @@ def test_import_session_schema_rejects_unknown_fields_wrong_types_and_oversized_
     payload = reference_sound_workspace.import_reference(make_reference_pcm(), "Reference")
     assert sound_session_from_dict(payload) == payload
     for field, value in [
-        ("schema_version", 2),
+        ("schema_version", 1),
+        ("schema_version", REFERENCE_SOUND_SCHEMA + 1),
         ("schema_version", True),
         ("title", " " * 3),
         ("title", "x" * 121),

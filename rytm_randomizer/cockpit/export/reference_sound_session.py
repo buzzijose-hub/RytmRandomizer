@@ -72,6 +72,7 @@ from .reference_sound_records import (
     ReferenceSoundSessionPayload,
     ReferenceSoundSource,
     narrow_sound_device_id,
+    narrow_sound_schema_version,
     require_sound_digest,
     require_sound_title,
     sound_candidate_from_dict,
@@ -219,7 +220,7 @@ class ReferenceSoundWorkspace:
             "frame_count": segment.frame_count,
         }
         payload: ReferenceSoundSessionPayload = {
-            "schema_version": REFERENCE_SOUND_SCHEMA,
+            "schema_version": narrow_sound_schema_version(REFERENCE_SOUND_SCHEMA),
             "session_id": _session_identity(context),
             "title": title,
             "segment": sound_segment_payload(segment),

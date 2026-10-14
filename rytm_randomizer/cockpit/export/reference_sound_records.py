@@ -173,7 +173,7 @@ class ReferenceSoundRefinementPayload(TypedDict):
 
 
 class ReferenceSoundSessionPayload(TypedDict):
-    schema_version: int
+    schema_version: Literal[2]
     session_id: str
     title: str
     segment: ReferenceSoundSegmentPayload
@@ -194,6 +194,14 @@ def narrow_sound_device_id(value: object) -> StageDeviceId:
     if value == ANALOG_FOUR_DEVICE_ID:
         return ANALOG_FOUR_DEVICE_ID
     raise ValueError("Reference-sound device is unsupported.")
+
+
+def narrow_sound_schema_version(value: object) -> Literal[2]:
+    """Public DTOs are current-schema only; legacy files enter through the store."""
+    schema = sound_integer(value)
+    if schema != REFERENCE_SOUND_SCHEMA or schema != 2:
+        raise ValueError("Reference-sound schema is incompatible.")
+    return schema
 
 
 @dataclass(frozen=True)
@@ -497,11 +505,10 @@ def require_sound_title(value: object) -> str:
 def sound_session_from_dict(value: object) -> ReferenceSoundSessionPayload:
     """Validate shape without granting replay, source, calibration or SEND authority."""
     data = _record(value, ReferenceSoundSessionPayload.__required_keys__)
-    if sound_integer(data["schema_version"]) != REFERENCE_SOUND_SCHEMA:
-        raise ValueError("Reference-sound schema is incompatible.")
+    schema = narrow_sound_schema_version(data["schema_version"])
     context, analysis = data["context"], data["analysis"]
     return {
-        "schema_version": REFERENCE_SOUND_SCHEMA,
+        "schema_version": schema,
         "session_id": require_sound_session_id(data["session_id"]),
         "title": require_sound_title(data["title"]),
         "segment": sound_segment_from_dict(data["segment"]),
