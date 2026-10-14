@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from ..cockpit.export.reader import read_bounded_artifact
 from ..data.midi_csv_reconciliation import (
     MIDI_CSV_ADDRESS_COLUMNS,
     MIDI_CSV_ADDRESS_MAX,
@@ -162,6 +163,5 @@ def parse_midi_csv(raw: bytes, spec: MidiCsvSourceSpec) -> MidiCsvSource:
 
 def read_midi_csv(path: Path, spec: MidiCsvSourceSpec) -> MidiCsvSource:
     """Bounded explicit local read; original input is never modified."""
-    with path.open("rb") as source:
-        raw = source.read(_MAX_SOURCE_BYTES + 1)
+    raw = read_bounded_artifact(path, maximum=_MAX_SOURCE_BYTES, label="CSV source")
     return parse_midi_csv(raw, spec)

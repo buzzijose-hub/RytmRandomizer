@@ -6,6 +6,7 @@ import csv
 import hashlib
 import io
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -16,6 +17,7 @@ from typing import Literal, get_args, get_type_hints, is_typeddict
 
 import pytest
 
+from rytm_randomizer.cockpit.export import reader as artifact_reader
 from rytm_randomizer.data.midi_csv_reconciliation import (
     MIDI_CSV_ADDRESS_COLUMNS,
     MIDI_CSV_COLUMNS,
@@ -23,6 +25,7 @@ from rytm_randomizer.data.midi_csv_reconciliation import (
     MIDI_CSV_SOURCES,
     MIDI_CSV_UPSTREAM_BLOBS,
 )
+from rytm_randomizer.observability.errors import DataError
 from rytm_randomizer.reports.device_support_inventory import build_device_support_inventory
 from rytm_randomizer.reports.midi_csv_ledger_rows import MidiCsvLedgerRow
 from rytm_randomizer.reports.midi_csv_matcher import (
@@ -53,6 +56,7 @@ from rytm_randomizer.reports.midi_csv_source import (
     parse_optional_number,
     read_midi_csv,
 )
+from scripts.reconcile_midi_csv import main as reconcile_midi_csv_main
 
 pytestmark = pytest.mark.fast
 ROOT = Path(__file__).resolve().parents[1]
@@ -462,7 +466,7 @@ def test_audit_failure_is_bound_to_real_files_before_any_publication(tmp_path: P
             original["sources"][0]["rows"] = 0
         path.write_text(json.dumps(original), encoding="utf-8")
     before = path.read_bytes()
-    with pytest.raises(ValueError):
+    with pytest.raises(DataError if failure == "oversized" else ValueError):
         build_midi_csv_reconciliation(
             INPUTS / "Analog Four MKII.csv",
             INPUTS / "Analog Rytm MKII.csv",
@@ -547,7 +551,7 @@ def test_on_disk_source_refusal_preserves_existing_ledger_outputs(tmp_path: Path
     )
     assert result.returncode != 0
     assert "unrecognized arguments" not in result.stderr
-    with pytest.raises((ValueError, OSError)):
+    with pytest.raises((ValueError, OSError, DataError)):
         build_midi_csv_reconciliation(
             inputs / "Analog Four MKII.csv",
             inputs / "Analog Rytm MKII.csv",
@@ -555,6 +559,157 @@ def test_on_disk_source_refusal_preserves_existing_ledger_outputs(tmp_path: Path
             inputs / "provenance.json",
         )
     assert {path.name: path.read_bytes() for path in outputs.iterdir()} == originals
+
+
+@pytest.fixture
+def retained_reader_paths(tmp_path: Path) -> tuple[Path, Path]:
+    inputs = tmp_path / "inputs"
+    shutil.copytree(INPUTS, inputs)
+    outputs = tmp_path / "outputs"
+    outputs.mkdir()
+    (outputs / "midi-csv-reconciliation.json").write_bytes(b"retained ledger")
+    (outputs / "midi-csv-reconciliation.md").write_bytes(b"retained summary")
+    return inputs, outputs
+
+
+def _retained_output_state(outputs: Path) -> dict[str, tuple[bytes, int]]:
+    return {path.name: (path.read_bytes(), path.stat().st_mtime_ns) for path in outputs.iterdir()}
+
+
+@pytest.mark.parametrize(
+    "filename, maximum",
+    [
+        ("Analog Four MKII.csv", 1024 * 1024),
+        ("Analog Rytm MKII.csv", 1024 * 1024),
+        ("audit-v2.json", 4 * 1024 * 1024),
+        ("provenance.json", 4 * 1024 * 1024),
+    ],
+)
+@pytest.mark.parametrize("failure", ["empty", "oversized", "nonregular"])
+def test_shared_reader_refuses_unsafe_file_before_publication(
+    retained_reader_paths: tuple[Path, Path], filename: str, maximum: int, failure: str
+):
+    inputs, outputs = retained_reader_paths
+    target = inputs / filename
+    if failure == "nonregular":
+        target.unlink()
+        target.mkdir()
+        expected = "not a regular file"
+    else:
+        target.write_bytes(b"" if failure == "empty" else b"x" * (maximum + 1))
+        expected = "size is outside the supported bound"
+    before = _retained_output_state(outputs)
+    original = target.read_bytes() if target.is_file() else None
+    with pytest.raises(DataError, match=expected):
+        reconcile_midi_csv_main(["--input-dir", str(inputs), "--output-dir", str(outputs)])
+    assert _retained_output_state(outputs) == before
+    if original is None:
+        assert target.is_dir()
+    else:
+        assert target.read_bytes() == original
+
+
+@pytest.mark.parametrize("filename", ["audit-v2.json", "provenance.json"])
+@pytest.mark.parametrize("nested", [False, True])
+def test_shared_json_decoder_rejects_duplicate_claims_before_publication(
+    retained_reader_paths: tuple[Path, Path], filename: str, nested: bool
+):
+    inputs, outputs = retained_reader_paths
+    target = inputs / filename
+    raw = json.dumps(json.loads(target.read_bytes())).encode("utf-8")
+    if nested:
+        duplicate = raw.replace(b'"sha256": "', b'"sha256": "untrusted", "sha256": "', 1)
+    else:
+        key = b'"sources"' if filename == "audit-v2.json" else b'"files"'
+        duplicate = b"{" + key + b": [], " + raw[1:]
+    assert duplicate != raw
+    assert json.loads(duplicate) == json.loads(raw)
+    target.write_bytes(duplicate)
+    before = _retained_output_state(outputs)
+    with pytest.raises(ValueError, match="duplicate JSON object key"):
+        reconcile_midi_csv_main(["--input-dir", str(inputs), "--output-dir", str(outputs)])
+    assert target.read_bytes() == duplicate
+    assert _retained_output_state(outputs) == before
+
+
+@pytest.mark.parametrize(
+    "filename", ["Analog Four MKII.csv", "Analog Rytm MKII.csv", "audit-v2.json", "provenance.json"]
+)
+def test_shared_reader_refuses_stale_bytes_before_publication(
+    retained_reader_paths: tuple[Path, Path], filename: str, monkeypatch: pytest.MonkeyPatch
+):
+    inputs, outputs = retained_reader_paths
+    target = inputs / filename
+    original = target.read_bytes()
+    identity = target.stat()
+    before = _retained_output_state(outputs)
+    native_fstat = artifact_reader.os.fstat
+    changed = False
+
+    def change_source_during_read(descriptor: int) -> os.stat_result:
+        nonlocal changed
+        opened = native_fstat(descriptor)
+        if not changed and (opened.st_dev, opened.st_ino) == (identity.st_dev, identity.st_ino):
+            changed = True
+            target.write_bytes(original + b"\n")
+        return opened
+
+    monkeypatch.setattr(artifact_reader.os, "fstat", change_source_during_read)
+    with pytest.raises(DataError, match="changed while it was read"):
+        reconcile_midi_csv_main(["--input-dir", str(inputs), "--output-dir", str(outputs)])
+    assert changed
+    assert target.read_bytes() == original + b"\n"
+    assert _retained_output_state(outputs) == before
+
+
+def test_shared_reader_preserves_exact_regular_csv_at_maximum(tmp_path: Path):
+    maximum = 1024 * 1024
+    base = _csv_bytes(notes="")
+    header, record = base.split(b"\r\n", 1)
+    header += b"\r\n"
+    row_count = 16
+    padding, remainder = divmod(maximum - len(header) - row_count * len(record), row_count)
+    # Keep each cell below csv's field-size limit while exercising the file cap.
+    raw = header + b"".join(
+        _csv_bytes(notes="x" * (padding + (index < remainder))).split(b"\r\n", 1)[1]
+        for index in range(row_count)
+    )
+    assert len(raw) == maximum
+    path = tmp_path / "bounded.csv"
+    path.write_bytes(raw)
+    spec = replace(MIDI_CSV_SOURCES[0], sha256=hashlib.sha256(raw).hexdigest(), row_count=row_count)
+    source = read_midi_csv(path, spec)
+    assert source.byte_count == maximum
+    assert source.sha256 == spec.sha256
+    assert (source.header_record + "".join(row.raw_record for row in source.rows)).encode(
+        "utf-8"
+    ) == raw
+    assert path.read_bytes() == raw
+
+
+@pytest.mark.parametrize("filename", ["audit-v2.json", "provenance.json"])
+def test_shared_reader_preserves_regular_json_at_maximum(
+    retained_reader_paths: tuple[Path, Path], filename: str
+):
+    inputs, outputs = retained_reader_paths
+    path = inputs / filename
+    original = path.read_bytes()
+    raw = original + b" " * (4 * 1024 * 1024 - len(original))
+    path.write_bytes(raw)
+    before = _retained_output_state(outputs)
+    result = build_midi_csv_reconciliation(
+        inputs / MIDI_CSV_SOURCES[0].filename,
+        inputs / MIDI_CSV_SOURCES[1].filename,
+        inputs / "audit-v2.json",
+        inputs / "provenance.json",
+    )
+    if filename == "audit-v2.json":
+        assert result["audit_v2_metadata"]["sha256"] == hashlib.sha256(raw).hexdigest()
+    else:
+        assert result["audit_v2_metadata"]["provenance_sha256"] == hashlib.sha256(raw).hexdigest()
+        assert result["provenance_original"] == json.loads(original)
+    assert path.read_bytes() == raw
+    assert _retained_output_state(outputs) == before
 
 
 @pytest.mark.parametrize("current", [False, True])

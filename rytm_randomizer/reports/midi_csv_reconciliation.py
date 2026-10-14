@@ -5,8 +5,12 @@ from __future__ import annotations
 import json
 from collections import Counter
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Final, Literal, TypedDict
 
+from ..cockpit.export.reader import (
+    decode_json_rejecting_duplicate_keys,
+    read_bounded_artifact,
+)
 from ..data.midi_csv_reconciliation import (
     MIDI_CSV_ATTRIBUTION,
     MIDI_CSV_CODE_LICENSE,
@@ -48,6 +52,8 @@ from .midi_csv_records import (
 )
 from .midi_csv_source import parse_csv_choices, read_midi_csv
 
+_MAX_EVIDENCE_BYTES: Final[int] = 4 * 1024 * 1024
+
 
 class MidiCsvReconciliationLedger(TypedDict):
     """Complete source rows, plus explicit canonical omissions and uncertainty."""
@@ -84,11 +90,8 @@ def _csv_evidence_records(value: object) -> list[dict[str, object]]:
 
 
 def _read_json(path: Path) -> tuple[dict[str, object], str]:
-    with path.open("rb") as stream:
-        raw = stream.read(4 * 1024 * 1024 + 1)
-    if len(raw) > 4 * 1024 * 1024:
-        raise ValueError("Evidence document exceeds bounded size")
-    return _mapping(json.loads(raw)), sha256_bytes(raw)
+    raw = read_bounded_artifact(path, maximum=_MAX_EVIDENCE_BYTES, label="CSV evidence document")
+    return _mapping(decode_json_rejecting_duplicate_keys(raw)), sha256_bytes(raw)
 
 
 def _audit_index(source: dict[str, object]) -> dict[int, dict[str, object]]:
