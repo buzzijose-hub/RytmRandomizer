@@ -6,7 +6,8 @@
 ## October 14 Reliability And Reference Ledger
 
 Working block started15:45UTC/11:45a.m.New York. The verified53a935d08582
-delivery remains unchanged. No new package is accepted at this checkpoint.
+delivery remains unchanged. New exactd563package acceptance passes; physical
+observations and protected approval remain separate; final source CI also passes.
 Current assembly is `codex/studio-rytm-mapping` for PR254's existing
 `codex/studio-evidence-handoff` head against `modularize-v1.34`.
 The starting remote checkpoint was b9f89c3e,33success/1skip and Eddie's
@@ -14,7 +15,8 @@ October3 CHANGES_REQUESTED. Published source3fe9ed53 passed normal mechanical
 hooks and CodeQL with zero open branch alerts. Its Windows38619518876 build was
 cancelled before publication after fresh review found record-schema/reader/
 assertion/telemetry repairs. Replacement source verification is complete;
-exact-package verification remains pending. No approval or protected merge is inferred.
+exactd563Windows38633750348 and actual packaged verification now pass. No
+approval or protected merge is inferred.
 
 Implemented signed Noise Fade inference with exact legacy replay/versioning;
 qualified pitch/octave and original-level quality diagnostics independent of
@@ -48,10 +50,20 @@ Its historical manifest is archived; only the catalog dependency hash changes.
 All eight audio dimensions and eight catalog/integration delta dimensions were
 reviewed separately; actionable findings were repaired without gate waivers.
 Focused private-input QA ownership review has no actionable findings. Actual
-new-package Pad2, native precision, both-device synthetic and real-input A4
-journeys remain pending. Historical WAVs will test recording quality/persistence,
+new-package Pad2 plan16.167s22cmd0fail, native40.769s22cmd0fail and both-device/
+real-input88.240s111cmd0fail journeys pass. Exact offline launcher startup and
+owned cleanup pass. Historical WAVs test recording quality/persistence,
 not be claimed as auditions of a newly generated candidate. Private configs and
 credentials are excluded from delivery. No real MIDI/USB access has occurred.
+Real A4 all18mutable controls/eightalternatives independently decode correctly;
+two historical takes hold refinement and favorite/session reopen exactly.
+Initial package real01/diagnostic02 failed only QA's source/rendered F1 annotation
+equality. Canonical public projections now supply separate exact witnesses;
+38Node cases and freshreference03 pass. Runtime is unchanged by that QA repair.
+Measured310.29-611.72MiB/max12processes4626handles/min15.78GiBfreeRAM/pending7.
+The bounded journeys are not a new90-minute endurance run. Eight source review
+dimensions and targeted QA closure returnNoFindings. Exactd563source CI succeeds
+with33checks/1skip/0fail; CodeQLd563succeeds with0openbranchalerts.
 
 Tonight's [single consolidated handoff](../../hardware-validation/2026-10-14-reference-sound-session.md)
 orders one10%Pad2 exact-plan audition/manual whole-payload recovery; separate

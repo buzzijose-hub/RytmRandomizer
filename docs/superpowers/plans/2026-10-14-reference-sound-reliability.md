@@ -154,3 +154,27 @@ Evidence-backed fixes, complete regression gates and a new exact-source Windows
 build exercised through its real UI/runtime, with a concise tonight handoff.
 Software verification is not physical sound matching, hardware save/recovery
 validation, full feature completion or show readiness.
+
+## Packaged Acceptance
+
+Exact d5634cae Windows38633750348 succeeds. New delivery is
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-d5634cae4ecd`.
+Actual Pad2 plan16.167s/22commands/0fail, native40.769s/22commands/0fail,
+reference/real-input88.240s/111commands/0fail pass with owned cleanup. Both-device
+synthetic comparison/refinement and real18-field A4 generation/readback,
+quality holds, exact favorite/reopen, playback/sample identity and restart pass.
+Actual copied hash-pinned launcher starts disarmed/no port with developer
+overrides removed; four fake guards and operator-present syntax pass.
+Embedded CC-BY-SA notice matches canonical bytes. Signed public release,
+physical application/save/recovery, sound matching and human approval remain held.
+
+Packaged real01/diagnostic02 failed QA-only F1 units equality, not generation:
+source and rendered forward projections intentionally have different annotations.
+Canonical store/public projections now supply independent strict witnesses;
+raw every-field oracle remains unchanged.38Node cases and final fresh reference03
+pass. Runtime/production source remains exactd563; no unnecessary rebuild.
+Measured owned samples310.29-611.72MiB, max12processes/4626handles,
+min15.78GiBfree RAM, pending high water7. Bounded runs are not90-minute endurance.
+Exactd563source CI passes33checks/1skip/0fail:38633717517 and38633707798 succeed,
+as do CodeQL and Windows packaging. Final receipt publication records the exact
+delivery hashes/launcher and remaining human/physical gates.

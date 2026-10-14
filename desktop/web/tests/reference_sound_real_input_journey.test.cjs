@@ -191,6 +191,35 @@ test('generated payload checks all eight directions, exact source/scope and vers
   }
 });
 
+test('F1 source and rendered annotations require separate canonical witnesses, not blind unit equality or stripping', t => {
+  const { config } = privateFixture(t), rows = controls(), parameters = helper.supportedParameters(rows);
+  rows[1].source_value = 32513;
+  rows[1].units = 'q8.8; F1 label truncated/not Hz; NRPN14=16256, lost native bit=1; output unverified';
+  const fade = { ...rows[0], proposed_value: 127, proposed_display: '63', rendered_value: 100, rendered_display: '36' };
+  const f1 = { parameter: 'filter1_frequency', source_value: 32513, rendered_value: 16127, offsets: [20, 21],
+    units: 'q8.8; F1 label is truncated/not Hz; NRPN14=8063, lost native bit=1; output unverified' };
+  const candidates = ['closest', 'darker', 'brighter', 'metallic', 'percussive', 'atmospheric', 'deeper', 'animated'].map((direction, index) => ({
+    candidate_id: String(index), direction, device_id: 'analog_four_mk2', target: 1, source_sha256: config.source.sha256,
+    output_authority: 'local-file-only', hardware_send_validated: false, roundtrip_redecoded: true,
+    intended_unpacked_offsets: [10, 20, 21], changed_unpacked_offsets: [10, 20, 21], changes: [fade, f1],
+  }));
+  const session = { context: { device_id: 'analog_four_mk2', target: 1, source_sha256: config.source.sha256,
+    segment_sha256: 's', parameters, locks: [], inference_version: 2 }, segment: { sha256: 's' }, candidates };
+  const witness = { source_sha256: config.source.sha256, candidates: candidates.map(candidate => ({
+    candidate_id: candidate.candidate_id, fields: { filter1_frequency: { source_units: rows[1].units, rendered_units: f1.units } },
+  })) };
+  helper.assertGeneratedSession(session, config, rows, parameters, witness);
+  assert.throws(() => helper.assertGeneratedSession(session, config, rows, parameters), /canonical independent/);
+  for (const kind of ['source', 'rendered', 'missing', 'identity']) {
+    const broken = structuredClone(witness);
+    if (kind === 'source') broken.candidates[0].fields.filter1_frequency.source_units = 'q8.8';
+    if (kind === 'rendered') broken.candidates[0].fields.filter1_frequency.rendered_units = rows[1].units;
+    if (kind === 'missing') delete broken.candidates[0].fields.filter1_frequency;
+    if (kind === 'identity') broken.source_sha256 = 'wrong';
+    assert.throws(() => helper.assertGeneratedSession(session, config, rows, parameters, broken));
+  }
+});
+
 test('quiet/unpitched real recording holds never promote the Welch peak or invent an octave mismatch', () => {
   const reference = { diagnostics: { qualified_pitch_hz: null, spectral_peak_hz: 82.095, pitch_status: 'uncertain', refinement_blockers: ['quiet_audio', 'pitch_uncertain'] } };
   const recording = { physical_validation: false, features: { diagnostics: { refinement_blockers: ['quiet_audio'] } },

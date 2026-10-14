@@ -62,7 +62,9 @@ actual subprocess refusals for private malformed/duplicate/missing-field JSON.
 Fresh full coverage proves89 touched production files100%line/branch and99.44%
 project pure branch at unchanged99%floor. Final all-green full suite passes12343
 tests/six skips/six known warnings1115.89s. Strict89-module typing passes. New
-package and CI remain pending in the active reliability plan; the earlier
+Windows38633750348 package passes actualplan/native/reference/real-input journeys,
+and the executable's826byteCC-BY-SA notice exactly matches canonical bytes.
+Exactd563source CI succeeds33checks/1skip/0fail; the earlier
 six-failure full run is not green acceptance. No MIDI/USB enumeration,
 opening, arming or sending occurred.
 
@@ -72,8 +74,8 @@ The assembled data facade exposes uppercase immutable facts only; the source
 record type is imported directly from its owning module. Shared tests, deliberate
 data snapshots, canonical input validators and shared raw-byte SHA256 now cover
 the complete producer/consumer contract. The packaging specification includes
-the data attribution notice; its presence in the new executable remains a
-separate pending package check. No runtime command registration is required.
+the data attribution notice; its presence in d563's new executable is verified
+by archive extraction and exact byte equality. No runtime command registration is required.
 
 After applying the own-files commit, run `scripts/reconcile_midi_csv.py --check`
 against the assembled tree. If another owner changes canonical inventory data,

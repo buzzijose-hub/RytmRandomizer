@@ -69,7 +69,8 @@ Verified fallback source `53a935d08582f3446259afb7494d6bdb79618263` remains
 delivered as `show-kit-forge-studio-53a935d08582`, unchanged with its settings.
 Windowsbuild38338316064 and its previous acceptance remain historical evidence,
 not acceptance of the October14 changes. A new exact-source build, actual
-packaged journeys and final CI are pending below until their receipts exist.
+packaged journeys and33checks/1skip/0fail source CI now pass on the separate
+d563delivery. Old receipts do not certify the new production.
 
 The first October14 source `3fe9ed53` is not delivery acceptance. Post-push
 review identified two Important repairs: explicit nested CSV claim schemas and
@@ -77,7 +78,7 @@ canonical schema2 migration/downgrade refusal for expanded session metadata.
 Its Windows build38619518876 was cancelled before publication. The minor shared
 DSP dtype annotation mismatch is repaired with129passing real-library/diagnostic
 tests; no decoding precision or retained measurements changed. Replacement
-source verification is complete; exact-source packaging remains pending. CodeQL passed
+source verification and exact-source packaging are complete. CodeQL passed
 on3fe with zero open branch alerts; this does not certify the next repair source.
 
 | Verification | Actual result |
@@ -87,8 +88,8 @@ on3fe with zero open branch alerts; this does not certify the next repair source
 | Frontend |Schema2 composition1326pass/81files98.69s/allfourcoverage100%; real Python/Chromium both-device reference journey1pass35.0s, no retries/timeouts added. |
 | Catalog/architecture |1435pass/1known warning80.65s, including898architecture items;552-row deterministic ledger check passes. |
 | Normal gates |Strict89-module typing, default Python lint/format, Vulture80 and version check pass. Frozen parity remains unchanged; final normal push gates are recorded separately. |
-| Driver |37Node cases pass, including independent every-selected-field native readback and required-change omission witnesses; private real-input config/source hashes validated; actual new-package journeys pending. |
-| Packaged acceptance |Pending new source freeze, Windows build, actual Pad2/native/reference UI journeys and binary/launcher hashes. |
+| Driver |38Node cases pass3.014s, including independent every-selected-field readback, required-change omission and distinct F1 source/rendered annotation witnesses. |
+| Packaged acceptance |Exactd563Windows38633750348 succeeds; plan16.167s/22cmd0fail, native40.769s/22cmd0fail, both-device/real-input reference88.240s/111cmd0fail.18fields/eightreal-inputA4alternatives, qualityholds/favorites/recall/ownedrestart/cleanup pass. Hash-pinned actualoffline launcher healthy/disarmed/noport. |
 | Hardware |No MIDI/USB enumeration/opening/arming/writes. No new physical sound-match, save/recovery or show certification. |
 
 The contained library-refresh and exact-Preview defects are reproduced with
@@ -102,10 +103,10 @@ and protected human approval remain separate from software acceptance.
 - [x] Coverage stays >=95% pure-branch.
 - [x] 685/685 V1.34 parity items byte-identical.
 - [x] No new dead code (vulture --min-confidence 80).
-- [ ] Exact-source new Windows package and affected native journeys pass.
-- [ ] Final replacement Windows package including diagnostics and exact segment tables passes.
-- [ ] Fresh test CI/required-checks complete on new build source.
-- [x] CodeQL path-injection alerts21-25 independently dispositioned with evidence; dispositions unchanged. Historical b9 aggregate passed; CodeQL3fe passes with zero open branch alerts. Replacement-source checks pending.
+- [x] Exact-source new Windows package and affected native journeys pass.
+- [x] Final replacement Windows package including diagnostics and exact segment tables passes.
+- [x] Fresh test CI/required-checks complete on new build source (d56333success/1skip/0fail).
+- [x] CodeQL path-injection alerts21-25 independently dispositioned with evidence; dispositions unchanged. CodeQLd56338633717656 passes with zero open branch alerts; exact source CI succeeds.
 - [ ] Protected human approval; latest Eddie review remains October3 CHANGES_REQUESTED.
 
 ## Plan-requirements conformance
@@ -159,10 +160,11 @@ Security dispositions are unchanged. The October14 follow-up repairs the
 demonstrated reference-sound reliability gaps and descriptive catalog evidence,
 not native mapping authority, general output or automatic recovery.
 
-Consolidated dimensional review is posted at https://github.com/buzzijose-hub/RytmRandomizer/pull/254#issuecomment-6134107254.
+Consolidated October14 dimensional review is posted at https://github.com/buzzijose-hub/RytmRandomizer/pull/254#issuecomment-6178636526.
 Fallback source53a935d0 and its binary hashes/actual acceptance remain in its
-unchanged receipt. October14 production is different and requires its own
-exact-source package acceptance. Older packages/settings remain preserved.
+unchanged receipt. October14 production has its own exact-source package
+acceptance in [the delivery receipt](https://github.com/buzzijose-hub/RytmRandomizer/blob/codex/studio-evidence-handoff/docs/hardware-validation/2026-10-14-reference-sound-delivery.md).
+Older packages/settings remain preserved.
 Later documentation/test-only receipts do not alter named binaries. Static research,
 synthetic audio, fixtures and software tests are not physical validation.
 Working-state synchronization, instrument recordings/application/save/reload,

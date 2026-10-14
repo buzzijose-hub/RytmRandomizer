@@ -271,6 +271,8 @@ function verifySelectedReadback(config, session, python, run = spawnSync) {
   const source = `from pathlib import Path
 import hashlib, json, sys
 from rytm_randomizer.cockpit.export.reference_sound_store import ReferenceSoundStore
+from rytm_randomizer.cockpit.export.reference_sound_candidates import list_reference_sound_controls
+from rytm_randomizer.cockpit.export.reference_sound_display import reference_sound_operator_control, reference_sound_operator_session
 from rytm_randomizer.data import A4_REFERENCE_INFERENCE_BINDINGS
 from rytm_randomizer.data.analog_four_audio_inference import ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER
 from rytm_randomizer.data.analog_four_kit_fields import parse_a4_fixed_8_8
@@ -284,6 +286,9 @@ capability = get_analog_four_native_field_capability()
 before = {cell.parameter: cell for cell in capability.read_native_fields(original).values if cell.track == 1}
 store = ReferenceSoundStore(Path(sys.argv[1]) / 'roaming' / 'rytm-randomizer' / 'reference-sounds')
 session = request['session']; context = session['context']
+controls = {cell.parameter: cell for cell in list_reference_sound_controls(original, context['device_id'], context['target'])}
+projected = reference_sound_operator_session(store.load(session['session_id']))
+projections = {candidate['candidate_id']: candidate for candidate in projected['candidates']}
 checked = []
 for candidate in session['candidates']:
     frame = store.read_artifact(candidate['frame_sha256'], 'syx')
@@ -300,7 +305,10 @@ for candidate in session['candidates']:
         rendered = domain.value_at(round(initial + context['strength'] * (target - initial)))
         actual = after[parameter].encoded_native
         assert actual == rendered, 'Selected control was omitted or incorrectly rendered'
-        fields[parameter] = dict(source=cell.encoded_native, proposed=proposed, rendered=rendered, actual=actual)
+        source_units = reference_sound_operator_control(controls[parameter])['units']
+        change = next((item for item in projections[candidate['candidate_id']]['changes'] if item['parameter'] == parameter), None)
+        fields[parameter] = dict(source=cell.encoded_native, proposed=proposed, rendered=rendered, actual=actual,
+                                source_units=source_units, rendered_units=change['units'] if change is not None else source_units)
     checked.append(dict(candidate_id=candidate['candidate_id'], frame_sha256=hashlib.sha256(frame).hexdigest(), fields=fields))
 assert Path(request['source']).read_bytes() == original
 print(json.dumps(dict(source_sha256=request['source_sha256'], candidates=checked)))
@@ -320,7 +328,7 @@ print(json.dumps(dict(source_sha256=request['source_sha256'], candidates=checked
   } finally { assertRealInputsUnchanged(config); }
 }
 
-function assertGeneratedSession(session, config, controls, parameters) {
+function assertGeneratedSession(session, config, controls, parameters, witness = null) {
   const context = session.context;
   assert.equal(context.device_id, 'analog_four_mk2');
   assert.equal(context.target, 1);
@@ -349,7 +357,13 @@ function assertGeneratedSession(session, config, controls, parameters) {
       const control = controls.find(item => item.parameter === change.parameter);
       assert(control && control.mutable && parameters.includes(change.parameter), 'Candidate mutated protected/out-of-scope field');
       assert.equal(change.source_value, control.source_value);
-      assert.equal(change.units, control.units);
+      if (change.parameter === 'filter1_frequency') {
+        assert(witness && witness.source_sha256 === context.source_sha256, 'F1 requires canonical independent operator projections');
+        const field = witness.candidates.find(item => item.candidate_id === candidate.candidate_id)?.fields[change.parameter];
+        assert(field, 'F1 projection witness is absent');
+        assert.equal(control.units, field.source_units, 'F1 source annotation is not its canonical native projection');
+        assert.equal(change.units, field.rendered_units, 'F1 rendered annotation is not its canonical native projection');
+      } else assert.equal(change.units, control.units);
       assert.deepEqual(change.offsets, control.offsets);
       if (change.parameter === 'noise_fade') { assertNoiseFadeNative(change); fadeChanges++; }
     }
@@ -457,8 +471,10 @@ async function exerciseReferenceSoundRealInput({ page, latest, connected, summar
     await panel.getByRole('button', { name: 'Generate eight alternatives', exact: true }).click();
     await expect(panel.getByRole('group', { name: 'Native alternatives' }).getByRole('radio')).toHaveCount(8, { timeout: 65_000 });
     await expect(panel.getByRole('button', { name: 'Refresh sessions', exact: true })).toBeEnabled();
-    assertGeneratedSession(latest.reference_sound_session, config, controls, parameters);
+    phase('all-selected-native-readback');
     const readback = verifySelectedReadback(config, latest.reference_sound_session, python);
+    phase('generated-scope');
+    assertGeneratedSession(latest.reference_sound_session, config, controls, parameters, readback);
     record({ kind: 'reference-real-selected-native-readback', fields_per_candidate: parameters.length, candidates: readback.candidates.length, hardware_validation: false });
     assertUnqualifiedReference(latest.reference_sound_session.analysis);
     const reference = latest.reference_sound_session;

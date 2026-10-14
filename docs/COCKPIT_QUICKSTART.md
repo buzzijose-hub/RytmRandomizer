@@ -1142,9 +1142,15 @@ The verified fallback is source `53a935d08582`, delivered at
 `C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-53a935d08582`.
 Its receipt includes frozen-worker and actual native UI acceptance. The previous
 `8d5d42f8`, `096be3ed` and `64d5c619` deliveries stay preserved. Offline acceptance is not show readiness.
+The separate October14 current candidate is source `d5634cae4ecd`, delivered at
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-d5634cae4ecd`.
+Its [receipt](hardware-validation/2026-10-14-reference-sound-delivery.md) records
+exact binary hashes, both-device/real-input UI journeys and disarmed offline
+launcher acceptance. The source CI passes33checks/1skip/0fail; physical rehearsal
+and protected approval remain pending. Data folders are separate.
 
 ```powershell
-Set-Location "C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-studio-53a935d08582"
+Set-Location "C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-studio-d5634cae4ecd"
 .\Launch-Offline.ps1 -Hidden:$false
 ```
 
@@ -1173,10 +1179,10 @@ Set-Location "C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-st
    export identifies its retained source-destination frame; the exported scratch
    frame has its own SHA because the destination and integrity bytes change.
 
-The October 14 diagnostics, audition-range and diagnostic-refresh controls below
-are source changes pending separate packaged acceptance. They are not present
-in that fallback. Use the new exact-source receipt only after it records actual
-binary acceptance. See the [reliability plan](superpowers/plans/2026-10-14-reference-sound-reliability.md)
+The October14 diagnostics, audition-range and refresh controls below pass in
+the separate d563package. They are not present in the53fallback. Use the matching
+new receipt/launcher, not another build's hardware hash block. See the
+[reliability plan](superpowers/plans/2026-10-14-reference-sound-reliability.md)
 and [ordered studio handoff](hardware-validation/2026-10-14-reference-sound-session.md).
 
 One session retains at most 16 supplied recordings and three refinement rounds.

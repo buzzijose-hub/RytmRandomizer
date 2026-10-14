@@ -137,7 +137,9 @@ live-send limits remain. This is heuristic reference-to-discovery, not an exact
 reproduction claim or a trained instrument renderer. The previous verified
 Windows rehearsal builds are preserved. The verified `53a935d08582` fallback
 includes the earlier workflow, not the October 14 diagnostic/range repairs.
-Those repairs require their own exact-source packaged acceptance. See the
+The separate `d5634cae4ecd` delivery passes exact-source packaged plan/native/
+reference/real-input journeys and disarmed offline startup; it remains physically
+unvalidated and NOT SHOW-READY. See the [matching delivery receipt](docs/hardware-validation/2026-10-14-reference-sound-delivery.md), the
 [reference-sound procedure](docs/COCKPIT_QUICKSTART.md#reference-sound-rehearsal)
 and [active reliability plan](docs/superpowers/plans/2026-10-14-reference-sound-reliability.md).
 The [October 11 feature plan](docs/superpowers/plans/2026-10-11-reference-sound-workflow.md)

@@ -4,16 +4,16 @@ Last updated: 2026-10-14. This file is a hand-authored snapshot and is meant to 
 
 ## Current Snapshot
 
-The October14 reference-sound reliability/catalog update is in final software
-verification on PR254. A new Windows delivery is not accepted yet. Signed Noise
+The October14 reference-sound reliability/catalog candidate is packaged and
+verified on PR254, source `d5634cae4ecdde78fe54ae49c99c373a49935753`. Signed Noise
 Fade inference, qualified pitch/octave/quality diagnostics, explicit audition
 segments and exact replay are implemented. The eleven-feature score is unchanged
 and is not percent accuracy. Uncertain references and unsuitable auditions hold
 refinement rather than changing protected tuning or silently normalizing audio.
 Post-push review identified fixed ledger-schema typing and persisted-session
 schema/downgrade repairs. The first3fe9ed53Windows build was cancelled before
-publication; replacement source/package acceptance is pending. CodeQL3fe passed
-with zero open branch alerts. This is not protected approval or final acceptance.
+publication; replacement d563source/package acceptance now passes. CodeQLd563
+passes with zero open branch alerts. Human approval/physical acceptance are separate.
 
 All552 supplied MIDI Guide CSV rows are reconciled:403 complete-address matches,
 24 contextual partial matches,125 A4 reference-only rows and one independently
@@ -29,13 +29,23 @@ touched production files100%line/branch and99.44%project pure branch at unchange
 99%floor. Strict89-module typing, default Python lint/format and Vulture80 pass.
 Schema2 frontend1326cases/81files passes100%allfourcoverage; actual both-device
 Python/Chromium reference journey passes35.0s without added retries/timeouts.
-New exact-source Windows build/packaged UI journeys remain pending. The previous
+Windows38633750348 and the exact package pass Pad2 plan16.167s, native precision
+40.769s and both-device/real-input reference88.240s, with0failed commands. The
+exact offline launcher starts disarmed/no port and passes guard/cleanup tests.
+Delivery `show-kit-forge-studio-d5634cae4ecd` is READY for offline rehearsal and
+the supervised scratch test, NOT SHOW-READY. Exactd563source CI passes33checks/
+1skip/0fail; human/physical gates remain separate. The previous
 12329pass/6fail coverage run stays failed evidence; frozen legacy expectations
 were repaired without changing their fixtures. FrozenV134 and pins are intact.
 
 Original WAVs, retained sessions, user app/data and all previous deliveries are
 preserved. Private real-input QA is a quality/persistence exercise, not a claim
-that historical takes were produced by a newly generated candidate. The AL02
+that historical takes were produced by a newly generated candidate. Real18-field
+A4 generation/every-selected-native readback pass; historical takes hold
+refinement for actual uncertainty/quality. Two failed package attempts were a
+QA-only F1 source-versus-rendered annotation assumption, repaired with separate
+canonical witnesses;38Node tests and a new package namespace pass. All owned
+test processes/listeners stopped; originals/fallback remain unchanged. The AL02
 compiler receipt was refreshed only for descriptive catalog dependency identity;
 its previous receipt is archived and the proof remains blocked with no SysEx.
 
@@ -70,6 +80,9 @@ disposable CY Ride saved-dump mapping follows only after recovery passes; a
 separate declared-note A4 take follows with output disabled. Arrival at9p.m.
 does not authorize hardware actions. General A4/BOTH, CY Ride SRC, paired
 precision, full unsaved synchronization and automatic restoration remain held.
+Fresh d563CodeQL38633717656 succeeds with zero open branch alerts; eight targeted
+post-push dimensions and the QA projection closure haveNoFindings. Use the new
+delivery's receipt, launcher and matching supervised hash block.
 
 The previously delivered reference-sound workflow below remains available.
 Both device paths now produce source-preserving local KIT candidates rather

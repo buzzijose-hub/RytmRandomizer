@@ -8,10 +8,15 @@ America/New_York. No automatic sends or hardware actions are scheduled.
 The verified delivery remains preserved at
 `C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-53a935d08582`.
 Its `studio-procedure/SUPERVISED-PAD2-PROCEDURE.md` remains the exact procedure for
-that build. No new reliability delivery is accepted yet. The diagnostics/range
-workflow below is source-only until a separate exact-source receipt records
-packaged acceptance, binaries and tested launcher. The fallback lacks those
-repairs; do not confuse the two builds or their data.
+that build. The separate reliability candidate is
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-d5634cae4ecd`,
+source `d5634cae4ecdde78fe54ae49c99c373a49935753`. Its packaged Pad2 plan,
+native precision, both-device reference and real-input A4 journeys pass; the
+exact offline launcher also starts disarmed with no open MIDI port. Use that
+candidate's matching `studio-procedure/DELIVERY-RECEIPT.md` and
+`SUPERVISED-PAD2-PROCEDURE.md`, not the fallback's hash block. Both remain
+unsigned, physically unvalidated on this build and NOT SHOW-READY. Their local
+data is separate; the fallback lacks the new diagnostic repairs.
 Close any older app through its own window before another launcher. Do not kill
 an unknown listener or overwrite old settings.
 
@@ -81,6 +86,16 @@ Record the actual played octave/MIDI note if known; otherwise mark it unknown.
 Capture one note for 5-8 seconds including onset and release, at unclipped peaks
 around -12 to -6 dBFS while monitoring stays low. This is a proposed experiment,
 not a claim that E is the verified reference note.
+
+The retained five-control proposal is in
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/reference-exercise-2026-10-12/first-audition.json`.
+Its Track1 display values are OSC1 Level113, OSC2 Level46, Noise Level11,
+Filter1 Frequency26.00 and Filter1 Resonance46. The retained source frame SHA is
+`d95293e5784ed604e8f460420afe19152e6262b408ba0c88ca336a1ce0364f64`.
+Use a backed-up disposable copy of that source and preserve its other fields.
+Slot01 was historical context, not permission to overwrite the current slot01.
+Record the actual current source/copy names and slots. These settings and take2's
+played-note association were operator-declared, not a post-change KIT-dump proof.
 
 Upload against the exact candidate and inspect the analyzed range/hashes,
 original capture levels, note activity, qualified pitch versus spectral peak,
