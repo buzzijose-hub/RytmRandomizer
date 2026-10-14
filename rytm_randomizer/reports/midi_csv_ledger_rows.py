@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from typing import TypedDict
 
 from ..cockpit.data.rytm_parameter_map import cockpit_parameter_key, cockpit_parameter_live_blockers
 from ..data.midi_csv_reconciliation import (
-    MIDI_CSV_ADDRESS_COLUMNS,
     MIDI_CSV_ATTRIBUTION,
     MIDI_CSV_EVIDENCE_NOTES,
     MIDI_CSV_HARDWARE_EVIDENCE,
@@ -18,6 +16,25 @@ from ..data.midi_csv_reconciliation import (
 from ..data.rytm_machine_catalog import RYTM_MACHINE_PROFILES_BY_KEY
 from .device_support_inventory import DeviceSupportInventory
 from .midi_csv_matcher import CanonicalMidiRow, MidiCsvMatch
+from .midi_csv_records import (
+    MidiCsvCanonicalClaims,
+    MidiCsvClaims,
+    MidiCsvConflict,
+    MidiCsvLedgerContext,
+    MidiCsvLiveSupport,
+    MidiCsvMatchStatus,
+    MidiCsvNativeClaims,
+    MidiCsvNativeEvidence,
+    MidiCsvOfflineSupport,
+    MidiCsvProtection,
+    MidiCsvRange,
+    MidiCsvRecovery,
+    MidiCsvReferenceKnowledge,
+    MidiCsvSourceCitation,
+    midi_csv_addresses_payload,
+    midi_csv_choice_payload,
+    midi_csv_context_payload,
+)
 from .midi_csv_source import MidiCsvRow, MidiCsvSource, parse_csv_choices
 
 
@@ -30,41 +47,47 @@ class MidiCsvLedgerRow(TypedDict):
     source_line_span: list[int]
     raw_cells: dict[str, str]
     raw_record: str
-    source: dict[str, object]
+    source: MidiCsvSourceCitation
     canonical_identity: str | None
     canonical_candidates: list[str]
-    context: dict[str, object]
-    match_status: str
-    csv_claims: dict[str, object]
-    canonical_midi_claims: dict[str, object] | None
-    canonical_reference_knowledge: dict[str, object] | None
-    native_claims: dict[str, object]
-    native_evidence: list[dict[str, object]]
-    conflicts: list[dict[str, object]]
-    protection: dict[str, object]
-    supported_offline_mutation_export: dict[str, object]
-    live_send: dict[str, object]
-    recovery: dict[str, object]
+    context: MidiCsvLedgerContext
+    match_status: MidiCsvMatchStatus
+    csv_claims: MidiCsvClaims
+    canonical_midi_claims: MidiCsvCanonicalClaims | None
+    canonical_reference_knowledge: MidiCsvReferenceKnowledge | None
+    native_claims: MidiCsvNativeClaims
+    native_evidence: list[MidiCsvNativeEvidence]
+    conflicts: list[MidiCsvConflict]
+    protection: MidiCsvProtection
+    supported_offline_mutation_export: MidiCsvOfflineSupport
+    live_send: MidiCsvLiveSupport
+    recovery: MidiCsvRecovery
     evidence_sources: list[str]
     physical_blockers: list[str]
     historical_audit_evidence: dict[str, object] | None
 
 
-def _csv_claims(row: MidiCsvRow) -> tuple[dict[str, object], tuple[str, ...]]:
-    choices, issues = parse_csv_choices(row.cell("usage"))
-    ranges = {
-        prefix: {
-            limit: row.number(prefix + "_" + limit + "_value")
-            for limit in ("min", "max", "default")
-        }
-        for prefix in ("cc", "nrpn")
-    }
+def _csv_range(row: MidiCsvRow, prefix: str) -> MidiCsvRange:
     return {
-        "addresses": {key: row.number(key) for key in MIDI_CSV_ADDRESS_COLUMNS},
-        "ranges": ranges,
+        "min": row.number(prefix + "_min_value"),
+        "max": row.number(prefix + "_max_value"),
+        "default": row.number(prefix + "_default_value"),
+    }
+
+
+def _csv_claims(row: MidiCsvRow) -> tuple[MidiCsvClaims, tuple[str, ...]]:
+    choices, issues = parse_csv_choices(row.cell("usage"))
+    return {
+        "addresses": {
+            "cc_msb": row.number("cc_msb"),
+            "cc_lsb": row.number("cc_lsb"),
+            "nrpn_msb": row.number("nrpn_msb"),
+            "nrpn_lsb": row.number("nrpn_lsb"),
+        },
+        "ranges": {"cc": _csv_range(row, "cc"), "nrpn": _csv_range(row, "nrpn")},
         "orientation": MIDI_CSV_ORIENTATION.get(row.cell("orientation")),
         "orientation_raw": row.cell("orientation"),
-        "enums": [asdict(choice) for choice in choices],
+        "enums": [midi_csv_choice_payload(choice) for choice in choices],
         "enum_authority": "community_usage_claims; intervals_and_overlaps_preserved",
         "units": None,
         "units_status": "no_explicit_units_column; MIDI scalars are not native or acoustic units",
@@ -73,9 +96,9 @@ def _csv_claims(row: MidiCsvRow) -> tuple[dict[str, object], tuple[str, ...]]:
     }, issues
 
 
-def _canonical_claims(item: CanonicalMidiRow) -> dict[str, object]:
+def _canonical_claims(item: CanonicalMidiRow) -> MidiCsvCanonicalClaims:
     return {
-        "addresses": dict(zip(MIDI_CSV_ADDRESS_COLUMNS, item.addresses, strict=True)),
+        "addresses": midi_csv_addresses_payload(item.addresses),
         "minimum": item.minimum,
         "maximum": item.maximum,
         "range_authority": item.support["domain_authority"],
@@ -93,8 +116,8 @@ def _conflicts(
     match: MidiCsvMatch,
     item: CanonicalMidiRow | None,
     usage_issues: tuple[str, ...],
-) -> list[dict[str, object]]:
-    results: list[dict[str, object]] = [
+) -> list[MidiCsvConflict]:
+    results: list[MidiCsvConflict] = [
         {
             "kind": "identity_or_usage",
             "field": None,
@@ -142,7 +165,7 @@ def _conflicts(
             {
                 "kind": "enum_labels_or_codes",
                 "field": "usage",
-                "csv": [asdict(choice) for choice in choices],
+                "csv": [midi_csv_choice_payload(choice) for choice in choices],
                 "canonical": list(item.enums),
                 "resolution": "unresolved; label differences are not a code conversion",
             }
@@ -152,14 +175,14 @@ def _conflicts(
 
 def _native_evidence(
     item: CanonicalMidiRow | None, inventory: DeviceSupportInventory
-) -> list[dict[str, object]]:
+) -> list[MidiCsvNativeEvidence]:
     if item is None:
         return []
     # Only a canonical calibration binding can relate these independent surfaces.
     # Similar names, MIDI addresses or numeric ranges do not establish a binding.
     if item.context.family == "a4":
         return [
-            dict(calibration)
+            {**calibration}
             for calibration in inventory["a4_field_calibrations"]
             if calibration["parameter"] == item.parameter
             and calibration["native_field"] is not None
@@ -214,9 +237,9 @@ def build_csv_ledger_row(
     native = _native_evidence(item if identified else None, inventory)
     native_field = next(
         (
-            calibration.get("native_field")
+            calibration["native_field"]
             for calibration in native
-            if calibration.get("native_field") is not None
+            if "native_field" in calibration and calibration["native_field"] is not None
         ),
         None,
     )
@@ -228,16 +251,18 @@ def build_csv_ledger_row(
         ),
         None,
     )
-    context: dict[str, object] = asdict(match.context)
-    context["source_track_index"] = None
-    context["source_midi_channel"] = None
-    context["registered_track_count"] = inventory["registered_devices"][source.spec.device_id][
-        "track_count"
-    ]
-    context["role"] = "not_declared_by_reference_csv; no role-specific mutation grant"
     profile = RYTM_MACHINE_PROFILES_BY_KEY.get(match.context.machine or "")
-    context["native_machine_identity"] = None if profile is None else profile.machine_value
-    context["machine_wire_identity"] = "not_inferred_from_native_identity"
+    context: MidiCsvLedgerContext = {
+        **midi_csv_context_payload(match.context),
+        "source_track_index": None,
+        "source_midi_channel": None,
+        "registered_track_count": inventory["registered_devices"][source.spec.device_id][
+            "track_count"
+        ],
+        "role": "not_declared_by_reference_csv; no role-specific mutation grant",
+        "native_machine_identity": None if profile is None else profile.machine_value,
+        "machine_wire_identity": "not_inferred_from_native_identity",
+    }
     return {
         "entry_id": source.sha256 + ":" + str(row.ordinal),
         "device_id": source.spec.device_id,

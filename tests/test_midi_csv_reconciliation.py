@@ -10,22 +10,40 @@ import shutil
 import subprocess
 import sys
 import tomllib
-from dataclasses import replace
+from dataclasses import asdict, replace
 from pathlib import Path
+from typing import Literal, get_args, get_type_hints, is_typeddict
 
 import pytest
 
 from rytm_randomizer.data.midi_csv_reconciliation import (
+    MIDI_CSV_ADDRESS_COLUMNS,
     MIDI_CSV_COLUMNS,
+    MIDI_CSV_MANUAL_CHECKS,
     MIDI_CSV_SOURCES,
     MIDI_CSV_UPSTREAM_BLOBS,
 )
 from rytm_randomizer.reports.device_support_inventory import build_device_support_inventory
-from rytm_randomizer.reports.midi_csv_matcher import canonical_midi_rows, match_midi_csv_row
+from rytm_randomizer.reports.midi_csv_ledger_rows import MidiCsvLedgerRow
+from rytm_randomizer.reports.midi_csv_matcher import (
+    MidiCsvMatch,
+    canonical_midi_rows,
+    match_midi_csv_row,
+)
 from rytm_randomizer.reports.midi_csv_reconciliation import (
+    MidiCsvReconciliationLedger,
     build_midi_csv_reconciliation,
     format_midi_csv_gap_summary,
     serialize_midi_csv_ledger,
+)
+from rytm_randomizer.reports.midi_csv_records import (
+    MidiCsvLiveSupport,
+    MidiCsvOfflineSupport,
+    MidiCsvOmission,
+    MidiCsvRecovery,
+    midi_csv_addresses_payload,
+    midi_csv_choice_payload,
+    midi_csv_context_payload,
 )
 from rytm_randomizer.reports.midi_csv_source import (
     MidiCsvRow,
@@ -302,6 +320,116 @@ def test_generation_is_deterministic_when_inputs_are_retained(ledger):
         format_midi_csv_gap_summary(ledger)
         == (ROOT / "docs/catalogs/midi-csv-reconciliation.md").read_bytes()
     )
+
+
+def test_fixed_row_contracts_match_all_generated_record_keys(ledger):
+    contracts = get_type_hints(MidiCsvLedgerRow)
+    for field in (
+        "source",
+        "context",
+        "csv_claims",
+        "canonical_midi_claims",
+        "canonical_reference_knowledge",
+        "native_claims",
+        "protection",
+        "supported_offline_mutation_export",
+        "live_send",
+        "recovery",
+    ):
+        annotation = contracts[field]
+        contract = (
+            annotation
+            if is_typeddict(annotation)
+            else next(option for option in get_args(annotation) if is_typeddict(option))
+        )
+        assert is_typeddict(contract)
+        records = [entry[field] for entry in ledger["entries"] if entry[field] is not None]
+        assert records
+        assert all(set(record) == contract.__required_keys__ for record in records)
+    assert contracts["match_status"] == get_type_hints(MidiCsvMatch)["status"]
+
+
+def test_fixed_ledger_contracts_match_generated_sources_omissions_and_summary(ledger):
+    contracts = get_type_hints(MidiCsvReconciliationLedger)
+    for field in ("upstream_supplement", "audit_v2_metadata", "summary"):
+        contract = contracts[field]
+        assert is_typeddict(contract)
+        assert set(ledger[field]) == contract.__required_keys__
+    for field in ("sources", "omission_entries"):
+        (contract,) = get_args(contracts[field])
+        assert is_typeddict(contract)
+        assert ledger[field]
+        assert all(set(record) == contract.__required_keys__ for record in ledger[field])
+    _, manual_contract = get_args(contracts["official_manual_checks"])
+    assert is_typeddict(manual_contract)
+    for checks in ledger["official_manual_checks"].values():
+        assert manual_contract.__required_keys__ <= checks.keys()
+        assert (
+            checks.keys() <= manual_contract.__required_keys__ | manual_contract.__optional_keys__
+        )
+    assert ledger["official_manual_checks"] == {
+        family: dict(checks) for family, checks in MIDI_CSV_MANUAL_CHECKS.items()
+    }
+
+
+def test_fixed_authority_contracts_cannot_describe_hardware_or_mutation_grants():
+    for contract, fields in (
+        (
+            MidiCsvReconciliationLedger,
+            ("hardware_access", "hardware_validation_granted", "runtime_authority_granted"),
+        ),
+        (MidiCsvLiveSupport, ("ledger_grants_send", "physical_validation_granted")),
+        (MidiCsvOfflineSupport, ("ledger_grants_mutation_or_export",)),
+        (MidiCsvRecovery, ("automatic_restore",)),
+        (MidiCsvOmission, ("ledger_grants_authority",)),
+    ):
+        annotations = get_type_hints(contract)
+        assert all(annotations[field] == Literal[False] for field in fields)
+
+
+def test_fixed_projection_helpers_preserve_existing_source_and_choice_records(catalog):
+    for item in catalog:
+        assert midi_csv_context_payload(item.context) == asdict(item.context)
+        assert midi_csv_addresses_payload(item.addresses) == dict(
+            zip(MIDI_CSV_ADDRESS_COLUMNS, item.addresses, strict=True)
+        )
+    choices, _ = parse_csv_choices("96: META None; 34: F1 Frequency; 0-127: META None")
+    assert [midi_csv_choice_payload(choice) for choice in choices] == [
+        asdict(choice) for choice in choices
+    ]
+
+
+@pytest.mark.parametrize("include_counts", [False, True])
+def test_fixed_source_records_keep_historical_json_opaque(tmp_path: Path, include_counts: bool):
+    audit = json.loads((INPUTS / "audit-v2.json").read_bytes())
+    historical_path = {"original_path_claim": [None, False, "not current source authority"]}
+    historical_count = {"unknown_count_claim": True}
+    audit["source_revision"] = {"historical_revision": None}
+    audit["supersedes"] = ["opaque", {"metadata": False}]
+    source = next(
+        record for record in audit["sources"] if record["sha256"] == MIDI_CSV_SOURCES[0].sha256
+    )
+    source["path"] = historical_path
+    source["comparison"]["catalog_rows"] = historical_count
+    if not include_counts:
+        for key in ("catalog_rows", "matched_csv_rows", "matched_distinct_catalog_rows"):
+            source["comparison"].pop(key, None)
+    path = tmp_path / "audit-v2.json"
+    path.write_text(json.dumps(audit), encoding="utf-8")
+    result = build_midi_csv_reconciliation(
+        INPUTS / MIDI_CSV_SOURCES[0].filename,
+        INPUTS / MIDI_CSV_SOURCES[1].filename,
+        path,
+        INPUTS / "provenance.json",
+    )
+    assert result["sources"][0]["original_path"] == historical_path
+    if include_counts:
+        assert result["sources"][0]["audit_comparison_counts"]["catalog_rows"] == historical_count
+    else:
+        assert result["sources"][0]["audit_comparison_counts"] == {}
+    assert result["audit_v2_metadata"]["source_revision"] == audit["source_revision"]
+    assert result["audit_v2_metadata"]["supersedes"] == audit["supersedes"]
+    assert result["provenance_original"] == json.loads((INPUTS / "provenance.json").read_bytes())
 
 
 def test_code_license_matches_repository_metadata_and_is_separate_from_csv_license(ledger):

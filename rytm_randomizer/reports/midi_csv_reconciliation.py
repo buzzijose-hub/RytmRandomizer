@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import json
 from collections import Counter
-from dataclasses import asdict
 from pathlib import Path
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 from ..data.midi_csv_reconciliation import (
     MIDI_CSV_ATTRIBUTION,
@@ -22,35 +21,55 @@ from ..data.midi_csv_reconciliation import (
     MIDI_CSV_UPSTREAM_LAST_CHANGE,
 )
 from ..data.rytm_machine_catalog import RYTM_MACHINE_PROFILES
-from ..guardrails.input_validation import require_object, require_sequence
-from .device_support_inventory import build_device_support_inventory
+from ..guardrails.input_validation import (
+    require_int,
+    require_integer_tuple,
+    require_object,
+    require_sequence,
+    require_text,
+    require_text_tuple,
+)
+from .device_support_inventory import UnsupportedCategory, build_device_support_inventory
 from .formatter import sha256_bytes
 from .midi_csv_ledger_rows import MidiCsvLedgerRow, build_csv_ledger_row
 from .midi_csv_matcher import canonical_midi_rows, match_midi_csv_row
+from .midi_csv_records import (
+    MidiCsvAuditCounts,
+    MidiCsvAuditMetadata,
+    MidiCsvLedgerSource,
+    MidiCsvMachineAmbiguity,
+    MidiCsvManualChecks,
+    MidiCsvMatchStatus,
+    MidiCsvOmission,
+    MidiCsvSummary,
+    MidiCsvUpstreamSupplement,
+    midi_csv_choice_payload,
+    midi_csv_context_payload,
+)
 from .midi_csv_source import parse_csv_choices, read_midi_csv
 
 
 class MidiCsvReconciliationLedger(TypedDict):
     """Complete source rows, plus explicit canonical omissions and uncertainty."""
 
-    schema: str
-    hardware_access: bool
-    hardware_validation_granted: bool
-    runtime_authority_granted: bool
+    schema: Literal["rytmrandomizer.midi-csv-reconciliation.v1"]
+    hardware_access: Literal[False]
+    hardware_validation_granted: Literal[False]
+    runtime_authority_granted: Literal[False]
     attribution: str
     adapted_reference_data_license: str
     license_url: str
     code_license: str
-    upstream_supplement: dict[str, object]
+    upstream_supplement: MidiCsvUpstreamSupplement
     provenance_original: dict[str, object]
-    audit_v2_metadata: dict[str, object]
-    official_manual_checks: dict[str, object]
+    audit_v2_metadata: MidiCsvAuditMetadata
+    official_manual_checks: dict[str, MidiCsvManualChecks]
     catalog_inventory_sha256: str
-    sources: list[dict[str, object]]
+    sources: list[MidiCsvLedgerSource]
     entries: list[MidiCsvLedgerRow]
-    omission_entries: list[dict[str, object]]
-    machine_wire_native_ambiguities: list[dict[str, object]]
-    summary: dict[str, object]
+    omission_entries: list[MidiCsvOmission]
+    machine_wire_native_ambiguities: list[UnsupportedCategory | MidiCsvMachineAmbiguity]
+    summary: MidiCsvSummary
 
 
 def _mapping(value: object) -> dict[str, object]:
@@ -105,8 +124,40 @@ def _require_provenance(
         raise ValueError("Provenance license disagrees with retained reference contract")
 
 
-def _machine_ambiguities(entries: list[MidiCsvLedgerRow]) -> list[dict[str, object]]:
-    results: list[dict[str, object]] = []
+def _audit_counts(comparison: object) -> MidiCsvAuditCounts:
+    data = _mapping(comparison)
+    result: MidiCsvAuditCounts = {}
+    if "catalog_rows" in data:
+        result["catalog_rows"] = data["catalog_rows"]
+    if "matched_csv_rows" in data:
+        result["matched_csv_rows"] = data["matched_csv_rows"]
+    if "matched_distinct_catalog_rows" in data:
+        result["matched_distinct_catalog_rows"] = data["matched_distinct_catalog_rows"]
+    return result
+
+
+def _manual_checks(value: object) -> MidiCsvManualChecks:
+    data = require_object(value, "manual checks", ValueError)
+    result: MidiCsvManualChecks = {
+        "version": require_text(data["version"], "manual version", ValueError),
+        "checked_pages": require_integer_tuple(data["checked_pages"], "checked pages", ValueError),
+        "method": require_text(data["method"], "manual method", ValueError),
+        "findings": require_text_tuple(data["findings"], "manual findings", ValueError),
+        "not_checked": require_text(data["not_checked"], "manual limits", ValueError),
+    }
+    if "retrieved_sha256" in data:
+        result["retrieved_sha256"] = require_text(
+            data["retrieved_sha256"], "manual hash", ValueError
+        )
+    if "retrieved_bytes" in data:
+        result["retrieved_bytes"] = require_int(data["retrieved_bytes"], "manual bytes", ValueError)
+    if "pages" in data:
+        result["pages"] = require_int(data["pages"], "manual pages", ValueError)
+    return result
+
+
+def _machine_ambiguities(entries: list[MidiCsvLedgerRow]) -> list[MidiCsvMachineAmbiguity]:
+    results: list[MidiCsvMachineAmbiguity] = []
     for row in entries:
         if row["canonical_identity"] != "rytm:COMMON:Track Machine Type":
             continue
@@ -115,7 +166,7 @@ def _machine_ambiguities(entries: list[MidiCsvLedgerRow]) -> list[dict[str, obje
             {
                 "source_entry_id": row["entry_id"],
                 "source_row": row["source_row"],
-                "csv_machine_wire_claims": [asdict(claim) for claim in claims],
+                "csv_machine_wire_claims": [midi_csv_choice_payload(claim) for claim in claims],
                 "native_catalog_identities": [
                     {
                         "key": profile.key,
@@ -152,7 +203,7 @@ def build_midi_csv_reconciliation(
     inventory = build_device_support_inventory()
     catalog = canonical_midi_rows(inventory)
     entries: list[MidiCsvLedgerRow] = []
-    sources: list[dict[str, object]] = []
+    sources: list[MidiCsvLedgerSource] = []
     matched: set[str] = set()
     for path, spec in zip((a4_csv, rytm_csv), MIDI_CSV_SOURCES, strict=True):
         source = read_midi_csv(path, spec)
@@ -173,35 +224,42 @@ def build_midi_csv_reconciliation(
                 matched.add(entry["canonical_identity"])
         sources.append(
             {
-                **asdict(spec),
+                "family": spec.family,
+                "device_id": spec.device_id,
+                "device_label": spec.device_label,
+                "filename": spec.filename,
+                "sha256": spec.sha256,
+                "row_count": spec.row_count,
+                "source_url": spec.source_url,
+                "manual_url": spec.manual_url,
                 "byte_count": source.byte_count,
                 "git_blob": source.git_blob,
                 "header_record": source.header_record,
                 "retained_path": "tests/fixtures/midi_guide/" + spec.filename,
                 "original_path": audit_source[0]["path"],
-                "audit_comparison_counts": {
-                    key: value
-                    for key, value in _mapping(audit_source[0]["comparison"]).items()
-                    if key in ("catalog_rows", "matched_csv_rows", "matched_distinct_catalog_rows")
-                },
+                "audit_comparison_counts": _audit_counts(audit_source[0]["comparison"]),
             }
         )
-    omissions: list[dict[str, object]] = [
+    omissions: list[MidiCsvOmission] = [
         {
             "canonical_identity": item.identity,
-            "context": asdict(item.context),
+            "context": midi_csv_context_payload(item.context),
             "parameter": item.parameter,
             "addresses": item.addresses,
             "range": [item.minimum, item.maximum],
             "orientation": item.orientation,
             "reason": "canonical row absent from supplied CSV; do not invent a source row",
-            "existing_support": dict(item.support),
+            "existing_support": {**item.support},
             "ledger_grants_authority": False,
         }
         for item in catalog
         if item.identity not in matched
     ]
-    statuses = Counter(entry["match_status"] for entry in entries)
+    statuses: Counter[MidiCsvMatchStatus] = Counter(entry["match_status"] for entry in entries)
+    ambiguities: list[UnsupportedCategory | MidiCsvMachineAmbiguity] = [
+        {**row} for row in inventory["unsupported_categories"]
+    ]
+    ambiguities.extend(_machine_ambiguities(entries))
     return {
         "schema": "rytmrandomizer.midi-csv-reconciliation.v1",
         "hardware_access": False,
@@ -240,15 +298,12 @@ def build_midi_csv_reconciliation(
             json.dumps(inventory, sort_keys=True, ensure_ascii=True).encode("ascii")
         ),
         "official_manual_checks": {
-            family: dict(checks) for family, checks in MIDI_CSV_MANUAL_CHECKS.items()
+            family: _manual_checks(checks) for family, checks in MIDI_CSV_MANUAL_CHECKS.items()
         },
         "sources": sources,
         "entries": entries,
         "omission_entries": omissions,
-        "machine_wire_native_ambiguities": [
-            dict(row) for row in inventory["unsupported_categories"]
-        ]
-        + _machine_ambiguities(entries),
+        "machine_wire_native_ambiguities": ambiguities,
         "summary": {
             "source_rows": len(entries),
             "canonical_omissions": len(omissions),
