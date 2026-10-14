@@ -169,7 +169,7 @@ export type ReferenceSoundAudioSelection =
   | { audio_kind: 'recording'; recording_sha256: string };
 
 export interface ReferenceSoundSession {
-  schema_version: 1;
+  schema_version: 2;
   session_id: string;
   title: string;
   segment: { original: ReferenceAudioInfo; start_frame: number; frame_count: number; sha256: string };

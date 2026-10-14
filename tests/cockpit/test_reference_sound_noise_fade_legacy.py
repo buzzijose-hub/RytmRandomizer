@@ -78,9 +78,8 @@ def _synthetic_wav(recipe: dict) -> bytes:
     return raw
 
 
-def test_v1_replays_genuine_b9_eight_directions_refinement_and_favorite_bytes(
-    offline_hardware_denied: None,
-) -> None:
+@pytest.mark.usefixtures("offline_hardware_denied")
+def test_v1_replays_genuine_b9_eight_directions_refinement_and_favorite_bytes() -> None:
     fixture = _legacy_fixture()
     assert fixture["provenance"]["revision"] == A4_REFERENCE_NOISE_FADE_V1_SOURCE_REVISION
     assert fixture["provenance"]["hardware_verified"] is False
@@ -150,10 +149,8 @@ def _restore_legacy_store(tmp_path: Path) -> tuple[dict, dict[str, bytes]]:
     return payload, before
 
 
-def test_frozen_legacy_session_reopens_with_v1_renderer_without_reanalysis(
-    tmp_path: Path,
-    offline_hardware_denied: None,
-) -> None:
+@pytest.mark.usefixtures("offline_hardware_denied")
+def test_frozen_legacy_session_reopens_with_v1_renderer_without_reanalysis(tmp_path: Path) -> None:
     payload, before = _restore_legacy_store(tmp_path)
 
     def no_analysis(*_args, **_kwargs):
@@ -168,9 +165,9 @@ def test_frozen_legacy_session_reopens_with_v1_renderer_without_reanalysis(
     assert len(payload["favorites"]) == 2 and len(payload["refinements"]) == 1
 
 
+@pytest.mark.usefixtures("offline_hardware_denied")
 def test_frozen_legacy_noise_fade_session_holds_fresh_refinement_without_changes(
     tmp_path: Path,
-    offline_hardware_denied: None,
 ) -> None:
     payload, before = _restore_legacy_store(tmp_path)
     workspace = session.ReferenceSoundWorkspace(ReferenceSoundStore(tmp_path))
@@ -185,9 +182,9 @@ def test_frozen_legacy_noise_fade_session_holds_fresh_refinement_without_changes
     assert {p.name: p.read_bytes() for p in tmp_path.iterdir()} == before
 
 
+@pytest.mark.usefixtures("offline_hardware_denied")
 def test_current_noise_fade_generation_is_separate_v2_session_preserving_legacy(
     tmp_path: Path,
-    offline_hardware_denied: None,
 ) -> None:
     payload, before = _restore_legacy_store(tmp_path)
     fixture = _legacy_fixture()
@@ -315,10 +312,9 @@ def test_v1_illegal_historical_target_is_refused_not_clamped_or_reencoded(render
     "render",
     [renderer.render_reference_sound_candidates, renderer.render_refined_reference_sound_candidate],
 )
+@pytest.mark.usefixtures("offline_hardware_denied")
 def test_both_inference_versions_refuse_working_source_even_when_fully_locked(
-    render,
-    inference_version: int,
-    offline_hardware_denied: None,
+    render, inference_version: int
 ) -> None:
     fixture = _legacy_fixture()
     working = bytearray(_source(fixture))

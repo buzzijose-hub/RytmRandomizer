@@ -1333,6 +1333,10 @@ in `data/elektron_midi_descriptions.py` and source/schema/context facts in
 licensed CSV bytes/cells; `midi_csv_matcher.py` matches context plus addresses;
 `midi_csv_ledger_rows.py` separates community claims, native evidence and policy;
 `midi_csv_reconciliation.py` composes the existing Device support inventory.
+`reports/midi_csv_records.py` owns nested fixed claim DTOs; only original
+historical/provenance evidence remains opaque. Source reads reuse the canonical
+`cockpit/export/reader.py` regular-file/identity/size guard and duplicate-key JSON
+decoder. Conflicting or changed evidence is refused before atomic publication.
 The thin `scripts/reconcile_midi_csv.py` publishes the two ledger artifacts with
 the existing atomic write-set owner or checks them without writing. It does not
 register another app workflow, mutate a KIT, enumerate ports or grant SEND.
@@ -1405,6 +1409,12 @@ refused, never automatically cropped. Legacy records retain absent optional keys
 measurements, source identity or session identity. Existing comparison diagnostics
 are recomputed when reference diagnostics are added. Old recordings require fresh
 qualified feedback before new refinement.
+Reference Sound store schema2 marks the expanded diagnostic/context/recording
+shape. The store authenticates the original checksum before the canonical
+registry's explicit v1 migration changes only the envelope version. Reading preserves
+the original file and all replay identities/absent evidence; subsequent explicit
+publication writes schema2. Older schema1 apps refuse these newer manifests with
+the canonical schema-newer reason instead of misclassifying optional fields.
 
 Noise Fade current inference uses signed display fade-out intent, followed by the
 verified native bipolar converter. Current unlocked Noise Fade contexts record

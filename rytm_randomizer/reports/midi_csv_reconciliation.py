@@ -95,7 +95,7 @@ def _read_json(path: Path) -> tuple[dict[str, object], str]:
 
 
 def _audit_index(source: dict[str, object]) -> dict[int, dict[str, object]]:
-    comparison = _mapping(source["comparison"])
+    comparison = _mapping(source.get("comparison"))
     results: dict[int, dict[str, object]] = {}
     for classification in (
         "matched",
@@ -103,8 +103,8 @@ def _audit_index(source: dict[str, object]) -> dict[int, dict[str, object]]:
         "ambiguous_csv_rows",
         "differences_or_missing_addresses",
     ):
-        for record in _csv_evidence_records(comparison[classification]):
-            number = record["row"]
+        for record in _csv_evidence_records(comparison.get(classification)):
+            number = record.get("row")
             if type(number) is not int or number < MIDI_CSV_FIRST_AUDIT_ROW:
                 raise ValueError("Audit source row identity is unsafe")
             results.setdefault(number, {})[classification] = record
@@ -116,7 +116,7 @@ def _require_provenance(
 ) -> None:
     matching = [
         record
-        for record in _csv_evidence_records(provenance["files"])
+        for record in _csv_evidence_records(provenance.get("files"))
         if record.get("sha256") == digest
     ]
     if len(matching) != 1 or matching[0].get("rows") != rows:
@@ -202,7 +202,7 @@ def build_midi_csv_reconciliation(
     """Read only explicit files and canonical passive inventory; never MIDI/USB."""
     audit, audit_hash = _read_json(audit_v2)
     origin, provenance_hash = _read_json(provenance)
-    audit_sources = _csv_evidence_records(audit["sources"])
+    audit_sources = _csv_evidence_records(audit.get("sources"))
     inventory = build_device_support_inventory()
     catalog = canonical_midi_rows(inventory)
     entries: list[MidiCsvLedgerRow] = []
@@ -239,8 +239,8 @@ def build_midi_csv_reconciliation(
                 "git_blob": source.git_blob,
                 "header_record": source.header_record,
                 "retained_path": "tests/fixtures/midi_guide/" + spec.filename,
-                "original_path": audit_source[0]["path"],
-                "audit_comparison_counts": _audit_counts(audit_source[0]["comparison"]),
+                "original_path": audit_source[0].get("path"),
+                "audit_comparison_counts": _audit_counts(audit_source[0].get("comparison")),
             }
         )
     omissions: list[MidiCsvOmission] = [

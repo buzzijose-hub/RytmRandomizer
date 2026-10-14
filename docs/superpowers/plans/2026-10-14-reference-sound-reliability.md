@@ -83,7 +83,7 @@ includes dimensional review and the protected human reassessment, Gate 15 captur
 the domain/diagnostic lessons, and Gate 16 uses the isolated workstreams above.
 Human approval and physical rehearsal remain explicitly pending, not waived.
 
-- [x] Gate 1 - 100% touched branch coverage; project coverage ratchet unchanged.
+- [ ] Gate 1 - Repair-source full coverage pending; historical3fe88files100%, ratchet unchanged.
 - [x] Gate 2 - All 685 frozen parity items unchanged.
 - [x] Gate 3 - Lint, formatting and strict touched-production typing.
 - [x] Gate 4 - No new dead code.
@@ -103,6 +103,23 @@ Human approval and physical rehearsal remain explicitly pending, not waived.
 - [x] Gate 18 - Architecture map and relevant diagram reflect diagnostics and ledger.
 
 ## Execution And Accounting
+
+At the reviewed repair checkpoint, the schema2 frontend passes1326tests/81files
+with all four coverage metrics100%. The real Python/Chromium reference journey
+passes for both devices in35.0s: a qualified octave mismatch remains held,
+a same-pitch harmonic recording permits bounded refinement, and restart retains
+exact audio, candidates and favorites. No retries, skips or timeout increases.
+Strict typing passes on89 touched production modules. The CSV reader/claim/CLI
+composition passes103tests, including eight actual subprocess refusals for
+private malformed, duplicate and missing-field JSON without publication.
+
+The preceding full coverage run remains failed evidence:12329pass/6fail/6skip
+in1082.84s. Six failures were old envelope-version expectations after schema2
+migration; frozen fixtures remain unchanged and strict envelope-only/read-only
+assertions are repaired. A fresh full coverage run is required; composed data
+from moved source lines is not the replacement acceptance artifact. Test-only
+fixture declarations and dtype/length assertions are rerun after that run.
+No new packaged delivery is accepted at this checkpoint.
 
 Start: 2026-10-14 15:45 UTC (11:45 a.m. America/New_York). Session ceiling: eight
 productive hours, finish sooner on software acceptance. Studio arrival expected

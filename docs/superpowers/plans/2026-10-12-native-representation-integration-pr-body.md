@@ -96,7 +96,7 @@ red tests and fixed through existing store/recall seams. No global preview,
 packet filtering, scope or output/restore authority changed. Hardware rehearsal
 and protected human approval remain separate from software acceptance.
 
-- [x] Local pytest passes (final full suite).
+- [ ] Local pytest passes (repair-source full run pending; historical3fe12259pass).
 - [x] `tests/architecture/` passes.
 - [x] Lint trio (ruff + black + isort) clean.
 - [x] Coverage stays >=95% pure-branch.
@@ -112,7 +112,7 @@ and protected human approval remain separate from software acceptance.
 
 Per [`docs/PLAN_REQUIREMENTS.md`](https://github.com/buzzijose-hub/RytmRandomizer/blob/codex/studio-evidence-handoff/docs/PLAN_REQUIREMENTS.md).
 
-- [x] **Gate 1** — 100% branch coverage on touched files; project ≥95% pure-branch.
+- [ ] **Gate 1** — 100% branch coverage on touched files; project ≥95% pure-branch.
 - [x] **Gate 2** — V1.34 parity byte-identical (505 goldens / 685 pytest items).
 - [x] **Gate 3** — lint clean and strict Pyright clean on every touched production module (`python scripts/typecheck_touched.py`).
 - [x] **Gate 4** — no new dead code (vulture --min-confidence 80).

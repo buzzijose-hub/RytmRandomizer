@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Protocol, TypeVar
 
@@ -40,6 +41,7 @@ class LibrosaApi(Protocol):
     fft_frequencies: Callable[..., NDArray[np.float64]]
     pyin: Callable[..., tuple[NDArray[np.float64], NDArray[np.bool_], NDArray[np.float64]]]
 
+    @abstractmethod
     def resample(
         self, y: NDArray[_AudioFloat], *, orig_sr: float, target_sr: float
     ) -> NDArray[_AudioFloat]: ...

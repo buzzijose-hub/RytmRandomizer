@@ -70,8 +70,9 @@ opening, arming or sending occurred.
 The assembled data facade exposes uppercase immutable facts only; the source
 record type is imported directly from its owning module. Shared tests, deliberate
 data snapshots, canonical input validators and shared raw-byte SHA256 now cover
-the complete producer/consumer contract. The packaged sidecar includes the data
-attribution notice. No runtime command registration is required for this file tool.
+the complete producer/consumer contract. The packaging specification includes
+the data attribution notice; its presence in the new executable remains a
+separate pending package check. No runtime command registration is required.
 
 After applying the own-files commit, run `scripts/reconcile_midi_csv.py --check`
 against the assembled tree. If another owner changes canonical inventory data,

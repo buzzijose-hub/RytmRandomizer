@@ -3496,7 +3496,10 @@ flowchart LR
     Codec --> Proof[Re-decode / approved byte-diff proof]
     Proof --> Prepared[PreparedReferenceSound / immutable result / no worker publication]
     Prepared --> Owner
-    Owner --> Store[Registered store / OS lock + manifest CAS + atomic write set]
+    Owner --> Store[Registered schema2 store / OS lock + manifest CAS + atomic write set]
+    Legacy[Original v1 manifest / unchanged on read] --> Authenticate[Verify original checksum]
+    Authenticate --> Migrate[Canonical envelope-only v1 to v2 migration]
+    Migrate --> Records
     Recording[Supplied audition recording] --> Worker
     Recording --> Range[Explicit sample range / retain original + segment]
     Range --> Worker
@@ -3526,12 +3529,15 @@ audio, not a probability, synthetic preview or physical sound-match certificate.
 
 ```mermaid
 flowchart TD
-    CSV[Licensed original CSVs / pinned SHA256 + Git blob] --> Parse[midi_csv_source / lossless bounded rows]
+    CSV[Licensed original CSVs / pinned SHA256 + Git blob] --> Reader[Existing guarded regular-file identity reader]
+    Reader --> Parse[midi_csv_source / lossless bounded rows]
+    Evidence[Audit-v2 / provenance / duplicate-key JSON refusal] --> Reader
     Data[Canonical Data / descriptions + source schema] --> Parse
     Parse --> Match[midi_csv_matcher / machine-track context + addresses]
     Inventory[Existing Device support inventory / native evidence + policy] --> Match
     Match --> Rows[midi_csv_ledger_rows / claims distinct from executable domains]
     Data --> Rows
+    Shapes[midi_csv_records / nested typed claims] --> Rows
     Rows --> Ledger[midi_csv_reconciliation / all 552 rows + gaps]
     Ledger --> Tool[Thin file-only script]
     Tool --> Check[Nonwriting reproducibility check]

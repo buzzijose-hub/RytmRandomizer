@@ -79,7 +79,7 @@ export function soundSession(audio = wav(), generated = false): ReferenceSoundSe
     limitations: ['Local file only; no verified physical match'], intended_unpacked_offsets: [100], changed_unpacked_offsets: [100],
     changed_wire_offsets: [1], features: measured.features, output_authority: 'local-file-only', hardware_send_validated: false, roundtrip_redecoded: true,
   }));
-  return { schema_version: 1, session_id: generated ? 'sound-generated' : 'sound-original', title: 'reference.wav',
+  return { schema_version: 2, session_id: generated ? 'sound-generated' : 'sound-original', title: 'reference.wav',
     segment: { original: { sample_rate: rate, channels: 1, sample_width: 2, frame_count: (audio.length - 44) / 2,
       sha256: sha(audio), seconds: (audio.length - 44) / (rate * 2) }, start_frame: 0, frame_count: (audio.length - 44) / 2, sha256: sha(audio) },
     context: generated ? { device_id: 'analog_rytm_mk2', target: 1, source_sha256: sha(patchBytes), segment_sha256: sha(audio), parameters: ['dec', 'lev'], locks: [], strength: 0.5 } : null,

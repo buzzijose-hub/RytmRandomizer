@@ -34,8 +34,12 @@ def test_shared_audio_protocol_matches_default_and_explicit_decode_precision() -
     assert precise.dtype == np.float64
     assert librosa.stft(default).dtype == np.complex64
     assert librosa.stft(precise).dtype == np.complex128
-    assert librosa.resample(default, orig_sr=rate, target_sr=16000).dtype == np.float32
-    assert librosa.resample(precise, orig_sr=rate, target_sr=16000).dtype == np.float64
+    orig_sr, target_sr = rate, 16000
+    resampled_default = librosa.resample(default, orig_sr=orig_sr, target_sr=target_sr)
+    resampled_precise = librosa.resample(precise, orig_sr=orig_sr, target_sr=target_sr)
+    assert resampled_default.dtype == np.float32
+    assert resampled_precise.dtype == np.float64
+    assert len(resampled_default) == len(resampled_precise) == target_sr
     np.testing.assert_array_equal(default, precise.astype(np.float32))
 
 

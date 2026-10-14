@@ -26,9 +26,15 @@
   },
   "reference_sound_store": {
     "store_id": "reference_sound_store",
-    "schema_version": 1,
+    "schema_version": 2,
     "owner_module": "rytm_randomizer.cockpit.export.reference_sound_store",
     "description": "Exact reference audio, scoped native candidates and supplied-recording feedback under {config}/reference-sounds.",
-    "migrations": []
+    "migrations": [
+      {
+        "from_version": 1,
+        "migrate": "rytm_randomizer.data.persisted_state._reference_sound_v1_to_v2",
+        "summary": "Permit optional sound diagnostics without changing retained replay identities."
+      }
+    ]
   }
 }

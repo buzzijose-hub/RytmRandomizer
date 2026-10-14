@@ -21,6 +21,9 @@ _READ_REFUSALS: Final[MappingProxyType[str, str]] = MappingProxyType(
 _READ_REFUSAL_FALLBACK: Final[str] = (
     "CSV reconciliation refused: category=read; reason=input_read_failed."
 )
+_CONTENT_REFUSAL: Final[str] = (
+    "CSV reconciliation refused: category=content; reason=invalid_or_conflicting_reference_data."
+)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -54,6 +57,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             category if isinstance(category, str) else "", _READ_REFUSAL_FALLBACK
         )
         print(message, file=sys.stderr)
+        return 2
+    except (ValueError, RecursionError):
+        print(_CONTENT_REFUSAL, file=sys.stderr)
         return 2
     artifacts = {
         args.output_dir / "midi-csv-reconciliation.json": serialize_midi_csv_ledger(ledger),

@@ -9,15 +9,18 @@ import { expect, injectTokenLive, primeToken, resolveRepoRoot, test } from './fi
 
 test.use({ actionTimeout: 10_000 });
 
-function pcmTone(frequency: number): Buffer {
-  const count = 11025;
+function pcmTone(frequency: number, secondHarmonic = 0): Buffer {
+  const count = 55125;
   const audio = Buffer.alloc(44 + count * 2);
   audio.write('RIFF'); audio.writeUInt32LE(audio.length - 8, 4); audio.write('WAVEfmt ', 8);
   audio.writeUInt32LE(16, 16); audio.writeUInt16LE(1, 20); audio.writeUInt16LE(1, 22);
   audio.writeUInt32LE(22050, 24); audio.writeUInt32LE(44100, 28);
   audio.writeUInt16LE(2, 32); audio.writeUInt16LE(16, 34); audio.write('data', 36);
   audio.writeUInt32LE(count * 2, 40);
-  for (let index = 0; index < count; index++) audio.writeInt16LE(Math.round(16000 * Math.sin(2 * Math.PI * frequency * index / 22050)), 44 + index * 2);
+  for (let index = 0; index < count; index++) {
+    const phase = 2 * Math.PI * frequency * index / 22050;
+    audio.writeInt16LE(Math.round(16000 * (Math.sin(phase) + secondHarmonic * Math.sin(2 * phase))), 44 + index * 2);
+  }
   return audio;
 }
 
@@ -59,10 +62,10 @@ test('both native reference paths retain exact audio, scope, recordings and favo
     await expect(panel.getByLabel('Original reference playback')).toBeVisible();
     expect(sessions.at(-1)!.segment.original.sha256).toBe(createHash('sha256').update(audio).digest('hex'));
     await panel.getByLabel('Start frame', { exact: true }).fill('2205');
-    await panel.getByLabel('Frame count', { exact: true }).fill('6615');
+    await panel.getByLabel('Frame count', { exact: true }).fill('44100');
     await panel.getByRole('button', { name: 'Retain segment', exact: true }).click();
     await expect.poll(() => sessions.at(-1)!.segment.start_frame).toBe(2205);
-    expect(sessions.at(-1)!.segment.frame_count).toBe(6615);
+    expect(sessions.at(-1)!.segment.frame_count).toBe(44100);
     await panel.getByRole('combobox', { name: 'Device', exact: true }).selectOption(device);
     await panel.getByRole('combobox', { name: 'Source Library record', exact: true }).selectOption({ index: 1 });
     await panel.getByLabel(device === 'analog_four_mk2' ? 'Target track' : 'Target pad', { exact: true }).fill(String(target));
@@ -81,7 +84,17 @@ test('both native reference paths retain exact audio, scope, recordings and favo
     await panel.getByLabel('Supplied candidate recording WAV (0.05-8s)', { exact: true }).setInputFiles({ name: 'synthetic-comparison.wav', mimeType: 'audio/wav', buffer: pcmTone(880) });
     await expect.poll(() => sessions.at(-1)!.recordings.length, { timeout: 65_000 }).toBe(1);
     expect(sessions.at(-1)!.recordings[0]!.physical_validation).toBe(false);
+    expect(sessions.at(-1)!.recordings[0]!.pitch_comparison!.support_status).toBe('held');
+    expect(sessions.at(-1)!.recordings[0]!.pitch_comparison!.blockers).toContain('pitch_mismatch');
+    expect(sessions.at(-1)!.recordings[0]!.pitch_comparison!.octave_difference).toBe(1);
+    await expect(panel.getByRole('button', { name: 'Refine candidate (0/3)', exact: true })).toBeDisabled();
+    await expect(panel.getByRole('table', { name: 'Controlled audition diagnostics', exact: true })).toBeVisible();
     await expect(panel.getByRole('table', { name: 'Measured reference and supplied recording (normalized 0-1)' })).toBeVisible();
+    await panel.getByLabel('Supplied candidate recording WAV (0.05-8s)', { exact: true }).setInputFiles({ name: 'synthetic-same-pitch-timbre.wav', mimeType: 'audio/wav', buffer: pcmTone(440, 0.25) });
+    await expect.poll(() => sessions.at(-1)!.recordings.length, { timeout: 65_000 }).toBe(2);
+    expect(sessions.at(-1)!.recordings[1]!.pitch_comparison!.support_status).toBe('supported');
+    expect(sessions.at(-1)!.recordings[1]!.pitch_comparison!.blockers).toEqual([]);
+    await expect(panel.getByRole('button', { name: 'Refine candidate (0/3)', exact: true })).toBeEnabled();
     await panel.getByRole('button', { name: 'Refine candidate (0/3)', exact: true }).click();
     await expect.poll(() => sessions.at(-1)!.refinements.length, { timeout: 65_000 }).toBe(1);
     await panel.getByLabel('Scratch KIT slot (1-128)', { exact: true }).fill('128');

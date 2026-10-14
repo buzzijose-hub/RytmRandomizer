@@ -22,6 +22,7 @@ from rytm_randomizer.cockpit.export.reference_sound_display import (
 )
 from rytm_randomizer.cockpit.export.reference_sound_session import ReferenceSoundWorkspace
 from rytm_randomizer.cockpit.export.reference_sound_store import (
+    REFERENCE_SOUND_SCHEMA,
     ReferenceSoundStore,
     reference_sound_digest,
     reference_sound_json,
@@ -96,7 +97,8 @@ def test_prechange_sessions_reopen_exact_candidates_without_analysis_or_rewrites
     directory, receipt, expected, workspace = legacy_session
     before = _files(workspace.store.directory)
     reopened = workspace.reopen(receipt["session_id"])
-    assert reopened == expected
+    assert expected["schema_version"] == 1
+    assert reopened == {**expected, "schema_version": REFERENCE_SOUND_SCHEMA}
     assert reopened["selected_candidate_id"] == receipt["favorite_candidate_id"]
     assert reopened["favorites"] == [receipt["favorite_candidate_id"]]
     assert [candidate["candidate_id"] for candidate in reopened["candidates"]] == receipt[
@@ -133,12 +135,13 @@ def test_prechange_selection_favorites_and_all_scratch_exports_preserve_exact_by
     before = _files(workspace.store.directory)
     session_id = receipt["session_id"]
     first, second = receipt["candidate_ids"][:2]
-    assert workspace.select(session_id, first, favorite=True) == expected
+    current = {**expected, "schema_version": REFERENCE_SOUND_SCHEMA}
+    assert workspace.select(session_id, first, favorite=True) == current
     changed = workspace.select(session_id, second, favorite=True)
     assert changed["selected_candidate_id"] == second
     assert changed["favorites"] == sorted((first, second))
     workspace.select(session_id, second, favorite=False)
-    assert workspace.select(session_id, first) == expected
+    assert workspace.select(session_id, first) == current
     for candidate_id in receipt["candidate_ids"]:
         exported = workspace.export_patch(session_id, candidate_id, receipt["export_slot"])
         assert exported == (directory / "exports" / f"{candidate_id}.syx").read_bytes()
@@ -155,7 +158,12 @@ def test_prechange_selection_favorites_and_all_scratch_exports_preserve_exact_by
                 candidate.frame[1:-1], require_trailer=True
             ).unpacked
         )
-    assert _files(workspace.store.directory) == before
+    manifest_name = f"{session_id}.sound.json"
+    migrated = {**current, "content_sha256": reference_sound_digest(reference_sound_json(current))}
+    assert _files(workspace.store.directory) == {
+        **before,
+        manifest_name: reference_sound_json(migrated),
+    }
 
 
 def test_prechange_native_scope_and_display_projection_keep_legacy_replay_separate(
@@ -206,4 +214,7 @@ def test_prechange_native_scope_and_display_projection_keep_legacy_replay_separa
             assert displayed["rendered_value"] == old["rendered_value"]
             assert displayed["source_display"] == "63.50"
             assert old["source_display"] == "63.50390625"
-    assert workspace.reopen(receipt["session_id"]) == expected
+    assert workspace.reopen(receipt["session_id"]) == {
+        **expected,
+        "schema_version": REFERENCE_SOUND_SCHEMA,
+    }

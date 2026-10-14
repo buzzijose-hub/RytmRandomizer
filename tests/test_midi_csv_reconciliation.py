@@ -7,6 +7,7 @@ import hashlib
 import io
 import json
 import os
+import runpy
 import shutil
 import subprocess
 import sys
@@ -56,11 +57,11 @@ from rytm_randomizer.reports.midi_csv_source import (
     parse_optional_number,
     read_midi_csv,
 )
-from scripts.reconcile_midi_csv import main as reconcile_midi_csv_main
 
 pytestmark = pytest.mark.fast
 ROOT = Path(__file__).resolve().parents[1]
 INPUTS = ROOT / "tests" / "fixtures" / "midi_guide"
+reconcile_midi_csv_main = runpy.run_path(str(ROOT / "scripts" / "reconcile_midi_csv.py"))["main"]
 
 
 @pytest.fixture(scope="module")
@@ -623,7 +624,10 @@ def test_shared_reader_refuses_unsafe_file_before_publication(
 @pytest.mark.parametrize("filename", ["audit-v2.json", "provenance.json"])
 @pytest.mark.parametrize("nested", [False, True])
 def test_shared_json_decoder_rejects_duplicate_claims_before_publication(
-    retained_reader_paths: tuple[Path, Path], filename: str, nested: bool
+    retained_reader_paths: tuple[Path, Path],
+    filename: str,
+    nested: bool,
+    capsys: pytest.CaptureFixture[str],
 ):
     inputs, outputs = retained_reader_paths
     target = inputs / filename
@@ -637,9 +641,70 @@ def test_shared_json_decoder_rejects_duplicate_claims_before_publication(
     assert json.loads(duplicate) == json.loads(raw)
     target.write_bytes(duplicate)
     before = _retained_output_state(outputs)
-    with pytest.raises(ValueError, match="duplicate JSON object key"):
-        reconcile_midi_csv_main(["--input-dir", str(inputs), "--output-dir", str(outputs)])
+    assert reconcile_midi_csv_main(["--input-dir", str(inputs), "--output-dir", str(outputs)]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert (
+        captured.err
+        == "CSV reconciliation refused: category=content; reason=invalid_or_conflicting_reference_data.\n"
+    )
     assert target.read_bytes() == duplicate
+    assert _retained_output_state(outputs) == before
+
+
+@pytest.mark.parametrize("filename", ["audit-v2.json", "provenance.json"])
+@pytest.mark.parametrize(
+    "content", ["duplicate", "malformed", "missing_fields", "missing_nested_fields"]
+)
+def test_actual_cli_refuses_private_corrupt_json_without_traceback_or_publication(
+    retained_reader_paths: tuple[Path, Path],
+    filename: str,
+    content: str,
+) -> None:
+    inputs, outputs = retained_reader_paths
+    target = inputs / filename
+    private = "private-key-token-C:/Users/PrivateOperator/SecretStage"
+    key = json.dumps(private).encode("utf-8")
+    raw = target.read_bytes()
+    if content == "duplicate":
+        corrupt = b"{" + key + b": 0, " + key + b": 1, " + raw[1:]
+    elif content == "malformed":
+        corrupt = key + b" invalid-json"
+    else:
+        data = json.loads(raw) if content == "missing_nested_fields" else {}
+        data[private] = "private value"
+        if content == "missing_nested_fields":
+            if filename == "audit-v2.json":
+                del data["sources"][0]["comparison"]["matched"]
+            else:
+                del data["license_reported_by_site"]
+        corrupt = json.dumps(data).encode("utf-8")
+    target.write_bytes(corrupt)
+    before = _retained_output_state(outputs)
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/reconcile_midi_csv.py"),
+            "--input-dir",
+            str(inputs),
+            "--output-dir",
+            str(outputs),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+        env={**os.environ, "RYTM_RAND_MIDI_BACKEND": "off", "RYTM_RAND_UPDATES": "off"},
+    )
+    assert result.returncode == 2 and result.stdout == ""
+    assert (
+        result.stderr
+        == "CSV reconciliation refused: category=content; reason=invalid_or_conflicting_reference_data.\n"
+    )
+    for value in (private, str(inputs), str(target), "Traceback"):
+        assert value not in result.stderr
+    assert target.read_bytes() == corrupt
     assert _retained_output_state(outputs) == before
 
 
