@@ -5,9 +5,27 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import Final
 
-from .analog_four_audio_inference import AnalogFourInferenceParameter
+from .analog_four_audio_inference import (
+    A4_AUDIO_INFERENCE_UNIPOLAR,
+    AnalogFourAudioInferenceSpec,
+    AnalogFourAudioInferenceTerm,
+    AnalogFourInferenceParameter,
+)
 from .analog_four_saved_kit_layout import A4_KIT_OBJECT_BYTE
 from .analog_rytm_kit_layout import RYTM_KIT_DUMP_ID
+
+REFERENCE_SOUND_INFERENCE_VERSION: Final[int] = 2
+REFERENCE_SOUND_VERSIONED_A4_PARAMETER: Final[str] = "noise_fade"
+A4_REFERENCE_NOISE_FADE_V1_SOURCE_REVISION: Final[str] = "b9f89c3ef780823a5e21d52aedfa65397c29bdaa"
+# Archived solely for exact legacy candidate replay. This historical equation
+# can exceed the signed native encoder's domain; replay must still reject that
+# input, never saturate it or use it as the default for new generation.
+A4_REFERENCE_NOISE_FADE_V1_SPEC: Final[AnalogFourAudioInferenceSpec] = AnalogFourAudioInferenceSpec(
+    ("Noise Fade",),
+    A4_AUDIO_INFERENCE_UNIPOLAR,
+    10.0,
+    (AnalogFourAudioInferenceTerm(("tail",), 96.0),),
+)
 
 REFERENCE_SOUND_SAVED_COMMANDS: Final[MappingProxyType[str, int]] = MappingProxyType(
     {
@@ -72,6 +90,10 @@ REFERENCE_SOUND_LIMITATIONS: Final[tuple[str, ...]] = (
 )
 
 __all__ = [
+    "REFERENCE_SOUND_INFERENCE_VERSION",
+    "REFERENCE_SOUND_VERSIONED_A4_PARAMETER",
+    "A4_REFERENCE_NOISE_FADE_V1_SPEC",
+    "A4_REFERENCE_NOISE_FADE_V1_SOURCE_REVISION",
     "REFERENCE_SOUND_SAVED_COMMANDS",
     "A4_REFERENCE_INFERENCE_BINDINGS",
     "REFERENCE_SOUND_LIMITATIONS",

@@ -20,7 +20,10 @@ from ...data.analog_rytm_kit_layout import (
 from ...data.analog_rytm_midi import ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER
 from ...data.reference_sound_candidates import (
     A4_REFERENCE_INFERENCE_BINDINGS,
+    A4_REFERENCE_NOISE_FADE_V1_SPEC,
+    REFERENCE_SOUND_INFERENCE_VERSION,
     REFERENCE_SOUND_LIMITATIONS,
+    REFERENCE_SOUND_VERSIONED_A4_PARAMETER,
     RYTM_REFERENCE_FEATURE_TERMS,
 )
 from ...data.rytm_machine_catalog import RYTM_MACHINE_PROFILES, is_machine_allowed_on_pad
@@ -275,10 +278,19 @@ def _validate_reference_request(
             raise ValueError("duplicate, unknown or foreign reference-sound parameter")
 
 
+def _validate_inference_version(inference_version: int) -> None:
+    if type(inference_version) is not int or inference_version not in (
+        1,
+        REFERENCE_SOUND_INFERENCE_VERSION,
+    ):
+        raise ValueError("inference_version must be integer 1 or 2")
+
+
 def _proposal(
     control: ReferenceSoundControl,
     features: AudioSynthesisFeatures,
     device_id: str,
+    inference_version: int,
 ) -> tuple[int, str, str]:
     if device_id == ANALOG_RYTM_DEVICE_ID:
         terms = RYTM_REFERENCE_FEATURE_TERMS[control.parameter]
@@ -287,6 +299,8 @@ def _proposal(
         return raw, str(raw), f"Normalized native-u7 intent: round(127*({equation})); not Hz/ms."
     parameter = A4_REFERENCE_INFERENCE_BINDINGS[control.parameter]
     spec = ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER[parameter]
+    if inference_version == 1 and control.parameter == REFERENCE_SOUND_VERSIONED_A4_PARAMETER:
+        spec = A4_REFERENCE_NOISE_FADE_V1_SPEC
     feature_values = build_analog_four_inference_feature_values(features, column=1)
     screen = str(evaluate_analog_four_inference_spec(spec, feature_values))
     native = get_analog_four_native_field_capability().native_fields()
@@ -347,6 +361,7 @@ def _render(  # noqa: PLR0913 - pure request plus selected direction and source 
     direction: str,
     label: str,
     audio_sha256: str,
+    inference_version: int,
 ) -> ReferenceSoundCandidate:
     mutations: list[AnalogFourNativeMutation] = []
     pending: list[tuple[ReferenceSoundControl, int, str, str, int]] = []
@@ -359,7 +374,7 @@ def _render(  # noqa: PLR0913 - pure request plus selected direction and source 
             limitations.append(f"{control.parameter} preserved: {', '.join(reasons)}.")
             continue
         domain = cast(AnalogFourNativeDomain, control.domain)
-        proposed, display, rationale = _proposal(control, features, device_id)
+        proposed, display, rationale = _proposal(control, features, device_id, inference_version)
         source_index = domain.index_of(control.source_value)
         proposed_index = domain.index_of(proposed)
         raw = domain.value_at(round(source_index + strength * (proposed_index - source_index)))
@@ -453,8 +468,11 @@ def render_reference_sound_candidates(  # noqa: PLR0913 - explicit immutable req
     parameters: tuple[str, ...],
     locks: tuple[str, ...],
     strength: float = 1.0,
+    *,
+    inference_version: int = REFERENCE_SOUND_INFERENCE_VERSION,
 ) -> tuple[ReferenceSoundCandidate, ...]:
-    """Render the eight existing DNA directions against exactly one saved sound."""
+    """Render eight directions; version 1 preserves legal legacy Noise Fade replay."""
+    _validate_inference_version(inference_version)
     require_reference_sound_generation_source(source_frame, device_id, target)
     controls = list_reference_sound_controls(source_frame, device_id, target)
     _validate_reference_request(analysis, parameters, locks, strength, controls)
@@ -474,6 +492,7 @@ def render_reference_sound_candidates(  # noqa: PLR0913 - explicit immutable req
             candidate.key,
             candidate.label,
             analysis.audio_sha256,
+            inference_version,
         )
         for candidate in workspace.candidates
     )
@@ -487,8 +506,11 @@ def render_refined_reference_sound_candidate(  # noqa: PLR0913 - same explicit r
     parameters: tuple[str, ...],
     locks: tuple[str, ...],
     strength: float = 1.0,
+    *,
+    inference_version: int = REFERENCE_SOUND_INFERENCE_VERSION,
 ) -> ReferenceSoundCandidate:
     """Render one already-refined measurement without reapplying DNA transforms."""
+    _validate_inference_version(inference_version)
     require_reference_sound_generation_source(source_frame, device_id, target)
     controls = list_reference_sound_controls(source_frame, device_id, target)
     _validate_reference_request(analysis, parameters, locks, strength, controls)
@@ -504,6 +526,7 @@ def render_refined_reference_sound_candidate(  # noqa: PLR0913 - same explicit r
         "refined",
         "Refined",
         analysis.audio_sha256,
+        inference_version,
     )
 
 
