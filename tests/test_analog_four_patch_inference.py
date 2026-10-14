@@ -1023,6 +1023,9 @@ def test_native_analysis_worker_serializes_success_and_bounded_failures(
     monkeypatch.setattr(inference, "_validate_native_audio_input", lambda _path: None)
     monkeypatch.setattr(inference, "_configure_native_audio_worker", lambda _cache: None)
     monkeypatch.setattr(inference, "analyze_audio_snapshot", lambda _path: _analysis())
+    monkeypatch.setattr(
+        inference, "_attach_native_audio_diagnostics", lambda _path, analysis: analysis
+    )
     inference._native_audio_analysis_worker(
         "parent-owned.wav",
         success_sender,  # type: ignore[arg-type]

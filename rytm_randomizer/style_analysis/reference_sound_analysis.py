@@ -24,13 +24,18 @@ from .extractor import (
     audio_synthesis_features_to_dict,
 )
 from .feature_report import FeatureReport, FeatureReportPayload, feature_report_to_dict
+from .reference_audio_diagnostics import ReferenceAudioDiagnostics, ReferenceAudioDiagnosticsPayload
 
 _MAX_SOUND_TEXT_LENGTH: Final[int] = 1024
 _MAX_SOUND_SCOPE_FIELDS: Final[int] = 256
 _MAX_SOUND_ENERGY_ARC: Final[int] = 32
 
 
-class ReferenceSoundAnalysisPayload(TypedDict):
+class _OptionalAnalysisPayload(TypedDict, total=False):
+    diagnostics: ReferenceAudioDiagnosticsPayload
+
+
+class ReferenceSoundAnalysisPayload(_OptionalAnalysisPayload):
     report: FeatureReportPayload
     features: AudioSynthesisFeaturesPayload
     evidence: AudioDnaEvidencePayload
@@ -75,11 +80,23 @@ def sound_string_tuple(value: object) -> tuple[str, ...]:
 
 
 def sound_analysis_to_dict(analysis: AudioFeatureAnalysis) -> ReferenceSoundAnalysisPayload:
-    return {
+    _validate_diagnostic_identity(analysis)
+    payload: ReferenceSoundAnalysisPayload = {
         "report": feature_report_to_dict(analysis.feature_report),
         "features": audio_synthesis_features_to_dict(analysis.synthesis_features),
         "evidence": audio_dna_evidence_to_dict(analysis.dna_evidence),
     }
+    if analysis.diagnostics is not None:
+        payload["diagnostics"] = analysis.diagnostics.to_dict()
+    return payload
+
+
+def _validate_diagnostic_identity(analysis: AudioFeatureAnalysis) -> None:
+    if (
+        analysis.diagnostics is not None
+        and analysis.diagnostics.audio_sha256 != analysis.audio_sha256
+    ):
+        raise ValueError("Reference-sound diagnostic identity differs from analysis.")
 
 
 def sound_features_from_dict(value: object) -> AudioSynthesisFeatures:
@@ -110,7 +127,7 @@ def sound_analysis_from_dict(value: object) -> AudioFeatureAnalysis:
         raise ValueError("Reference-sound energy measurements are invalid.")
     frequency = evidence["dominant_frequency_hz"]
     note = evidence["dominant_note"]
-    return AudioFeatureAnalysis(
+    analysis = AudioFeatureAnalysis(
         FeatureReport(
             source_type=SourceType(sound_text(report["source_type"])),
             confidence=Confidence(sound_text(report["confidence"])),
@@ -133,4 +150,11 @@ def sound_analysis_from_dict(value: object) -> AudioFeatureAnalysis:
             tonal_stability=sound_number(evidence["tonal_stability"]),
             spectral_movement=sound_number(evidence["spectral_movement"]),
         ),
+        diagnostics=(
+            ReferenceAudioDiagnostics.from_dict(data["diagnostics"])
+            if "diagnostics" in data
+            else None
+        ),
     )
+    _validate_diagnostic_identity(analysis)
+    return analysis

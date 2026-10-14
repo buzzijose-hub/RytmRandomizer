@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib
 import math
 import multiprocessing
@@ -56,6 +57,10 @@ from .feature_report import (
     FeatureReportPayload,
     compute_feature_report_hash,
     feature_report_to_dict,
+)
+from .reference_audio_diagnostics import (
+    REFERENCE_AUDIO_MAX_SECONDS,
+    analyze_reference_audio_diagnostics,
 )
 from .runtime_types import require_runtime_type
 
@@ -313,6 +318,7 @@ def _native_audio_analysis_worker(
         _configure_native_audio_worker(cache_dir)
         _validate_native_audio_input(Path(audio_path))
         analysis = analyze_audio_snapshot(Path(audio_path))
+        analysis = _attach_native_audio_diagnostics(Path(audio_path), analysis)
         sender.send(_NativeAnalysisMessage(analysis=analysis))
     except (KeyboardInterrupt, SystemExit) as exc:
         _send_native_analysis_failure(sender, exc)
@@ -383,6 +389,29 @@ def _native_audio_info(path: Path) -> _AudioInfo:
                 "fingerprint": "a4.audio_patch.native_analysis_failed",
             },
         ) from exc
+
+
+def _check_native_audio_identity(path: Path, expected: str) -> None:
+    with path.open("rb") as stream:
+        encoded = stream.read(NATIVE_AUDIO_MAX_BYTES + 1)
+    if len(encoded) > NATIVE_AUDIO_MAX_BYTES or hashlib.sha256(encoded).hexdigest() != expected:
+        raise ValueError("audio snapshot changed during analysis")
+
+
+def _attach_native_audio_diagnostics(
+    path: Path, analysis: AudioFeatureAnalysis
+) -> AudioFeatureAnalysis:
+    _check_native_audio_identity(path, analysis.audio_sha256)
+    info = _native_audio_info(path)
+    # The original frame/rate domain, not normalized synthesis duration, decides
+    # eligibility. Longer accepted analyses retain the legacy None contract.
+    if 0 < info.frames <= REFERENCE_AUDIO_MAX_SECONDS * info.samplerate:
+        diagnostics = analyze_reference_audio_diagnostics(path)
+        if diagnostics.audio_sha256 != analysis.audio_sha256:
+            raise ValueError("audio snapshot changed during diagnostics")
+        analysis = replace(analysis, diagnostics=diagnostics)
+    _check_native_audio_identity(path, analysis.audio_sha256)
+    return analysis
 
 
 def _validate_native_audio_input(path: Path) -> None:

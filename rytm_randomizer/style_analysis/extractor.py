@@ -48,6 +48,7 @@ from rytm_randomizer.guardrails.schema import Confidence, SourceType
 from rytm_randomizer.observability.errors import DataError
 
 from .feature_report import FeatureReport, compute_feature_report_hash
+from .reference_audio_diagnostics import ReferenceAudioDiagnostics
 from .runtime_types import require_runtime_type
 
 _AUDIO_SAMPLE_RATE: Final[int] = 22_050
@@ -246,6 +247,7 @@ class AudioFeatureAnalysis:
     feature_report: FeatureReport
     synthesis_features: AudioSynthesisFeatures
     dna_evidence: AudioDnaEvidence = EMPTY_AUDIO_DNA_EVIDENCE
+    diagnostics: ReferenceAudioDiagnostics | None = None
 
     @property
     def audio_sha256(self) -> str:
