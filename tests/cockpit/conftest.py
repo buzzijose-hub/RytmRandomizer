@@ -157,14 +157,45 @@ def reference_sound_workspace(
 ) -> ReferenceSoundWorkspace:
     from rytm_randomizer.cockpit.export.reference_sound_session import ReferenceSoundWorkspace
     from rytm_randomizer.cockpit.export.reference_sound_store import ReferenceSoundStore
+    from rytm_randomizer.style_analysis.reference_audio_diagnostics import ReferenceAudioDiagnostics
 
     def analyze(path: Path, cancel: Event) -> AudioFeatureAnalysis:
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        # Fake DSP metadata enables workflow tests only, not physical sound evidence.
+        with wave.open(str(path), "rb") as audio:
+            rate, channels, frames = audio.getframerate(), audio.getnchannels(), audio.getnframes()
+        diagnostics = ReferenceAudioDiagnostics(
+            digest,
+            digest,
+            rate,
+            channels,
+            0,
+            frames,
+            "librosa.pyin.v1",
+            440.0,
+            440.0,
+            0.1,
+            0.2,
+            0.0,
+            "qualified",
+            0.9,
+            0.9,
+            0.0,
+            False,
+            10,
+            9,
+            0,
+            1,
+            False,
+            (),
+            (),
+        )
         return replace(
             audio_patch_dna_analysis,
             synthesis_features=replace(
                 audio_patch_dna_analysis.synthesis_features, audio_sha256=digest
             ),
+            diagnostics=diagnostics,
         )
 
     return ReferenceSoundWorkspace(ReferenceSoundStore(tmp_path / "sounds"), analyzer=analyze)

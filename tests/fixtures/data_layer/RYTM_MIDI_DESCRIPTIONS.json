@@ -1,0 +1,1004 @@
+{
+  "('AMP', 'Amp Pan')": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "supplied_filename": "Analog Rytm MKII.csv",
+      "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+    },
+    "source_row": 55,
+    "cc_range": [
+      0,
+      127
+    ],
+    "nrpn_range": [
+      0,
+      127
+    ],
+    "orientation": "centered",
+    "reference_labels": [],
+    "units": [],
+    "notes": [],
+    "supporting_urls": [],
+    "missing_source_fields": []
+  },
+  "('FILTER', 'Filter Env Depth')": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "supplied_filename": "Analog Rytm MKII.csv",
+      "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+    },
+    "source_row": 48,
+    "cc_range": [
+      0,
+      127
+    ],
+    "nrpn_range": [
+      0,
+      127
+    ],
+    "orientation": "centered",
+    "reference_labels": [],
+    "units": [],
+    "notes": [],
+    "supporting_urls": [],
+    "missing_source_fields": []
+  },
+  "('SAMPLE', 'Sample Fine tune')": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "supplied_filename": "Analog Rytm MKII.csv",
+      "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+    },
+    "source_row": 34,
+    "cc_range": [
+      0,
+      127
+    ],
+    "nrpn_range": [
+      0,
+      127
+    ],
+    "orientation": "centered",
+    "reference_labels": [],
+    "units": [],
+    "notes": [],
+    "supporting_urls": [],
+    "missing_source_fields": []
+  },
+  "('SAMPLE', 'Sample Tune')": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "supplied_filename": "Analog Rytm MKII.csv",
+      "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+    },
+    "source_row": 33,
+    "cc_range": [
+      40,
+      88
+    ],
+    "nrpn_range": [
+      40,
+      88
+    ],
+    "orientation": "centered",
+    "reference_labels": [],
+    "units": [],
+    "notes": [],
+    "supporting_urls": [],
+    "missing_source_fields": []
+  },
+  "('bt_classic', 'Sweep Depth')": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "supplied_filename": "Analog Rytm MKII.csv",
+      "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+    },
+    "source_row": null,
+    "cc_range": null,
+    "nrpn_range": null,
+    "orientation": null,
+    "reference_labels": [],
+    "units": [],
+    "notes": [
+      "CSV omits this parameter; retain the independent Appendix C/D catalog row."
+    ],
+    "supporting_urls": [
+      "https://www.elektron.se/wp-content/uploads/2025/01/Analog-Rytm-MKII-User-Manual_ENG_OS1.72_250130.pdf#page=93",
+      "https://www.elektron.se/wp-content/uploads/2025/01/Analog-Rytm-MKII-User-Manual_ENG_OS1.72_250130.pdf#page=105"
+    ],
+    "missing_source_fields": [
+      "parameter_row"
+    ]
+  },
+  "('cy_ride', 'Cymbal Type')": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "supplied_filename": "Analog Rytm MKII.csv",
+      "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+    },
+    "source_row": 297,
+    "cc_range": [
+      0,
+      3
+    ],
+    "nrpn_range": [
+      0,
+      3
+    ],
+    "orientation": "zero_based",
+    "reference_labels": [
+      [
+        0,
+        "A"
+      ],
+      [
+        1,
+        "B"
+      ],
+      [
+        2,
+        "C"
+      ],
+      [
+        3,
+        "D"
+      ]
+    ],
+    "units": [],
+    "notes": [
+      "A-D names do not resolve the held CY Ride native SRC slot semantics."
+    ],
+    "supporting_urls": [
+      "https://www.elektron.se/wp-content/uploads/2025/01/Analog-Rytm-MKII-User-Manual_ENG_OS1.72_250130.pdf"
+    ],
+    "missing_source_fields": []
+  },
+  "('cy_ride', 'Tune')": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "supplied_filename": "Analog Rytm MKII.csv",
+      "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+    },
+    "source_row": 296,
+    "cc_range": [
+      0,
+      127
+    ],
+    "nrpn_range": [
+      0,
+      127
+    ],
+    "orientation": "centered",
+    "reference_labels": [],
+    "units": [],
+    "notes": [],
+    "supporting_urls": [],
+    "missing_source_fields": []
+  },
+  "('sy_chip', 'Offset 2')": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "supplied_filename": "Analog Rytm MKII.csv",
+      "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+    },
+    "source_row": 233,
+    "cc_range": [
+      40,
+      88
+    ],
+    "nrpn_range": null,
+    "orientation": "centered",
+    "reference_labels": [],
+    "units": [],
+    "notes": [
+      "Reported MIDI range is not a legal native offset domain."
+    ],
+    "supporting_urls": [],
+    "missing_source_fields": [
+      "nrpn_address",
+      "nrpn_range"
+    ]
+  },
+  "('sy_chip', 'Offset 3')": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "supplied_filename": "Analog Rytm MKII.csv",
+      "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+    },
+    "source_row": 234,
+    "cc_range": [
+      40,
+      88
+    ],
+    "nrpn_range": null,
+    "orientation": "centered",
+    "reference_labels": [],
+    "units": [],
+    "notes": [
+      "Reported MIDI range is not a legal native offset domain."
+    ],
+    "supporting_urls": [],
+    "missing_source_fields": [
+      "nrpn_address",
+      "nrpn_range"
+    ]
+  },
+  "('sy_chip', 'Offset 4')": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "supplied_filename": "Analog Rytm MKII.csv",
+      "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+    },
+    "source_row": 235,
+    "cc_range": [
+      40,
+      88
+    ],
+    "nrpn_range": null,
+    "orientation": "centered",
+    "reference_labels": [],
+    "units": [],
+    "notes": [
+      "Reported MIDI range is not a legal native offset domain."
+    ],
+    "supporting_urls": [],
+    "missing_source_fields": [
+      "nrpn_address",
+      "nrpn_range"
+    ]
+  },
+  "('sy_chip', 'Speed')": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "supplied_filename": "Analog Rytm MKII.csv",
+      "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+    },
+    "source_row": 231,
+    "cc_range": [
+      0,
+      127
+    ],
+    "nrpn_range": null,
+    "orientation": "zero_based",
+    "reference_labels": [],
+    "units": [
+      "BPM note divisions",
+      "Hz",
+      "single-shot"
+    ],
+    "notes": [
+      "Manual describes tempo-synced, fixed-Hz and single-shot regions; numeric boundaries, mode codes and conversions are not established."
+    ],
+    "supporting_urls": [
+      "https://www.elektron.se/wp-content/uploads/2025/01/Analog-Rytm-MKII-User-Manual_ENG_OS1.72_250130.pdf"
+    ],
+    "missing_source_fields": [
+      "nrpn_address",
+      "nrpn_range",
+      "usage"
+    ]
+  },
+  "('sy_chip', 'Tune')": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "supplied_filename": "Analog Rytm MKII.csv",
+      "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+    },
+    "source_row": 229,
+    "cc_range": [
+      0,
+      127
+    ],
+    "nrpn_range": null,
+    "orientation": "centered",
+    "reference_labels": [],
+    "units": [],
+    "notes": [],
+    "supporting_urls": [],
+    "missing_source_fields": [
+      "nrpn_address",
+      "nrpn_range"
+    ]
+  },
+  "('sy_chip', 'Waveform')": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "supplied_filename": "Analog Rytm MKII.csv",
+      "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+    },
+    "source_row": 230,
+    "cc_range": [
+      0,
+      127
+    ],
+    "nrpn_range": null,
+    "orientation": "zero_based",
+    "reference_labels": [
+      [
+        0,
+        "Analog Sine"
+      ],
+      [
+        1,
+        "Asymmetric Sine"
+      ],
+      [
+        2,
+        "Triangle"
+      ],
+      [
+        3,
+        "Sinesaw"
+      ],
+      [
+        4,
+        "Saw"
+      ],
+      [
+        5,
+        "Square"
+      ],
+      [
+        6,
+        "Noise"
+      ],
+      [
+        7,
+        "Anim 1"
+      ],
+      [
+        8,
+        "Anim 2"
+      ],
+      [
+        9,
+        "Anim 3"
+      ],
+      [
+        10,
+        "Anim 4"
+      ],
+      [
+        11,
+        "Anim 5"
+      ],
+      [
+        12,
+        "PWM+"
+      ],
+      [
+        13,
+        "PWM-"
+      ],
+      [
+        14,
+        ".TRI"
+      ],
+      [
+        15,
+        "+TRI"
+      ],
+      [
+        16,
+        "TRI+"
+      ],
+      [
+        17,
+        "TRI*"
+      ],
+      [
+        18,
+        ".SAW"
+      ],
+      [
+        19,
+        "+SAW"
+      ],
+      [
+        20,
+        "SAW+"
+      ],
+      [
+        21,
+        "SAW*"
+      ],
+      [
+        22,
+        ".SQR"
+      ],
+      [
+        23,
+        "+SQR"
+      ],
+      [
+        24,
+        "SQR+"
+      ],
+      [
+        25,
+        "SQR*"
+      ],
+      [
+        26,
+        "TBL1"
+      ],
+      [
+        27,
+        "TBL2"
+      ],
+      [
+        28,
+        "TBL3"
+      ],
+      [
+        29,
+        "P1%"
+      ],
+      [
+        30,
+        "P2%"
+      ],
+      [
+        31,
+        "P3%"
+      ],
+      [
+        32,
+        "P4%"
+      ],
+      [
+        33,
+        "P5%"
+      ],
+      [
+        34,
+        "P6%"
+      ],
+      [
+        35,
+        "P7%"
+      ],
+      [
+        36,
+        "P8%"
+      ],
+      [
+        37,
+        "P9%"
+      ],
+      [
+        38,
+        "P10%"
+      ],
+      [
+        39,
+        "P11%"
+      ],
+      [
+        40,
+        "P12%"
+      ],
+      [
+        41,
+        "P13%"
+      ],
+      [
+        42,
+        "P14%"
+      ],
+      [
+        43,
+        "P15%"
+      ],
+      [
+        44,
+        "P16%"
+      ],
+      [
+        45,
+        "P17%"
+      ],
+      [
+        46,
+        "P18%"
+      ],
+      [
+        47,
+        "P19%"
+      ],
+      [
+        48,
+        "P20%"
+      ],
+      [
+        49,
+        "P21%"
+      ],
+      [
+        50,
+        "P22%"
+      ],
+      [
+        51,
+        "P23%"
+      ],
+      [
+        52,
+        "P24%"
+      ],
+      [
+        53,
+        "P25%"
+      ],
+      [
+        54,
+        "P26%"
+      ],
+      [
+        55,
+        "P27%"
+      ],
+      [
+        56,
+        "P28%"
+      ],
+      [
+        57,
+        "P29%"
+      ],
+      [
+        58,
+        "P30%"
+      ],
+      [
+        59,
+        "P31%"
+      ],
+      [
+        60,
+        "P32%"
+      ],
+      [
+        61,
+        "P33%"
+      ],
+      [
+        62,
+        "P34%"
+      ],
+      [
+        63,
+        "P35%"
+      ],
+      [
+        64,
+        "P36%"
+      ],
+      [
+        65,
+        "P37%"
+      ],
+      [
+        66,
+        "P38%"
+      ],
+      [
+        67,
+        "P39%"
+      ],
+      [
+        68,
+        "P40%"
+      ],
+      [
+        69,
+        "P41%"
+      ],
+      [
+        70,
+        "P42%"
+      ],
+      [
+        71,
+        "P43%"
+      ],
+      [
+        72,
+        "P44%"
+      ],
+      [
+        73,
+        "P45%"
+      ],
+      [
+        74,
+        "P46%"
+      ],
+      [
+        75,
+        "P47%"
+      ],
+      [
+        76,
+        "P48%"
+      ],
+      [
+        77,
+        "P49%"
+      ],
+      [
+        78,
+        "P50%"
+      ],
+      [
+        79,
+        "P51%"
+      ],
+      [
+        80,
+        "P52%"
+      ],
+      [
+        81,
+        "P53%"
+      ],
+      [
+        82,
+        "P54%"
+      ],
+      [
+        83,
+        "P55%"
+      ],
+      [
+        84,
+        "P56%"
+      ],
+      [
+        85,
+        "P57%"
+      ],
+      [
+        86,
+        "P58%"
+      ],
+      [
+        87,
+        "P59%"
+      ],
+      [
+        88,
+        "P60%"
+      ],
+      [
+        89,
+        "P61%"
+      ],
+      [
+        90,
+        "P62%"
+      ],
+      [
+        91,
+        "P63%"
+      ],
+      [
+        92,
+        "P64%"
+      ],
+      [
+        93,
+        "P65%"
+      ],
+      [
+        94,
+        "P66%"
+      ],
+      [
+        95,
+        "P67%"
+      ],
+      [
+        96,
+        "P68%"
+      ],
+      [
+        97,
+        "P69%"
+      ],
+      [
+        98,
+        "P70%"
+      ],
+      [
+        99,
+        "P71%"
+      ],
+      [
+        100,
+        "P72%"
+      ],
+      [
+        101,
+        "P73%"
+      ],
+      [
+        102,
+        "P74%"
+      ],
+      [
+        103,
+        "P75%"
+      ],
+      [
+        104,
+        "P76%"
+      ],
+      [
+        105,
+        "P77%"
+      ],
+      [
+        106,
+        "P78%"
+      ],
+      [
+        107,
+        "P79%"
+      ],
+      [
+        108,
+        "P80%"
+      ],
+      [
+        109,
+        "P81%"
+      ],
+      [
+        110,
+        "P82%"
+      ],
+      [
+        111,
+        "P83%"
+      ],
+      [
+        112,
+        "P84%"
+      ],
+      [
+        113,
+        "P85%"
+      ],
+      [
+        114,
+        "P86%"
+      ],
+      [
+        115,
+        "P87%"
+      ],
+      [
+        116,
+        "P88%"
+      ],
+      [
+        117,
+        "P89%"
+      ],
+      [
+        118,
+        "P90%"
+      ],
+      [
+        119,
+        "P91%"
+      ],
+      [
+        120,
+        "P92%"
+      ],
+      [
+        121,
+        "P93%"
+      ],
+      [
+        122,
+        "P94%"
+      ],
+      [
+        123,
+        "P95%"
+      ],
+      [
+        124,
+        "P96%"
+      ],
+      [
+        125,
+        "P97%"
+      ],
+      [
+        126,
+        "P98%"
+      ],
+      [
+        127,
+        "P99%"
+      ]
+    ],
+    "units": [],
+    "notes": [
+      "128 CSV labels do not establish native selector encoding."
+    ],
+    "supporting_urls": [
+      "https://www.elektron.se/wp-content/uploads/2025/01/Analog-Rytm-MKII-User-Manual_ENG_OS1.72_250130.pdf"
+    ],
+    "missing_source_fields": [
+      "nrpn_address",
+      "nrpn_range"
+    ]
+  },
+  "('ut_impulse', 'Polarity')": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "supplied_filename": "Analog Rytm MKII.csv",
+      "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+    },
+    "source_row": 322,
+    "cc_range": [
+      0,
+      1
+    ],
+    "nrpn_range": [
+      0,
+      1
+    ],
+    "orientation": "zero_based",
+    "reference_labels": [
+      [
+        0,
+        "Positive"
+      ],
+      [
+        1,
+        "Negative"
+      ]
+    ],
+    "units": [],
+    "notes": [
+      "Manual names POS/NEG but does not establish these numeric wire codes."
+    ],
+    "supporting_urls": [
+      "https://www.elektron.se/wp-content/uploads/2025/01/Analog-Rytm-MKII-User-Manual_ENG_OS1.72_250130.pdf#page=97"
+    ],
+    "missing_source_fields": []
+  },
+  "('ut_noise', 'Sweep Depth')": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+      "supplied_filename": "Analog Rytm MKII.csv",
+      "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+    },
+    "source_row": 317,
+    "cc_range": [
+      0,
+      127
+    ],
+    "nrpn_range": [
+      0,
+      127
+    ],
+    "orientation": "centered",
+    "reference_labels": [],
+    "units": [],
+    "notes": [],
+    "supporting_urls": [],
+    "missing_source_fields": []
+  }
+}

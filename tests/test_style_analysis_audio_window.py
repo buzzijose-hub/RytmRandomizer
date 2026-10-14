@@ -9,6 +9,7 @@ import pytest
 
 from rytm_randomizer.style_analysis import extractor
 from rytm_randomizer.style_analysis.extractor import AudioMeasurements
+from rytm_randomizer.style_analysis.runtime_types import LibrosaApi
 
 pytestmark = pytest.mark.fast
 
@@ -81,7 +82,7 @@ def test_measurement_core_passes_bounded_decode_options_and_handles_empty_audio(
     monkeypatch.setattr(
         extractor,
         "_require_librosa",
-        lambda: (cast(extractor._LibrosaApi, FakeLibrosa()), object()),
+        lambda: (cast(LibrosaApi, FakeLibrosa()), object()),
     )
     monkeypatch.setattr(extractor, "_flat_float_values", lambda *_args: [])
 
@@ -115,7 +116,7 @@ def test_get_audio_duration_uses_metadata_path_and_validates_result(
     monkeypatch.setattr(
         extractor,
         "_require_librosa",
-        lambda: (cast(extractor._LibrosaApi, FakeLibrosa()), object()),
+        lambda: (cast(LibrosaApi, FakeLibrosa()), object()),
     )
 
     assert extractor.get_audio_duration(Path("mix.wav")) == 7_200.5
@@ -136,7 +137,7 @@ def test_get_audio_duration_rejects_invalid_metadata(
     monkeypatch.setattr(
         extractor,
         "_require_librosa",
-        lambda: (cast(extractor._LibrosaApi, FakeLibrosa()), object()),
+        lambda: (cast(LibrosaApi, FakeLibrosa()), object()),
     )
 
     with pytest.raises(ValueError, match="finite and positive"):

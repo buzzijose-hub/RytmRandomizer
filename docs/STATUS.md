@@ -1,10 +1,40 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-10-13. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-10-14. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
 
-The October13 security/rehearsal follow-up delivers source
+The October14 reference-sound reliability/catalog update is in final software
+verification on PR254. A new Windows delivery is not accepted yet. Signed Noise
+Fade inference, qualified pitch/octave/quality diagnostics, explicit audition
+segments and exact replay are implemented. The eleven-feature score is unchanged
+and is not percent accuracy. Uncertain references and unsuitable auditions hold
+refinement rather than changing protected tuning or silently normalizing audio.
+
+All552 supplied MIDI Guide CSV rows are reconciled:403 complete-address matches,
+24 contextual partial matches,125 A4 reference-only rows and one independently
+supported BT Classic Sweep Depth omission. Exact source hashes, attribution and
+CC-BY-SA4 data licensing are retained. Descriptive additions grant no native
+offsets, selector safety, MIDI-domain conversion or SEND authority. See the
+[ledger](catalogs/midi-csv-reconciliation.md) and
+[active plan](superpowers/plans/2026-10-14-reference-sound-reliability.md).
+
+Latest focused integration passes1435catalog/architecture/data/packaging cases;
+frontend1326cases/81files passes100%allfourcoverage. Strict88-module typing,
+full Python lint/format and Vulture80 pass. Same-production composed coverage
+has86touched runtime files100%line/branch and99.43%project pure branch. The final
+full run passes12259tests/six skips/six warnings436.47s. New exact-source packaged
+UI journeys remain pending. The preceding full run had12246passes and six
+failures; the166focused repair cases pass, but that failed run is not accepted
+as green. FrozenV134 and pins are intact.
+
+Original WAVs, retained sessions, user app/data and all previous deliveries are
+preserved. Private real-input QA is a quality/persistence exercise, not a claim
+that historical takes were produced by a newly generated candidate. The AL02
+compiler receipt was refreshed only for descriptive catalog dependency identity;
+its previous receipt is archived and the proof remains blocked with no SysEx.
+
+The verified October13 security/rehearsal fallback remains source
 `53a935d08582f3446259afb7494d6bdb79618263` on PR254:
 `C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-53a935d08582`.
 It is READY for a supervised, backed-up single-Pad2 scratch test, **NOT SHOW-READY**.
@@ -19,31 +49,21 @@ weakened; trusted-local-root limits remain explicit in the
 [security report](security/2026-10-13-codeql-path-disposition.md). Seven separate
 default-branch dependency alerts are not resolved by this focused disposition.
 
-Exact server packets are visible before arm and in confirmation. Fresh library
-ACKs now publish through the existing store after freshness/success checks.
-Forge Preview recalls the exact selected candidate, not another regeneration.
-All source/scope/output/restore restrictions remain unchanged.1306frontend
-cases/81files98.60s pass allfourcoverage100%; type/lint/build and25driver cases
-pass. Normal gates pass strict76typing/898architecture/697nonfast including
-685frozen parity. Exact53 Windows full CI:11877pass/5skip/6warnings1635.61s;
-Python production remains byte-identical to the verified5db6 source.
-
-Actual packaged acceptance: focused rehearsal24.141s/22commands/7checks,
-native precision46.195s/22commands/10checks, both-device reference sound50.517s/
-47commands and isolated worker25.078s pass, with one startup/owned restart,
-exact values/replay, disarmed recovery and confirmed cleanup. Rehearsal memory
-325.15-569.53MiB/max10processes/max4106handles/min9.69GiBfree; pendinghigh4.
-These are bounded journeys, not new endurance/acoustic/hardware certification.
-The5d narrow-layout and0bb library failures remain failed evidence. Test observer
-and locator repairs now require fresh hydration/bootstrap without timeout or
-retry increases. No MIDI/USB access occurred; the user's older4317 app is untouched.
+Fallback acceptance includes exact server-plan inspection, fresh library ACKs,
+exact selected-candidate Preview,11877Windows tests and bounded actual Pad2,
+native and both-device reference journeys. Its receipt retains precise hashes,
+timings and resources. Those results do not certify October14 production changes.
+All source/scope/output/restore restrictions remain unchanged. No MIDI/USB access
+occurred and the user's older4317 app is untouched.
 
 Latest Eddie review remains October3 CHANGES_REQUESTED. Protected approval and
 historical Gate14/16 remain pending; no merge. First physical test: the
-[four-control Pad2 checklist](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md),
+[October14 three-stage handoff](hardware-validation/2026-10-14-reference-sound-session.md),
 10% candidate, exact ready plan, explicit Rytm arm/confirmation, DISARM, manual
-KIT reload, front-panel/listening recovery and fresh exact baseline. A4 working
-query research is not a prerequisite. General A4/BOTH, CY Ride SRC, paired
+KIT reload, front-panel/listening recovery and fresh exact baseline. Separate
+disposable CY Ride saved-dump mapping follows only after recovery passes; a
+separate declared-note A4 take follows with output disabled. Arrival at9p.m.
+does not authorize hardware actions. General A4/BOTH, CY Ride SRC, paired
 precision, full unsaved synchronization and automatic restoration remain held.
 
 The previously delivered reference-sound workflow below remains available.

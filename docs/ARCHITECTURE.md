@@ -1324,6 +1324,23 @@ without erasing earlier favorites.
 | `cockpit/export/reference_sound_errors.py` | Closed reason codes, fixed operator messages and bounded diagnostic classification. |
 | `cockpit/export/reference_sound_analysis.py` | Public export facade for the canonical lower `style_analysis/reference_sound_analysis.py` validators and typed serializer. |
 | `PreparedReferenceSound` in `cockpit/export/reference_sound_session.py` | Immutable worker-to-owner payload/artifact handoff, with expected-manifest compare-and-swap identity. |
+| `style_analysis/reference_audio_diagnostics.py` | Bounded original-level PCM measurements, qualified monophonic pYIN estimates, spectral peaks, conservative note activity and separate pitch comparison; no tuning authority. |
+| `style_analysis/runtime_types.py` | Shared lazy soundfile/librosa Protocols and runtime narrowing, reused by extraction, the isolated worker and diagnostics; no eager audio imports. |
+
+The file-only MIDI Guide reconciliation tool uses canonical descriptive tables
+in `data/elektron_midi_descriptions.py` and source/schema/context facts in
+`data/midi_csv_reconciliation.py`. `reports/midi_csv_source.py` preserves exact
+licensed CSV bytes/cells; `midi_csv_matcher.py` matches context plus addresses;
+`midi_csv_ledger_rows.py` separates community claims, native evidence and policy;
+`midi_csv_reconciliation.py` composes the existing Device support inventory.
+The thin `scripts/reconcile_midi_csv.py` publishes the two ledger artifacts with
+the existing atomic write-set owner or checks them without writing. It does not
+register another app workflow, mutate a KIT, enumerate ports or grant SEND.
+Shared input validators and `reports/formatter.sha256_bytes` own narrowing and
+full-byte identity. Repository code retains PolyForm Noncommercial; supplied
+and adapted reference data retains CC-BY-SA-4.0 attribution. The
+[552-row ledger](catalogs/midi-csv-reconciliation.md) records unresolved evidence
+and intentionally protected FX/CV, routing, selectors and OXI-owned controls.
 
 `cockpit/export/reference_sound_session.py` composes the existing eight-direction
 DNA, native inference, recording comparison and residual refinement. A worker
@@ -1353,7 +1370,7 @@ additional mapping evidence, live eligibility or trained acoustic models.
 `reference_sound_store` is registered in the canonical persisted-state registry.
 It uses the shared bounded reader, canonical JSON facade and atomic write set,
 content-addressed audio/SysEx, capped storage and checksum-verified manifests.
-Reopen recomputes candidates and residual feedback under current policy and
+Reopen recomputes candidates and residual feedback under the retained inference version and
 verifies exact artifacts. Metadata summaries stay compact; audio is read in
 bounded chunks from approved session artifacts only. Local favorites are not
 hardware KIT saves, and recalling them does not recover an instrument.
@@ -1365,6 +1382,32 @@ input size/duration are bounded. Cancellation, child failure and timeout do not
 publish a replacement session. Candidate playback requires a supplied recording;
 there is no simulated instrument preview. Ranking reuses the normalized
 11-feature weighted L1 metric, not a probability or proof of sound accuracy.
+
+Short reference analyses add optional, strictly validated pitch/quality metadata
+inside that same isolated worker. Long-form analysis remains a separate path.
+The original-level RMS/peak/clipping and exact PCM identity are measured without
+normalization or trimming. pYIN periodicity/voicing qualifies a fundamental only
+under explicit conservative policy; the strongest Welch spectral peak is not a
+verified fundamental or captured played note. Unpitched and uncertain results
+remain distinct. Pitch/octave diagnostics do not alter the eleven-feature metric.
+Missing, quiet, clipped, uncertain or multi-note feedback, and supported pitch
+differences beyond 100 cents, hold new refinement server-side.
+
+Audition comparison accepts an explicit 0.05-8 second frame range and retains
+both the original take and selected WAV. A long audition without a range is
+refused, never automatically cropped. Legacy records retain absent optional keys;
+`measure` can add reference diagnostics without altering candidates, favorites,
+measurements, source identity or session identity. Existing comparison diagnostics
+are recomputed when reference diagnostics are added. Old recordings require fresh
+qualified feedback before new refinement.
+
+Noise Fade current inference uses signed display fade-out intent, followed by the
+verified native bipolar converter. Current unlocked Noise Fade contexts record
+inference version 2. Absence means legacy replay: its old equation is archived
+as a data-layer compatibility fact, with exact readback/byte proofs unchanged.
+Legacy Noise Fade sessions remain recallable/exportable but cannot create new
+refinements; current generation creates a separate versioned context. Neither
+model is a calibrated fade-time estimate or a grant for general A4 transmission.
 
 Export requires an explicit zero-based scratch slot, uses canonical stored-dump
 commands and `ElektronNativeObjectMessage.with_slot`, then verifies the unchanged

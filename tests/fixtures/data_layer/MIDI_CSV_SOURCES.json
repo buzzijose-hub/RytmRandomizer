@@ -1,0 +1,22 @@
+[
+  {
+    "family": "a4",
+    "device_id": "analog_four_mk2",
+    "device_label": "Analog Four MKII",
+    "filename": "Analog Four MKII.csv",
+    "sha256": "da38d8ec8df47d4a6c39034b2f1c829475ac301c712d26c0a4b4787ae259ea69",
+    "row_count": 230,
+    "source_url": "https://midi.guide/d/elektron/analog-four-mkii/",
+    "manual_url": "https://www.elektron.se/wp-content/uploads/2024/09/Analog-Four-MKII-User-Manual_ENG_OS1.51C_220204-1.pdf"
+  },
+  {
+    "family": "rytm",
+    "device_id": "analog_rytm_mk2",
+    "device_label": "Analog Rytm MKII",
+    "filename": "Analog Rytm MKII.csv",
+    "sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+    "row_count": 322,
+    "source_url": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+    "manual_url": "https://www.elektron.se/wp-content/uploads/2025/01/Analog-Rytm-MKII-User-Manual_ENG_OS1.72_250130.pdf"
+  }
+]

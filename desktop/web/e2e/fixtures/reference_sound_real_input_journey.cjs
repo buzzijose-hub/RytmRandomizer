@@ -1,4 +1,6 @@
 /* Explicit private-input QA only. The parent owns launch, restart and cleanup.
+ * Supplied historical takes exercise recording quality and persistence; they
+ * are not claimed to be auditions of the new full-scope generated candidate.
  * validateRealInputConfig({ qa_only: true, source, reference, take2, take3 },
  *   { repo, runRoot }) requires { path: absolutePrivatePath, sha256 } per input.
  * primeReferenceRealInputSources(repo, runRoot, python, config) retains only KIT
@@ -427,7 +429,9 @@ async function exerciseReferenceSoundRealInput({ page, latest, connected, summar
     await page.screenshot({ path: screenshot });
     summary.reference_sound_real_input = { session_id: expected.session_id, source_sha256: config.source.sha256, original_sha256: config.reference.sha256,
       segment_sha256: expected.segment.sha256, parameters, candidate_count: 8, favorite_count: expected.favorites.length, recording_count: expected.recordings.length,
-      hardware_validation: false, synthetic_audio_only: false, reopened_exact: false, screenshot_sha256: digest(fs.readFileSync(screenshot)) };
+      hardware_validation: false, candidate_audition_association_validated: false,
+      purpose: 'recording-quality and persistence exercise, not sound-match proof',
+      synthetic_audio_only: false, reopened_exact: false, screenshot_sha256: digest(fs.readFileSync(screenshot)) };
     phase('await-parent-restart');
     return expected;
   } finally { assertRealInputsUnchanged(config); }

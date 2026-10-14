@@ -3498,8 +3498,18 @@ flowchart LR
     Prepared --> Owner
     Owner --> Store[Registered store / OS lock + manifest CAS + atomic write set]
     Recording[Supplied audition recording] --> Worker
-    Analysis --> Metric[11-feature weighted L1 / bounded residual refinement]
-    Metric --> DNA
+    Recording --> Range[Explicit sample range / retain original + segment]
+    Range --> Worker
+    Worker --> Quality[Original PCM levels / clipping / note activity / qualified pYIN]
+    Quality --> Pitch[Separate pitch + octave diagnostics / no tuning writes]
+    Analysis --> Metric[Unchanged 11-feature weighted L1]
+    Metric --> Hold[Server quality + pitch hold / bounded residual refinement]
+    Pitch --> Hold
+    Hold --> DNA
+    Store --> Version[Retained inference version / exact legacy Noise Fade replay]
+    Version --> DNA
+    Store --> Refresh[Measure missing reference diagnostics / preserve session + candidates]
+    Refresh --> Worker
     Store --> Recall[Exact disarmed reopen / local favorites]
     Store --> Export[Explicit scratch slot / local SysEx download]
     Hardware[Manual instrument load / recording / save / reload] -. physical evidence pending .-> Recording
@@ -3511,3 +3521,25 @@ documented eligible SRC controls are not revoked or expanded. Restrictions on
 unverified A4/BOTH sending, paired MIDI conversion and automatic restoration
 remain held. A similarity score is a defined feature comparison of supplied
 audio, not a probability, synthetic preview or physical sound-match certificate.
+
+## MIDI Guide Reference Reconciliation
+
+```mermaid
+flowchart TD
+    CSV[Licensed original CSVs / pinned SHA256 + Git blob] --> Parse[midi_csv_source / lossless bounded rows]
+    Data[Canonical Data / descriptions + source schema] --> Parse
+    Parse --> Match[midi_csv_matcher / machine-track context + addresses]
+    Inventory[Existing Device support inventory / native evidence + policy] --> Match
+    Match --> Rows[midi_csv_ledger_rows / claims distinct from executable domains]
+    Data --> Rows
+    Rows --> Ledger[midi_csv_reconciliation / all 552 rows + gaps]
+    Ledger --> Tool[Thin file-only script]
+    Tool --> Check[Nonwriting reproducibility check]
+    Tool --> Publish[Existing atomic write set / JSON + Markdown]
+    Publish --> Handoff[Separate unresolved studio experiments]
+    Holds[A4-BOTH / CY Ride / paired precision / OXI protection] -. unchanged .-> Inventory
+```
+
+This is a documentary reference path, not another mutation, MIDI or restoration
+workflow. Missing cells and conflicting claims remain explicit. Descriptive
+enum labels do not grant native authoring, output readiness or physical validation.

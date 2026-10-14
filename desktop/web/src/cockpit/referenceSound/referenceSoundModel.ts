@@ -64,6 +64,17 @@ export function currentSoundRecordings(view: ReferenceSoundView): ReferenceSound
     recording.candidate_id === candidate.candidate_id && recording.candidate_sha256 === candidate.frame_sha256);
 }
 
+export function recordingRefinementHeld(recording: ReferenceSoundRecording): boolean {
+  return recording.features.diagnostics === undefined || recording.pitch_comparison === undefined ||
+    recording.pitch_comparison.support_status === 'held' || recording.pitch_comparison.blockers.length > 0;
+}
+
+export function legacyNoiseFadeSession(session: ReferenceSoundSession): boolean {
+  const context = session.context;
+  return context?.device_id === 'analog_four_mk2' && context.inference_version === undefined &&
+    context.parameters.includes('noise_fade') && !context.locks.includes('noise_fade');
+}
+
 export function segmentIsValid(view: ReferenceSoundView): boolean {
   const original = view.session?.segment.original;
   return original !== undefined && Number.isInteger(view.startFrame) && Number.isInteger(view.frameCount) &&
@@ -153,7 +164,7 @@ export class ReferenceSoundModel {
 
   private async request(action: ReferenceSoundAction, revision: number): Promise<ReferenceSoundReply> {
     this.check(revision);
-    const heavy = action.action === 'generate' || action.action === 'record' || action.action === 'refine';
+    const heavy = action.action === 'generate' || action.action === 'record' || action.action === 'refine' || action.action === 'measure';
     const ack = await this.client.send({ type: 'reference_sound', ...action },
       heavy ? { timeoutMs: SOUND_ANALYSIS_TIMEOUT_MS } : undefined);
     this.check(revision);
@@ -419,16 +430,23 @@ export class ReferenceSoundModel {
     if (changed) await this.restoreRecording(next, revision);
   });
 
-  record = async (file: File): Promise<void> => this.run('Uploading and measuring supplied recording', async (revision) => {
+  record = async (file: File, segment?: { start_frame: number; frame_count: number }): Promise<void> => this.run('Uploading and measuring supplied recording', async (revision) => {
     const candidate = selectedSound(this.view);
     if (candidate === undefined || this.view.session!.recordings.length >= 16) throw new Error('Choose a current candidate; this session allows at most 16 recordings.');
+    if (segment !== undefined && (!Number.isInteger(segment.start_frame) || !Number.isInteger(segment.frame_count) || segment.start_frame < 0 || segment.frame_count < 1)) {
+      throw new Error('Choose an integer audition start frame and positive frame count.');
+    }
     const uploadId = await this.upload(file, revision);
     const session = await this.sessionRequest({ action: 'record', session_id: this.view.session!.session_id,
-      candidate_id: candidate.candidate_id, candidate_sha256: candidate.frame_sha256, upload_id: uploadId }, revision);
+      candidate_id: candidate.candidate_id, candidate_sha256: candidate.frame_sha256, upload_id: uploadId, ...segment }, revision);
     this.uploadOpen = false;
     this.adopt(session);
-    this.setAudio('recordingUrl', file);
-    this.update({ recordingSha: currentSoundRecordings(this.view).at(-1)!.audio_sha256 });
+    if (segment === undefined) {
+      this.setAudio('recordingUrl', file);
+      this.update({ recordingSha: currentSoundRecordings(this.view).at(-1)!.audio_sha256 });
+    } else {
+      await this.restoreRecording(session, revision);
+    }
   });
 
   refine = async (gain: number): Promise<void> => this.run('Refining measured candidate', async (revision) => {
@@ -439,12 +457,27 @@ export class ReferenceSoundModel {
       throw new Error('Supply a recording of this exact candidate first. Refinement gain is 0-1, with at most three rounds.');
     }
     const latest = currentSoundRecordings(this.view).at(-1)!;
+    if (legacyNoiseFadeSession(session)) throw new Error('Legacy Noise Fade session: exact recall remains available. Generate a separate current-model session before new refinement.');
     if (this.view.recordingSha !== null && this.view.recordingSha !== latest.audio_sha256) {
       throw new Error('Select the latest supplied recording for refinement; older recordings remain available for comparison.');
+    }
+    if (recordingRefinementHeld(latest)) {
+      throw new Error('Refinement held: inspect pitch and recording-quality diagnostics, then compare a clean single-note audition. Retained work is unchanged.');
     }
     const next = await this.sessionRequest({ action: 'refine', session_id: session.session_id, candidate_id: candidate.candidate_id, correction_gain: gain }, revision);
     this.adopt(next);
     if (next.selected_candidate_id !== candidate.candidate_id) this.setAudio('recordingUrl', null);
+  });
+
+  measureReference = async (): Promise<void> => this.run('Measuring retained reference diagnostics', async (revision) => {
+    const current = this.view.session;
+    if (current?.analysis == null || this.view.stale) throw new Error('Reopen a source-bound session before measuring retained diagnostics.');
+    const next = await this.sessionRequest({ action: 'measure', session_id: current.session_id }, revision);
+    if (next.session_id !== current.session_id || JSON.stringify(next.candidates) !== JSON.stringify(current.candidates) ||
+      JSON.stringify(next.context) !== JSON.stringify(current.context) || next.segment.sha256 !== current.segment.sha256) {
+      throw new Error('Diagnostic refresh changed retained source or candidate identity; reopen the original session.');
+    }
+    this.adopt(next);
   });
 
   download = async (destinationSlot: number): Promise<void> => this.run('Preparing native SysEx download', async (revision) => {

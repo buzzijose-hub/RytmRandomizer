@@ -6,8 +6,10 @@ import csv
 import hashlib
 import io
 import json
+import shutil
 import subprocess
 import sys
+import tomllib
 from dataclasses import replace
 from pathlib import Path
 
@@ -300,6 +302,159 @@ def test_generation_is_deterministic_when_inputs_are_retained(ledger):
         format_midi_csv_gap_summary(ledger)
         == (ROOT / "docs/catalogs/midi-csv-reconciliation.md").read_bytes()
     )
+
+
+def test_code_license_matches_repository_metadata_and_is_separate_from_csv_license(ledger):
+    metadata = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    assert ledger["code_license"] == metadata["project"]["license"]
+    assert (
+        (ROOT / "LICENSE")
+        .read_text(encoding="utf-8")
+        .startswith("# PolyForm Noncommercial License 1.0.0")
+    )
+    assert ledger["adapted_reference_data_license"] == "CC-BY-SA-4.0"
+
+
+@pytest.mark.parametrize(
+    "failure", ["oversized", "unsafe-row", "missing-source", "duplicate-source", "wrong-row-count"]
+)
+def test_audit_failure_is_bound_to_real_files_before_any_publication(tmp_path: Path, failure: str):
+    path = tmp_path / "audit-v2.json"
+    original = json.loads((INPUTS / "audit-v2.json").read_bytes())
+    if failure == "oversized":
+        path.write_bytes(b" " * (4 * 1024 * 1024 + 1))
+    else:
+        if failure == "unsafe-row":
+            original["sources"][0]["comparison"]["matched"][0]["row"] = True
+        elif failure == "missing-source":
+            original["sources"] = []
+        elif failure == "duplicate-source":
+            original["sources"].append(original["sources"][0])
+        else:
+            original["sources"][0]["rows"] = 0
+        path.write_text(json.dumps(original), encoding="utf-8")
+    before = path.read_bytes()
+    with pytest.raises(ValueError):
+        build_midi_csv_reconciliation(
+            INPUTS / "Analog Four MKII.csv",
+            INPUTS / "Analog Rytm MKII.csv",
+            path,
+            INPUTS / "provenance.json",
+        )
+    assert path.read_bytes() == before
+
+
+def test_upstream_identity_disagreement_refuses_without_changing_sources(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from rytm_randomizer.reports import midi_csv_reconciliation as report
+
+    before = {path.name: path.read_bytes() for path in INPUTS.iterdir() if path.is_file()}
+    monkeypatch.setattr(
+        report, "MIDI_CSV_UPSTREAM_BLOBS", {"a4": "0" * 40, "rytm": MIDI_CSV_UPSTREAM_BLOBS["rytm"]}
+    )
+    with pytest.raises(ValueError, match="Git blob"):
+        build_midi_csv_reconciliation(
+            INPUTS / "Analog Four MKII.csv",
+            INPUTS / "Analog Rytm MKII.csv",
+            INPUTS / "audit-v2.json",
+            INPUTS / "provenance.json",
+        )
+    assert {path.name: path.read_bytes() for path in INPUTS.iterdir() if path.is_file()} == before
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        "missing-csv",
+        "corrupt-csv",
+        "corrupt-audit",
+        "corrupt-provenance",
+        "provenance-license",
+        "provenance-identity",
+        "provenance-rows",
+    ],
+)
+def test_on_disk_source_refusal_preserves_existing_ledger_outputs(tmp_path: Path, failure: str):
+    inputs = tmp_path / "inputs"
+    shutil.copytree(INPUTS, inputs)
+    outputs = tmp_path / "outputs"
+    outputs.mkdir()
+    originals = {
+        "midi-csv-reconciliation.json": b"original json",
+        "midi-csv-reconciliation.md": b"original markdown",
+    }
+    for name, value in originals.items():
+        (outputs / name).write_bytes(value)
+    if failure == "missing-csv":
+        (inputs / "Analog Four MKII.csv").unlink()
+    elif failure == "corrupt-csv":
+        (inputs / "Analog Four MKII.csv").write_bytes(b"not the pinned CSV")
+    elif failure in ("corrupt-audit", "corrupt-provenance"):
+        name = "audit-v2.json" if failure == "corrupt-audit" else "provenance.json"
+        (inputs / name).write_bytes(b"{broken")
+    else:
+        path = inputs / "provenance.json"
+        provenance = json.loads(path.read_bytes())
+        if failure == "provenance-license":
+            provenance["license_reported_by_site"] = "unverified"
+        elif failure == "provenance-identity":
+            provenance["files"][0]["sha256"] = "a" * 64
+        else:
+            provenance["files"][0]["rows"] = 0
+        path.write_text(json.dumps(provenance), encoding="utf-8")
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/reconcile_midi_csv.py"),
+            "--input-dir",
+            str(inputs),
+            "--output-dir",
+            str(outputs),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0
+    assert "unrecognized arguments" not in result.stderr
+    with pytest.raises((ValueError, OSError)):
+        build_midi_csv_reconciliation(
+            inputs / "Analog Four MKII.csv",
+            inputs / "Analog Rytm MKII.csv",
+            inputs / "audit-v2.json",
+            inputs / "provenance.json",
+        )
+    assert {path.name: path.read_bytes() for path in outputs.iterdir()} == originals
+
+
+@pytest.mark.parametrize("current", [False, True])
+def test_check_mode_never_rewrites_existing_outputs(tmp_path: Path, current: bool):
+    outputs = tmp_path / "outputs"
+    outputs.mkdir()
+    for name in ("midi-csv-reconciliation.json", "midi-csv-reconciliation.md"):
+        (outputs / name).write_bytes(
+            (ROOT / "docs/catalogs" / name).read_bytes() if current else b"stale-but-retained"
+        )
+    before = {path.name: (path.read_bytes(), path.stat().st_mtime_ns) for path in outputs.iterdir()}
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/reconcile_midi_csv.py"),
+            "--output-dir",
+            str(outputs),
+            "--check",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == (0 if current else 1)
+    assert {
+        path.name: (path.read_bytes(), path.stat().st_mtime_ns) for path in outputs.iterdir()
+    } == before
 
 
 def test_import_is_passive_when_hardware_libraries_are_trapped():

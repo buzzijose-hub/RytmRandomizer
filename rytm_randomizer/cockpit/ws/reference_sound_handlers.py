@@ -9,7 +9,7 @@ import contextvars
 import secrets
 from collections.abc import Callable
 from threading import Event
-from typing import Final, TypeVar
+from typing import Final, Literal, TypeVar
 
 from ...guardrails.input_validation import require_sequence
 from ...observability.errors import BoundaryError, RytmRandomizerError
@@ -36,7 +36,7 @@ from ..export.reference_sound_errors import (
 )
 from ..export.reference_sound_records import ReferenceSoundSessionPayload, sound_session_from_dict
 from ..export.reference_sound_session import ReferenceSoundWorkspace
-from ..export.reference_sound_store import reference_sound_digest
+from ..export.reference_sound_store import reference_sound_digest, reference_sound_json
 from .protocol import ERR_VALIDATION, EVENT_SEND_PLAN_CHANGED
 from .result import HandlerResult
 from .session import CockpitSession
@@ -304,6 +304,20 @@ async def _sound_analysis_operation(
             )
         payload = workspace.commit(result)
         return _sound_session_result(session, payload)
+    if action == "measure":
+        result = await _owned_operation(
+            session, lambda cancel: workspace.measure_reference(session_id, cancel=cancel)
+        )
+        payload = workspace.commit(result)
+        outcome: Literal["reused", "refreshed"] = (
+            "reused"
+            if reference_sound_digest(reference_sound_json(payload))
+            == result.expected_manifest_sha256
+            else "refreshed"
+        )
+        _logger.info("reference_sound_measurement_committed", extra={"outcome": outcome})
+        get_metrics().record_local_artifact_decision("measure_reference", outcome)
+        return _reply(session=payload)
     if action == "record":
         audio = _upload_bytes(cmd, session)
         result = await _owned_operation(
@@ -314,6 +328,8 @@ async def _sound_analysis_operation(
                 candidate_sha256=sound_text(cmd["candidate_sha256"]),
                 recording=audio,
                 cancel=cancel,
+                start_frame=None if "start_frame" not in cmd else sound_integer(cmd["start_frame"]),
+                frame_count=None if "frame_count" not in cmd else sound_integer(cmd["frame_count"]),
             ),
         )
         payload = workspace.commit(result)
@@ -432,7 +448,7 @@ async def _execute_reference_sound(
         return _sound_refusal("operation_busy")
     if action in ("list", "controls", "upload_begin", "upload_chunk", "upload_finish"):
         return _sound_inputs(cmd, session)
-    if action in ("generate", "record", "refine"):
+    if action in ("generate", "record", "refine", "measure"):
         return await _sound_analysis_operation(cmd, session)
     if action in ("reopen", "segment", "select", "favorite"):
         return _sound_retention(cmd, session)

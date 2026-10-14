@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections import Counter
 from dataclasses import asdict
 from pathlib import Path
-from typing import TypedDict, cast
+from typing import TypedDict
 
 from ..data.midi_csv_reconciliation import (
     MIDI_CSV_ATTRIBUTION,
+    MIDI_CSV_CODE_LICENSE,
     MIDI_CSV_FIRST_AUDIT_ROW,
     MIDI_CSV_LICENSE,
     MIDI_CSV_LICENSE_URL,
@@ -22,7 +22,9 @@ from ..data.midi_csv_reconciliation import (
     MIDI_CSV_UPSTREAM_LAST_CHANGE,
 )
 from ..data.rytm_machine_catalog import RYTM_MACHINE_PROFILES
+from ..guardrails.input_validation import require_object, require_sequence
 from .device_support_inventory import build_device_support_inventory
+from .formatter import sha256_bytes
 from .midi_csv_ledger_rows import MidiCsvLedgerRow, build_csv_ledger_row
 from .midi_csv_matcher import canonical_midi_rows, match_midi_csv_row
 from .midi_csv_source import parse_csv_choices, read_midi_csv
@@ -52,18 +54,14 @@ class MidiCsvReconciliationLedger(TypedDict):
 
 
 def _mapping(value: object) -> dict[str, object]:
-    if not isinstance(value, dict):
-        raise ValueError("Evidence object must be a string-keyed mapping")
-    candidate = cast(dict[object, object], value)
-    if not all(isinstance(key, str) for key in candidate):
-        raise ValueError("Evidence object must be a string-keyed mapping")
-    return cast(dict[str, object], value)
+    return dict(require_object(value, "CSV evidence object", ValueError))
 
 
-def _records(value: object) -> list[dict[str, object]]:
-    if not isinstance(value, list):
-        raise ValueError("Evidence records must be an array")
-    return [_mapping(record) for record in cast(list[object], value)]
+def _csv_evidence_records(value: object) -> list[dict[str, object]]:
+    return [
+        _mapping(record)
+        for record in require_sequence(value, "CSV evidence records", ValueError, kind="list")
+    ]
 
 
 def _read_json(path: Path) -> tuple[dict[str, object], str]:
@@ -71,7 +69,7 @@ def _read_json(path: Path) -> tuple[dict[str, object], str]:
         raw = stream.read(4 * 1024 * 1024 + 1)
     if len(raw) > 4 * 1024 * 1024:
         raise ValueError("Evidence document exceeds bounded size")
-    return _mapping(json.loads(raw)), hashlib.sha256(raw).hexdigest()
+    return _mapping(json.loads(raw)), sha256_bytes(raw)
 
 
 def _audit_index(source: dict[str, object]) -> dict[int, dict[str, object]]:
@@ -83,7 +81,7 @@ def _audit_index(source: dict[str, object]) -> dict[int, dict[str, object]]:
         "ambiguous_csv_rows",
         "differences_or_missing_addresses",
     ):
-        for record in _records(comparison[classification]):
+        for record in _csv_evidence_records(comparison[classification]):
             number = record["row"]
             if type(number) is not int or number < MIDI_CSV_FIRST_AUDIT_ROW:
                 raise ValueError("Audit source row identity is unsafe")
@@ -95,7 +93,9 @@ def _require_provenance(
     provenance: dict[str, object], source: dict[str, object], digest: str, rows: int
 ) -> None:
     matching = [
-        record for record in _records(provenance["files"]) if record.get("sha256") == digest
+        record
+        for record in _csv_evidence_records(provenance["files"])
+        if record.get("sha256") == digest
     ]
     if len(matching) != 1 or matching[0].get("rows") != rows:
         raise ValueError("Provenance does not identify the pinned source")
@@ -148,7 +148,7 @@ def build_midi_csv_reconciliation(
     """Read only explicit files and canonical passive inventory; never MIDI/USB."""
     audit, audit_hash = _read_json(audit_v2)
     origin, provenance_hash = _read_json(provenance)
-    audit_sources = _records(audit["sources"])
+    audit_sources = _csv_evidence_records(audit["sources"])
     inventory = build_device_support_inventory()
     catalog = canonical_midi_rows(inventory)
     entries: list[MidiCsvLedgerRow] = []
@@ -210,7 +210,7 @@ def build_midi_csv_reconciliation(
         "attribution": MIDI_CSV_ATTRIBUTION,
         "adapted_reference_data_license": MIDI_CSV_LICENSE,
         "license_url": MIDI_CSV_LICENSE_URL,
-        "code_license": "existing repository MIT; reference data separately CC-BY-SA-4.0",
+        "code_license": MIDI_CSV_CODE_LICENSE,
         "upstream_supplement": {
             "repository": MIDI_CSV_REPOSITORY,
             "verified_dataset_commit": MIDI_CSV_UPSTREAM_COMMIT,
@@ -236,10 +236,12 @@ def build_midi_csv_reconciliation(
             "supersedes": audit.get("supersedes"),
             "interpretation": "historical comparison evidence, not current matcher or eligibility authority",
         },
-        "catalog_inventory_sha256": hashlib.sha256(
+        "catalog_inventory_sha256": sha256_bytes(
             json.dumps(inventory, sort_keys=True, ensure_ascii=True).encode("ascii")
-        ).hexdigest(),
-        "official_manual_checks": dict(MIDI_CSV_MANUAL_CHECKS),
+        ),
+        "official_manual_checks": {
+            family: dict(checks) for family, checks in MIDI_CSV_MANUAL_CHECKS.items()
+        },
         "sources": sources,
         "entries": entries,
         "omission_entries": omissions,
@@ -281,7 +283,7 @@ def format_midi_csv_gap_summary(ledger: MidiCsvReconciliationLedger) -> bytes:
         "",
         "All 552 supplied rows are retained verbatim in `midi-csv-reconciliation.json`.",
         "Reference/adapted data: Pencil Research and MIDI Guide community contributors,",
-        f"[{MIDI_CSV_LICENSE}]({MIDI_CSV_LICENSE_URL}). Code remains under repository MIT.",
+        f"[{MIDI_CSV_LICENSE}]({MIDI_CSV_LICENSE_URL}). Code retains repository {MIDI_CSV_CODE_LICENSE}.",
         "No MIDI/USB discovery, ports, arming, mutation or sending occurs.",
         "",
         "## Reproduce",

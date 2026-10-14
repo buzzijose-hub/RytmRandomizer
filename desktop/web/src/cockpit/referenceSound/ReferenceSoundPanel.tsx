@@ -3,11 +3,34 @@ import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useCockpitStore } from '../../state';
 import { useCockpitClient } from '../context';
 import { ANALOG_FOUR_TRACKS } from '../devices';
+import type { ReferenceAudioDiagnostics } from '../../ws/referenceSound';
 import {
-  currentSoundRecordings, nativeSourceLabel, nativeSources, ReferenceSoundModel, segmentIsValid, selectedSound,
+  currentSoundRecordings, legacyNoiseFadeSession, nativeSourceLabel, nativeSources, recordingRefinementHeld, ReferenceSoundModel, segmentIsValid, selectedSound,
 } from './referenceSoundModel';
 
 import './referenceSound.css';
+
+function levelDbfs(value: number): string {
+  return value === 0 ? '-inf' : (20 * Math.log10(value)).toFixed(2);
+}
+
+function AudioDiagnostics({ diagnostics, label }: { diagnostics: ReferenceAudioDiagnostics | undefined; label: string }): JSX.Element {
+  if (diagnostics === undefined) return <p className="panel-meta">{label}: legacy analysis; pitch and quality diagnostics unavailable.</p>;
+  return <div className="reference-sound-table-scroll"><table className="reference-sound-table">
+    <caption>{label}</caption>
+    <tbody>
+      <tr><th scope="row">Fundamental estimate</th><td>{diagnostics.qualified_pitch_hz === null ? 'Not qualified' : `${diagnostics.qualified_pitch_hz.toFixed(3)} Hz`} / {diagnostics.pitch_status}</td></tr>
+      <tr><th scope="row">Strongest spectral peak</th><td>{diagnostics.spectral_peak_hz === null ? 'Unavailable' : `${diagnostics.spectral_peak_hz.toFixed(3)} Hz`} / not a verified fundamental</td></tr>
+      <tr><th scope="row">Pitch method</th><td>{diagnostics.pitch_method} / monophonic estimate, not a played-note capture</td></tr>
+      <tr><th scope="row">Voicing estimate</th><td>{diagnostics.pitch_confidence.toFixed(3)} / voiced fraction {diagnostics.voiced_fraction.toFixed(3)} / not accuracy</td></tr>
+      <tr><th scope="row">Pitch stability</th><td>{diagnostics.pitch_stability_cents === null ? 'Unavailable' : `${diagnostics.pitch_stability_cents.toFixed(2)} cents`} / octave ambiguity {diagnostics.octave_ambiguous ? 'yes' : 'no'}</td></tr>
+      <tr><th scope="row">Original capture levels</th><td>RMS {levelDbfs(diagnostics.rms)} dBFS / peak {levelDbfs(diagnostics.peak)} dBFS / clipped samples {(100 * diagnostics.clipped_fraction).toFixed(3)}%</td></tr>
+      <tr><th scope="row">Detected note activity</th><td>{diagnostics.note_count ?? 'Uncertain'} / additional onsets {diagnostics.onset_count} / multiple pitches {diagnostics.multiple_pitch ? 'yes' : 'no'}</td></tr>
+      <tr><th scope="row">Segment-local samples</th><td>{diagnostics.start_sample}:{diagnostics.sample_count} at {diagnostics.sample_rate} Hz / PCM SHA-256 {diagnostics.pcm_sha256}</td></tr>
+      <tr><th scope="row">Diagnostic warnings</th><td>{diagnostics.warnings.length === 0 ? 'None detected' : diagnostics.warnings.join(', ').replace(/_/g, ' ')}</td></tr>
+    </tbody>
+  </table></div>;
+}
 
 export function ReferenceSoundPanel(): JSX.Element {
   const [open, setOpen] = useState(false);
@@ -37,6 +60,11 @@ export function ReferenceSoundWorkspace(): JSX.Element {
   const [reopenId, setReopenId] = useState('');
   const [gain, setGain] = useState(0.5);
   const [scratchSlot, setScratchSlot] = useState('');
+  const [auditionStart, setAuditionStart] = useState('');
+  const [auditionCount, setAuditionCount] = useState('');
+  const auditionRangeValid = (auditionStart === '' && auditionCount === '') ||
+    (auditionStart !== '' && auditionCount !== '' && Number.isInteger(Number(auditionStart)) &&
+      Number(auditionStart) >= 0 && Number.isInteger(Number(auditionCount)) && Number(auditionCount) > 0);
   const scratchSlotValid = scratchSlot !== '' && Number.isInteger(Number(scratchSlot)) && Number(scratchSlot) >= 1 && Number(scratchSlot) <= 128;
   const candidate = selectedSound(view);
   const session = view.session;
@@ -168,6 +196,10 @@ export function ReferenceSoundWorkspace(): JSX.Element {
       </div>
 
       {session !== null && !view.stale && session.candidates.length > 0 && <>
+        {legacyNoiseFadeSession(session) && <p className="reference-sound-error">Legacy Noise Fade model: exact recall and favorites remain available. Generate a separate current-model session before new refinement.</p>}
+        {session.analysis?.diagnostics === undefined && <button type="button" disabled={busy || unavailable}
+          onClick={() => void model.measureReference()}>Measure retained reference</button>}
+        <AudioDiagnostics diagnostics={session.analysis?.diagnostics} label="Reference segment diagnostics" />
         <fieldset className="reference-sound-candidates">
           <legend>Native alternatives</legend>
           {session.candidates.map((item, index) => <label key={item.candidate_id}>
@@ -203,11 +235,16 @@ export function ReferenceSoundWorkspace(): JSX.Element {
           <ul className="panel-meta">{candidate.limitations.map((limitation) => <li key={limitation}>{limitation}</li>)}</ul>
 
           <div className="reference-sound-toolbar">
+            <label>Audition start frame (optional)<input type="number" min={0} step={1} value={auditionStart}
+              disabled={busy || unavailable} onChange={(event) => setAuditionStart(event.target.value)} /></label>
+            <label>Audition frame count (optional)<input type="number" min={1} step={1} value={auditionCount}
+              disabled={busy || unavailable} onChange={(event) => setAuditionCount(event.target.value)} /></label>
             <label>Supplied candidate recording WAV (0.05-8s)
-              <input type="file" accept=".wav,audio/wav" disabled={busy || unavailable || session.recordings.length >= 16} onChange={(event) => {
+              <input type="file" accept=".wav,audio/wav" disabled={busy || unavailable || !auditionRangeValid || session.recordings.length >= 16} onChange={(event) => {
                 const file = event.target.files?.[0];
                 event.target.value = '';
-                if (file !== undefined) void model.record(file);
+                if (file !== undefined) void model.record(file, auditionStart === '' ? undefined :
+                  { start_frame: Number(auditionStart), frame_count: Number(auditionCount) });
               }} />
             </label>
             {recordings.length > 0 && <label>Retained supplied recording
@@ -220,11 +257,20 @@ export function ReferenceSoundWorkspace(): JSX.Element {
             </label>}
             {view.recordingUrl !== null && <audio controls preload="metadata" src={view.recordingUrl} aria-label="Supplied candidate recording playback" />}
             <label>Correction gain <span>{gain}</span><input type="range" min={0} max={1} step={0.01} value={gain} onChange={(event) => setGain(Number(event.target.value))} /></label>
-            <button type="button" disabled={busy || unavailable || recording === undefined || comparingOlderRecording || session.refinements.length >= 3}
+            <button type="button" disabled={busy || unavailable || recording === undefined || comparingOlderRecording || recordingRefinementHeld(recording) || legacyNoiseFadeSession(session) || session.refinements.length >= 3}
               title={comparingOlderRecording ? 'Latest supplied recording required for refinement' : undefined}
               onClick={() => void model.refine(gain)}>Refine candidate ({session.refinements.length}/3)</button>
           </div>
           {recording === undefined ? <p className="panel-meta">No measured recording for this candidate. No synthetic audio preview.</p> : <>
+            {recording.segment !== undefined && <p className="panel-meta">
+              Analyzed audition: frames {recording.segment.start_frame}:{recording.segment.frame_count} / {recording.segment.start_frame / recording.segment.original.sample_rate}s - {(recording.segment.start_frame + recording.segment.frame_count) / recording.segment.original.sample_rate}s / {recording.segment.original.sample_rate} Hz / segment SHA-256 {recording.segment.sha256} / original SHA-256 {recording.segment.original.sha256}
+            </p>}
+            {recording.segment === undefined && <p className="panel-meta">Legacy whole-recording analysis / SHA-256 {recording.audio_sha256}</p>}
+            <AudioDiagnostics diagnostics={recording.features.diagnostics} label="Controlled audition diagnostics" />
+            <p className={recordingRefinementHeld(recording) ? 'reference-sound-error' : 'panel-meta'}>
+              Pitch comparison: {recording.pitch_comparison?.support_status ?? 'held'} / recording minus reference {recording.pitch_comparison?.delta_cents == null ? 'not qualified' : `${recording.pitch_comparison.delta_cents.toFixed(2)} cents`} / octave difference {recording.pitch_comparison?.octave_difference ?? 'not qualified'} / separate from the eleven-feature score.
+              {recordingRefinementHeld(recording) && ` Refinement held: ${recording.pitch_comparison?.blockers.join(', ').replace(/_/g, ' ') || 'diagnostics unavailable'}. Supply a clean single-note audition with onset and release; no pitch or tuning changed.`}
+            </p>
             <p className="panel-meta">Score {recording.score}/100 / distance {recording.distance} / {recording.metric} / physical validation: no</p>
             <div className="reference-sound-table-scroll"><table className="reference-sound-table">
               <caption>Measured reference and supplied recording (normalized 0-1)</caption>

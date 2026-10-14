@@ -1,0 +1,38 @@
+{
+  "bd_hard": [
+    {
+      "source": {
+        "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+        "supplied_filename": "Analog Rytm MKII.csv",
+        "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+        "attribution": "MIDI Guide / Pencil Research and contributors",
+        "repository_url": "https://github.com/pencilresearch/midi",
+        "license_id": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+        "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+        "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+      },
+      "source_row": 12,
+      "message": "CSV omits BD Hard / identity 0 and reports MIDI range 1..33; retain native identity 0 without inferring a MIDI encoding."
+    }
+  ],
+  "rs_classic": [
+    {
+      "source": {
+        "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+        "supplied_filename": "Analog Rytm MKII.csv",
+        "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+        "attribution": "MIDI Guide / Pencil Research and contributors",
+        "repository_url": "https://github.com/pencilresearch/midi",
+        "license_id": "CC-BY-SA-4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+        "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+        "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+        "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+      },
+      "source_row": 12,
+      "message": "CSV labels both codes 4 and 5 RS Hard; retain canonical RS Classic identity 5 and treat the duplicate label as a conflict, not a wire-encoding correction."
+    }
+  ]
+}

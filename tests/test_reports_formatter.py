@@ -9,6 +9,7 @@ Naming convention: test_<unit>_<behavior>_when_<condition>
 from __future__ import annotations
 
 import dataclasses
+import hashlib
 import sys
 import types
 
@@ -17,6 +18,15 @@ import pytest
 # WS-M4: mark this module as fast-suite; pytest -m fast skips the 505
 # warm-worker V1.34 parity fixtures and runs in <60s.
 pytestmark = pytest.mark.fast
+
+
+@pytest.mark.parametrize("payload", [b"", b"\0\xff|\r\n", b"plain text"])
+def test_raw_sha256_identity_is_full_and_byte_exact(payload: bytes) -> None:
+    from rytm_randomizer.reports.formatter import sha256_bytes
+
+    assert sha256_bytes(payload) == hashlib.sha256(payload).hexdigest()
+    assert len(sha256_bytes(payload)) == 64
+
 
 # ---------------------------------------------------------------------------
 # Helper: import target (must fail until formatter.py exists)

@@ -1,0 +1,15 @@
+{
+  "Amp": "AMP",
+  "Euclidean": "EUCLIDEAN",
+  "FX: Compressor": "COMPRESSOR",
+  "FX: Delay": "DELAY",
+  "FX: Distortion": "DISTORTION",
+  "FX: Reverb": "REVERB",
+  "Filter": "FILTER",
+  "Kit": "COMMON",
+  "LFO": "LFO",
+  "Performance": "PERFORMANCE",
+  "Sample": "SAMPLE",
+  "Synth: General": "SYNTH",
+  "Trig": "TRIG PARAMETERS"
+}

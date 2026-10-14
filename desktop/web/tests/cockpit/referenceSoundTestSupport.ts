@@ -57,6 +57,13 @@ export function analysis(audio = wav()): ReferenceSoundAnalysis {
     features: { audio_sha256: sha(audio), duration: 1, attack: 0.5, decay: 0.5, sustain: 0.5, tail: 0.5, brightness: 0.5,
       spectral_flatness: 0.5, noise: 0.5, low_end: 0.5, harmonicity: 0.5, transient: 0.5, modulation: 0.5 },
     evidence: { dominant_frequency_hz: null, dominant_note: null, pitch_confidence: 0, tonal_stability: 0.5, spectral_movement: 0.5 },
+    // Controlled fake DSP metadata for workflow tests, never acoustic evidence.
+    diagnostics: { audio_sha256: sha(audio), pcm_sha256: sha(audio), sample_rate: 8000, channels: 1,
+      start_sample: 0, sample_count: (audio.length - 44) / 2, pitch_method: 'librosa.pyin.v1',
+      qualified_pitch_hz: 440, spectral_peak_hz: 440, rms: 0.1, peak: 0.2, clipped_fraction: 0,
+      pitch_status: 'qualified', pitch_confidence: 0.9, voiced_fraction: 0.9, pitch_stability_cents: 0,
+      octave_ambiguous: false, frame_count: 10, stable_pitch_frame_count: 9, onset_count: 0, note_count: 1,
+      multiple_pitch: false, warnings: [], refinement_blockers: [] },
   };
 }
 
@@ -129,7 +136,12 @@ export function soundHarness(audio = wav()) {
       case 'select': session = { ...session, selected_candidate_id: command.candidate_id }; return soundAck({ session });
       case 'favorite': session = { ...session, selected_candidate_id: command.candidate_id, favorites: command.favorite ? [command.candidate_id] : [] }; return soundAck({ session });
       case 'record': {
-        const bytes = Uint8Array.from(Buffer.concat(uploadParts));
+        const original = Uint8Array.from(Buffer.concat(uploadParts));
+        const info = soundSession(original).segment.original;
+        const start = command.start_frame ?? 0;
+        const count = command.frame_count ?? info.frame_count;
+        const bytes = wav(count, info.sample_rate);
+        bytes.set(original.subarray(44 + start * 2, 44 + (start + count) * 2), 44);
         const measured = analysis(bytes);
         const weights: ReadonlyArray<[ReferenceSoundRecording['feature_deltas'][number]['feature'], number]> = [
           ['attack', 0.12], ['decay', 0.09], ['sustain', 0.08], ['tail', 0.08], ['brightness', 0.15], ['spectral_flatness', 0.08],
@@ -140,7 +152,9 @@ export function soundHarness(audio = wav()) {
         session = { ...session, recordings: [...session.recordings, { candidate_id: command.candidate_id, candidate_sha256: command.candidate_sha256,
         audio_sha256: sha(bytes), features: measured, score: 90, distance: 0.1,
         feature_deltas: weights.map(([feature, weight]) => ({ feature, reference_value: 0.5, render_value: 0.6, absolute_delta: 0.1, weight, weighted_delta: 0.1 * weight })),
-        metric: 'weighted normalized 11-feature L1 distance; score = round(100 * (1 - distance)); not a probability or verified sound match', physical_validation: false }] }; return soundAck({ session });
+        metric: 'weighted normalized 11-feature L1 distance; score = round(100 * (1 - distance)); not a probability or verified sound match', physical_validation: false,
+        segment: { original: info, start_frame: start, frame_count: count, sha256: sha(bytes) },
+        pitch_comparison: { delta_cents: 0, octave_difference: 0, support_status: 'supported', blockers: [] } }] }; return soundAck({ session });
       }
       case 'refine': {
         const recording = session.recordings.filter((item) => item.candidate_id === command.candidate_id).at(-1)!;
@@ -150,6 +164,7 @@ export function soundHarness(audio = wav()) {
           refinements: [...session.refinements, { parent_id: command.candidate_id, recording_sha256: recording.audio_sha256, gain: command.correction_gain,
             features: analysis(audio).features }] }; return soundAck({ session });
       }
+      case 'measure': session = { ...session, analysis: { ...session.analysis!, diagnostics: analysis(audio).diagnostics! } }; return soundAck({ session });
       case 'export': return soundAck({ sysex_base64: Buffer.from(patchBytes).toString('base64'), sha256: sha(patchBytes),
         candidate_id: command.candidate_id, destination_slot: command.destination_slot });
     }

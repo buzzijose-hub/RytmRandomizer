@@ -24,6 +24,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Literal, Protocol, TypedDict, cast
 
+from ..data.reference_sound_candidates import REFERENCE_AUDIO_PCM_BITS_BY_SUBTYPE
 from ..guardrails.input_validation import (
     require_boolean,
     require_exact_keys,
@@ -33,7 +34,7 @@ from ..guardrails.input_validation import (
     require_text,
     require_text_tuple,
 )
-from .runtime_types import require_runtime_type
+from .runtime_types import AudioFileInfo, LibrosaApi, require_runtime_type
 
 if TYPE_CHECKING:
     import numpy as np
@@ -48,6 +49,9 @@ _HOP: Final[int] = 256
 _MIN_FRAMES: Final[int] = 6
 _QUIET_RMS: Final[float] = 0.001  # -60 dBFS; never normalize to rescue a take.
 _MAX_PITCH_DELTA_CENTS: Final[float] = 100.0
+_MIN_F0: Final[float] = 32.0
+_MAX_F0: Final[float] = 2000.0
+_MAX_F0_DELTA_CENTS: Final[float] = 1200.0 * math.log2(_MAX_F0 / _MIN_F0)
 _METHOD: Final[str] = "librosa.pyin.v1"
 _HASH_LENGTH: Final[int] = 64
 _MIN_RATE: Final[int] = 8000
@@ -170,7 +174,11 @@ class ReferenceAudioDiagnostics:
             and 0 < self.sample_count <= self.sample_rate * REFERENCE_AUDIO_MAX_SECONDS
         ):
             raise ValueError("diagnostic segment exceeds PCM bounds")
-        if self.stable_pitch_frame_count > self.frame_count or self.frame_count > _MAX_FRAMES:
+        if (
+            self.stable_pitch_frame_count > self.frame_count
+            or self.frame_count > _MAX_FRAMES
+            or self.onset_count > self.frame_count
+        ):
             raise ValueError("diagnostic frame counts are inconsistent")
         if (
             self.note_count is not None
@@ -195,6 +203,11 @@ class ReferenceAudioDiagnostics:
         for frequency in (self.qualified_pitch_hz, self.spectral_peak_hz):
             if frequency is not None and not 0 < _finite(frequency) <= self.sample_rate / 2:
                 raise ValueError("diagnostic frequency is invalid")
+        if (
+            self.qualified_pitch_hz is not None
+            and not _MIN_F0 <= self.qualified_pitch_hz <= _MAX_F0
+        ):
+            raise ValueError("qualified pitch is outside the supported analyzer domain")
         if self.pitch_stability_cents is not None and _finite(self.pitch_stability_cents) < 0:
             raise ValueError("diagnostic stability is invalid")
         self._validate_pitch_evidence()
@@ -250,7 +263,7 @@ class ReferenceAudioDiagnostics:
             or self.voiced_fraction > _MAX_UNPITCHED_FRACTION
             or self.stable_pitch_frame_count != 0
             or self.pitch_stability_cents is not None
-            or self.note_count != 0
+            or self.note_count != (self.onset_count + 1 if self.onset_count else 0)
         ):
             raise ValueError("unpitched status requires low voicing evidence")
         if (
@@ -261,6 +274,12 @@ class ReferenceAudioDiagnostics:
             and not self.multiple_pitch
         ):
             raise ValueError("multiple-note statistics require the multiple-pitch flag")
+        if self.onset_count > 0 and (
+            not self.multiple_pitch
+            or self.note_count is None
+            or self.note_count < self.onset_count + 1
+        ):
+            raise ValueError("additional onsets require matching multiple-note evidence")
 
     def to_dict(self) -> ReferenceAudioDiagnosticsPayload:
         """Return detached JSON-compatible measurements."""
@@ -311,9 +330,7 @@ class ReferenceAudioDiagnostics:
             rms=_finite(data["rms"]),
             peak=_finite(data["peak"]),
             clipped_fraction=_finite(data["clipped_fraction"]),
-            pitch_status=cast(
-                PitchStatus, require_text(data["pitch_status"], "pitch_status", ValueError)
-            ),
+            pitch_status=narrow_reference_pitch_status(data["pitch_status"]),
             pitch_confidence=_finite(data["pitch_confidence"]),
             voiced_fraction=_finite(data["voiced_fraction"]),
             pitch_stability_cents=_optional_number(data["pitch_stability_cents"]),
@@ -352,6 +369,28 @@ def _optional_number(value: object) -> float | None:
     return None if value is None else _finite(value)
 
 
+def narrow_reference_pitch_status(value: object) -> PitchStatus:
+    status = require_text(value, "pitch_status", ValueError)
+    if status == "qualified":
+        return "qualified"
+    if status == "unpitched":
+        return "unpitched"
+    if status == "uncertain":
+        return "uncertain"
+    raise ValueError("unknown pitch status")
+
+
+def narrow_reference_pitch_support_status(value: object) -> PitchSupportStatus:
+    status = require_text(value, "support_status", ValueError)
+    if status == "supported":
+        return "supported"
+    if status == "unpitched":
+        return "unpitched"
+    if status == "held":
+        return "held"
+    raise ValueError("unknown pitch support status")
+
+
 def _validate_codes(value: object, allowed: frozenset[str]) -> None:
     if not isinstance(value, tuple):
         raise ValueError("diagnostic codes must be immutable")
@@ -384,6 +423,8 @@ class ReferencePitchComparison:
             raise ValueError("comparison status requires consistent blockers")
         if self.delta_cents is not None:
             delta = _finite(self.delta_cents)
+            if abs(delta) > _MAX_F0_DELTA_CENTS:
+                raise ValueError("pitch comparison exceeds the supported analyzer domain")
             if self.octave_difference is None:
                 raise ValueError("comparison delta requires octave evidence")
             octave = require_int(self.octave_difference, "octave_difference", ValueError)
@@ -424,10 +465,7 @@ class ReferencePitchComparison:
                 if data["octave_difference"] is None
                 else require_int(data["octave_difference"], "octave_difference", ValueError)
             ),
-            cast(
-                PitchSupportStatus,
-                require_text(data["support_status"], "support_status", ValueError),
-            ),
+            narrow_reference_pitch_support_status(data["support_status"]),
             require_text_tuple(data["blockers"], "blockers", ValueError, kind="list"),
         )
 
@@ -449,7 +487,9 @@ def compare_reference_audio_diagnostics(
     delta: float | None = None
     octave: int | None = None
     if reference.qualified_pitch_hz is not None and recorded.qualified_pitch_hz is not None:
-        delta = 1200.0 * math.log2(recorded.qualified_pitch_hz / reference.qualified_pitch_hz)
+        delta = 1200.0 * (
+            math.log2(recorded.qualified_pitch_hz) - math.log2(reference.qualified_pitch_hz)
+        )
         nearest = round(delta / 1200.0)
         octave = nearest if abs(delta - nearest * 1200.0) <= _HALF_SEMITONE_CENTS else 0
         if abs(delta) > _MAX_PITCH_DELTA_CENTS:
@@ -469,41 +509,16 @@ def compare_reference_audio_diagnostics(
     )
 
 
-class _AudioInfo(Protocol):
-    frames: int
-    samplerate: int
-    channels: int
-    subtype: str
-
-
 class _SoundFileApi(Protocol):
-    info: Callable[..., _AudioInfo]
+    info: Callable[..., AudioFileInfo]
     read: Callable[..., tuple[NDArray[np.float64], int]]
-
-
-class _OnsetApi(Protocol):
-    onset_detect: Callable[..., NDArray[np.int64]]
-
-
-class _FeatureApi(Protocol):
-    rms: Callable[..., NDArray[np.float64]]
-    spectral_flatness: Callable[..., NDArray[np.float64]]
-
-
-class _LibrosaApi(Protocol):
-    pyin: Callable[..., tuple[NDArray[np.float64], NDArray[np.bool_], NDArray[np.float64]]]
-    resample: Callable[..., NDArray[np.float64]]
-    onset: _OnsetApi
-    feature: _FeatureApi
 
 
 class _ScipySignalApi(Protocol):
     welch: Callable[..., tuple[NDArray[np.float64], NDArray[np.float64]]]
 
 
-def _supported_onsets(
-    librosa: _LibrosaApi, y: NDArray[np.float64], accepted: NDArray[np.bool_]
-) -> int:
+def _supported_onsets(librosa: LibrosaApi, y: NDArray[np.float64]) -> int:
     import numpy as np
 
     events = librosa.onset.onset_detect(
@@ -511,13 +526,18 @@ def _supported_onsets(
     )
     levels = librosa.feature.rms(y=y, frame_length=512, hop_length=_HOP, center=True).reshape(-1)
     # Spectral flux also fires on releases/timbral changes. Require a measured
-    # energy rise across the event; this is an estimate, not note transcription.
+    # energy rise and prior sustained audio, including unpitched activity.
+    # A delayed initial onset has no prior activity; this is not transcription.
     return sum(
         float(np.median(levels[int(index) : int(index) + 4]))
         > max(float(np.median(levels[max(0, int(index) - 4) : int(index)])) * 1.5, 1e-10)
         for index in events
         if _FRAME // _HOP <= index < len(levels)
-        and np.count_nonzero(accepted[: max(0, int(index) - _FRAME // _HOP)]) >= _MIN_FRAMES
+        and np.count_nonzero(
+            levels[: max(0, int(index) - _FRAME // _HOP)]
+            >= max(float(np.median(levels[int(index) : int(index) + 4])) / 4, 1e-10)
+        )
+        >= _MIN_FRAMES
     )
 
 
@@ -564,7 +584,7 @@ def analyze_reference_audio_diagnostics(
     ).hexdigest()
     rms = math.sqrt(float(np.mean(pcm**2)))
     peak = float(np.max(np.abs(pcm)))
-    bits = {"PCM_U8": 8, "PCM_16": 16, "PCM_24": 24, "PCM_32": 32}.get(info.subtype)
+    bits = REFERENCE_AUDIO_PCM_BITS_BY_SUBTYPE.get(info.subtype)
     ceiling = 1.0 - 2.0 ** (1 - bits) if bits is not None else 1.0
     clipped = float(np.mean((pcm >= ceiling) | (pcm <= -1.0)))
     mono = cast("NDArray[np.float64]", np.mean(pcm, axis=1))
@@ -604,7 +624,7 @@ def _measure_pitch(
 ) -> ReferenceAudioDiagnostics:
     import numpy as np
 
-    librosa = cast(_LibrosaApi, importlib.import_module("librosa"))
+    librosa = cast(LibrosaApi, importlib.import_module("librosa"))
     spectral_peak = _spectral_peak(mono, segment["sample_rate"])
     y = librosa.resample(mono, orig_sr=segment["sample_rate"], target_sr=_DSP_RATE)
     frame_count = max(0, 1 + (len(y) - _FRAME) // _HOP)
@@ -621,8 +641,8 @@ def _measure_pitch(
         f0, voiced, probabilities = librosa.pyin(
             y,
             sr=_DSP_RATE,
-            fmin=32.0,
-            fmax=2000.0,
+            fmin=_MIN_F0,
+            fmax=_MAX_F0,
             frame_length=_FRAME,
             hop_length=_HOP,
             center=False,
@@ -641,7 +661,7 @@ def _measure_pitch(
             np.mean(voiced & np.isfinite(f0) & (probabilities >= _MIN_PITCH_CONFIDENCE))
         )
         confidence = float(np.mean(probabilities))
-        onset_count = _supported_onsets(librosa, y, accepted)
+        onset_count = _supported_onsets(librosa, y)
         selected = f0[accepted]
         if len(selected) >= _MIN_FRAMES:
             cents = 1200.0 * np.log2(selected / float(np.median(selected)))
@@ -665,6 +685,7 @@ def _measure_pitch(
                 and voiced_fraction >= _MIN_VOICED_FRACTION
                 and confidence >= _MIN_PITCH_CONFIDENCE
                 and stability <= _MAX_STABILITY_CENTS
+                and stable_frames >= _MIN_FRAMES
             ):
                 pitch = float(np.median(selected))
                 status = "qualified"
@@ -689,8 +710,15 @@ def _measure_pitch(
             >= _MIN_NOISE_FLATNESS
         ):
             status = "unpitched"
-            note_count = 0
+            multiple = onset_count > 0
+            note_count = onset_count + 1 if multiple else 0
+            if multiple:
+                warnings.append("multiple_notes")
             warnings.append("unpitched_audio")
+        if onset_count > 0 and not multiple:
+            multiple = True
+            note_count = max(note_count or 0, onset_count + 1)
+            warnings.append("multiple_notes")
         if status == "uncertain":
             warnings.append("pitch_uncertain")
     blockers = tuple(code for code in warnings if code not in _NONBLOCKING_CODES)

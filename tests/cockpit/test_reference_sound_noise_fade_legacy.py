@@ -23,9 +23,9 @@ from rytm_randomizer.cockpit.export.reference_sound_store import (
     reference_sound_json,
 )
 from rytm_randomizer.data import (
-    A4_WORKING_KIT_OBJECT_BYTE,
     A4_REFERENCE_NOISE_FADE_V1_SOURCE_REVISION,
     A4_REFERENCE_NOISE_FADE_V1_SPEC,
+    A4_WORKING_KIT_OBJECT_BYTE,
     REFERENCE_SOUND_INFERENCE_VERSION,
     REFERENCE_SOUND_VERSIONED_A4_PARAMETER,
 )
@@ -170,17 +170,14 @@ def test_frozen_legacy_noise_fade_session_holds_fresh_refinement_without_changes
 ) -> None:
     payload, before = _restore_legacy_store(tmp_path)
     workspace = session.ReferenceSoundWorkspace(ReferenceSoundStore(tmp_path))
-    with pytest.raises((ValueError, BoundaryError)) as error:
+    with pytest.raises(BoundaryError) as error:
         workspace.refine(
             payload["session_id"],
             payload["recordings"][0]["candidate_id"],
             correction_gain=0.3,
             cancel=Event(),
         )
-    if isinstance(error.value, BoundaryError):
-        assert error.value.context["error_code"] == "legacy_inference_requires_regeneration"
-    else:
-        assert "legacy_inference_requires_regeneration" in str(error.value)
+    assert error.value.context["error_code"] == "legacy_inference_requires_regeneration"
     assert {p.name: p.read_bytes() for p in tmp_path.iterdir()} == before
 
 

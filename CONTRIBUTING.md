@@ -31,7 +31,7 @@
 
 Every PR must satisfy ALL of these. If you cannot satisfy one, do not open the PR; coordinate with @buzzijose-hub.
 
-1. **V1.34 parity** — 685/685 byte-identical JSON goldens under `tests/fixtures/v134_parity/`. Do not regenerate without explicit approval.
+1. **V1.34 parity** — 505 byte-frozen golden files / 685 test items under `tests/fixtures/v134_parity/`. Do not regenerate without explicit approval.
 2. **Coverage ratchet** — ≥95% pure-branch coverage project-wide (enforced by `scripts/coverage_ratchet.py`).
 3. **Architecture tests** — all tests under `tests/architecture/` pass. Do not add to allowlists without justification in the PR body.
 4. **Lint clean** — `ruff check`, `black --check --target-version=py311`, `isort --profile black --check-only` all clean. No exceptions; auto-fix locally before pushing.
@@ -178,6 +178,13 @@ portable native recipes retain their profile and algorithm for exact replay.
 Canonical field facts/protection live in `data/`; shared file readers and atomic
 writers sit below both stores. Sensitive original-source publication opts into
 redacted writer diagnostics. Prevalidate recall before a revision is published.
+
+Reference-sound diagnostics use the same isolated audio worker and optional typed
+metadata, not another analysis runtime. Keep the eleven-feature metric unchanged
+when adding qualified pitch/quality evidence. Preserve legacy missing keys and
+candidate identities; reject new refinement without supported diagnostics.
+Audition ranges retain original and selected sample bytes. Archived inference
+versions are replay contracts, not current generation or MIDI eligibility grants.
 
 The 12-PR sweep against the staff-engineer review introduced four reusable patterns that future cockpit / wire-boundary code is expected to follow. Each pattern is mechanically enforced by an architecture test under `tests/architecture/` so the smell cannot reappear silently. The complete table of prevention tests is in [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md#code_reviewmd-prevention-test-family-strengthens-existing-gates-no-new-gate-count) and [`docs/CODE_REVIEW_HOOK_SETUP.md`](docs/CODE_REVIEW_HOOK_SETUP.md).
 

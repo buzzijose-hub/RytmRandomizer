@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Final, Literal, TypeAlias, TypedDict, TypeVar, cast
 
 from ...data.audio_patch_dna import AUDIO_PATCH_DNA_CANDIDATE_COUNT
+from ...data.reference_sound_candidates import REFERENCE_SOUND_INFERENCE_VERSION
 from ...snapshot.mutation_scope import registered_mutation_ids
 from ...style_analysis.analog_four_patch_render_rank import AnalogFourRenderFeatureDelta
 from ...style_analysis.extractor import (
@@ -15,6 +16,10 @@ from ...style_analysis.extractor import (
     audio_synthesis_features_to_dict,
 )
 from ...style_analysis.feature_report import FeatureReportPayload
+from ...style_analysis.reference_audio_diagnostics import (
+    ReferencePitchComparison,
+    ReferencePitchComparisonPayload,
+)
 from ..data import require_exact_keys, require_object, require_sequence
 from ..data.stage import ANALOG_FOUR_DEVICE_ID, ANALOG_RYTM_DEVICE_ID, StageDeviceId
 from .reference_sound_analysis import (
@@ -87,7 +92,11 @@ class ReferenceSoundSegmentIdentity(TypedDict):
     frame_count: int
 
 
-class ReferenceSoundContextPayload(TypedDict):
+class _OptionalContextPayload(TypedDict, total=False):
+    inference_version: int
+
+
+class ReferenceSoundContextPayload(_OptionalContextPayload):
     device_id: StageDeviceId
     target: int
     source_sha256: str
@@ -139,7 +148,12 @@ class ReferenceSoundFeatureDeltaPayload(TypedDict):
     weighted_delta: float
 
 
-class ReferenceSoundRecordingPayload(TypedDict):
+class _OptionalRecordingPayload(TypedDict, total=False):
+    segment: ReferenceSoundSegmentPayload
+    pitch_comparison: ReferencePitchComparisonPayload
+
+
+class ReferenceSoundRecordingPayload(_OptionalRecordingPayload):
     candidate_id: str
     candidate_sha256: str
     audio_sha256: str
@@ -208,9 +222,15 @@ def _sound_record_target(value: object, device: StageDeviceId) -> int:
     return target
 
 
-def _record(value: object, keys: frozenset[str]) -> Mapping[str, object]:
+def _record(
+    value: object, keys: frozenset[str], optional: frozenset[str] = frozenset()
+) -> Mapping[str, object]:
     data = require_object(value, "Reference-sound record", ValueError)
-    require_exact_keys(data, keys, "Reference-sound record")
+    if optional:
+        if not keys <= data.keys() or data.keys() - keys - optional:
+            raise ValueError("Reference-sound record keys are invalid.")
+    else:
+        require_exact_keys(data, keys, "Reference-sound record")
     return data
 
 
@@ -295,9 +315,13 @@ def sound_segment_from_dict(value: object) -> ReferenceSoundSegmentPayload:
 
 
 def sound_context_from_dict(value: object) -> ReferenceSoundContextPayload:
-    data = _record(value, ReferenceSoundContextPayload.__required_keys__)
+    data = _record(
+        value,
+        ReferenceSoundContextPayload.__required_keys__,
+        ReferenceSoundContextPayload.__optional_keys__,
+    )
     device = narrow_sound_device_id(data["device_id"])
-    return {
+    result: ReferenceSoundContextPayload = {
         "device_id": device,
         "target": _sound_record_target(data["target"], device),
         "source_sha256": require_sound_digest(data["source_sha256"]),
@@ -306,10 +330,22 @@ def sound_context_from_dict(value: object) -> ReferenceSoundContextPayload:
         "locks": _strings(data["locks"]),
         "strength": _normalized(data["strength"]),
     }
+    if "inference_version" in data:
+        if (
+            sound_integer(data["inference_version"]) != REFERENCE_SOUND_INFERENCE_VERSION
+            or device != ANALOG_FOUR_DEVICE_ID
+        ):
+            raise ValueError("Reference-sound inference version is unsupported.")
+        result["inference_version"] = REFERENCE_SOUND_INFERENCE_VERSION
+    return result
 
 
 def _analysis(value: object) -> ReferenceSoundAnalysisPayload:
-    data = _record(value, ReferenceSoundAnalysisPayload.__required_keys__)
+    data = _record(
+        value,
+        ReferenceSoundAnalysisPayload.__required_keys__,
+        ReferenceSoundAnalysisPayload.__optional_keys__,
+    )
     _record(data["report"], FeatureReportPayload.__required_keys__)
     _record(data["features"], AudioSynthesisFeaturesPayload.__required_keys__)
     _record(data["evidence"], AudioDnaEvidencePayload.__required_keys__)
@@ -402,7 +438,11 @@ def _delta(value: object) -> ReferenceSoundFeatureDeltaPayload:
 
 
 def sound_recording_from_dict(value: object) -> ReferenceSoundRecordingPayload:
-    data = _record(value, ReferenceSoundRecordingPayload.__required_keys__)
+    data = _record(
+        value,
+        ReferenceSoundRecordingPayload.__required_keys__,
+        ReferenceSoundRecordingPayload.__optional_keys__,
+    )
     score, distance = sound_integer(data["score"]), _sound_record_number(data["distance"])
     if (
         not 0 <= score <= _SCORE_MAXIMUM
@@ -410,7 +450,7 @@ def sound_recording_from_dict(value: object) -> ReferenceSoundRecordingPayload:
         or data["physical_validation"] is not False
     ):
         raise ValueError("Reference-sound recording score or evidence is invalid.")
-    return {
+    result: ReferenceSoundRecordingPayload = {
         "candidate_id": require_sound_digest(data["candidate_id"]),
         "candidate_sha256": require_sound_digest(data["candidate_sha256"]),
         "audio_sha256": require_sound_digest(data["audio_sha256"]),
@@ -421,6 +461,16 @@ def sound_recording_from_dict(value: object) -> ReferenceSoundRecordingPayload:
         "feature_deltas": _records(data["feature_deltas"], _delta),
         "physical_validation": False,
     }
+    if "segment" in data:
+        segment = sound_segment_from_dict(data["segment"])
+        if segment["sha256"] != result["audio_sha256"]:
+            raise ValueError("Recording segment identity disagrees with measured audio.")
+        result["segment"] = segment
+    if "pitch_comparison" in data:
+        result["pitch_comparison"] = ReferencePitchComparison.from_dict(
+            data["pitch_comparison"]
+        ).to_dict()
+    return result
 
 
 def sound_refinement_from_dict(value: object) -> ReferenceSoundRefinementPayload:

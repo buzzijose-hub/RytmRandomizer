@@ -278,6 +278,8 @@ def pyinstaller_command(
         str(work_dir),
         "--additional-hooks-dir",
         str(work_dir / "hooks"),
+        "--add-data",
+        f"{PROJECT_ROOT / 'rytm_randomizer/data/MIDI_GUIDE_DATA_NOTICE.txt'}:rytm_randomizer/data",
     ]
     for package in COLLECT_ALL_PACKAGES:
         command.extend(["--collect-all", package])

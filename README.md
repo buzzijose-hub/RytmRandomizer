@@ -128,15 +128,21 @@ never enumerates, opens, or writes a MIDI port.
 **Reference sound workflow (physical acceptance pending):** import and retain a
 short PCM WAV, select an exact segment and original Rytm/A4 KIT, scope supported
 controls, inspect eight source-preserving local candidates, retain favorites,
-compare supplied audition recordings and perform bounded refinement. Export uses
-an explicit scratch slot; it does not transmit. Existing native protection and
+compare supplied audition recordings and perform bounded refinement.
+Separate qualified pitch/octave and original-level recording diagnostics hold
+unreliable feedback before refinement. Exact audition ranges retain original
+audio; legacy diagnostic refresh preserves candidates and favorite identities.
+Export uses an explicit scratch slot; it does not transmit. Existing native protection and
 live-send limits remain. This is heuristic reference-to-discovery, not an exact
 reproduction claim or a trained instrument renderer. The previous verified
-Windows rehearsal builds are preserved; audio-enabled source `64d5c619` already
-includes this workflow. The October 12 representation integration is being
-verified separately and does not inherit that build's acceptance. See the
+Windows rehearsal builds are preserved. The verified `53a935d08582` fallback
+includes the earlier workflow, not the October 14 diagnostic/range repairs.
+Those repairs require their own exact-source packaged acceptance. See the
 [reference-sound procedure](docs/COCKPIT_QUICKSTART.md#reference-sound-rehearsal)
-and [active plan](docs/superpowers/plans/2026-10-11-reference-sound-workflow.md).
+and [active reliability plan](docs/superpowers/plans/2026-10-14-reference-sound-reliability.md).
+The [October 11 feature plan](docs/superpowers/plans/2026-10-11-reference-sound-workflow.md)
+is background; the [October 14 studio handoff](docs/hardware-validation/2026-10-14-reference-sound-session.md)
+keeps rehearsal, mapping and acoustic evidence separate.
 
 **Native representation:** A4 F1 device labels, exact native words and lossy
 wire values remain distinct. Working-RAM KIT responses are inspect-only, never

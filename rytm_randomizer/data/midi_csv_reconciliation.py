@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final
+from typing import Final, cast
 
 from .elektron_midi_descriptions import MIDI_GUIDE_SOURCES
 
@@ -78,21 +78,10 @@ MIDI_CSV_ATTRIBUTION: Final[str] = MIDI_GUIDE_SOURCES["a4"].attribution
 MIDI_CSV_REPOSITORY: Final[str] = MIDI_GUIDE_SOURCES["a4"].repository_url
 MIDI_CSV_LICENSE: Final[str] = MIDI_GUIDE_SOURCES["a4"].license_id
 MIDI_CSV_LICENSE_URL: Final[str] = MIDI_GUIDE_SOURCES["a4"].upstream_license_url
-MIDI_CSV_UPSTREAM_COMMIT: Final[str] = str(
-    getattr(MIDI_GUIDE_SOURCES["a4"], "upstream_revision", None)
-    or "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b"
-)
+MIDI_CSV_CODE_LICENSE: Final[str] = "PolyForm-Noncommercial-1.0.0"
+MIDI_CSV_UPSTREAM_COMMIT: Final[str] = cast(str, MIDI_GUIDE_SOURCES["a4"].upstream_revision)
 MIDI_CSV_UPSTREAM_BLOBS: Final = MappingProxyType(
-    {
-        "a4": str(
-            getattr(MIDI_GUIDE_SOURCES["a4"], "upstream_blob_sha1", None)
-            or "53a1a26263782ce8f044b112a33642de27f547cd"
-        ),
-        "rytm": str(
-            getattr(MIDI_GUIDE_SOURCES["rytm"], "upstream_blob_sha1", None)
-            or "46cc786dc106f35a00a9412057f8ee63192aa308"
-        ),
-    }
+    {family: cast(str, source.upstream_blob_sha1) for family, source in MIDI_GUIDE_SOURCES.items()}
 )
 MIDI_CSV_UPSTREAM_LAST_CHANGE: Final = MappingProxyType(
     {
@@ -165,33 +154,37 @@ MIDI_CSV_EVIDENCE_NOTES: Final = MappingProxyType(
 )
 MIDI_CSV_MANUAL_CHECKS: Final = MappingProxyType(
     {
-        "rytm": {
-            "version": "OS1.72_250130",
-            "retrieved_sha256": "6485fc5eee11cd210913fa6041cde889b74ddaff19042220cea1db4b7b5d985f",
-            "retrieved_bytes": 13216102,
-            "pages": 114,
-            "checked_pages": (85, 86, 87, 93, 94, 105, 108),
-            "method": "read-only official PDF fetch and local pypdf extraction; originals untouched",
-            "findings": (
-                "BT Classic Sweep Depth: CC19, NRPN1:3; absent from supplied CSV, not from manual.",
-                "CY Ride Hit Decay: CC19/NRPN1:3; Cymbal Type: CC20/NRPN1:4; agrees with narrow inbound receipts.",
-                "General SRC ordering differs from front-panel parameter ordering; machine context is mandatory.",
-                "LFO Depth pairs CC109/118; CSV and native representation cannot certify paired output or restore.",
-                "MIDI appendix establishes addresses, not narrower ranges, enum inverses or per-row physical receipts.",
-            ),
-            "not_checked": "No target-unit outbound, native-slot, precision, freshness or restore experiment.",
-        },
-        "a4": {
-            "version": "OS1.51C_220204",
-            "checked_pages": (37, 97, 98, 102, 103, 104, 105, 106, 107),
-            "method": "official PDF text inspection; no document bytes redistributed",
-            "findings": (
-                "FX NRPN bank2 and CV bank3 are distinct from synth/performance context.",
-                "Envelope/LFO MIDI tables document addresses, not exact ordinal-to-native conversion.",
-                "CSV reference tracks can include FX/CV pages that the synth saved-field strategy does not cover.",
-                "July physical enum corrections supersede plugin/list-index hypotheses; general A4/BOTH remains held.",
-            ),
-            "not_checked": "OS1.51C manual does not prove installed OS1.55 target behavior or physical acceptance.",
-        },
+        "rytm": MappingProxyType(
+            {
+                "version": "OS1.72_250130",
+                "retrieved_sha256": "6485fc5eee11cd210913fa6041cde889b74ddaff19042220cea1db4b7b5d985f",
+                "retrieved_bytes": 13216102,
+                "pages": 114,
+                "checked_pages": (85, 86, 87, 93, 94, 105, 108),
+                "method": "read-only official PDF fetch and local pypdf extraction; originals untouched",
+                "findings": (
+                    "BT Classic Sweep Depth: CC19, NRPN1:3; absent from supplied CSV, not from manual.",
+                    "CY Ride Hit Decay: CC19/NRPN1:3; Cymbal Type: CC20/NRPN1:4; agrees with narrow inbound receipts.",
+                    "General SRC ordering differs from front-panel parameter ordering; machine context is mandatory.",
+                    "LFO Depth pairs CC109/118; CSV and native representation cannot certify paired output or restore.",
+                    "MIDI appendix establishes addresses, not narrower ranges, enum inverses or per-row physical receipts.",
+                ),
+                "not_checked": "No target-unit outbound, native-slot, precision, freshness or restore experiment.",
+            }
+        ),
+        "a4": MappingProxyType(
+            {
+                "version": "OS1.51C_220204",
+                "checked_pages": (37, 97, 98, 102, 103, 104, 105, 106, 107),
+                "method": "official PDF text inspection; no document bytes redistributed",
+                "findings": (
+                    "FX NRPN bank2 and CV bank3 are distinct from synth/performance context.",
+                    "Envelope/LFO MIDI tables document addresses, not exact ordinal-to-native conversion.",
+                    "CSV reference tracks can include FX/CV pages that the synth saved-field strategy does not cover.",
+                    "July physical enum corrections supersede plugin/list-index hypotheses; general A4/BOTH remains held.",
+                ),
+                "not_checked": "OS1.51C manual does not prove installed OS1.55 target behavior or physical acceptance.",
+            }
+        ),
     }
 )

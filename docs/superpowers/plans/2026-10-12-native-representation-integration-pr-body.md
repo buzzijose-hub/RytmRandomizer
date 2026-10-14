@@ -1,7 +1,8 @@
 # Summary
 
 Continue the bounded offline reference-sound workflow for A4 MKII and Rytm MKII
-with parameter-specific native representation and passive working-KIT inspection.
+with signed Noise Fade inference, qualified pitch/recording diagnostics, exact
+analyzed segments and the complete community MIDI Guide reconciliation ledger.
 Exact source bytes, scope/locks, candidate identities, local favorites and
 recording comparison remain distinct from instrument application and recovery.
 This is reference-to-discovery, not forensic reconstruction or a trained renderer.
@@ -15,6 +16,24 @@ it does not widen SRC, paired precision, A4/BOTH or restoration authority.
 
 ## What changed
 
+- Noise Fade inference now produces verified signed display units before the
+  existing native encoder. Legacy candidate identities/replay remain exact;
+  old unlocked Noise Fade sessions must regenerate before new refinement.
+- Separate Welch spectral peaks and qualified pYIN fundamental/octave diagnostics
+  from the unchanged eleven-feature distance. Uncertain pitch, quiet/clipped
+  takes, multiple attacks and mismatched sample identity hold refinement.
+- Preserve original recordings and explicit selected frame ranges, verify replay
+  from their exact source bytes, and expose measurements/limitations in the UI.
+  Measuring legacy references preserves their candidates and local favorites.
+- Reconcile all552 supplied CSV rows with machine/track/address context, pinned
+  SHA256/Git provenance, CC-BY-SA4 attribution, official manual checks, conflicts,
+  protections and separate software/native/physical evidence. Added descriptive
+  metadata does not expand executable domains, authoring or SEND permissions.
+- Preserve the historical AL02 fail-closed receipt and refresh only its catalog
+  dependency identity. That proof remains blocked; no new kit SysEx is emitted.
+- Extend isolated packaged QA with both-device synthetic comparison/refinement
+  and real-input A4 generation/quality/persistence. Historical recordings are
+  not claimed to be auditions of newly generated candidates.
 - Separate A4 F1 and ordinary Rytm LFO Depth contracts, literal boundary/order/
   collision witnesses and canonical u14 reuse. Native, display and wire values
   remain distinct; arithmetic models do not grant output authority.
@@ -40,42 +59,44 @@ The operator can inspect legal native words and precision loss without changing
 favorite identity or mistaking working-RAM/body equality for saved-state proof.
 The next studio session starts with one bounded Pad2 four-control audition and
 manual recovery; F1 working-query research comes later, not as a prerequisite.
-Physical observations and protected approval remain pending.
+Physical observations and protected approval remain pending. The October14
+handoff keeps one10%Pad2 audition/manual recovery first, a separate bounded
+mapping session second, and a separate controlled A4 single-note take third.
 
 ## Test plan
 
-Final build source `53a935d08582f3446259afb7494d6bdb79618263` is delivered as
-`show-kit-forge-studio-53a935d08582`. Windowsbuild38338316064, sourceCI38338223170/
-required-checks and CodeQL115103503126 succeed. Binary hashes/launcher/manual
-operator-present procedure are in its local delivery receipt and run report.
-Earlier builds remain preserved;5d/0bb failures are not relabeled passes.
+Verified fallback source `53a935d08582f3446259afb7494d6bdb79618263` remains
+delivered as `show-kit-forge-studio-53a935d08582`, unchanged with its settings.
+Windowsbuild38338316064 and its previous acceptance remain historical evidence,
+not acceptance of the October14 changes. A new exact-source build, actual
+packaged journeys and final CI are pending below until their receipts exist.
 
 | Verification | Actual result |
 | --- | --- |
-| Exact53 Windows full |11877pass/5skip/6warnings1635.61s; Python production unchanged from verified5db6. All76touched production files retain100%line/branch; project99.42%purebranch/99%floor unchanged. |
-| Path/store/command |373pass/3warnings6.12s;28pre-I/O command refusals; validator removal catches2 failures. Five normal false-positive dispositions are independently reviewed, with trusted-local-root limits stated. |
-| Frontend |1306pass/81files98.60s/allfourcoverage100%; type/lint/build clean. |
-| Normal gates |Strict76typing/lint/898architecture/697nonfast including685frozen parity pass, no bypass. |
-| Focused browser and driver |Exact recall plus1440/600 geometry pass3.0s, no retry;25Node cases cover complete packets, failure cleanup, phase deadlines and fresh replacement-socket bootstrap. |
-| Actual packaged Pad2 rehearsal |24.141s/22commands/zero failures/7checks; fresh sources,10%seed3000, complete4packets, exact Preview, scope-clear and ready-plan-before-owned-restart/fresh disarmed bootstrap pass. |
-| Actual packaged native/ref |Native46.195s/22commands/10checks; both-device reference50.517s/47commands, exact favorites/export/reopen; isolated worker25.078s/devPython cleared. |
-| Cleanup/resources |All owned processes stopped; memory325.15-569.53MiB/max10processes/max4106handles/min9.69GiBfree/pending4. No MIDI/USB/hardware or new endurance/acoustic certification. |
+| Python full |12259pass/6skip/6warnings436.47s, two workers. Prior coverage run12246pass/6fail/6skip1048.05s remains failed evidence;166 focused repair tests pass. |
+| Coverage |Same-production composed full+focused coverage:86 touched runtime files100%line/branch; project99.43%purebranch,99%floor unchanged. |
+| Frontend |1326pass/81files51.13s/allfourcoverage100%; final typecheck/lint/build pass, existing bundle-size/import warnings retained. |
+| Catalog/architecture |1435pass/1known warning80.65s, including898architecture items;552-row deterministic ledger check passes. |
+| Normal gates |Strict88-module typing, full Python lint/format and Vulture80 plus unused-code checks pass. Frozen parity remains unchanged. |
+| Driver |35Node cases pass (25existing driver,10real-input helper); private real-input config/source hashes validated; actual new-package journeys pending. |
+| Packaged acceptance |Pending new source freeze, Windows build, actual Pad2/native/reference UI journeys and binary/launcher hashes. |
+| Hardware |No MIDI/USB enumeration/opening/arming/writes. No new physical sound-match, save/recovery or show certification. |
 
 The contained library-refresh and exact-Preview defects are reproduced with
 red tests and fixed through existing store/recall seams. No global preview,
 packet filtering, scope or output/restore authority changed. Hardware rehearsal
 and protected human approval remain separate from software acceptance.
 
-- [x] Local pytest passes (full suite).
+- [x] Local pytest passes (final full suite).
 - [x] `tests/architecture/` passes.
 - [x] Lint trio (ruff + black + isort) clean.
 - [x] Coverage stays >=95% pure-branch.
 - [x] 685/685 V1.34 parity items byte-identical.
 - [x] No new dead code (vulture --min-confidence 80).
-- [x] Exact-source new Windows package and affected native journeys pass.
-- [x] Final replacement Windows package including guard and readable value tables passes.
-- [x] Fresh test CI/required-checks complete on build source53a935d0.
-- [x] CodeQL path-injection alerts21-25 independently dispositioned with evidence; actual aggregate passes on53.
+- [ ] Exact-source new Windows package and affected native journeys pass.
+- [ ] Final replacement Windows package including diagnostics and exact segment tables passes.
+- [ ] Fresh test CI/required-checks complete on new build source.
+- [x] CodeQL path-injection alerts21-25 independently dispositioned with evidence; dispositions are unchanged, latest remote b9 aggregate passes.
 - [ ] Protected human approval; latest Eddie review remains October3 CHANGES_REQUESTED.
 
 ## Plan-requirements conformance
@@ -118,19 +139,22 @@ do not retroactively certify earlier work or bypass protected human approval.
 ## Plan document
 
 [Native integration plan](https://github.com/buzzijose-hub/RytmRandomizer/blob/codex/studio-evidence-handoff/docs/superpowers/plans/2026-10-12-native-representation-integration.md).
-The earlier reference-sound plan/delivery remains preserved and separately accounted.
+[October14 reliability plan](https://github.com/buzzijose-hub/RytmRandomizer/blob/codex/studio-evidence-handoff/docs/superpowers/plans/2026-10-14-reference-sound-reliability.md).
+[All-row MIDI CSV ledger plan](https://github.com/buzzijose-hub/RytmRandomizer/blob/codex/studio-evidence-handoff/docs/superpowers/plans/2026-10-14-midi-csv-ledger.md).
+Earlier plans/deliveries remain preserved and separately accounted.
 
 ## Reviewer notes
 
 [CodeQL disposition and regression evidence](https://github.com/buzzijose-hub/RytmRandomizer/blob/codex/studio-evidence-handoff/docs/security/2026-10-13-codeql-path-disposition.md).
-The follow-up is limited to security triage and the existing Pad2 rehearsal
-path. A4 working-query research and broader feature expansion are not prerequisites.
+Security dispositions are unchanged. The October14 follow-up repairs the
+demonstrated reference-sound reliability gaps and descriptive catalog evidence,
+not native mapping authority, general output or automatic recovery.
 
 Consolidated dimensional review is posted at https://github.com/buzzijose-hub/RytmRandomizer/pull/254#issuecomment-6134107254.
-Final delivery source53a935d0 and binary hashes/actual acceptance are in the run
-report. The focused frontend repairs preserve all backend source/output gates;
-Python remains byte-identical to5db6. Olderf670 and other packages/settings remain
-preserved. Later documentation/test-only receipts do not alter named binaries. Static research,
+Fallback source53a935d0 and its binary hashes/actual acceptance remain in its
+unchanged receipt. October14 production is different and requires its own
+exact-source package acceptance. Older packages/settings remain preserved.
+Later documentation/test-only receipts do not alter named binaries. Static research,
 synthetic audio, fixtures and software tests are not physical validation.
 Working-state synchronization, instrument recordings/application/save/reload,
 manual recovery and show rehearsal remain pending. No protected merge is requested

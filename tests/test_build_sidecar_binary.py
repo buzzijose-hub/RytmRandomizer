@@ -260,6 +260,20 @@ def test_audio_packaging_is_explicit_and_preserves_lazy_dependencies(tmp_path: P
     compile(hook, "hook-librosa.py", "exec")
 
 
+def test_sidecar_bundles_the_attribution_for_derived_midi_reference_data(tmp_path: Path) -> None:
+    command = packaging.pyinstaller_command(
+        tmp_path / "entry.py", output_dir=tmp_path / "dist", work_dir=tmp_path / "work"
+    )
+    source = (
+        Path(packaging.__file__).resolve().parents[1]
+        / "rytm_randomizer/data/MIDI_GUIDE_DATA_NOTICE.txt"
+    )
+    assert source.is_file()
+    assert command[command.index("--add-data") + 1] == (f"{source}:rytm_randomizer/data")
+    notice = source.read_text(encoding="utf-8")
+    assert "CC-BY-SA-4.0" in notice and "Pencil Research" in notice
+
+
 @pytest.mark.parametrize("available", (False, True))
 def test_pyinstaller_detection_does_not_import_it(
     monkeypatch: pytest.MonkeyPatch, available: bool

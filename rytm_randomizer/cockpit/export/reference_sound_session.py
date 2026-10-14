@@ -10,7 +10,11 @@ from threading import Event
 from types import MappingProxyType
 from typing import Final
 
-from ...data.reference_sound_candidates import REFERENCE_SOUND_SAVED_COMMANDS
+from ...data.reference_sound_candidates import (
+    REFERENCE_SOUND_INFERENCE_VERSION,
+    REFERENCE_SOUND_SAVED_COMMANDS,
+    REFERENCE_SOUND_VERSIONED_A4_PARAMETER,
+)
 from ...devices import resolve_saved_kit_capture_capability
 from ...observability.errors import BoundaryError
 from ...observability.tracing import trace
@@ -29,6 +33,8 @@ from ...style_analysis.extractor import (
     StyleAnalysisDependencyError,
     audio_synthesis_features_to_dict,
 )
+from ...style_analysis.reference_audio_diagnostics import compare_reference_audio_diagnostics
+from ..data.stage import ANALOG_FOUR_DEVICE_ID
 from .reader import decode_json_rejecting_duplicate_keys
 from .reference_sound_analysis import (
     sound_analysis_from_dict,
@@ -84,6 +90,20 @@ from .writer import atomic_write
 _MAX_KIT_DESTINATION_SLOT: Final[int] = 127
 
 SoundAnalyzer = Callable[[Path, Event], AudioFeatureAnalysis]
+
+
+def _require_exact_diagnostic_audio(analysis: AudioFeatureAnalysis, audio: bytes) -> None:
+    diagnostics = analysis.diagnostics
+    if diagnostics is None:
+        return
+    info = inspect_reference_audio(audio)
+    if (
+        diagnostics.sample_rate,
+        diagnostics.channels,
+        diagnostics.start_sample,
+        diagnostics.sample_count,
+    ) != (info.sample_rate, info.channels, 0, info.frame_count):
+        raise ValueError("Diagnostic sample range differs from the exact retained WAV.")
 
 
 @dataclass(frozen=True, init=False)
@@ -164,6 +184,7 @@ class ReferenceSoundWorkspace:
         _check_cancel(cancel)
         if analysis.audio_sha256 != reference_sound_digest(audio):
             raise ValueError("Audio analysis does not match the retained segment.")
+        _require_exact_diagnostic_audio(analysis, audio)
         return analysis
 
     def _load(self, session_id: str) -> ReferenceSoundSessionPayload:
@@ -297,6 +318,12 @@ class ReferenceSoundWorkspace:
                 "strength": strength,
             }
         )
+        if (
+            device_id == ANALOG_FOUR_DEVICE_ID
+            and REFERENCE_SOUND_VERSIONED_A4_PARAMETER in parameters
+            and REFERENCE_SOUND_VERSIONED_A4_PARAMETER not in locks
+        ):
+            context["inference_version"] = REFERENCE_SOUND_INFERENCE_VERSION
         identity = _session_identity(context)
         if (self.store.directory / f"{identity}.sound.json").exists():
             _check_cancel(cancel)
@@ -343,6 +370,7 @@ class ReferenceSoundWorkspace:
         analysis = sound_analysis_from_dict(payload["analysis"])
         if analysis.audio_sha256 != reference_sound_digest(audio):
             raise ValueError("Retained measurements belong to a different segment.")
+        _require_exact_diagnostic_audio(analysis, audio)
         source = self.store.read_artifact(sound_text(context["source_sha256"]), "syx")
         device = sound_text(context["device_id"])
         target = sound_integer(context["target"])
@@ -350,7 +378,14 @@ class ReferenceSoundWorkspace:
         locks = tuple(context["locks"])
         strength = sound_number(context["strength"])
         candidates = render_reference_sound_candidates(
-            source, device, target, analysis, parameters, locks, strength
+            source,
+            device,
+            target,
+            analysis,
+            parameters,
+            locks,
+            strength,
+            inference_version=context.get("inference_version", 1),
         )
         refinements = payload["refinements"]
         for item in refinements:
@@ -393,6 +428,7 @@ class ReferenceSoundWorkspace:
                     parameters,
                     locks,
                     strength,
+                    inference_version=context.get("inference_version", 1),
                 ),
             )
         if len({item.candidate_id for item in candidates}) != len(candidates):
@@ -444,11 +480,28 @@ class ReferenceSoundWorkspace:
         ):
             raise ValueError("Recorded feedback identity or evidence status is invalid.")
         audio = self.store.read_artifact(sound_text(record["audio_sha256"]), "wav")
+        if "segment" in record:
+            segment = record["segment"]
+            original = self.store.read_artifact(segment["original"]["sha256"], "wav")
+            selected = select_reference_segment(
+                original, start_frame=segment["start_frame"], frame_count=segment["frame_count"]
+            )
+            if selected.wav != audio or sound_segment_payload(selected) != segment:
+                raise ValueError("Recording segment disagrees with its exact original audio.")
         if inspect_reference_audio(audio).seconds > REFERENCE_SEGMENT_MAX_SECONDS:
             raise ValueError("Retained recording exceeds the bounded comparison window.")
         measured = sound_analysis_from_dict(record["features"])
         if measured.audio_sha256 != reference_sound_digest(audio):
             raise ValueError("Recording measurements differ from retained audio.")
+        _require_exact_diagnostic_audio(measured, audio)
+        if (
+            "pitch_comparison" in record
+            and record["pitch_comparison"]
+            != compare_reference_audio_diagnostics(
+                reference.diagnostics, measured.diagnostics
+            ).to_dict()
+        ):
+            raise ValueError("Recording pitch diagnostics disagree with retained measurements.")
         retained_score = sound_integer(record["score"])
         retained_distance = sound_number(record["distance"])
         score = self._score(reference, measured, candidate)
@@ -542,6 +595,8 @@ class ReferenceSoundWorkspace:
         candidate_sha256: str,
         recording: bytes,
         cancel: Event,
+        start_frame: int | None = None,
+        frame_count: int | None = None,
     ) -> PreparedReferenceSound:
         payload = self.reopen(session_id)
         candidate = self.candidate(session_id, candidate_id)
@@ -554,37 +609,102 @@ class ReferenceSoundWorkspace:
                 REFERENCE_SOUND_FAILURE_MESSAGES["audio_invalid"],
                 context=reference_sound_error_context("audio_invalid"),
             ) from exc
-        if info.seconds > REFERENCE_SEGMENT_MAX_SECONDS:
+        if (start_frame is None) != (frame_count is None):
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES["recording_segment_invalid"],
+                context=reference_sound_error_context("recording_segment_invalid"),
+            )
+        if start_frame is None and info.seconds > REFERENCE_SEGMENT_MAX_SECONDS:
             raise BoundaryError(
                 REFERENCE_SOUND_FAILURE_MESSAGES["recording_too_long"],
                 context=reference_sound_error_context("recording_too_long"),
             )
+        try:
+            segment = select_reference_segment(
+                recording,
+                start_frame=0 if start_frame is None else start_frame,
+                frame_count=info.frame_count if frame_count is None else frame_count,
+            )
+        except ValueError as exc:
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES["recording_segment_invalid"],
+                context=reference_sound_error_context("recording_segment_invalid"),
+            ) from exc
         records = payload["recordings"]
         if len(records) >= REFERENCE_SOUND_MAX_RECORDINGS:
             raise BoundaryError(
                 REFERENCE_SOUND_FAILURE_MESSAGES["recording_limit"],
                 context=reference_sound_error_context("recording_limit"),
             )
-        analysis = self._analyze(recording, cancel)
+        analysis = self._analyze(segment.wav, cancel)
         reference = sound_analysis_from_dict(payload["analysis"])
         score = self._score(reference, analysis, candidate)
         record: ReferenceSoundRecordingPayload = {
             "candidate_id": candidate_id,
             "candidate_sha256": candidate_sha256,
-            "audio_sha256": info.sha256,
+            "audio_sha256": segment.sha256,
             "features": sound_analysis_to_dict(analysis),
             "distance": score.distance,
             "score": score.similarity,
             "metric": REFERENCE_SOUND_METRIC,
             "feature_deltas": [sound_delta_payload(item) for item in score.feature_deltas],
             "physical_validation": False,
+            "segment": sound_segment_payload(segment),
+            "pitch_comparison": compare_reference_audio_diagnostics(
+                reference.diagnostics, analysis.diagnostics
+            ).to_dict(),
         }
         updated: ReferenceSoundSessionPayload = {**payload, "recordings": [*records, record]}
         _check_cancel(cancel)
         return PreparedReferenceSound(
             updated,
-            {sound_artifact_name(info.sha256, "wav"): recording},
+            {
+                sound_artifact_name(info.sha256, "wav"): recording,
+                sound_artifact_name(segment.sha256, "wav"): segment.wav,
+            },
             reference_sound_digest(reference_sound_json(payload)),
+        )
+
+    @trace("reference_sound.measure")
+    def measure_reference(self, session_id: str, *, cancel: Event) -> PreparedReferenceSound:
+        """Add diagnostics without rewriting existing measurements or candidate identities."""
+        payload = self.reopen(session_id)
+        retained = payload["analysis"]
+        if retained is None:
+            raise ValueError("Generate a source-bound session before refreshing diagnostics.")
+        analysis = sound_analysis_from_dict(retained)
+        if analysis.diagnostics is not None:
+            _check_cancel(cancel)
+            return PreparedReferenceSound(
+                payload, {}, reference_sound_digest(reference_sound_json(payload))
+            )
+        measured = self._analyze(self._segment_bytes(payload), cancel)
+        if measured.diagnostics is None:
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES["recording_quality_required"],
+                context=reference_sound_error_context("recording_quality_required"),
+            )
+        updated: ReferenceSoundSessionPayload = {
+            **payload,
+            "analysis": sound_analysis_to_dict(replace(analysis, diagnostics=measured.diagnostics)),
+            "recordings": [
+                (
+                    {
+                        **record,
+                        "pitch_comparison": compare_reference_audio_diagnostics(
+                            measured.diagnostics,
+                            sound_analysis_from_dict(record["features"]).diagnostics,
+                        ).to_dict(),
+                    }
+                    if "pitch_comparison" in record
+                    else record
+                )
+                for record in payload["recordings"]
+            ],
+        }
+        _check_cancel(cancel)
+        return PreparedReferenceSound(
+            updated, {}, reference_sound_digest(reference_sound_json(payload))
         )
 
     @trace("reference_sound.refine")
@@ -592,6 +712,20 @@ class ReferenceSoundWorkspace:
         self, session_id: str, candidate_id: str, *, correction_gain: float, cancel: Event
     ) -> PreparedReferenceSound:
         payload = self.reopen(session_id)
+        context = payload["context"]
+        if (
+            context is not None
+            and context["device_id"] == ANALOG_FOUR_DEVICE_ID
+            and (
+                REFERENCE_SOUND_VERSIONED_A4_PARAMETER in context["parameters"]
+                and REFERENCE_SOUND_VERSIONED_A4_PARAMETER not in context["locks"]
+                and "inference_version" not in context
+            )
+        ):
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES["legacy_inference_requires_regeneration"],
+                context=reference_sound_error_context("legacy_inference_requires_regeneration"),
+            )
         candidate = self.candidate(session_id, candidate_id)
         refinements = payload["refinements"]
         if len(refinements) >= REFERENCE_SOUND_MAX_REFINEMENTS:
@@ -612,6 +746,20 @@ class ReferenceSoundWorkspace:
             raise ValueError("Recorded feedback belongs to a different patch.")
         reference = sound_analysis_from_dict(payload["analysis"])
         measured = self._verified_recording(record, candidate, reference)
+        comparison = compare_reference_audio_diagnostics(
+            reference.diagnostics, measured.diagnostics
+        )
+        if comparison.blockers:
+            if "diagnostics_missing" in comparison.blockers:
+                reason = "recording_quality_required"
+            elif "pitch_mismatch" in comparison.blockers:
+                reason = "recording_pitch_mismatch"
+            else:
+                reason = "recording_quality_unreliable"
+            raise BoundaryError(
+                REFERENCE_SOUND_FAILURE_MESSAGES[reason],
+                context=reference_sound_error_context(reason),
+            )
         score = self._score(reference, measured, candidate)
         if score.distance == 0.0:
             _check_cancel(cancel)
@@ -633,6 +781,7 @@ class ReferenceSoundWorkspace:
             tuple(context["parameters"]),
             tuple(context["locks"]),
             sound_number(context["strength"]),
+            inference_version=context.get("inference_version", 1),
         )
         entry: ReferenceSoundRefinementPayload = {
             "parent_id": candidate_id,

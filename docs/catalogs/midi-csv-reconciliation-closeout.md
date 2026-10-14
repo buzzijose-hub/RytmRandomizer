@@ -11,15 +11,17 @@
   ledger without G: or any hardware. Running without `--check` publishes JSON
   and Markdown together through the existing atomic write-set owner.
 - Parser and matcher are separate narrow modules. Source schemas, scope aliases,
-  evidence references and pinned fallback provenance live in `data/`, not reports.
+  evidence references and pinned provenance live in `data/`, not reports.
   `MIDI_GUIDE_SOURCES` owns filenames, input hashes, source URLs, attribution and
-  license. Its `upstream_revision` and `upstream_blob_sha1` are consumed when
-  present; old-base fallback IDs retain independently verified original blobs.
+  license. The integrated `upstream_revision` and `upstream_blob_sha1` are
+  consumed directly; duplicate old-base fallback declarations were removed.
 
-The implementation worktree began at `07cdc166`. The facts dependency was
+The isolated implementation worktree began at `07cdc166`. The facts dependency was
 cherry-picked from parent commit `28ef60de` as local `1fcd2429` so the real
 descriptive APIs could be exercised. Parent already has that dependency: apply
-only this worker's final own-files commit, not the dependency again.
+only this worker's final own-files commit, not the dependency again. This
+integration is now assembled on `codex/studio-rytm-mapping` for the existing
+PR254 head, not a separate delivery or PR. The worker checkout is archived.
 
 ## Row Completion
 
@@ -51,16 +53,24 @@ and native identities are a separate unresolved comparison, not a converter.
   `6485fc5eee11cd210913fa6041cde889b74ddaff19042220cea1db4b7b5d985f`.
   Relevant address/machine sections inspected; no PDF bytes redistributed.
 
-No full suite, architecture suite, coverage run or build was performed by this
-worker. Parent reserved integration gates. No branch/PR/push or descendant agent
-was created, and no MIDI/USB enumeration, opening, arming or sending occurred.
+The worker did not run full integration gates. The assembled catalog/data/
+packaging/architecture composition subsequently passed1435 cases in80.65s,
+including898architecture items, with one known short-name warning. Strict88
+production-module typing, full lint/format, Vulture80 and deterministic ledger
+check pass. Same-production composed full/focused coverage records100%lines and
+branches on86 touched runtime files and99.43%project pure branch. Final all-green
+full suite passes12259tests/six skips/six warnings436.47s. New
+package and CI remain pending in the active reliability plan; the earlier
+six-failure full run is not green acceptance. No MIDI/USB enumeration,
+opening, arming or sending occurred.
 
 ## Integration And Remaining Gates
 
-Parent owns `data/__init__.py`, shared tests, snapshot integration and packaging
-notices. Optional source-spec exports are `MidiCsvSourceSpec`, `MIDI_CSV_SOURCES`,
-and any source-contract constants parent needs; report code imports its owning
-modules directly. No runtime command registration is required for this file tool.
+The assembled data facade exposes uppercase immutable facts only; the source
+record type is imported directly from its owning module. Shared tests, deliberate
+data snapshots, canonical input validators and shared raw-byte SHA256 now cover
+the complete producer/consumer contract. The packaged sidecar includes the data
+attribution notice. No runtime command registration is required for this file tool.
 
 After applying the own-files commit, run `scripts/reconcile_midi_csv.py --check`
 against the assembled tree. If another owner changes canonical inventory data,

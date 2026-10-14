@@ -1138,13 +1138,13 @@ documented in [the studio experiment](NATIVE_WORKING_KIT_STUDIO_EXPERIMENT.md).
 The new **Reference sound** workspace is for one short sound. It is distinct
 from the description compiler and song/profile wizard. The prior `6e098f85`
 rehearsal package does not contain this feature or its audio dependencies.
-The audio-enabled source `f67059ba` package is delivered at
-`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-f67059ba844f`.
+The verified fallback is source `53a935d08582`, delivered at
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-53a935d08582`.
 Its receipt includes frozen-worker and actual native UI acceptance. The previous
 `8d5d42f8`, `096be3ed` and `64d5c619` deliveries stay preserved. Offline acceptance is not show readiness.
 
 ```powershell
-Set-Location "C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-studio-f67059ba844f"
+Set-Location "C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-studio-53a935d08582"
 .\Launch-Offline.ps1 -Hidden:$false
 ```
 
@@ -1173,7 +1173,35 @@ Set-Location "C:\Users\Jose Buzzi\Documents\ShowKitForgeStudio\show-kit-forge-st
    export identifies its retained source-destination frame; the exported scratch
    frame has its own SHA because the destination and integrity bytes change.
 
+The October 14 diagnostics, audition-range and diagnostic-refresh controls below
+are source changes pending separate packaged acceptance. They are not present
+in that fallback. Use the new exact-source receipt only after it records actual
+binary acceptance. See the [reliability plan](superpowers/plans/2026-10-14-reference-sound-reliability.md)
+and [ordered studio handoff](hardware-validation/2026-10-14-reference-sound-session.md).
+
 One session retains at most 16 supplied recordings and three refinement rounds.
+Comparison keeps the eleven-feature weighted L1 score separate from qualified
+pitch/octave estimates. A spectral peak alone is not a verified fundamental.
+Inspect original RMS/peak dBFS, clipped fraction and detected note activity.
+Scores are not percent accuracy. Very quiet, clipped, multi-note or uncertain
+feedback, missing diagnostics, or a supported pitch difference beyond 100 cents
+holds refinement on the server. No oscillator tuning or played note changes.
+Blockers may come from the reference or the audition: a clean new take cannot
+clear an uncertain reference. Two reliably unpitched inputs may proceed when
+neither has another blocker; uncertain pitch remains held.
+
+For auditions, either supply the whole 0.05-8 second single-note WAV or explicitly
+set both audition start frame and frame count before upload. Longer takes are
+refused without a range; they are not silently cropped. The UI shows the exact
+analyzed range, original/segment hashes and retained sample identity. Originals
+are preserved separately. Include onset and release when selecting a range.
+For a legacy session, **Measure retained reference** adds only missing diagnostic
+metadata. Candidates, source, favorites and identities are unchanged; compare a
+fresh controlled take afterward. Legacy unlocked Noise Fade sessions remain
+recallable/exportable, but new refinement requires a separate current-model
+generation. Its signed display equation is a heuristic fade-out intent, not
+calibrated seconds or live MIDI encoding evidence.
+
 The store is bounded to 64 sessions / 256 MiB, and an analysis worker has a
 60-second deadline. A refused operation preserves committed work. For recovery,
 close the app and preserve a complete copy of its reference-sound store before

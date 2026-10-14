@@ -4,15 +4,15 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { expect } = require('@playwright/test');
 
-function syntheticWav(frequency) {
-  const count = 11025;
+function syntheticWav(frequency, harmonic = 0) {
+  const count = 55125;
   const audio = Buffer.alloc(44 + count * 2);
   audio.write('RIFF'); audio.writeUInt32LE(audio.length - 8, 4); audio.write('WAVEfmt ', 8);
   audio.writeUInt32LE(16, 16); audio.writeUInt16LE(1, 20); audio.writeUInt16LE(1, 22);
   audio.writeUInt32LE(22050, 24); audio.writeUInt32LE(44100, 28);
   audio.writeUInt16LE(2, 32); audio.writeUInt16LE(16, 34); audio.write('data', 36);
   audio.writeUInt32LE(count * 2, 40);
-  for (let index = 0; index < count; index++) audio.writeInt16LE(Math.round(16000 * Math.sin(2 * Math.PI * frequency * index / 22050)), 44 + index * 2);
+  for (let index = 0; index < count; index++) audio.writeInt16LE(Math.round(14000 * (Math.sin(2 * Math.PI * frequency * index / 22050) + harmonic * Math.sin(4 * Math.PI * frequency * index / 22050))), 44 + index * 2);
   return audio;
 }
 
@@ -49,10 +49,10 @@ async function exerciseReferenceSoundPackage({ page, latest, connected, processO
     await expect(panel.getByRole('button', { name: 'Refresh sessions', exact: true })).toBeEnabled();
     assert.equal(latest.reference_sound_session.segment.original.sha256, digest(audio));
     await panel.getByLabel('Start frame', { exact: true }).fill('2205');
-    await panel.getByLabel('Frame count', { exact: true }).fill('6615');
+    await panel.getByLabel('Frame count', { exact: true }).fill('44100');
     await panel.getByRole('button', { name: 'Retain segment', exact: true }).click();
     await expect.poll(() => latest.reference_sound_session?.segment.start_frame).toBe(2205);
-    assert.equal(latest.reference_sound_session.segment.frame_count, 6615);
+    assert.equal(latest.reference_sound_session.segment.frame_count, 44100);
     await panel.getByRole('combobox', { name: 'Device', exact: true }).selectOption(device);
     await panel.getByRole('combobox', { name: 'Source Library record', exact: true }).selectOption({ index: 1 });
     await panel.getByLabel(device === 'analog_four_mk2' ? 'Target track' : 'Target pad', { exact: true }).fill(String(target));
@@ -72,7 +72,16 @@ async function exerciseReferenceSoundPackage({ page, latest, connected, processO
     await panel.getByLabel('Supplied candidate recording WAV (0.05-8s)', { exact: true }).setInputFiles({ name: 'synthetic-only-comparison.wav', mimeType: 'audio/wav', buffer: syntheticWav(880) });
     await expect.poll(() => latest.reference_sound_session?.recordings.length, { timeout: 65_000 }).toBe(1);
     assert.equal(latest.reference_sound_session.recordings[0].physical_validation, false);
+    assert.equal(latest.reference_sound_session.recordings[0].pitch_comparison.support_status, 'held');
+    assert(latest.reference_sound_session.recordings[0].pitch_comparison.blockers.includes('pitch_mismatch'));
+    assert.equal(latest.reference_sound_session.recordings[0].pitch_comparison.octave_difference, 1);
+    await expect(panel.getByRole('button', { name: 'Refine candidate (0/3)', exact: true })).toBeDisabled();
+    await expect(panel.getByRole('table', { name: 'Controlled audition diagnostics', exact: true })).toBeVisible();
     await expect(panel.getByRole('table', { name: /Supplied recording ranking/ })).toBeVisible();
+    await panel.getByLabel('Supplied candidate recording WAV (0.05-8s)', { exact: true }).setInputFiles({ name: 'synthetic-same-pitch-timbre.wav', mimeType: 'audio/wav', buffer: syntheticWav(440, 0.25) });
+    await expect.poll(() => latest.reference_sound_session?.recordings.length, { timeout: 65_000 }).toBe(2);
+    assert.equal(latest.reference_sound_session.recordings[1].pitch_comparison.support_status, 'supported');
+    assert.deepEqual(latest.reference_sound_session.recordings[1].pitch_comparison.blockers, []);
     await panel.getByRole('button', { name: 'Refine candidate (0/3)', exact: true }).click();
     await expect.poll(() => latest.reference_sound_session?.refinements.length, { timeout: 65_000 }).toBe(1);
     await panel.getByLabel('Scratch KIT slot (1-128)', { exact: true }).fill('128');

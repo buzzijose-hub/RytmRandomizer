@@ -910,6 +910,67 @@ def test_audio_patch_dna_directions_are_canonical_immutable_data():
     assert "AudioPatchDnaDirectionSpec" in audio_patch_dna_data.__all__
 
 
+def test_reference_audio_pcm_bits_are_canonical_immutable_facts() -> None:
+    from rytm_randomizer import data
+    from rytm_randomizer.data import reference_sound_candidates
+
+    assert (
+        data.REFERENCE_AUDIO_PCM_BITS_BY_SUBTYPE
+        is reference_sound_candidates.REFERENCE_AUDIO_PCM_BITS_BY_SUBTYPE
+    )
+    assert dict(data.REFERENCE_AUDIO_PCM_BITS_BY_SUBTYPE) == {
+        "PCM_U8": 8,
+        "PCM_16": 16,
+        "PCM_24": 24,
+        "PCM_32": 32,
+    }
+    assert "REFERENCE_AUDIO_PCM_BITS_BY_SUBTYPE" in data.__all__
+    with pytest.raises(TypeError):
+        data.REFERENCE_AUDIO_PCM_BITS_BY_SUBTYPE["PCM_16"] = 17
+
+
+def test_midi_guide_descriptions_are_canonical_immutable_reference_knowledge():
+    from rytm_randomizer.data import elektron_midi_descriptions as descriptions
+
+    for name in (
+        "A4_MIDI_DESCRIPTIONS",
+        "MIDI_GUIDE_DATA_NOTICE",
+        "MIDI_GUIDE_SOURCES",
+        "RYTM_MACHINE_REFERENCE_NOTES",
+        "RYTM_MIDI_DESCRIPTIONS",
+    ):
+        assert name in data.__all__
+        assert getattr(data, name) is getattr(descriptions, name)
+    polarity = data.RYTM_MIDI_DESCRIPTIONS[("ut_impulse", "Polarity")]
+    assert polarity.reference_labels == ((0, "Positive"), (1, "Negative"))
+    assert len(data.RYTM_MIDI_DESCRIPTIONS[("sy_chip", "Waveform")].reference_labels) == 128
+    assert "CC-BY-SA-4.0" in data.MIDI_GUIDE_DATA_NOTICE
+    assert data.MIDI_GUIDE_SOURCES["a4"].upstream_blob_sha1 == (
+        "53a1a26263782ce8f044b112a33642de27f547cd"
+    )
+    assert data.MIDI_GUIDE_SOURCES["rytm"].upstream_blob_sha1 == (
+        "46cc786dc106f35a00a9412057f8ee63192aa308"
+    )
+    with pytest.raises(TypeError):
+        data.RYTM_MIDI_DESCRIPTIONS[("ut_impulse", "Polarity")] = polarity
+
+
+def test_csv_reconciliation_owns_context_schema_but_reuses_source_provenance():
+    from rytm_randomizer.data import midi_csv_reconciliation as reconciliation
+
+    for name in vars(reconciliation):
+        if name.startswith("MIDI_CSV_"):
+            assert name in data.__all__
+            assert getattr(data, name) is getattr(reconciliation, name)
+    for spec in data.MIDI_CSV_SOURCES:
+        source = data.MIDI_GUIDE_SOURCES[spec.family]
+        assert spec.sha256 == source.supplied_sha256
+        assert source.upstream_revision == data.MIDI_CSV_UPSTREAM_COMMIT
+        assert data.MIDI_CSV_UPSTREAM_BLOBS[spec.family] == source.upstream_blob_sha1
+    with pytest.raises(TypeError):
+        data.MIDI_CSV_MANUAL_CHECKS["rytm"]["version"] = "unverified"
+
+
 if __name__ == "__main__":
     test_data_layer_exports_are_non_empty()
     test_machine_cc_is_15_everywhere()

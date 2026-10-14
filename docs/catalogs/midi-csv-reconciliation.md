@@ -2,7 +2,7 @@
 
 All 552 supplied rows are retained verbatim in `midi-csv-reconciliation.json`.
 Reference/adapted data: Pencil Research and MIDI Guide community contributors,
-[CC-BY-SA-4.0](https://github.com/pencilresearch/midi/blob/main/LICENSE). Code remains under repository MIT.
+[CC-BY-SA-4.0](https://github.com/pencilresearch/midi/blob/main/LICENSE). Code retains repository PolyForm-Noncommercial-1.0.0.
 No MIDI/USB discovery, ports, arming, mutation or sending occurs.
 
 ## Reproduce

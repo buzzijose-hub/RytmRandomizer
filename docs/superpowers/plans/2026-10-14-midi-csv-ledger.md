@@ -1,5 +1,7 @@
 # MIDI CSV Reconciliation Ledger
 
+> Status: in-flight (PR #254; integration verification and protected review pending).
+
 Per [docs/PLAN_REQUIREMENTS.md](../../PLAN_REQUIREMENTS.md).
 
 ## Scope And Ownership

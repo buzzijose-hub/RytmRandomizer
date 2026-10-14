@@ -41,6 +41,82 @@ async function reopen(h: ReturnType<typeof soundHarness>) {
 }
 
 describe('actual reference sound workspace', () => {
+  it('labels retained legacy Noise Fade explicitly and holds new refinement while keeping favorites visible', async () => {
+    const h = soundHarness(); await prepareSound(h); await h.model.record(audioFile()); await h.model.select('candidate-1', true);
+    const old = h.getSession();
+    h.setSession({ ...old, context: { ...old.context!, device_id: 'analog_four_mk2', parameters: ['noise_fade'] } });
+    mount(h); await reopen(h);
+    expect(screen.getByText(/Legacy Noise Fade model:/)).toHaveTextContent('Generate a separate current-model session');
+    expect(screen.getByRole('button', { name: /Refine candidate/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Remove favorite' })).toBeEnabled();
+  });
+  it('keeps missing generated analysis visibly unmeasured without accepting a diagnostic refresh', async () => {
+    const h = soundHarness(); await prepareSound(h);
+    h.setSession({ ...h.getSession(), analysis: null });
+    mount(h); await reopen(h);
+    expect(screen.getByText(/Reference segment diagnostics: legacy analysis/)).toBeInTheDocument();
+    const count = h.calls.length;
+    fireEvent.click(screen.getByRole('button', { name: 'Measure retained reference' }));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('source-bound session'));
+    expect(h.calls).toHaveLength(count);
+  });
+  it('shows qualified pitch separately from spectral peaks, exact audition samples and bad-quality refusal', async () => {
+    const h = soundHarness(); await prepareSound(h); await h.model.record(audioFile());
+    const saved = h.getSession();
+    const measured = saved.recordings[0]!;
+    h.setSession({ ...saved, analysis: { ...saved.analysis!, diagnostics: { ...saved.analysis!.diagnostics!,
+      spectral_peak_hz: null, qualified_pitch_hz: null, pitch_status: 'uncertain', rms: 0, peak: 0,
+      pitch_stability_cents: null, note_count: null, octave_ambiguous: true, warnings: ['pitch_uncertain'] } },
+      recordings: [{ ...measured, features: { ...measured.features, diagnostics: { ...measured.features.diagnostics!,
+        qualified_pitch_hz: 220, spectral_peak_hz: 440, clipped_fraction: 0.01, multiple_pitch: true,
+        warnings: ['quiet_audio', 'clipped_audio', 'multiple_notes'], refinement_blockers: ['quiet_audio', 'clipped_audio', 'multiple_notes'] } },
+        pitch_comparison: { delta_cents: -1200, octave_difference: -1, support_status: 'held', blockers: ['pitch_mismatch', 'multiple_notes'] } }] });
+    mount(h); await reopen(h);
+    expect(screen.getByRole('table', { name: 'Reference segment diagnostics' })).toHaveTextContent('RMS -inf dBFS');
+    expect(screen.getByRole('table', { name: 'Reference segment diagnostics' })).toHaveTextContent('Not qualified / uncertain');
+    const diagnostics = screen.getByRole('table', { name: 'Controlled audition diagnostics' });
+    expect(diagnostics).toHaveTextContent('220.000 Hz / qualified');
+    expect(diagnostics).toHaveTextContent('440.000 Hz / not a verified fundamental');
+    expect(diagnostics).toHaveTextContent('clipped samples 1.000%');
+    expect(diagnostics).toHaveTextContent('multiple pitches yes');
+    expect(screen.getByText(/Analyzed audition: frames/)).toHaveTextContent(measured.audio_sha256);
+    expect(screen.getByText(/Pitch comparison:/)).toHaveTextContent('-1200.00 cents / octave difference -1');
+    expect(screen.getByText(/Pitch comparison:/)).toHaveTextContent('no pitch or tuning changed');
+    expect(screen.getByRole('button', { name: /Refine candidate/ })).toBeDisabled();
+  });
+
+  it('keeps legacy comparisons visible without inventing missing pitch evidence or enabling refinement', async () => {
+    const h = soundHarness(); await prepareSound(h); await h.model.record(audioFile());
+    const saved = structuredClone(h.getSession());
+    delete saved.analysis!.diagnostics;
+    delete saved.recordings[0]!.features.diagnostics;
+    delete saved.recordings[0]!.pitch_comparison;
+    delete saved.recordings[0]!.segment;
+    h.setSession(saved); mount(h); await reopen(h);
+    expect(screen.getByText(/Reference segment diagnostics: legacy analysis/)).toBeInTheDocument();
+    expect(screen.getByText(/Controlled audition diagnostics: legacy analysis/)).toBeInTheDocument();
+    expect(screen.getByText(/Legacy whole-recording analysis/)).toHaveTextContent(saved.recordings[0]!.audio_sha256);
+    expect(screen.getByText(/Pitch comparison:/)).toHaveTextContent('not qualified');
+    expect(screen.getByRole('button', { name: /Refine candidate/ })).toBeDisabled();
+    expect(screen.getByRole('table', { name: /Measured reference and supplied recording/ })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Measure retained reference' }));
+    await waitFor(() => expect(screen.getByRole('table', { name: 'Reference segment diagnostics' })).toBeVisible());
+    expect(h.getSession().candidates).toEqual(saved.candidates);
+    expect(screen.getByRole('button', { name: /Refine candidate/ })).toBeDisabled();
+  });
+
+  it('requires both sample-aligned audition boundaries and submits only the explicit range', async () => {
+    const h = soundHarness(); await prepareSound(h); mount(h); await reopen(h);
+    const input = screen.getByLabelText('Supplied candidate recording WAV (0.05-8s)');
+    fireEvent.change(screen.getByLabelText('Audition start frame (optional)'), { target: { value: '8000' } });
+    expect(input).toBeDisabled();
+    fireEvent.change(screen.getByLabelText('Audition frame count (optional)'), { target: { value: '40000' } });
+    expect(input).toBeEnabled();
+    fireEvent.change(input, { target: { files: [audioFile(wav(80_000))] } });
+    await waitFor(() => expect(screen.getByText(/Analyzed audition: frames 8000:40000/)).toBeVisible());
+    expect(h.calls.find(({ command }) => command.type === 'reference_sound' && command.action === 'record')?.command)
+      .toMatchObject({ start_frame: 8000, frame_count: 40000 });
+  });
   it('exposes only recorded alternatives in a measured ranking and reopens the exact selected alternative', async () => {
     const h = soundHarness();
     await prepareSound(h);

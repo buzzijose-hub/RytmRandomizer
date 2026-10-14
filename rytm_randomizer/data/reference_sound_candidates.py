@@ -14,6 +14,10 @@ from .analog_four_audio_inference import (
 from .analog_four_saved_kit_layout import A4_KIT_OBJECT_BYTE
 from .analog_rytm_kit_layout import RYTM_KIT_DUMP_ID
 
+REFERENCE_AUDIO_PCM_BITS_BY_SUBTYPE: Final[MappingProxyType[str, int]] = MappingProxyType(
+    {"PCM_U8": 8, "PCM_16": 16, "PCM_24": 24, "PCM_32": 32}
+)
+
 REFERENCE_SOUND_INFERENCE_VERSION: Final[int] = 2
 REFERENCE_SOUND_VERSIONED_A4_PARAMETER: Final[str] = "noise_fade"
 A4_REFERENCE_NOISE_FADE_V1_SOURCE_REVISION: Final[str] = "b9f89c3ef780823a5e21d52aedfa65397c29bdaa"
@@ -90,6 +94,7 @@ REFERENCE_SOUND_LIMITATIONS: Final[tuple[str, ...]] = (
 )
 
 __all__ = [
+    "REFERENCE_AUDIO_PCM_BITS_BY_SUBTYPE",
     "REFERENCE_SOUND_INFERENCE_VERSION",
     "REFERENCE_SOUND_VERSIONED_A4_PARAMETER",
     "A4_REFERENCE_NOISE_FADE_V1_SPEC",

@@ -3,6 +3,57 @@
 > Status: in-flight — offline package/endurance delivered; human/physical gates pending.
 > Earlier8b/fa43 copies preserved. Protected review and physical/show gates held.
 
+## October 14 Reliability And Reference Ledger
+
+Working block started15:45UTC/11:45a.m.New York. The verified53a935d08582
+delivery remains unchanged. No new package is accepted at this checkpoint.
+Current assembly is `codex/studio-rytm-mapping` for PR254's existing
+`codex/studio-evidence-handoff` head against `modularize-v1.34`.
+Fresh remote inspection still shows b9f89c3e,33success/1skip and Eddie's
+October3 CHANGES_REQUESTED. No approval or protected merge is inferred.
+
+Implemented signed Noise Fade inference with exact legacy replay/versioning;
+qualified pitch/octave and original-level quality diagnostics independent of
+the unchanged eleven-feature distance; explicit audition frame ranges bound to
+exact WAV identities; preserved originals, candidates, favorites and restart
+replay; authoritative refinement holds and categorical post-commit telemetry.
+No automatic played-note/tuning changes, silent normalization or genuine
+renderer claim is introduced.
+
+The MIDI Guide reconciliation preserves552verbatim source rows,403complete
+address matches,24contextual partial matches and125reference-only A4 entries.
+The BT Classic Sweep Depth canonical omission remains supported independently.
+Pinned source hashes/upstream Git blobs and CC-BY-SA4 attribution accompany
+separate range/orientation/enum/unit/conflict/protection/native/physical claims.
+Descriptive metadata grants no new authoring/SEND authority. All CY Ride SRC,
+general A4/BOTH, paired precision and automatic restore remain held.
+
+Integrated focused gates:1435cases80.65s including898architecture items;
+frontend1326cases/81files51.13s/allfourcoverage100%; strict88production modules,
+full Python lint/format, Vulture80 and35Node driver/helper cases pass. Composed
+same-production coverage is100%lines/branches on86touched runtime files and
+99.43%project pure branch, unchanged99%floor. The preceding full coverage run
+had12246passes/six failures/six skips1048.05s; shared-protocol test references
+and the stale fail-closed AL02 dependency receipt were repaired. The166focused
+repair tests pass. Final full suite passes12259tests/six skips/six warnings in
+436.47s with two workers; failed runs are not reclassified. AL02 remains blocked,
+with zero raw-byte changes and no SysEx.
+Its historical manifest is archived; only the catalog dependency hash changes.
+
+All eight audio dimensions and eight catalog/integration delta dimensions were
+reviewed separately; actionable findings were repaired without gate waivers.
+Focused private-input QA ownership review has no actionable findings. Actual
+new-package Pad2, native precision, both-device synthetic and real-input A4
+journeys remain pending. Historical WAVs will test recording quality/persistence,
+not be claimed as auditions of a newly generated candidate. Private configs and
+credentials are excluded from delivery. No real MIDI/USB access has occurred.
+
+Tonight's [single consolidated handoff](../../hardware-validation/2026-10-14-reference-sound-session.md)
+orders one10%Pad2 exact-plan audition/manual whole-payload recovery; separate
+disposable CY Ride saved-dump mapping; then a separate controlled A4 single-note
+take.9p.m.arrival is not authorization. Software acceptance, physical sound
+matching, save/reload/recovery, protected approval and show readiness are separate.
+
 ## October 7 Resumed Reliability Acceptance
 
 Final offline delivery source is `6e098f85ddeb48d9beb97f732f22e2f2152d86eb`.

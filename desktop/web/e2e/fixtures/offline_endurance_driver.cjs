@@ -24,6 +24,7 @@ const a4Page = argument('--a4-page', 'FILTER');
 const a4Fields = argument('--a4-fields', 'Filter1 Frequency,filter2_resonance').split(',');
 const a4SourceHash = argument('--a4-source-sha256', null);
 const referenceSound = args.includes('--reference-sound');
+const realInputConfigPath = argument('--real-input-config', null);
 const nativeRepresentation = args.includes('--native-representation');
 const planInspection = args.includes('--plan-inspection');
 const includePad2 = args.includes('--pad2') || planInspection;
@@ -39,6 +40,13 @@ assert(Number.isInteger(startupAttempts) && startupAttempts >= 1 && startupAttem
 assert([referenceSound, nativeRepresentation, planInspection].filter(Boolean).length <= 1, 'Choose one bounded packaged journey');
 assert(!nativeRepresentation || smoke > 0, 'Native representation requires a bounded smoke budget');
 assert(!planInspection || smoke > 0, 'Plan inspection requires a bounded smoke budget');
+assert(!realInputConfigPath || (referenceSound && smoke > 0), 'Real inputs require the bounded reference journey');
+const realInputHelper = realInputConfigPath ? require('./reference_sound_real_input_journey.cjs') : null;
+let realInputConfig = null;
+if (realInputConfigPath) {
+  assert(path.isAbsolute(realInputConfigPath), 'Private QA config path must be absolute');
+  assert(fs.statSync(realInputConfigPath).size <= 16 * 1024, 'Private QA config exceeds its bound');
+}
 assert(a4Fields.length > 0 && a4Fields.length <= 8);
 assert(!runRoot.startsWith(bundle + path.sep), 'QA credentials must be outside delivery');
 assert(!fs.existsSync(runRoot), 'Use a new isolated QA namespace');
@@ -51,6 +59,9 @@ for (const [name, expected] of Object.entries(manifest.sha256)) {
 const sourceDiff = spawnSync('git', ['diff', '--name-only', manifest.source_commit, '--', 'rytm_randomizer', 'desktop/web/src'], { cwd: repo, encoding: 'utf8', windowsHide: true });
 assert.equal(sourceDiff.status, 0); assert.equal(sourceDiff.stdout.trim(), '', 'Verifier source must match binary production');
 fs.mkdirSync(path.join(runRoot, 'report'), { recursive: true });
+if (realInputConfigPath) {
+  realInputConfig = realInputHelper.validateRealInputConfig(JSON.parse(fs.readFileSync(realInputConfigPath, 'utf8')), { repo, runRoot });
+}
 const reportRoot = path.join(runRoot, 'report');
 const telemetry = path.join(reportRoot, 'telemetry.ndjson');
 const summary = { source_commit: manifest.source_commit, binary_sha256: manifest.sha256, driver_sha256: digest(fs.readFileSync(__filename)), mode: smoke > 0 ? 'smoke' : 'endurance', minimum_minutes: smoke > 0 ? null : minutes, started_at: new Date().toISOString(), midi_backend: 'off', physical_observation: false, a4_track: a4Track, a4_fields: a4Fields, pad2_preset: includePad2, passed: false, cycles: 0, restarts: [], setup_interruptions: [], operations: {}, pending_high_water: 0, configured_bounds: { journal: 50, native_frame_cache: 128, native_frame_cache_bytes: 67108864 }, observation_limits: ['HistoryStore is append-only, not an eviction ring; source-reuse history size is observed. Native frame-cache occupancy is not exposed; its structural bounds have separate software tests.'] };
@@ -303,8 +314,18 @@ async function main() {
     if (referenceSound) {
       const started = performance.now();
       await require('./reference_sound_package_journey.cjs').exerciseReferenceSoundPackage({ page, latest, connected, processOperation, summary, save, reportRoot, record, digest });
+      if (realInputConfig) {
+        realInputHelper.primeReferenceRealInputSources(repo, runRoot, python, realInputConfig);
+        const realArgs = { page, latest, connected, summary, save, reportRoot, record, digest, config: realInputConfig };
+        const expected = await realInputHelper.exerciseReferenceSoundRealInput(realArgs);
+        const recovery = processOperation('restart-backend');
+        summary.restarts.push({ ...recovery, at: new Date().toISOString() });
+        await realInputHelper.reopenReferenceSoundRealInput({ ...realArgs, expected });
+        realInputHelper.assertRealInputsUnchanged(realInputConfig);
+      }
       assert.equal(rawPageErrors, 0); assert.equal(observationFailure, null);
       summary.elapsed_seconds = (performance.now() - started) / 1000;
+      assert(summary.elapsed_seconds < smoke, 'Bounded reference journey deadline reached');
       summary.passed = true; summary.phase = 'completed';
       summary.stop_reason = 'bounded-reference-sound-package-proof-not-endurance';
       return;

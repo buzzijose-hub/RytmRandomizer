@@ -36,8 +36,8 @@ MIDI_GUIDE_DATA_NOTICE: Final[str] = (
 class MidiReferenceSource:
     """Provenance of the supplied file, not a hardware validation receipt.
 
-    The hash identifies the user's CSV, not a verified upstream commit or byte
-    identity. The CSV does not establish the installed target-unit firmware.
+    SHA-256 identifies the supplied CSV; its Git blob identity was also checked
+    against the pinned upstream revision. Neither establishes target-unit firmware.
     """
 
     device_page: str
@@ -48,6 +48,8 @@ class MidiReferenceSource:
     license_id: str = "CC-BY-SA-4.0"
     license_url: str = "https://creativecommons.org/licenses/by-sa/4.0/"
     upstream_license_url: str = "https://github.com/pencilresearch/midi/blob/main/LICENSE"
+    upstream_revision: str | None = None
+    upstream_blob_sha1: str | None = None
 
 
 MIDI_GUIDE_SOURCES: Final[Mapping[str, MidiReferenceSource]] = MappingProxyType(
@@ -56,11 +58,15 @@ MIDI_GUIDE_SOURCES: Final[Mapping[str, MidiReferenceSource]] = MappingProxyType(
             "https://midi.guide/d/elektron/analog-rytm-mkii/",
             "Analog Rytm MKII.csv",
             "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+            upstream_revision="a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+            upstream_blob_sha1="46cc786dc106f35a00a9412057f8ee63192aa308",
         ),
         "a4": MidiReferenceSource(
             "https://midi.guide/d/elektron/analog-four-mkii/",
             "Analog Four MKII.csv",
             "da38d8ec8df47d4a6c39034b2f1c829475ac301c712d26c0a4b4787ae259ea69",
+            upstream_revision="a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+            upstream_blob_sha1="53a1a26263782ce8f044b112a33642de27f547cd",
         ),
     }
 )

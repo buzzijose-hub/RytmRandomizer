@@ -66,6 +66,116 @@ def test_tone_has_qualified_f0_separate_peak_and_original_levels(
     assert result.note_count == 1
 
 
+@pytest.mark.parametrize("frequency", [5e-324, 31.999, 2000.001])
+def test_qualified_pitch_rejects_values_outside_the_supported_dsp_domain(
+    measured_tone: ReferenceAudioDiagnostics,
+    frequency: float,
+) -> None:
+    with pytest.raises(ValueError, match="supported analyzer domain"):
+        dataclasses.replace(measured_tone, qualified_pitch_hz=frequency)
+
+
+@pytest.mark.parametrize("onsets", [1, 10**100])
+def test_onset_counts_cannot_hide_multiple_note_evidence(
+    measured_tone: ReferenceAudioDiagnostics,
+    onsets: int,
+) -> None:
+    payload = measured_tone.to_dict()
+    payload["onset_count"] = onsets
+    with pytest.raises(ValueError, match="onsets|frame counts"):
+        ReferenceAudioDiagnostics.from_dict(payload)
+
+
+def test_unpitched_multiple_onsets_are_retained_but_cannot_drive_refinement(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The DSP note/event estimate is independently policy-checked even for noise.
+    monkeypatch.setattr(diagnostics, "_supported_onsets", lambda *_args: 1)
+    samples = np.random.default_rng(711).normal(0, 0.12, 12800)
+    result = analyze_reference_audio_diagnostics(_write(tmp_path / "noise-events.wav", samples))
+    assert result.pitch_status == "unpitched" and result.qualified_pitch_hz is None
+    assert result.multiple_pitch and result.note_count == 2
+    assert "multiple_notes" in result.refinement_blockers
+    assert compare_reference_audio_diagnostics(result, result).support_status == "held"
+
+
+def test_actual_repeated_noise_hits_are_held_without_voiced_pitch_history(tmp_path: Path) -> None:
+    noise = np.random.default_rng(714).normal(0, 0.12, 4800)
+    samples = np.concatenate(
+        (np.zeros(3200), noise, np.zeros(8000), noise, np.zeros(8000), noise, np.zeros(3200))
+    )
+    result = analyze_reference_audio_diagnostics(_write(tmp_path / "repeated-noise.wav", samples))
+    assert result.pitch_status == "unpitched" and result.qualified_pitch_hz is None
+    assert result.onset_count >= 1 and result.multiple_pitch and result.note_count >= 2
+    assert "multiple_notes" in result.refinement_blockers
+    assert compare_reference_audio_diagnostics(result, result).support_status == "held"
+
+
+def test_insufficient_stable_pitch_frames_return_uncertainty_not_an_analysis_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import librosa
+
+    frequencies = 440 * 2 ** (np.array([-40, -20, -10, 10, 20, 40]) / 1200)
+    monkeypatch.setattr(
+        librosa,
+        "pyin",
+        lambda *_args, **_kwargs: (frequencies, np.ones(6, dtype=bool), np.full(6, 0.9)),
+    )
+    result = analyze_reference_audio_diagnostics(
+        _write(tmp_path / "marginal-pitch.wav", _tone(440, seconds=0.336))
+    )
+    assert result.pitch_status == "uncertain" and result.qualified_pitch_hz is None
+    assert result.stable_pitch_frame_count == 4
+    assert "pitch_uncertain" in result.refinement_blockers
+
+
+def test_uncertain_multi_attack_measurement_is_retained_and_held(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import librosa
+
+    monkeypatch.setattr(
+        librosa,
+        "pyin",
+        lambda *_args, **_kwargs: (np.full(6, np.nan), np.zeros(6, dtype=bool), np.zeros(6)),
+    )
+    # The actual repeated-noise test covers onset detection; this covers the
+    # independent uncertain-pitch policy path with one supported extra event.
+    monkeypatch.setattr(diagnostics, "_supported_onsets", lambda *_args: 1)
+    result = analyze_reference_audio_diagnostics(
+        _write(tmp_path / "uncertain-attacks.wav", _tone(440, seconds=0.336))
+    )
+    assert result.pitch_status == "uncertain" and result.multiple_pitch
+    assert result.onset_count == 1 and result.note_count == 2
+    assert set(result.refinement_blockers) >= {"pitch_uncertain", "multiple_notes"}
+
+
+@pytest.mark.parametrize("status", ["qualified", "unpitched", "uncertain", "bad"])
+def test_pitch_literal_parser_is_closed(status: str) -> None:
+    if status == "bad":
+        with pytest.raises(ValueError, match="unknown"):
+            diagnostics.narrow_reference_pitch_status(status)
+    else:
+        assert diagnostics.narrow_reference_pitch_status(status) == status
+
+
+@pytest.mark.parametrize("status", ["supported", "unpitched", "held", "bad"])
+def test_pitch_support_literal_parser_is_closed(status: str) -> None:
+    if status == "bad":
+        with pytest.raises(ValueError, match="unknown"):
+            diagnostics.narrow_reference_pitch_support_status(status)
+    else:
+        assert diagnostics.narrow_reference_pitch_support_status(status) == status
+
+
+@pytest.mark.parametrize("delta", [-1e308, 1e308, 8000.0])
+def test_forged_pitch_deltas_are_refused_before_arithmetic(delta: float) -> None:
+    with pytest.raises(ValueError, match="supported analyzer domain"):
+        ReferencePitchComparison(delta, 0, "held", ("pitch_mismatch",))
+
+
 def test_strong_second_harmonic_does_not_become_fundamental(tmp_path: Path) -> None:
     samples = _tone(220, amplitude=0.12) + _tone(440, amplitude=0.5) + _tone(660, amplitude=0.15)
     result = analyze_reference_audio_diagnostics(_write(tmp_path / "harmonics.wav", samples))

@@ -17,6 +17,7 @@ from ..data.midi_csv_reconciliation import (
     MIDI_CSV_VALUE_MAX,
     MidiCsvSourceSpec,
 )
+from .formatter import sha256_bytes
 
 _MAX_SOURCE_BYTES: Final[int] = 1024 * 1024
 _NUMBER: Final[re.Pattern[str]] = re.compile(r"[+-]?\d+\Z")
@@ -123,7 +124,7 @@ def csv_row_issues(row: MidiCsvRow) -> tuple[str, ...]:
 
 def parse_midi_csv(raw: bytes, spec: MidiCsvSourceSpec) -> MidiCsvSource:
     """Require the pinned input, exact schema and safe device identity."""
-    digest = hashlib.sha256(raw).hexdigest()
+    digest = sha256_bytes(raw)
     if len(raw) > _MAX_SOURCE_BYTES or digest != spec.sha256:
         raise ValueError("CSV source hash or size does not match pinned contract")
     content = raw.decode("utf-8-sig")

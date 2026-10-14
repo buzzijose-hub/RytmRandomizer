@@ -1051,6 +1051,10 @@ def test_retained_overlong_recording_is_refused_even_with_valid_hash_and_manifes
     digest = reference_sound_digest(audio)
     payload["recordings"][0]["audio_sha256"] = digest
     payload["recordings"][0]["features"]["features"]["audio_sha256"] = digest
+    # Exercise the legacy duration boundary, independently of new identity metadata.
+    payload["recordings"][0]["features"].pop("diagnostics", None)
+    payload["recordings"][0].pop("segment", None)
+    payload["recordings"][0].pop("pitch_comparison", None)
     workspace.store.publish(payload, {sound_artifact_name(digest, "wav"): audio})
     before = _files(workspace.store.directory)
     with pytest.raises(ValueError, match="bounded comparison"):

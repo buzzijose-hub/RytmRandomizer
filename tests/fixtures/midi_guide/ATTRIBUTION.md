@@ -10,7 +10,7 @@ respective manufacturers. Preserve upstream attribution and that caveat.
 The two CSVs are unmodified mechanical copies of the user's supplied originals.
 Scoped Git attributes disable text conversion, including on Windows checkouts.
 The generated ledger and adapted reference claims are CC-BY-SA-4.0; this does
-not change the existing MIT license of implementation code.
+not change the existing PolyForm Noncommercial 1.0.0 license of implementation code.
 
 Verified upstream dataset commit: `a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b`.
 

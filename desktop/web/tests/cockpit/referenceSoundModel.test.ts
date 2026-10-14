@@ -490,6 +490,91 @@ describe('cancellation, refusals and bounded failures', () => {
     expect(h.model.snapshot().recordingUrl).toBeNull();
   });
 
+  it('sends only an explicit audition range and plays the exact retained segment, not the supplied multi-note file', async () => {
+    const h = soundHarness(); await prepareSound(h);
+    const original = wav(80_000);
+    original[44 + 8000 * 2] = 42;
+    await h.model.record(audioFile(original), { start_frame: 8000, frame_count: 40_000 });
+    expect(h.model.snapshot().error).toBeNull();
+    const record = h.getSession().recordings.at(-1)!;
+    expect(record.segment).toMatchObject({ start_frame: 8000, frame_count: 40_000, original: { sha256: sha(original) } });
+    expect(record.audio_sha256).not.toBe(sha(original));
+    expect(h.calls.find(({ command }) => command.type === 'reference_sound' && command.action === 'record')?.command)
+      .toMatchObject({ start_frame: 8000, frame_count: 40_000 });
+    expect(h.calls.at(-1)?.command).toMatchObject({ action: 'read_audio', recording_sha256: record.audio_sha256 });
+    expect(h.model.snapshot().recordingSha).toBe(record.audio_sha256);
+  });
+
+  it.each(['missing', 'held', 'blocked'] as const)('rejects %s diagnostics without making a refine request or replacing retained favorites', async (mode) => {
+    const h = soundHarness(); await prepareSound(h); await h.model.record(audioFile()); await h.model.select('candidate-1', true);
+    const saved = structuredClone(h.getSession());
+    if (mode === 'missing') delete saved.recordings[0]!.features.diagnostics;
+    if (mode === 'held') saved.recordings[0]!.pitch_comparison!.support_status = 'held';
+    if (mode === 'blocked') saved.recordings[0]!.pitch_comparison!.blockers = ['pitch_mismatch'];
+    h.setSession(saved); await h.model.reopen(saved.session_id);
+    const count = h.calls.length;
+    await h.model.refine(0.5);
+    expect(h.model.snapshot().error).toMatch(/Refinement held/);
+    expect(h.calls).toHaveLength(count);
+    expect(h.getSession()).toEqual(saved);
+  });
+
+  it('adds retained reference diagnostics without changing any candidate, source, scope or favorite identity', async () => {
+    const h = soundHarness(); await prepareSound(h); await h.model.select('candidate-1', true);
+    const old = structuredClone(h.getSession()); delete old.analysis!.diagnostics;
+    h.setSession(old); await h.model.reopen(old.session_id);
+    await h.model.measureReference();
+    expect(h.model.snapshot().error).toBeNull();
+    expect(h.calls.at(-1)).toMatchObject({ command: { action: 'measure', session_id: old.session_id }, options: { timeoutMs: SOUND_ANALYSIS_TIMEOUT_MS } });
+    expect(h.getSession().candidates).toEqual(old.candidates);
+    expect(h.getSession().context).toEqual(old.context);
+    expect(h.getSession().favorites).toEqual(old.favorites);
+    expect(h.getSession().analysis?.diagnostics).toBeDefined();
+  });
+
+  it('preserves older Noise Fade candidates but refuses new refinement until a current-model session is generated', async () => {
+    const h = soundHarness(); await prepareSound(h); await h.model.record(audioFile());
+    const old = structuredClone(h.getSession());
+    old.context = { ...old.context!, device_id: 'analog_four_mk2', parameters: ['noise_fade'] };
+    h.setSession(old); await h.model.reopen(old.session_id);
+    const count = h.calls.length; await h.model.refine(0.5);
+    expect(h.model.snapshot().error).toMatch(/Legacy Noise Fade/);
+    expect(h.calls).toHaveLength(count); expect(h.getSession().candidates).toEqual(old.candidates);
+  });
+
+  it('rejects diagnostic refresh before generation or after scope changes without making a request', async () => {
+    const h = soundHarness(); await h.model.importReference(audioFile());
+    const count = h.calls.length; await h.model.measureReference();
+    expect(h.calls).toHaveLength(count); expect(h.model.snapshot().error).toMatch(/source-bound/);
+    await h.model.chooseSource('native-source', 'analog_rytm_mk2', 1); await h.model.generate(); h.model.setStrength(0.25);
+    const next = h.calls.length; await h.model.measureReference();
+    expect(h.calls).toHaveLength(next); expect(h.model.snapshot().error).toMatch(/source-bound/);
+  });
+
+  it.each(['session', 'candidate', 'context', 'segment'] as const)('refuses %s identity drift in a diagnostic refresh', async (part) => {
+    const h = soundHarness(); await prepareSound(h);
+    const old = structuredClone(h.getSession());
+    const next = structuredClone(old);
+    if (part === 'session') next.session_id = 'sound-other';
+    if (part === 'candidate') next.candidates[0]!.candidate_id = 'changed';
+    if (part === 'context') next.context!.strength = 0.1;
+    if (part === 'segment') next.segment.sha256 = 'other';
+    h.send.mockResolvedValueOnce(soundAck({ session: next }));
+    await h.model.measureReference();
+    expect(h.model.snapshot().error).toMatch(/changed retained source/);
+    expect(h.model.snapshot().session).toEqual(old);
+  });
+
+  it.each([{ start_frame: -1, frame_count: 400 }, { start_frame: 0.5, frame_count: 400 }, { start_frame: 0, frame_count: 0 }, { start_frame: 0, frame_count: 400.5 }])('refuses an invalid audition range before upload (%s)', async (segment) => {
+    const h = soundHarness(); await prepareSound(h);
+    const count = h.calls.length;
+    const before = structuredClone(h.getSession());
+    await h.model.record(audioFile(), segment);
+    expect(h.model.snapshot().error).toMatch(/integer audition/);
+    expect(h.calls).toHaveLength(count);
+    expect(h.getSession()).toEqual(before);
+  });
+
   it('never adopts canceled retained-recording playback or retries a refusal', async () => {
     const h = soundHarness(); await prepareSound(h); await h.model.record(audioFile());
     const recordingSha = h.getSession().recordings[0]!.audio_sha256;

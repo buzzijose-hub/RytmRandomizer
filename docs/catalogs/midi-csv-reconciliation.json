@@ -9,7 +9,7 @@
     "supersedes": "audit.json was an intermediate comparison limited to A4 CC rows and excluding generic Rytm SRC aliases; use this v2 comparison instead."
   },
   "catalog_inventory_sha256": "bf1a4ddc18c69447f00d24e8e0ea82d28827a68a5685353d32e1e31edc83185e",
-  "code_license": "existing repository MIT; reference data separately CC-BY-SA-4.0",
+  "code_license": "PolyForm-Noncommercial-1.0.0",
   "entries": [
     {
       "canonical_candidates": [

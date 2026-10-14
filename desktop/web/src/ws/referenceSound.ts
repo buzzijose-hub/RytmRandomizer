@@ -18,6 +18,7 @@ export interface ReferenceSoundFeatures {
 }
 
 export interface ReferenceSoundAnalysis {
+  diagnostics?: ReferenceAudioDiagnostics;
   report: {
     source_type: string;
     confidence: string;
@@ -40,6 +41,40 @@ export interface ReferenceSoundAnalysis {
     tonal_stability: number;
     spectral_movement: number;
   };
+}
+
+export interface ReferenceAudioDiagnostics {
+  audio_sha256: string;
+  pcm_sha256: string;
+  sample_rate: number;
+  channels: number;
+  start_sample: number;
+  sample_count: number;
+  pitch_method: string;
+  qualified_pitch_hz: number | null;
+  spectral_peak_hz: number | null;
+  rms: number;
+  peak: number;
+  clipped_fraction: number;
+  pitch_status: 'qualified' | 'unpitched' | 'uncertain';
+  pitch_confidence: number;
+  voiced_fraction: number;
+  pitch_stability_cents: number | null;
+  octave_ambiguous: boolean;
+  frame_count: number;
+  stable_pitch_frame_count: number;
+  onset_count: number;
+  note_count: number | null;
+  multiple_pitch: boolean;
+  warnings: string[];
+  refinement_blockers: string[];
+}
+
+export interface ReferencePitchComparison {
+  delta_cents: number | null;
+  octave_difference: number | null;
+  support_status: 'supported' | 'unpitched' | 'held';
+  blockers: string[];
 }
 
 export interface ReferenceAudioInfo {
@@ -98,6 +133,7 @@ export interface ReferenceSoundCandidate {
 }
 
 export interface ReferenceSoundContext {
+  inference_version?: 2;
   device_id: KitCaptureDeviceId;
   target: number;
   source_sha256: string;
@@ -124,6 +160,8 @@ export interface ReferenceSoundRecording {
     weighted_delta: number;
   }[];
   physical_validation: false;
+  segment?: ReferenceSoundSession['segment'];
+  pitch_comparison?: ReferencePitchComparison;
 }
 
 export type ReferenceSoundAudioSelection =
@@ -165,8 +203,9 @@ export type ReferenceSoundAction =
   | { action: 'generate'; session_id: string; source_record_id: string; device_id: KitCaptureDeviceId; target: number; parameters: string[]; locks: string[]; strength: number }
   | { action: 'select'; session_id: string; candidate_id: string }
   | { action: 'favorite'; session_id: string; candidate_id: string; favorite: boolean }
-  | { action: 'record'; session_id: string; candidate_id: string; candidate_sha256: string; upload_id: string }
+  | { action: 'record'; session_id: string; candidate_id: string; candidate_sha256: string; upload_id: string; start_frame?: number; frame_count?: number }
   | { action: 'refine'; session_id: string; candidate_id: string; correction_gain: number }
+  | { action: 'measure'; session_id: string }
   | { action: 'reopen'; session_id: string }
   | ({ action: 'read_audio'; session_id: string; offset: number } & ReferenceSoundAudioSelection)
   | { action: 'export'; session_id: string; candidate_id: string; destination_slot: number };

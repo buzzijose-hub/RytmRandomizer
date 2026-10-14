@@ -62,7 +62,7 @@ from .reference_audio_diagnostics import (
     REFERENCE_AUDIO_MAX_SECONDS,
     analyze_reference_audio_diagnostics,
 )
-from .runtime_types import require_runtime_type
+from .runtime_types import AudioFileInfo, require_runtime_type
 
 _AUDIO_REPORT_DERIVED_AT: Final[str] = "1970-01-01T00:00:00Z"
 _INFERENCE_FAILURE_FINGERPRINT: Final[str] = "a4.audio_patch.inference_failed"
@@ -337,15 +337,9 @@ def _native_audio_analysis_worker(
         _close_native_analysis_resource(sender, resource_kind="worker_sender")
 
 
-class _AudioInfo(Protocol):
-    frames: int
-    samplerate: int
-    channels: int
-
-
 class _AudioInfoApi(Protocol):
     @abstractmethod
-    def info(self, path: str) -> _AudioInfo: ...
+    def info(self, path: str) -> AudioFileInfo: ...
 
 
 def _configure_native_audio_worker(cache_dir: str | None = None) -> None:
@@ -374,7 +368,7 @@ def _validate_native_audio_file(path: Path) -> None:
         raise ValueError("audio snapshot is invalid or exceeds analysis bounds")
 
 
-def _native_audio_info(path: Path) -> _AudioInfo:
+def _native_audio_info(path: Path) -> AudioFileInfo:
     try:
         soundfile = cast(_AudioInfoApi, importlib.import_module("soundfile"))
     except (ImportError, OSError) as exc:
