@@ -6,9 +6,21 @@ import argparse
 import sys
 from collections.abc import Sequence
 from pathlib import Path
+from types import MappingProxyType
 from typing import Final
 
 ROOT: Final[Path] = Path(__file__).resolve().parents[1]
+_READ_REFUSALS: Final[MappingProxyType[str, str]] = MappingProxyType(
+    {
+        "missing": "CSV reconciliation refused: category=missing; reason=input_missing.",
+        "access": "CSV reconciliation refused: category=access; reason=input_changed_or_unreadable.",
+        "path": "CSV reconciliation refused: category=path; reason=input_not_regular.",
+        "size": "CSV reconciliation refused: category=size; reason=input_size_outside_bound.",
+    }
+)
+_READ_REFUSAL_FALLBACK: Final[str] = (
+    "CSV reconciliation refused: category=read; reason=input_read_failed."
+)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -16,6 +28,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     # Select this checkout even when the interpreter has another editable install.
     sys.path.insert(0, str(ROOT))
     from rytm_randomizer.cockpit.export.writer import atomic_write_set
+    from rytm_randomizer.observability.errors import DataError
     from rytm_randomizer.reports.midi_csv_reconciliation import (
         build_midi_csv_reconciliation,
         format_midi_csv_gap_summary,
@@ -28,12 +41,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--output-dir", type=Path, default=ROOT / "docs" / "catalogs")
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args(argv)
-    ledger = build_midi_csv_reconciliation(
-        args.input_dir / "Analog Four MKII.csv",
-        args.input_dir / "Analog Rytm MKII.csv",
-        args.input_dir / "audit-v2.json",
-        args.input_dir / "provenance.json",
-    )
+    try:
+        ledger = build_midi_csv_reconciliation(
+            args.input_dir / "Analog Four MKII.csv",
+            args.input_dir / "Analog Rytm MKII.csv",
+            args.input_dir / "audit-v2.json",
+            args.input_dir / "provenance.json",
+        )
+    except DataError as exc:
+        category = exc.context.get("category")
+        message = _READ_REFUSALS.get(
+            category if isinstance(category, str) else "", _READ_REFUSAL_FALLBACK
+        )
+        print(message, file=sys.stderr)
+        return 2
     artifacts = {
         args.output_dir / "midi-csv-reconciliation.json": serialize_midi_csv_ledger(ledger),
         args.output_dir / "midi-csv-reconciliation.md": format_midi_csv_gap_summary(ledger),

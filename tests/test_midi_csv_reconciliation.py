@@ -585,25 +585,36 @@ def _retained_output_state(outputs: Path) -> dict[str, tuple[bytes, int]]:
         ("provenance.json", 4 * 1024 * 1024),
     ],
 )
-@pytest.mark.parametrize("failure", ["empty", "oversized", "nonregular"])
+@pytest.mark.parametrize("failure", ["missing", "empty", "oversized", "nonregular"])
 def test_shared_reader_refuses_unsafe_file_before_publication(
-    retained_reader_paths: tuple[Path, Path], filename: str, maximum: int, failure: str
+    retained_reader_paths: tuple[Path, Path],
+    filename: str,
+    maximum: int,
+    failure: str,
+    capsys: pytest.CaptureFixture[str],
 ):
     inputs, outputs = retained_reader_paths
     target = inputs / filename
-    if failure == "nonregular":
+    if failure == "missing":
+        target.unlink()
+        category, reason = "missing", "input_missing"
+    elif failure == "nonregular":
         target.unlink()
         target.mkdir()
-        expected = "not a regular file"
+        category, reason = "path", "input_not_regular"
     else:
         target.write_bytes(b"" if failure == "empty" else b"x" * (maximum + 1))
-        expected = "size is outside the supported bound"
+        category, reason = "size", "input_size_outside_bound"
     before = _retained_output_state(outputs)
     original = target.read_bytes() if target.is_file() else None
-    with pytest.raises(DataError, match=expected):
-        reconcile_midi_csv_main(["--input-dir", str(inputs), "--output-dir", str(outputs)])
+    assert reconcile_midi_csv_main(["--input-dir", str(inputs), "--output-dir", str(outputs)]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == f"CSV reconciliation refused: category={category}; reason={reason}.\n"
     assert _retained_output_state(outputs) == before
-    if original is None:
+    if failure == "missing":
+        assert not target.exists()
+    elif original is None:
         assert target.is_dir()
     else:
         assert target.read_bytes() == original
@@ -636,7 +647,10 @@ def test_shared_json_decoder_rejects_duplicate_claims_before_publication(
     "filename", ["Analog Four MKII.csv", "Analog Rytm MKII.csv", "audit-v2.json", "provenance.json"]
 )
 def test_shared_reader_refuses_stale_bytes_before_publication(
-    retained_reader_paths: tuple[Path, Path], filename: str, monkeypatch: pytest.MonkeyPatch
+    retained_reader_paths: tuple[Path, Path],
+    filename: str,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
 ):
     inputs, outputs = retained_reader_paths
     target = inputs / filename
@@ -655,11 +669,53 @@ def test_shared_reader_refuses_stale_bytes_before_publication(
         return opened
 
     monkeypatch.setattr(artifact_reader.os, "fstat", change_source_during_read)
-    with pytest.raises(DataError, match="changed while it was read"):
-        reconcile_midi_csv_main(["--input-dir", str(inputs), "--output-dir", str(outputs)])
+    assert reconcile_midi_csv_main(["--input-dir", str(inputs), "--output-dir", str(outputs)]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == (
+        "CSV reconciliation refused: category=access; reason=input_changed_or_unreadable.\n"
+    )
     assert changed
     assert target.read_bytes() == original + b"\n"
     assert _retained_output_state(outputs) == before
+
+
+@pytest.mark.parametrize(
+    "category", ["missing", "access", "path", "size", "arbitrary-category", None]
+)
+def test_cli_reader_refusal_does_not_echo_exception_or_context(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    category: object,
+):
+    from rytm_randomizer.reports import midi_csv_reconciliation as report
+
+    def refuse_source(*_paths: Path) -> MidiCsvReconciliationLedger:
+        raise DataError(
+            "private read diagnostics",
+            context={
+                "category": category,
+                "artifact_name": "private.csv",
+                "source_path": str(tmp_path),
+            },
+        )
+
+    monkeypatch.setattr(report, "build_midi_csv_reconciliation", refuse_source)
+    assert reconcile_midi_csv_main(["--output-dir", str(tmp_path)]) == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err.startswith("CSV reconciliation refused: category=")
+    assert captured.err.count("\n") == 1
+    assert "Traceback" not in captured.err
+    assert "private" not in captured.err
+    assert "arbitrary-category" not in captured.err
+    assert str(tmp_path) not in captured.err
+    assert list(tmp_path.iterdir()) == []
+    if category in ("arbitrary-category", None):
+        assert (
+            captured.err == "CSV reconciliation refused: category=read; reason=input_read_failed.\n"
+        )
 
 
 def test_shared_reader_preserves_exact_regular_csv_at_maximum(tmp_path: Path):
