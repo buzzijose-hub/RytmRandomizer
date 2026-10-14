@@ -8,7 +8,11 @@ from pathlib import Path
 from threading import Event
 
 import pytest
-from cockpit.conftest import make_reference_pcm, make_reference_sound_session
+from cockpit.conftest import (
+    make_generated_reference_sound,
+    make_reference_pcm,
+    make_reference_sound_session,
+)
 
 from rytm_randomizer.cockpit.export.reference_sound_session import ReferenceSoundWorkspace
 from rytm_randomizer.cockpit.ws.handlers import handle_command
@@ -20,20 +24,7 @@ pytestmark = pytest.mark.fast
 
 
 def _generated(workspace: ReferenceSoundWorkspace, source: tuple[bytes, str, int, tuple[str, ...]]):
-    imported = workspace.import_reference(make_reference_pcm(), "Quality boundary")
-    frame, device, target, parameters = source
-    generated = workspace.commit(
-        workspace.generate(
-            imported["session_id"],
-            source_frame=frame,
-            device_id=device,
-            target=target,
-            parameters=parameters,
-            locks=(),
-            strength=1.0,
-            cancel=Event(),
-        )
-    )
+    generated = make_generated_reference_sound(workspace, source, "Quality boundary")
     return workspace.select(
         generated["session_id"], generated["selected_candidate_id"], favorite=True
     )
@@ -128,6 +119,144 @@ def test_raw_refinement_command_cannot_bypass_recording_quality_or_pitch_holds(
     assert {p.name: p.read_bytes() for p in workspace.store.directory.iterdir()} == before
     assert workspace.reopen(payload["session_id"]) == compared
     assert compared["favorites"] == [candidate["candidate_id"]]
+
+
+@pytest.mark.parametrize("cents", [-100.1, -99.9, 99.9, 100.1])
+@pytest.mark.usefixtures("offline_hardware_denied")
+def test_raw_refinement_command_enforces_signed_one_semitone_boundary(
+    tmp_path: Path,
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: tuple[bytes, str, int, tuple[str, ...]],
+    cents: float,
+    reference_sound_caplog: pytest.LogCaptureFixture,
+) -> None:
+    workspace = reference_sound_workspace
+    caplog = reference_sound_caplog
+    payload = _generated(workspace, reference_sound_source)
+    candidate = payload["candidates"][0]
+    analyzer = workspace.analyzer
+    pitch = payload["analysis"]["diagnostics"]["qualified_pitch_hz"]
+
+    def shifted(path: Path, cancel: Event) -> AudioFeatureAnalysis:
+        measured = analyzer(path, cancel)
+        assert measured.diagnostics is not None
+        return replace(
+            measured,
+            diagnostics=replace(
+                measured.diagnostics, qualified_pitch_hz=pitch * 2 ** (cents / 1200)
+            ),
+            synthesis_features=replace(measured.synthesis_features, brightness=0.25),
+        )
+
+    workspace.analyzer = shifted
+    compared = workspace.commit(
+        workspace.compare(
+            payload["session_id"],
+            candidate["candidate_id"],
+            candidate_sha256=candidate["frame_sha256"],
+            recording=make_reference_pcm(frames=1600),
+            cancel=Event(),
+        )
+    )
+    session, _ = make_reference_sound_session(tmp_path, workspace, reference_sound_source)
+    before = {p.name: p.read_bytes() for p in workspace.store.directory.iterdir()}
+    held = abs(cents) > 100
+    metric = f"refinement_quality:{'refused' if held else 'verified'}"
+    count = get_metrics().local_artifact_decisions[metric]
+    with caplog.at_level("INFO", logger="rytm_randomizer.cockpit.export.reference_sound_session"):
+        ack = asyncio.run(
+            handle_command(
+                {
+                    "request_id": "boundary-refine",
+                    "command": {
+                        "type": "reference_sound",
+                        "action": "refine",
+                        "session_id": payload["session_id"],
+                        "candidate_id": candidate["candidate_id"],
+                        "correction_gain": 0.5,
+                    },
+                },
+                session,
+            )
+        )
+    assert ack["ok"] is not held
+    comparison = compared["recordings"][0]["pitch_comparison"]
+    assert comparison["delta_cents"] == pytest.approx(cents, abs=1e-8)
+    assert comparison["blockers"] == (["pitch_mismatch"] if held else [])
+    if held:
+        assert "recording_pitch_mismatch" in str(ack)
+        assert {p.name: p.read_bytes() for p in workspace.store.directory.iterdir()} == before
+        assert workspace.reopen(payload["session_id"]) == compared
+    else:
+        assert len(workspace.reopen(payload["session_id"])["refinements"]) == 1
+    assert session.armed_apply is None and session.current_send_plan is None
+    assert get_metrics().local_artifact_decisions[metric] == count + 1
+    decisions = [
+        r for r in caplog.records if r.message == "reference_sound_refinement_quality_decision"
+    ]
+    assert len(decisions) == 1
+    decision = decisions[0]
+    assert decision.outcome == ("refused" if held else "accepted")
+    assert decision.support_status == ("held" if held else "supported")
+    assert decision.blockers == (("pitch_mismatch",) if held else ())
+    assert decision.stage == "quality_gate_only"
+    assert not any(
+        key in decision.__dict__ for key in ("session_id", "candidate_id", "audio_sha256", "path")
+    )
+
+
+def test_quality_acceptance_is_not_reported_as_publication_success_after_later_failure(
+    reference_sound_workspace: ReferenceSoundWorkspace,
+    reference_sound_source: tuple[bytes, str, int, tuple[str, ...]],
+    monkeypatch: pytest.MonkeyPatch,
+    reference_sound_caplog: pytest.LogCaptureFixture,
+) -> None:
+    workspace = reference_sound_workspace
+    caplog = reference_sound_caplog
+    payload = _generated(workspace, reference_sound_source)
+    candidate = payload["candidates"][0]
+    analyzer = workspace.analyzer
+
+    def changed_feedback(path: Path, cancel: Event) -> AudioFeatureAnalysis:
+        measured = analyzer(path, cancel)
+        return replace(
+            measured, synthesis_features=replace(measured.synthesis_features, brightness=0.25)
+        )
+
+    workspace.analyzer = changed_feedback
+    compared = workspace.commit(
+        workspace.compare(
+            payload["session_id"],
+            candidate["candidate_id"],
+            candidate_sha256=candidate["frame_sha256"],
+            recording=make_reference_pcm(),
+            cancel=Event(),
+        )
+    )
+    before = {p.name: p.read_bytes() for p in workspace.store.directory.iterdir()}
+
+    def fail_after_quality(*_args: object, **_kwargs: object) -> None:
+        raise ValueError("private-score-failure")
+
+    monkeypatch.setattr(
+        "rytm_randomizer.cockpit.export.reference_sound_session.plan_audio_feature_refinement",
+        fail_after_quality,
+    )
+    with (
+        caplog.at_level("INFO", logger="rytm_randomizer.cockpit.export.reference_sound_session"),
+        pytest.raises(ValueError, match="private-score-failure"),
+    ):
+        workspace.refine(
+            payload["session_id"], candidate["candidate_id"], correction_gain=0.5, cancel=Event()
+        )
+    decisions = [
+        r for r in caplog.records if r.message == "reference_sound_refinement_quality_decision"
+    ]
+    assert len(decisions) == 1 and decisions[0].outcome == "accepted"
+    assert decisions[0].stage == "quality_gate_only"
+    assert "private-score-failure" not in str(decisions[0].__dict__)
+    assert {p.name: p.read_bytes() for p in workspace.store.directory.iterdir()} == before
+    assert workspace.reopen(payload["session_id"]) == compared
 
 
 def test_legacy_recording_reopens_exactly_but_new_refinement_requires_fresh_diagnostics(

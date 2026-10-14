@@ -240,6 +240,86 @@ function assertNoiseFadeNative(value) {
   }
 }
 
+function assertSelectedReadback(session, parameters, witness) {
+  assert.equal(witness.source_sha256, session.context.source_sha256);
+  assert.equal(witness.candidates.length, session.candidates.length);
+  for (const candidate of session.candidates) {
+    const checked = witness.candidates.find(item => item.candidate_id === candidate.candidate_id);
+    assert(checked, 'Missing independently decoded candidate');
+    assert.equal(checked.frame_sha256, candidate.frame_sha256);
+    assert.deepEqual(Object.keys(checked.fields).sort(), [...parameters].sort(), 'Every selected control needs readback');
+    const required = [];
+    for (const parameter of parameters) {
+      const field = checked.fields[parameter];
+      assert.equal(field.actual, field.rendered, `Selected control omitted: ${parameter}`);
+      const change = candidate.changes.find(item => item.parameter === parameter);
+      if (field.rendered === field.source) assert(!change, 'Genuine no-op must retain its source value');
+      else {
+        required.push(parameter);
+        assert(change, `Required change omitted: ${parameter}`);
+        assert.equal(change.source_value, field.source);
+        assert.equal(change.proposed_value, field.proposed);
+        assert.equal(change.rendered_value, field.rendered);
+      }
+    }
+    assert.deepEqual(candidate.changes.map(item => item.parameter).sort(), required.sort());
+  }
+}
+
+function verifySelectedReadback(config, session, python, run = spawnSync) {
+  assertRealInputsUnchanged(config);
+  const source = `from pathlib import Path
+import hashlib, json, sys
+from rytm_randomizer.cockpit.export.reference_sound_store import ReferenceSoundStore
+from rytm_randomizer.data import A4_REFERENCE_INFERENCE_BINDINGS
+from rytm_randomizer.data.analog_four_audio_inference import ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER
+from rytm_randomizer.data.analog_four_kit_fields import parse_a4_fixed_8_8
+from rytm_randomizer.devices import get_analog_four_native_field_capability, AnalogFourNativeEncoding, encode_bipolar
+from rytm_randomizer.style_analysis.analog_four_patch_inference import build_analog_four_inference_feature_values, evaluate_analog_four_inference_spec
+from rytm_randomizer.cockpit.export.reference_sound_analysis import sound_features_from_dict
+request = json.load(sys.stdin)
+original = Path(request['source']).read_bytes()
+assert hashlib.sha256(original).hexdigest() == request['source_sha256']
+capability = get_analog_four_native_field_capability()
+before = {cell.parameter: cell for cell in capability.read_native_fields(original).values if cell.track == 1}
+store = ReferenceSoundStore(Path(sys.argv[1]) / 'roaming' / 'rytm-randomizer' / 'reference-sounds')
+session = request['session']; context = session['context']
+checked = []
+for candidate in session['candidates']:
+    frame = store.read_artifact(candidate['frame_sha256'], 'syx')
+    after = {cell.parameter: cell for cell in capability.read_native_fields(frame).values if cell.track == 1}
+    values = build_analog_four_inference_feature_values(sound_features_from_dict(candidate['features']), column=1)
+    fields = {}
+    for parameter in context['parameters']:
+        cell = before[parameter]; domain = cell.domain
+        assert domain is not None and parameter not in context['locks'] and cell.protection_reason is None
+        display = str(evaluate_analog_four_inference_spec(ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER[A4_REFERENCE_INFERENCE_BINDINGS[parameter]], values))
+        encoding = cell.metadata.native_encoding
+        proposed = parse_a4_fixed_8_8(display) if encoding is AnalogFourNativeEncoding.Q8_8 else encode_bipolar(int(display)) if encoding is AnalogFourNativeEncoding.BIPOLAR else int(display)
+        initial = domain.index_of(cell.encoded_native); target = domain.index_of(proposed)
+        rendered = domain.value_at(round(initial + context['strength'] * (target - initial)))
+        actual = after[parameter].encoded_native
+        assert actual == rendered, 'Selected control was omitted or incorrectly rendered'
+        fields[parameter] = dict(source=cell.encoded_native, proposed=proposed, rendered=rendered, actual=actual)
+    checked.append(dict(candidate_id=candidate['candidate_id'], frame_sha256=hashlib.sha256(frame).hexdigest(), fields=fields))
+assert Path(request['source']).read_bytes() == original
+print(json.dumps(dict(source_sha256=request['source_sha256'], candidates=checked)))
+`;
+  try {
+    const result = run(python, ['-c', source, config.state], {
+      cwd: config.repo, input: JSON.stringify({ source: config.source.path, source_sha256: config.source.sha256, session }),
+      encoding: 'utf8', windowsHide: true, timeout: 15_000, maxBuffer: 256 * 1024,
+      env: { ...process.env, PYTHONPATH: config.repo, PYTHONDONTWRITEBYTECODE: '1',
+        RYTM_RAND_MIDI_BACKEND: 'off', RYTM_RAND_UPDATES: 'off', RYTM_RAND_UPDATE_BEACON: 'off',
+        OPENBLAS_NUM_THREADS: '1', OMP_NUM_THREADS: '1', MKL_NUM_THREADS: '1', NUMBA_NUM_THREADS: '1' },
+    });
+    assert.equal(result.status, 0, 'Independent selected-control native readback failed');
+    const witness = JSON.parse(result.stdout);
+    assertSelectedReadback(session, session.context.parameters, witness);
+    return witness;
+  } finally { assertRealInputsUnchanged(config); }
+}
+
 function assertGeneratedSession(session, config, controls, parameters) {
   const context = session.context;
   assert.equal(context.device_id, 'analog_four_mk2');
@@ -335,7 +415,7 @@ async function assertReferencePresentation(expect, panel, session, config) {
   await expect(panel.getByText(`Retained frames 0:352800 / SHA-256 ${session.segment.sha256}`, { exact: true })).toBeVisible();
 }
 
-async function exerciseReferenceSoundRealInput({ page, latest, connected, summary, save, reportRoot, record, digest, config }) {
+async function exerciseReferenceSoundRealInput({ page, latest, connected, summary, save, reportRoot, record, digest, config, python }) {
   assertRealInputsUnchanged(config);
   assert(inside(config.runRoot, resolvedLocation(reportRoot)), 'Reports must stay in the owned QA root');
   const { expect } = require('@playwright/test');
@@ -378,6 +458,8 @@ async function exerciseReferenceSoundRealInput({ page, latest, connected, summar
     await expect(panel.getByRole('group', { name: 'Native alternatives' }).getByRole('radio')).toHaveCount(8, { timeout: 65_000 });
     await expect(panel.getByRole('button', { name: 'Refresh sessions', exact: true })).toBeEnabled();
     assertGeneratedSession(latest.reference_sound_session, config, controls, parameters);
+    const readback = verifySelectedReadback(config, latest.reference_sound_session, python);
+    record({ kind: 'reference-real-selected-native-readback', fields_per_candidate: parameters.length, candidates: readback.candidates.length, hardware_validation: false });
     assertUnqualifiedReference(latest.reference_sound_session.analysis);
     const reference = latest.reference_sound_session;
     assert.equal(reference.analysis.features.audio_sha256, reference.segment.sha256);
@@ -472,4 +554,5 @@ async function reopenReferenceSoundRealInput({ page, latest, connected, summary,
 
 module.exports = { validateRealInputConfig, assertRealInputsUnchanged, primeReferenceRealInputSources,
   exerciseReferenceSoundRealInput, reopenReferenceSoundRealInput, assertSegmentBounds, supportedParameters,
-  selectSupportedScope, assertNoiseFadeNative, assertGeneratedSession, assertUnqualifiedReference, assertRecordingHold, assertSegmentIdentity };
+  selectSupportedScope, assertNoiseFadeNative, assertGeneratedSession, assertSelectedReadback, verifySelectedReadback,
+  assertUnqualifiedReference, assertRecordingHold, assertSegmentIdentity };

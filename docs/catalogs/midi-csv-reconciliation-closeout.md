@@ -58,7 +58,8 @@ packaging/architecture composition subsequently passed1435 cases in80.65s,
 including898architecture items, with one known short-name warning. Strict88
 production-module typing, full lint/format, Vulture80 and deterministic ledger
 check pass. Same-production composed full/focused coverage records100%lines and
-branches on86 touched runtime files and99.43%project pure branch. Final all-green
+branches on88 touched runtime files and99.43%project pure branch at published3fe;
+replacement repair-source coverage remains pending. Final all-green
 full suite passes12259tests/six skips/six warnings436.47s. New
 package and CI remain pending in the active reliability plan; the earlier
 six-failure full run is not green acceptance. No MIDI/USB enumeration,

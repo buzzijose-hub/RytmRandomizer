@@ -17,6 +17,8 @@ from ...data.reference_sound_candidates import (
 )
 from ...devices import resolve_saved_kit_capture_capability
 from ...observability.errors import BoundaryError
+from ...observability.logging import get_logger
+from ...observability.metrics import get_metrics
 from ...observability.tracing import trace
 from ...snapshot.elektron_native_object import ElektronNativeObjectMessage
 from ...style_analysis.analog_four_patch_inference import (
@@ -88,6 +90,7 @@ from .reference_sound_store import (
 from .writer import atomic_write
 
 _MAX_KIT_DESTINATION_SLOT: Final[int] = 127
+_logger = get_logger(__name__)
 
 SoundAnalyzer = Callable[[Path, Event], AudioFeatureAnalysis]
 
@@ -748,6 +751,18 @@ class ReferenceSoundWorkspace:
         measured = self._verified_recording(record, candidate, reference)
         comparison = compare_reference_audio_diagnostics(
             reference.diagnostics, measured.diagnostics
+        )
+        _logger.info(
+            "reference_sound_refinement_quality_decision",
+            extra={
+                "outcome": "refused" if comparison.blockers else "accepted",
+                "support_status": comparison.support_status,
+                "blockers": comparison.blockers,
+                "stage": "quality_gate_only",
+            },
+        )
+        get_metrics().record_local_artifact_decision(
+            "refinement_quality", "refused" if comparison.blockers else "verified"
         )
         if comparison.blockers:
             if "diagnostics_missing" in comparison.blockers:

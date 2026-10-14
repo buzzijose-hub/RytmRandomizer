@@ -99,6 +99,59 @@ def test_eight_candidates_are_deterministic_source_preserving_and_redecoded(
         candidates[0].target = 1  # type: ignore[misc]
 
 
+def _assert_all_selected_a4_controls_are_applied(frame, candidate, parameters) -> None:
+    from rytm_randomizer.data.analog_four_audio_inference import (
+        ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER,
+    )
+    from rytm_randomizer.data.analog_four_kit_fields import parse_a4_fixed_8_8
+    from rytm_randomizer.devices import AnalogFourNativeEncoding, encode_bipolar
+    from rytm_randomizer.style_analysis.analog_four_patch_inference import (
+        build_analog_four_inference_feature_values,
+        evaluate_analog_four_inference_spec,
+    )
+
+    before = {
+        c.parameter: c for c in list_reference_sound_controls(frame, ANALOG_FOUR_DEVICE_ID, 1)
+    }
+    after = {
+        c.parameter: c
+        for c in list_reference_sound_controls(candidate.frame_bytes, ANALOG_FOUR_DEVICE_ID, 1)
+    }
+    fields = {f.parameter: f for f in get_analog_four_native_field_capability().native_fields()}
+    values = build_analog_four_inference_feature_values(candidate.audio_features, column=1)
+    changes = {c.parameter: c for c in candidate.changes}
+    required = set()
+    for parameter in parameters:
+        control = before[parameter]
+        assert control.mutable and control.domain is not None
+        spec = ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER[A4_REFERENCE_INFERENCE_BINDINGS[parameter]]
+        display = str(evaluate_analog_four_inference_spec(spec, values))
+        encoding = fields[parameter].native_encoding
+        proposed = (
+            parse_a4_fixed_8_8(display)
+            if encoding is AnalogFourNativeEncoding.Q8_8
+            else (
+                encode_bipolar(int(display))
+                if encoding is AnalogFourNativeEncoding.BIPOLAR
+                else int(display)
+            )
+        )
+        assert after[parameter].source_value == proposed, f"Selected control omitted: {parameter}"
+        if proposed != control.source_value:
+            required.add(parameter)
+            assert parameter in changes, f"Required change omitted from report: {parameter}"
+            change = changes[parameter]
+            assert change.proposed_value == change.rendered_value == proposed
+            assert change.proposed_display == display
+            assert change.rendered_display == after[parameter].source_display
+        else:
+            assert parameter not in changes
+    assert set(changes) == required
+    for parameter, control in before.items():
+        if parameter not in parameters:
+            assert after[parameter].source_value == control.source_value
+
+
 def test_noise_fade_real_measurements_render_all_18_controls_on_exact_native_grid() -> None:
     from rytm_randomizer.data.analog_four_audio_inference import (
         ANALOG_FOUR_AUDIO_INFERENCE_BY_PARAMETER,
@@ -147,11 +200,39 @@ def test_noise_fade_real_measurements_render_all_18_controls_on_exact_native_gri
         )
         assert changed == candidate.changed_unpacked_offsets
         assert set(changed).issubset(candidate.intended_unpacked_offsets)
-        assert {change.parameter for change in candidate.changes}.issubset(parameters)
+        _assert_all_selected_a4_controls_are_applied(frame, candidate, parameters)
     assert candidates == render_reference_sound_candidates(
         frame, ANALOG_FOUR_DEVICE_ID, 1, analysis, parameters, ()
     )
     assert frame == (_FIXTURES / "A4_Test1_Init_Kit.syx").read_bytes()
+
+
+def test_full_scope_readback_assertion_refuses_an_omitted_required_control(
+    audio_patch_dna_analysis: AudioFeatureAnalysis,
+) -> None:
+    frame = (_FIXTURES / "A4_Test1_Init_Kit.syx").read_bytes()
+    parameters = tuple(
+        c.parameter
+        for c in list_reference_sound_controls(frame, ANALOG_FOUR_DEVICE_ID, 1)
+        if c.mutable
+    )
+    candidate = render_reference_sound_candidates(
+        frame, ANALOG_FOUR_DEVICE_ID, 1, audio_patch_dna_analysis, parameters, ()
+    )[0]
+    _assert_all_selected_a4_controls_are_applied(frame, candidate, parameters)
+    omitted = candidate.changes[0].parameter
+    with pytest.raises(AssertionError, match="Required change omitted"):
+        _assert_all_selected_a4_controls_are_applied(
+            frame,
+            replace(
+                candidate, changes=tuple(c for c in candidate.changes if c.parameter != omitted)
+            ),
+            parameters,
+        )
+    with pytest.raises(AssertionError, match="Selected control omitted"):
+        _assert_all_selected_a4_controls_are_applied(
+            frame, replace(candidate, frame_bytes=frame), parameters
+        )
 
 
 @pytest.mark.parametrize("lock_fade", [False, True])

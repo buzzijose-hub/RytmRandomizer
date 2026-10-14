@@ -290,7 +290,9 @@ class MidiMetrics:
 
     def record_local_artifact_decision(
         self,
-        operation: Literal["retain_source", "read_source_frame", "measure_reference"],
+        operation: Literal[
+            "retain_source", "read_source_frame", "measure_reference", "refinement_quality"
+        ],
         outcome: Literal["retained", "reused", "verified", "reconstructed", "refused", "refreshed"],
     ) -> None:
         """Count bounded local file decisions, without IDs, paths or transport meaning."""

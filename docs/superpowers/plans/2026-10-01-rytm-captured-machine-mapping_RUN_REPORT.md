@@ -9,8 +9,12 @@ Working block started15:45UTC/11:45a.m.New York. The verified53a935d08582
 delivery remains unchanged. No new package is accepted at this checkpoint.
 Current assembly is `codex/studio-rytm-mapping` for PR254's existing
 `codex/studio-evidence-handoff` head against `modularize-v1.34`.
-Fresh remote inspection still shows b9f89c3e,33success/1skip and Eddie's
-October3 CHANGES_REQUESTED. No approval or protected merge is inferred.
+The starting remote checkpoint was b9f89c3e,33success/1skip and Eddie's
+October3 CHANGES_REQUESTED. Published source3fe9ed53 passed normal mechanical
+hooks and CodeQL with zero open branch alerts. Its Windows38619518876 build was
+cancelled before publication after fresh review found record-schema/reader/
+assertion/telemetry repairs. Replacement source and exact-package verification
+remain pending. No approval or protected merge is inferred.
 
 Implemented signed Noise Fade inference with exact legacy replay/versioning;
 qualified pitch/octave and original-level quality diagnostics independent of
@@ -32,7 +36,9 @@ Integrated focused gates:1435cases80.65s including898architecture items;
 frontend1326cases/81files51.13s/allfourcoverage100%; strict88production modules,
 full Python lint/format, Vulture80 and35Node driver/helper cases pass. Composed
 same-production coverage is100%lines/branches on86touched runtime files and
-99.43%project pure branch, unchanged99%floor. The preceding full coverage run
+99.43%project pure branch, unchanged99%floor. Publication recheck includes all88
+touched files;86 was the precommit count. Neither certifies the pending repair
+source. The preceding full coverage run
 had12246passes/six failures/six skips1048.05s; shared-protocol test references
 and the stale fail-closed AL02 dependency receipt were repaired. The166focused
 repair tests pass. Final full suite passes12259tests/six skips/six warnings in

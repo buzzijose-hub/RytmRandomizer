@@ -71,10 +71,19 @@ Windowsbuild38338316064 and its previous acceptance remain historical evidence,
 not acceptance of the October14 changes. A new exact-source build, actual
 packaged journeys and final CI are pending below until their receipts exist.
 
+The first October14 source `3fe9ed53` is not delivery acceptance. Post-push
+review identified two Important repairs: explicit nested CSV claim schemas and
+canonical schema2 migration/downgrade refusal for expanded session metadata.
+Its Windows build38619518876 was cancelled before publication. The minor shared
+DSP dtype annotation mismatch is repaired with129passing real-library/diagnostic
+tests; no decoding precision or retained measurements changed. Replacement
+source verification and exact-source packaging remain pending. CodeQL passed
+on3fe with zero open branch alerts; this does not certify the next repair source.
+
 | Verification | Actual result |
 | --- | --- |
 | Python full |12259pass/6skip/6warnings436.47s, two workers. Prior coverage run12246pass/6fail/6skip1048.05s remains failed evidence;166 focused repair tests pass. |
-| Coverage |Same-production composed full+focused coverage:86 touched runtime files100%line/branch; project99.43%purebranch,99%floor unchanged. |
+| Coverage |Published3fe same-production composed full+focused coverage:88 touched runtime files100%line/branch; project99.43%purebranch,99%floor unchanged. Replacement repair-source coverage is pending. |
 | Frontend |1326pass/81files51.13s/allfourcoverage100%; final typecheck/lint/build pass, existing bundle-size/import warnings retained. |
 | Catalog/architecture |1435pass/1known warning80.65s, including898architecture items;552-row deterministic ledger check passes. |
 | Normal gates |Strict88-module typing, full Python lint/format and Vulture80 plus unused-code checks pass. Frozen parity remains unchanged. |
@@ -96,7 +105,7 @@ and protected human approval remain separate from software acceptance.
 - [ ] Exact-source new Windows package and affected native journeys pass.
 - [ ] Final replacement Windows package including diagnostics and exact segment tables passes.
 - [ ] Fresh test CI/required-checks complete on new build source.
-- [x] CodeQL path-injection alerts21-25 independently dispositioned with evidence; dispositions are unchanged, latest remote b9 aggregate passes.
+- [x] CodeQL path-injection alerts21-25 independently dispositioned with evidence; dispositions unchanged. Historical b9 aggregate passed; CodeQL3fe passes with zero open branch alerts. Replacement-source checks pending.
 - [ ] Protected human approval; latest Eddie review remains October3 CHANGES_REQUESTED.
 
 ## Plan-requirements conformance

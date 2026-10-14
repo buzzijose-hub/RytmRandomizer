@@ -80,7 +80,29 @@ from rytm_randomizer.cockpit.ws.session import CockpitSession
 from rytm_randomizer.style_analysis.extractor import AudioFeatureAnalysis
 
 if TYPE_CHECKING:
+    from rytm_randomizer.cockpit.export.reference_sound_records import ReferenceSoundSessionPayload
     from rytm_randomizer.cockpit.export.reference_sound_session import ReferenceSoundWorkspace
+
+
+def make_generated_reference_sound(
+    workspace: ReferenceSoundWorkspace,
+    source: tuple[bytes, str, int, tuple[str, ...]],
+    title: str = "Exact audition",
+) -> ReferenceSoundSessionPayload:
+    imported = workspace.import_reference(make_reference_pcm(), title)
+    frame, device, target, parameters = source
+    return workspace.commit(
+        workspace.generate(
+            imported["session_id"],
+            source_frame=frame,
+            device_id=device,
+            target=target,
+            parameters=parameters,
+            locks=(),
+            strength=1.0,
+            cancel=Event(),
+        )
+    )
 
 
 def make_reference_sound_session(
@@ -278,6 +300,20 @@ def ws_handler_caplog(
     """Capture handler records despite package-level propagation being disabled."""
 
     logger = logging.getLogger("rytm_randomizer.cockpit.ws.handlers")
+    monkeypatch.setattr(logger, "propagate", False)
+    logger.addHandler(caplog.handler)
+    try:
+        yield caplog
+    finally:
+        logger.removeHandler(caplog.handler)
+
+
+@pytest.fixture
+def reference_sound_caplog(
+    caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> Iterator[pytest.LogCaptureFixture]:
+    """Capture only reference workflow decisions through the canonical logger."""
+    logger = logging.getLogger("rytm_randomizer.cockpit.export.reference_sound_session")
     monkeypatch.setattr(logger, "propagate", False)
     logger.addHandler(caplog.handler)
     try:

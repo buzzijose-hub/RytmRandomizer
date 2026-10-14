@@ -206,6 +206,49 @@ test('quiet/unpitched real recording holds never promote the Welch peak or inven
   }
 });
 
+test('selected readback requires every mutable field, permits real no-ops and rejects omitted required changes', () => {
+  const session = { context: { source_sha256: 'source', parameters: ['noise_fade', 'filter1_frequency'] }, candidates: [{ candidate_id: 'one', frame_sha256: 'frame',
+    changes: [{ parameter: 'noise_fade', source_value: 64, proposed_value: 100, rendered_value: 80 }] }] };
+  const checked = { candidate_id: 'one', frame_sha256: 'frame', fields: {
+    noise_fade: { source: 64, proposed: 100, rendered: 80, actual: 80 },
+    filter1_frequency: { source: 128, proposed: 128, rendered: 128, actual: 128 },
+  } };
+  const witness = { source_sha256: 'source', candidates: [checked] };
+  helper.assertSelectedReadback(session, session.context.parameters, witness);
+  const omitted = structuredClone(witness); delete omitted.candidates[0].fields.filter1_frequency;
+  assert.throws(() => helper.assertSelectedReadback(session, session.context.parameters, omitted), /Every selected control/);
+  const omittedChange = structuredClone(witness); omittedChange.candidates[0].fields.filter1_frequency = { source: 128, proposed: 256, rendered: 192, actual: 192 };
+  assert.throws(() => helper.assertSelectedReadback(session, session.context.parameters, omittedChange), /Required change omitted/);
+  const notApplied = structuredClone(witness); notApplied.candidates[0].fields.noise_fade.actual = 64;
+  assert.throws(() => helper.assertSelectedReadback(session, session.context.parameters, notApplied), /Selected control omitted/);
+  assert.throws(() => helper.assertSelectedReadback(session, session.context.parameters, { ...witness, candidates: [] }));
+});
+
+test('independent native readback derives all selected values from canonical inference and domain, never renderer reports', t => {
+  const { config } = privateFixture(t);
+  const session = { context: { source_sha256: config.source.sha256, parameters: ['noise_fade'] }, candidates: [{ candidate_id: 'one', frame_sha256: 'frame',
+    changes: [{ parameter: 'noise_fade', source_value: 64, proposed_value: 100, rendered_value: 80 }] }] };
+  const witness = { source_sha256: config.source.sha256, candidates: [{ candidate_id: 'one', frame_sha256: 'frame',
+    fields: { noise_fade: { source: 64, proposed: 100, rendered: 80, actual: 80 } } }] };
+  let calls = 0;
+  const result = helper.verifySelectedReadback(config, session, 'primary-python-cli', (python, args, options) => {
+    calls++;
+    assert.equal(python, 'primary-python-cli'); assert.equal(args[0], '-c'); assert.equal(args[2], config.state);
+    assert.match(args[1], /capability\.read_native_fields\(frame\)/);
+    assert.match(args[1], /for parameter in context\['parameters'\]/);
+    assert.match(args[1], /evaluate_analog_four_inference_spec/);
+    assert.match(args[1], /domain\.value_at\(round/);
+    assert.match(args[1], /assert actual == rendered/);
+    assert(!/render_reference_sound|_proposal|mido|rtmidi|write_bytes|write_text/.test(args[1]));
+    assert.equal(options.cwd, config.repo); assert.equal(options.windowsHide, true); assert.equal(options.timeout, 15000);
+    assert.equal(options.env.PYTHONDONTWRITEBYTECODE, '1'); assert.equal(options.env.RYTM_RAND_MIDI_BACKEND, 'off');
+    assert.deepEqual(JSON.parse(options.input), { source: config.source.path, source_sha256: config.source.sha256, session });
+    return { status: 0, stdout: JSON.stringify(witness) };
+  });
+  assert.equal(calls, 1); assert.deepEqual(result, witness);
+  assert.throws(() => helper.verifySelectedReadback(config, session, 'fake', () => ({ status: 1 })), /native readback failed/);
+});
+
 test('exact recording segment verifier refuses wrong original hash, range, rate and impossible bounds', t => {
   const { config } = privateFixture(t);
   const segment = { original: { ...config.take3.info, sha256: config.take3.sha256 }, start_frame: 264600, frame_count: 176400, sha256: 'a'.repeat(64) };

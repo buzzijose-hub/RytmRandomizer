@@ -316,7 +316,7 @@ async function main() {
       await require('./reference_sound_package_journey.cjs').exerciseReferenceSoundPackage({ page, latest, connected, processOperation, summary, save, reportRoot, record, digest });
       if (realInputConfig) {
         realInputHelper.primeReferenceRealInputSources(repo, runRoot, python, realInputConfig);
-        const realArgs = { page, latest, connected, summary, save, reportRoot, record, digest, config: realInputConfig };
+        const realArgs = { page, latest, connected, summary, save, reportRoot, record, digest, config: realInputConfig, python };
         const expected = await realInputHelper.exerciseReferenceSoundRealInput(realArgs);
         const recovery = processOperation('restart-backend');
         summary.restarts.push({ ...recovery, at: new Date().toISOString() });

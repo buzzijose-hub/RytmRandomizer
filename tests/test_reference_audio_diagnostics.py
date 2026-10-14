@@ -380,6 +380,22 @@ def test_comparison_delta_octaves_and_missing_support(
     assert compare_reference_audio_diagnostics(measured_tone, semitone).octave_difference == 0
 
 
+@pytest.mark.parametrize("cents", [-100.1, -99.9, 99.9, 100.1])
+def test_pitch_mismatch_hold_pins_both_sides_of_the_one_semitone_boundary(
+    measured_tone: ReferenceAudioDiagnostics, cents: float
+) -> None:
+    assert measured_tone.qualified_pitch_hz is not None
+    recording = dataclasses.replace(
+        measured_tone, qualified_pitch_hz=measured_tone.qualified_pitch_hz * 2 ** (cents / 1200)
+    )
+    comparison = compare_reference_audio_diagnostics(measured_tone, recording)
+    held = abs(cents) > 100
+    assert comparison.delta_cents == pytest.approx(cents, abs=1e-8)
+    assert comparison.octave_difference == 0
+    assert comparison.support_status == ("held" if held else "supported")
+    assert comparison.blockers == (("pitch_mismatch",) if held else ())
+
+
 @pytest.mark.parametrize(
     "payload",
     [

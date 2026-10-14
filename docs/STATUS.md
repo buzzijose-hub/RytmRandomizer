@@ -10,6 +10,10 @@ Fade inference, qualified pitch/octave/quality diagnostics, explicit audition
 segments and exact replay are implemented. The eleven-feature score is unchanged
 and is not percent accuracy. Uncertain references and unsuitable auditions hold
 refinement rather than changing protected tuning or silently normalizing audio.
+Post-push review identified fixed ledger-schema typing and persisted-session
+schema/downgrade repairs. The first3fe9ed53Windows build was cancelled before
+publication; replacement source/package acceptance is pending. CodeQL3fe passed
+with zero open branch alerts. This is not protected approval or final acceptance.
 
 All552 supplied MIDI Guide CSV rows are reconciled:403 complete-address matches,
 24 contextual partial matches,125 A4 reference-only rows and one independently
@@ -22,7 +26,8 @@ offsets, selector safety, MIDI-domain conversion or SEND authority. See the
 Latest focused integration passes1435catalog/architecture/data/packaging cases;
 frontend1326cases/81files passes100%allfourcoverage. Strict88-module typing,
 full Python lint/format and Vulture80 pass. Same-production composed coverage
-has86touched runtime files100%line/branch and99.43%project pure branch. The final
+has88touched runtime files100%line/branch and99.43%project pure branch at published
+3fe, not the pending repair source. The final
 full run passes12259tests/six skips/six warnings436.47s. New exact-source packaged
 UI journeys remain pending. The preceding full run had12246passes and six
 failures; the166focused repair cases pass, but that failed run is not accepted

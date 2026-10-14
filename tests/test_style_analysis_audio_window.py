@@ -14,6 +14,31 @@ from rytm_randomizer.style_analysis.runtime_types import LibrosaApi
 pytestmark = pytest.mark.fast
 
 
+def test_shared_audio_protocol_matches_default_and_explicit_decode_precision() -> None:
+    from io import BytesIO
+
+    import numpy as np
+
+    sf = pytest.importorskip("soundfile")
+    pytest.importorskip("librosa")
+    librosa, _ = extractor._require_librosa()
+    encoded = BytesIO()
+    samples = 0.25 * np.sin(2 * np.pi * 440 * np.arange(22050) / 22050)
+    sf.write(encoded, samples, 22050, format="WAV", subtype="PCM_16")
+    raw = encoded.getvalue()
+
+    default, rate = librosa.load(BytesIO(raw))
+    precise, precise_rate = librosa.load(BytesIO(raw), dtype=np.float64)
+    assert rate == precise_rate == 22050
+    assert default.dtype == np.float32
+    assert precise.dtype == np.float64
+    assert librosa.stft(default).dtype == np.complex64
+    assert librosa.stft(precise).dtype == np.complex128
+    assert librosa.resample(default, orig_sr=rate, target_sr=16000).dtype == np.float32
+    assert librosa.resample(precise, orig_sr=rate, target_sr=16000).dtype == np.float64
+    np.testing.assert_array_equal(default, precise.astype(np.float32))
+
+
 def _measurements() -> AudioMeasurements:
     return {
         "bpm": 138.0,

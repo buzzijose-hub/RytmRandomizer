@@ -1392,6 +1392,11 @@ verified fundamental or captured played note. Unpitched and uncertain results
 remain distinct. Pitch/octave diagnostics do not alter the eleven-feature metric.
 Missing, quiet, clipped, uncertain or multi-note feedback, and supported pitch
 differences beyond 100 cents, hold new refinement server-side.
+Shared lazy DSP Protocols describe both default float32/complex64 extraction
+and explicit float64/complex128 paths; resampling preserves input precision.
+The annotations follow the [pinned librosa load contract](https://librosa.org/doc/0.11.0/generated/librosa.load.html)
+and [STFT contract](https://librosa.org/doc/0.11.0/generated/librosa.stft.html),
+not a forced precision change to existing measurements.
 
 Audition comparison accepts an explicit 0.05-8 second frame range and retains
 both the original take and selected WAV. A long audition without a range is

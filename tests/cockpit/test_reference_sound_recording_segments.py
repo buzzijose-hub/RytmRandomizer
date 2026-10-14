@@ -6,6 +6,7 @@ from pathlib import Path
 from threading import Event
 
 import pytest
+from cockpit.conftest import make_generated_reference_sound as _generated
 from cockpit.conftest import make_reference_pcm
 
 from rytm_randomizer.cockpit.export.reference_sound_audio import select_reference_segment
@@ -18,23 +19,6 @@ from rytm_randomizer.cockpit.export.reference_sound_store import reference_sound
 from rytm_randomizer.observability.errors import BoundaryError
 
 pytestmark = pytest.mark.fast
-
-
-def _generated(workspace: ReferenceSoundWorkspace, source: tuple[bytes, str, int, tuple[str, ...]]):
-    imported = workspace.import_reference(make_reference_pcm(), "Exact audition")
-    frame, device, target, parameters = source
-    return workspace.commit(
-        workspace.generate(
-            imported["session_id"],
-            source_frame=frame,
-            device_id=device,
-            target=target,
-            parameters=parameters,
-            locks=(),
-            strength=1.0,
-            cancel=Event(),
-        )
-    )
 
 
 def test_selected_recording_survives_restart_with_original_and_exact_sample_identity(

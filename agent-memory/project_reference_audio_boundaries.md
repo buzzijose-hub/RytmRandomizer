@@ -37,6 +37,14 @@ old contract, not permission to silently regenerate a saved favorite. Old bad
 equations may be replayed only for already-legal retained candidates; new work
 uses the repaired model and keeps older sessions intact.
 
+Optional new fields still expand a persisted schema. Mark new writes with the
+canonical store version and migrate old records explicitly after validating the
+original checksum. Reading must not rewrite originals or change replay identity;
+an older app must return schema-newer, not misclassify a newer file as corrupt.
+Match lazy DSP Protocol dtypes to installed-library behavior: default librosa
+decoding is float32, while explicit diagnostic PCM remains float64. Repair the
+annotation, not existing precision or measurements, and test both real paths.
+
 Community MIDI CSVs are reference knowledge. Pin original hashes and upstream
 identity and retain attribution/licensing, but keep MIDI ranges, display units,
 native fields, executable mutation policy and physical receipts separate. A
