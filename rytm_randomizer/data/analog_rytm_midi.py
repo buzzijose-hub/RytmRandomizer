@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, Literal, TypeAlias
 
+from .elektron_midi_descriptions import RYTM_MIDI_DESCRIPTIONS, MidiParameterDescription
 from .rytm_machine_catalog import RYTM_MACHINE_PROFILES, RYTM_PAD_CAPABILITIES
 
 RiskTier: TypeAlias = Literal["low", "medium", "high"]
@@ -65,6 +66,19 @@ class AnalogRytmCcMapping:
     value_kind: ParameterValueKind = "continuous"
     value_orientation: ParameterValueOrientation = "zero_based"
     machine_key: str | None = None
+
+    @property
+    def reference_description(self) -> MidiParameterDescription | None:
+        """Exact-context reference facts, separate from all executable fields.
+
+        Kept out of dataclass fields so persisted/asdict catalog DTOs do not
+        change. Shared CCs and NRPN slots never identify a description alone.
+        """
+
+        key = (self.section, self.parameter)
+        if self != ANALOG_RYTM_ALL_CC_BY_SECTION_AND_PARAMETER.get(key):
+            return None
+        return RYTM_MIDI_DESCRIPTIONS.get(key)
 
 
 @dataclass(frozen=True)
