@@ -1,7 +1,8 @@
 # Live Control Closure
 
-Status: local implementation; integration verification in progress. This is not
-a replacement installer or a hardware acceptance receipt.
+Status: bounded local software verification complete; integration review and
+hardware acceptance remain pending. This is not a replacement installer or a
+hardware acceptance receipt, and general A4 live transport remains unfinished.
 
 ## Changes
 
@@ -37,6 +38,21 @@ PR254, merged, packaged or installed. The existing d563 delivery remains the
 verified rehearsal build. Integrate the local source delta through the existing
 review workflow; do not create a PR stacked on the open integration PR.
 
+## Integration Handoff
+
+The verified source checkpoint is `20e82194`, based on
+`b613c7052fce08b8794a838af299a90e8ac7959e`. The local branch includes all three
+worker commits plus the composed source/compatibility changes; taking only one
+worker commit is not an equivalent integration. Merge the complete branch into
+the current integration branch after checking its latest state, then rerun the
+composed gates and existing protected PR review. Do not replace the d563
+installer or declare a new release from source-only verification.
+
+The next engineering task is the bounded A4 armed RAM-only transport integration
+described above, not enabling SEND from this preview DTO. Its exact-plan tests
+must include configured routing, stale source/reload refusal, whole-plan
+rejection, pacing and partial failure before physical acceptance can qualify it.
+
 ## Studio Evidence Still Needed
 
 Use backed-up disposable kits and low monitoring level, never a valuable show
@@ -63,18 +79,34 @@ Persistent KIT writes and automatic restore remain prohibited.
 - Show Kit Forge composed suite: 681 passed, including historical-source replay,
   recall, export/import and mixed V1/V2 generation. The additional wire-name
   guard is included in the final full-suite run.
-- Frontend: 1328 passed across81 files, 100% statements/branches/functions/lines.
+- Frontend: 1328 passed across 81 files, 100% statements/branches/functions/lines.
   TypeScript, affected ESLint and production Vite build pass. Existing chunk-size
   and mixed dynamic/static Tauri import warnings remain.
-- Browser: real Edge/Playwright mock-WS journey passes desktop1440, narrow600 and
-  mobile390 geometry/screenshots; no MIDI or backend/hardware claim.
+- Browser: real Edge/Playwright mock-WS journey passes desktop 1440, narrow 600
+  and mobile 390 geometry/screenshots; no MIDI or backend/hardware claim.
 - Fourteen touched Python modules pass strict Pyright; Ruff, Black, isort and
   Vulture80 pass. Frozen parity fixtures, dependency pins and coverage settings
   are unchanged.
-- Final complete Python/parity run and fresh coverage remain in progress.
-  Preliminary interrupted scans and isolated worker results are not full-suite
-  passes. Final Gate1 must include all committed production changes, not just
-  the worker merges.
+- Final complete Python/parity run: 12762 passed, 6 skipped, 6 warnings in
+  1100.88 seconds with two workers on Python 3.12.14. The skips and warnings
+  remain visible; no test or safety gate was suppressed.
+- Fresh coverage: the canonical touched-coverage checker proves all 14 committed
+  production modules at 100% lines and branches against b613. Project pure
+  branch coverage is 99.44%, above the unchanged 99% floor; blended coverage is
+  99.69%. Preliminary interrupted scans and isolated worker results are not
+  counted as full-suite passes.
+- After updating the closeout documentation, all 915 architecture tests pass
+  again in 76.71 seconds with one existing short-name warning. Frozen V1.34
+  fixtures, `pyproject.toml` and `.coveragerc` remain byte-identical to b613.
+- The initial complete sweep was 12743 passed /17 failed /5 skipped. Its failures
+  were the new exports' missing data snapshots, stale derived CSV/AL02 evidence
+  and a plan-status marker; those are repaired and 538 artifact checks pass.
+  This failed sweep is not counted as a green result.
+- Twelve new data-layer fixtures were captured with the canonical data dumper,
+  independently of frozen V1.34 fixtures. The CSV ledger's descriptive support
+  inventory hash/refusals were regenerated with retained source hashes intact.
+  The prior AL02 receipt (`869ab55f...`) is archived; its refreshed copy changes
+  only the device-facade dependency hash and still emits zero SysEx.
 
 ## Maintainability And Learning
 
@@ -91,4 +123,9 @@ Dimensional reviews cover architecture, type hygiene, tests/parity, side effects
 observability, reuse, documentation and maintainability. The early shared UI
 fixture drift finding was repaired with canonical serialized Python output and
 a producer/consumer regression guard. No production gate was relaxed. Complete
-review/test results and the final source commit are recorded at closeout.
+review/test results apply to source checkpoint `20e82194`; subsequent closeout
+edits only record the verification and handoff.
+The additional recapture-coverage finding is repaired with V1 and V2 public
+verification/restart/package journeys and a Sample Bit-only V2 mismatch. The
+stateful compatibility sequence now explicitly recalls V1, authors V2, then
+recalls V1 again; its focused 13 cases pass without hardware.

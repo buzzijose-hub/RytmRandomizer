@@ -1,6 +1,6 @@
 # Live Control Closure - 2026-10-15
 
-Status: in-flight (bounded software implementation and local verification).
+Status: in-flight (bounded local software verified; integration and hardware held).
 
 ## Scope And Evidence
 
@@ -100,3 +100,22 @@ Uncertainty never enables output. Test failures trigger repair, not weakened
 gates. Hardware acceptance remains a separate operator-present studio procedure.
 Rollback is omission/revert of these owned changes, not resetting other work.
 Local source handoff is not an installed or show-certified release.
+
+## Local Verification Checkpoint
+
+Source `20e82194` completes the bounded mapping/compatibility implementation.
+The fresh complete run passes 12762 Python tests with 6 skips and 6 warnings in
+1100.88 seconds, including unchanged frozen parity. The canonical Gate 1 checker
+proves all 14 touched production modules at 100% lines/branches; project pure
+branch coverage is 99.44%, with the 99% floor unchanged. Strict touched typing,
+Ruff/Black/isort and Vulture80 pass. Frontend 1328 tests across 81 files have
+100% coverage in all four metrics, with TypeScript, affected ESLint, production
+build and desktop/mobile Edge journey checks passing.
+
+Eight targeted review dimensions are complete. Canonical UI fixture drift and
+historical recapture coverage findings are repaired without weakening gates.
+All three worker worktrees are archived after their commits were integrated.
+The source remains local: no push, protected merge, installer replacement or
+hardware action occurred. General A4 armed transport and physical acceptance
+remain unfinished; the [closure report](../../LIVE_CONTROL_CLOSURE_REPORT.md)
+records their exact boundaries and studio matrix.

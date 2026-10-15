@@ -9,7 +9,7 @@
 
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-orange.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/tests-8%2C389-9be8a0.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-12%2C762-9be8a0.svg)](#testing)
 [![WCAG](https://img.shields.io/badge/accessibility-WCAG%202.2%20AA-7cc4ff.svg)](docs/ACCESSIBILITY.md)
 [![Phase 1 · Cockpit](https://img.shields.io/badge/Phase%201%20%C2%B7%20Cockpit-shipped-7cc4ff.svg)](#cockpit)
 [![Phase 2 · Wizard](https://img.shields.io/badge/Phase%202%20%C2%B7%20Wizard-shipped-9be8a0.svg)](#profile-wizard)
@@ -489,15 +489,16 @@ See [the closeout plan](docs/superpowers/plans/2026-09-08-release-closeout.md),
 <a id="testing"></a>
 ## Testing
 
-Show Kit Forge integration results (see the [dated run report](docs/superpowers/plans/2026-09-04-show-kit-forge_RUN_REPORT.md)):
+Current local source verification (see the [October 15 closure report](docs/LIVE_CONTROL_CLOSURE_REPORT.md)); this is not an installed-build or hardware certification:
 
 | Suite | Count |
 |---|---|
-| Full Python suite (`pytest`) | 8,931 collected test items |
-| Architecture invariants (`tests/architecture/`) | 805 test items |
+| Full Python suite (`pytest`, two workers) | 12,762 passed; 6 skipped; 6 warnings |
+| Architecture invariants (`tests/architecture/`) | 915 test items, included in the full suite |
 | V1.34 parity | 505 golden JSON files → 685 byte-identical test items |
-| Frontend (`desktop/web`, vitest) | 852 test items; 100% coverage |
-| Accessibility gate | axe WCAG 2.2 AA, 0 violations |
+| Frontend (`desktop/web`, vitest) | 1,328 passed across 81 files; 100% coverage |
+| Python coverage | 14 touched modules: 100% lines/branches; project pure branch: 99.44% |
+| Browser journey | Edge desktop/mobile geometry and screenshots; mocked WebSocket, no hardware |
 
 The suite uses `pytest-xdist` (`-n auto`). Don't pass `-o addopts=''` for normal runs — it disables xdist and triples the runtime.
 

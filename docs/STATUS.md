@@ -7,7 +7,13 @@ Last updated: 2026-10-15. This file is a hand-authored snapshot and is meant to 
 Local source work on `codex/live-control-closure` adds the narrow Rytm Sample
 Bit Reduction capture/planning path, corrects protected/unprojected inventory
 labels and exposes source-bound A4 CC7 conversion evidence for 25 scalar fields
-in the existing preparation report. Integration verification is in progress.
+in the existing preparation report. Bounded local software verification passes
+at source checkpoint `20e82194`: 12762 Python tests, 6 skips, 6 warnings in
+1100.88 seconds; all 14 touched production modules have 100% line/branch coverage
+and project pure branch coverage is 99.44% at the unchanged 99% floor. Frontend
+1328 tests have 100% coverage; strict typing, lint and the responsive Edge
+browser journey pass. Integration review, packaging and physical acceptance
+remain pending; general A4 armed live transport still requires engineering.
 Versioned capture projections also preserve old favorites' replay, recall and
 export while newly authored candidates use the explicit expanded domain.
 No A4/BOTH SEND hold or protected/paired control is unlocked. This is not a new
