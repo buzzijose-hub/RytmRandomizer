@@ -1,0 +1,32 @@
+{
+  "bank_id": "bank-boundary",
+  "bank_revision": 5,
+  "entry_id": "cue-source",
+  "candidate_id": "candidate-84c280139d226737",
+  "session_generation": 3,
+  "routing": {
+    "output_port_name": "Elektron Analog Four MKII Out",
+    "track_channels": [2, 4, 6, 8]
+  },
+  "send_plan": {
+    "plan_id": "a4-studio-c078db1c831fface2e42f4cf8e40bf039c23fb412ebba8451e394aacd431069b",
+    "candidate_id": "candidate-84c280139d226737",
+    "source_snapshot_id": "capture-a4-21-0df5c4c2db8f0369-c85e5053",
+    "profile_id": "scene-birmingham",
+    "ready": true,
+    "readiness_reason": "ready",
+    "safety_status": "armed",
+    "estimated_midi_msgs": 1,
+    "pad_count": 1,
+    "locked_pad_ids": [],
+    "target_pad_ids": [],
+    "blocked_reasons": [],
+    "packets": [{ "pad_id": 1, "parameter": "osc1_level", "channel": 1, "control": 69, "value": 100 }]
+  },
+  "plan_id": "a4-studio-c078db1c831fface2e42f4cf8e40bf039c23fb412ebba8451e394aacd431069b",
+  "ready": true,
+  "blocked_reasons": [],
+  "hardware_send_validated": false,
+  "persistent_write": false,
+  "output_authority": "studio-ram-only-unqualified"
+}

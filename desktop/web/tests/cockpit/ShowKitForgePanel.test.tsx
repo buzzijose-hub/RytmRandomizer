@@ -90,6 +90,10 @@ describe('ShowKitForgePanel', () => {
     expect(useCockpitStore.getState().showBank).toBe(showBankState);
     expect(useCockpitStore.getState().kitCaptures).toEqual([]);
     expect(screen.getByRole('button', { name: 'A4 SEND blocked \u2014 offline only' })).toBeDisabled();
+    const offlineA4 = screen.getByRole('region', { name: 'A4 audition preparation' });
+    const studioA4 = screen.getByRole('region', { name: 'A4 studio audition' });
+    expect(offlineA4.nextElementSibling).toBe(studioA4);
+    expect(studioA4).toHaveTextContent('General A4/BOTH stage output remains blocked');
     act(() => useCockpitStore.setState({ libraryRecords: records.map((record) =>
       record.record_id === 'original-rytm' ? { ...record, kit_name: '' } : record,
     ) }));

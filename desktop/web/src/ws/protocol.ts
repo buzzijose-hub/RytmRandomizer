@@ -217,6 +217,30 @@ export interface CockpitSendPlan {
   packets: SendPlanPacket[];
 }
 
+/** Separate, unqualified working-RAM authority; never general A4/BOTH readiness. */
+export interface A4StudioAuditionPlan {
+  plan_id: string;
+  ready: boolean;
+  blocked_reasons: string[];
+  bank_id: string;
+  bank_revision: number;
+  entry_id: string;
+  candidate_id: string | null;
+  session_generation: number;
+  routing: { output_port_name: string; track_channels: [number, number, number, number] };
+  send_plan: CockpitSendPlan;
+  hardware_send_validated: false;
+  persistent_write: false;
+  output_authority: 'studio-ram-only-unqualified';
+}
+
+export interface A4StudioAuditionOutcome {
+  status: string;
+  sent_count: number;
+  expected_count: number;
+  reason: string;
+}
+
 export interface OperatorPackageRehearsal {
   rehearsal_id: string;
   operator_package_id: string;
@@ -1040,6 +1064,8 @@ export interface PerformanceConsoleChangedEvent {
 export interface SessionStatusEvent {
   type: 'session_status';
   armed: boolean;
+  /** Present only for explicitly armed A4 studio output; absence preserves Rytm. */
+  armed_device_id?: 'analog_four_mk2';
   midi_port: string | null;
   mode: SessionMode;
   connection_phase: ConnectionPhase;
@@ -1289,6 +1315,8 @@ export interface ArmCommand {
   arm_token: string;
   confirm: boolean;
   port_name?: string | null;
+  device_id?: 'analog_four_mk2';
+  acknowledge_unvalidated_hardware?: true;
 }
 
 /** `disarm {}` — tear down the armed seam, restore the passive device. */
@@ -1342,6 +1370,25 @@ export interface ShowBankListCommand {
     expected_revision: number;
     output_port_name: string | null;
   };
+}
+
+export interface ShowBankPrepareA4StudioAuditionCommand {
+  type: 'show_bank_prepare_a4_studio_audition';
+  bank_id: string;
+  entry_id: string;
+  expected_revision: number;
+  output_port_name: string;
+  track_channels: [number, number, number, number];
+  source_reloaded: true;
+  acknowledge_unvalidated_hardware: true;
+}
+
+export interface ShowBankSendA4StudioAuditionCommand {
+  type: 'show_bank_send_a4_studio_audition';
+  send_plan_id: string;
+  confirm: true;
+  source_reloaded: true;
+  acknowledge_unvalidated_hardware: true;
 }
 
 export interface ShowBankCreateCommand {
@@ -1548,6 +1595,8 @@ export type Command =
   | LibraryDeleteCommand
   | LibraryImportCapturesCommand
   | ShowBankListCommand
+  | ShowBankPrepareA4StudioAuditionCommand
+  | ShowBankSendA4StudioAuditionCommand
   | ShowBankCreateCommand
   | ShowBankSelectCommand
   | ShowBankUpdateCommand
@@ -1616,6 +1665,8 @@ export interface CommandAck {
   show_pack_export?: ShowPackExportAck;
   show_pack_import?: ShowPackImportAck;
   a4_preparation?: A4PreparationReport;
+  a4_studio_plan?: A4StudioAuditionPlan;
+  a4_studio_outcome?: A4StudioAuditionOutcome;
   show_bank_id?: string;
   show_bank_entry_id?: string;
   candidate_id?: string;

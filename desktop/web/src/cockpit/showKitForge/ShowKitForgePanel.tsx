@@ -28,6 +28,7 @@ import { useCockpitClient } from '../context';
 import { useMutationTargets } from '../useMutationTargets';
 import { usePadLocks } from '../usePadLocks';
 import { A4PreparationPanel } from './A4PreparationPanel';
+import { A4StudioAuditionPanel } from './A4StudioAuditionPanel';
 
 import {
   applyEntryMove,
@@ -1274,6 +1275,7 @@ export function ShowKitForgePanel(): JSX.Element {
               </section>
 
               <A4PreparationPanel bank={activeBank} entry={activeEntry} disabled={actionDisabled} />
+              <A4StudioAuditionPanel bank={activeBank} entry={activeEntry} disabled={actionDisabled} />
 
               <section className="show-kit-forge-section" aria-labelledby="show-kit-audition-title">
                 <div className="show-kit-forge-section-heading"><div><p className="show-kit-forge-step">Rytm audition</p><h3 id="show-kit-audition-title">Existing exact-plan safety path</h3></div><span>{auditionStatusLabel(activeEntry)}</span></div>

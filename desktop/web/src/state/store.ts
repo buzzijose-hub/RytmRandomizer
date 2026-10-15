@@ -58,6 +58,7 @@ import type {
 
 export interface SessionStatus {
   armed: boolean;
+  armed_device_id?: 'analog_four_mk2';
   midi_port: string | null;
   mode: SessionMode;
   connection_phase: ConnectionPhase;
