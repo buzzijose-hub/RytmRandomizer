@@ -1,25 +1,26 @@
 # A4 Studio Audition Integration
 
-Status: implemented locally; final composed verification/review in progress.
+Status: bounded software verification complete; PR254 is the integration/review vehicle.
 This is an unqualified studio RAM-only experiment, not general A4/BOTH show
 readiness, persistent KIT write support or a replacement installer.
 
 ## Execution Ledger
 
-Checkpoint 2026-10-15 22:04 UTC. Frozen production source:
+Checkpoint 2026-10-15 22:24 UTC. Frozen production source:
 `fa84d7bf4b0c0aaa7d1ecd8b03b6cf3456c7d99e`.
+Final full-test checkpoint: `5032413d` (only tests/docs changed after that production).
 
 | Gate | Observed State |
 | --- | --- |
-| Full Python/coverage | First complete run: 13,474 passed, 3 failed, 6 skipped, 6 warnings in 1116.73 seconds. All failures were stale 64-command assertions after the new two-command surface made 66. Not accepted. Failed log/JUnit/coverage archived under ignored `output/local/a4-fa84-contract-failed.*`; a fresh final run follows the contract repair. |
-| Architecture + async regression | 1,075 passed, one known warning, 78.90 seconds. |
+| Full Python/coverage | 13,478 passed, 6 skipped, 6 warnings, zero failures in 1119.94 seconds; two workers. Fresh log/JUnit: ignored `output/local/a4-full-pytest.*`; coverage: `coverage.xml`. |
+| Architecture/parity | 921 architecture items and all 685 frozen V1.34 parity items pass in the full suite. Separate architecture + async regression: 1,075 passed, one known warning, 78.90 seconds. |
 | Strict production typing | All 99 PR-touched modules pass with zero diagnostics. |
-| Coverage diagnostic | First full XML covers all 99 PR-touched modules at 100% lines/branches; whole-project pure branch 99.44%, unchanged 99% floor. This does not turn the failed test run into acceptance. |
+| Coverage | Canonical touched-file gate proves all 99 PR-touched modules at 100% lines/branches; whole-project pure branch 99.44%, unchanged 99% floor. Fresh final XML only; no earlier or cancelled-run data used. |
 | Frontend | 1,412 tests / 82 files pass in 104.69 seconds; statements/branches/functions/lines all 100%. |
 | Browser | Two Edge journeys pass in 4.7 seconds, including exact A4 routing/confirmation at 1440/600/390 pixels and preserved offline review. Screenshots inspected; mocked WS only. |
 | Lint/build | Ruff, Black py311, isort, ESLint, TypeScript, Vulture80 and version drift check pass. Vite build passes with existing chunk/dynamic-import warnings. |
-| Review | Eight dimensions completed; identified repairs applied and targeted fix reviews clear. Full test/coverage outcome remains a separate gate. |
-| Remote | PR254 still at b613c705; no push, protected merge, new package or physical I/O. Four implementation worker worktrees archived after merge. |
+| Review | Eight dimensions completed; identified repairs applied and targeted fix reviews clear. Contract repair also has a clean targeted review. Protected human approval remains separate. |
+| Integration | Existing PR254 only; remote CI and current publication/review state are tracked on that PR. No protected merge, new package or physical I/O is claimed. Four implementation worker worktrees archived after merge. |
 
 A 21:53 UTC resource spot-check showed approximately 15.38 GB free of 31.75 GB
 physical RAM and 19% aggregate CPU use. This is a point-in-time observation,
@@ -34,6 +35,13 @@ command identifiers and a positive real-WebSocket prepare/deliver journey tied
 to the protocol round-trip guard. It does not only raise a count or change any
 production behavior. Native rendering, fake-port packets and consumed authority
 are asserted through both new wire commands.
+
+The preceding complete coverage run failed: 13,474 passed, 3 failed, 6 skipped,
+6 warnings in 1116.73 seconds. All three failures were stale 64-command assertions
+after the new surface made 66. Its log/JUnit/coverage are retained under ignored
+`output/local/a4-fa84-contract-failed.*`, not used as final acceptance. The
+contract/positive-WebSocket repair passed 151 focused cases before the fresh
+full run above; no production behavior changed for that repair.
 
 ## Implementation
 
@@ -74,10 +82,10 @@ not prove physical identity, and that remains an external acceptance boundary.
 The frontend Python fixture initially retained a random source snapshot identity.
 The producer drift guard now fixes only that identity input and compares the
 entire canonical serialized plan. Native rendering, byte checks and replay are
-not stubbed. Focused composed tests, including the actual WS reader DISARM
-journey, pass 732 cases at the current checkpoint. Final full-suite, coverage,
-browser and dimensional review results are pending and must not be inferred
-from worker-only results.
+not stubbed. An earlier focused composed checkpoint passed 732 cases, including
+the actual WS reader DISARM journey. It is superseded by the fresh full-suite,
+coverage, browser and review results above, not treated as composed acceptance
+on its own.
 
 ## Studio Handoff
 
@@ -119,7 +127,8 @@ data module was also corrected. Docs reconcile old categorical A4 holds with
 the separate studio exception. Historic PR254 Gate14/16 deviations are not
 retroactively cleared by this increment's audit/execution record.
 
-Final full-source test/coverage and remote publication results remain pending.
+Final full-source test/coverage results are recorded above. Current remote CI
+and protected review/publication state belong to PR254, not a hardware receipt.
 
 The first full coverage attempt was stopped and is not acceptance evidence.
 An architecture-only retry identified relocated broad catches; the repair uses

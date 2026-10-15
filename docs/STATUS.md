@@ -12,10 +12,17 @@ consumes each plan before output, records partial/interrupted counts and revokes
 current hardware-readiness labels. OS-labelled A4 route filtering rejects known
 Rytm/generic routes but is not physical device authentication. General A4/BOTH
 performance output, paired/disputed fields, persistent writes and automatic
-restore remain blocked. Source composition is under final verification; there
-is no new installed build or physical receipt. See the
+restore remain blocked. Source verification passes at `5032413d`: 13,478 Python
+tests, 6 skips, 6 warnings in 1119.94 seconds; 921 architecture items and all 685
+frozen parity items pass. All 99 PR-touched production modules have 100% line/
+branch coverage, with project pure branch 99.44% at the unchanged 99% floor.
+Frontend: 1,412 tests across 82 files, all four coverage dimensions 100%; two
+responsive Edge journeys, strict typing, lint and build pass. PR254 remains the
+integration/review vehicle; there is no new installed build or physical receipt. See the
 [studio plan](superpowers/plans/2026-10-15-a4-armed-studio-audition.md) and
 [supervised procedure](hardware-validation/2026-10-15-a4-studio-audition.md).
+The [verification report](A4_STUDIO_AUDITION_REPORT.md) distinguishes repaired
+failed checkpoints from the final green composed run.
 
 The preceding mapping-only checkpoint on `codex/live-control-closure` added the narrow Rytm Sample
 Bit Reduction capture/planning path, corrects protected/unprojected inventory

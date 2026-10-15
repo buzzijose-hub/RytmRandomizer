@@ -1,6 +1,6 @@
 # A4 Armed Studio Audition - 2026-10-15
 
-Status: in-flight (implementation and software qualification; no physical claim).
+Status: in-flight (software verified; protected integration review and physical acceptance remain separate).
 
 ## Scope
 
@@ -109,3 +109,9 @@ frozen parity before pushing the existing integration PR and requesting Eddie.
 Physical validation is a separate backed-up scratch session, not agent work.
 Rollback reverts only owned commits; no resets of other work. No protected merge
 or show-ready claim is part of software closeout.
+
+Software checkpoint `5032413d` passes 13,478 Python tests / 6 skips / 6 warnings
+with fresh full coverage; all 99 PR-touched modules have 100% line/branch
+coverage. Frontend 1,412 tests / 82 files have 100% all-four coverage. Exact
+results, failed-checkpoint disposition and the post-audit are recorded in
+`docs/A4_STUDIO_AUDITION_REPORT.md`. PR254 carries current remote CI/review state.

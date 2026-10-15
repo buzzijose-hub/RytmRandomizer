@@ -1,6 +1,6 @@
 # A4 Studio Audition - Supervised Scratch Procedure
 
-Status: software implementation under verification; physical observations NOT
+Status: bounded software verification complete; physical observations NOT
 PERFORMED. Do not use this as a show-ready receipt. The installed d563 rehearsal
 delivery is unchanged and does not contain this new source-only studio flow.
 Use an independently packaged and verified build of this exact integration
@@ -16,6 +16,9 @@ before testing. Preserve the old delivery and all original kit/audio files.
 - Read the actual four synth-track MIDI channels on the A4. Enter those exact
   distinct 1..16 channels; there are no software defaults. Duplicate, unknown
   or generic DIN routes are outside this bounded trial.
+- Confirm the existing input configuration permits CC reception from that USB
+  route without disturbing OXI note/clock routing; sending to a port alone is
+  not evidence that the instrument accepted the control.
 - Preserve existing clock, note, pitch/tuning, OXI, kit selector, sample slot,
   master level and sequencer settings. Do not test a valuable show bank.
 
@@ -23,8 +26,11 @@ before testing. Preserve the old delivery and all original kit/audio files.
 
 1. Start disarmed. Adopt backed-up paired saved-kit sources into a local cue.
 2. Lock every Rytm pad and all A4 tracks except one. In the A4 parameter scope,
-   select only a small envelope change such as Env2 Attack. Generate a small
-   native-fields candidate and select it in the active cue.
+   select only a small supported change already audible in that source kit,
+   such as Env2 Attack when that envelope is actively used. Generate a small
+   native-fields candidate and select it in the active cue. If only front-panel
+   value readback is demonstrable, record the listening result as inconclusive;
+   do not change extra modulation/routing controls within this same trial.
 3. Manually reload the immutable saved A4 source slot. Receive its current KIT
    through the input-only capture control. Confirm it matches the saved source;
    a saved-state dump alone cannot prove unsaved RAM was restored.

@@ -4,6 +4,12 @@ Status: bounded local software verification complete; integration review and
 hardware acceptance remain pending. This is not a replacement installer or a
 hardware acceptance receipt, and general A4 live transport remains unfinished.
 
+This report records the mapping-only `20e82194` checkpoint. The subsequent
+[A4 studio increment](A4_STUDIO_AUDITION_REPORT.md) implements a separate,
+unqualified RAM-only trial for the 25 scalar bindings. Its current test,
+integration and physical status is recorded there; it does not promote this
+offline preparation report into output authority.
+
 ## Changes
 
 - Rytm Sample Bit Reduction: the existing native primary byte at sound offset
@@ -23,20 +29,21 @@ MIDI Guide and the supplied CSVs are one documentary source, not independent
 hardware witnesses. Existing native/recipe evidence supplies separate numeric
 contracts; neither source proves current configured channels or live acceptance.
 
-## Remaining Engineering
+## Subsequent Integration
 
-This patch does not finish general A4 live audition. The exact scalar evidence
-still needs reviewed integration into an armed RAM-only plan with configured
-channels, current-source/reload checks, pacing and partial-failure handling.
-The preparation report itself must remain non-authorizing. Resolve the six
+The mapping-only patch did not finish general A4 live audition. The subsequent
+studio increment adds configured channels, current-source/reload checks,
+cooperative pacing and partial-failure handling through ArmedApply. The
+preparation report itself remains non-authorizing. Resolve the six
 display conflicts, enums and paired precision independently before widening
 that plan. Physical acceptance must then exercise the actual integrated build.
 Persistent writes and automatic restore are separate unsupported features.
 
-The changes are bundled on local `codex/live-control-closure`, not pushed to
-PR254, merged, packaged or installed. The existing d563 delivery remains the
-verified rehearsal build. Integrate the local source delta through the existing
-review workflow; do not create a PR stacked on the open integration PR.
+At this mapping-only checkpoint the changes were local on
+`codex/live-control-closure`, not pushed, packaged or installed. The current
+integration state belongs to the studio report above. The existing d563
+delivery remains the verified rehearsal build; use the existing PR254 review
+workflow, never a stacked PR.
 
 ## Integration Handoff
 
@@ -48,10 +55,10 @@ the current integration branch after checking its latest state, then rerun the
 composed gates and existing protected PR review. Do not replace the d563
 installer or declare a new release from source-only verification.
 
-The next engineering task is the bounded A4 armed RAM-only transport integration
-described above, not enabling SEND from this preview DTO. Its exact-plan tests
-must include configured routing, stale source/reload refusal, whole-plan
-rejection, pacing and partial failure before physical acceptance can qualify it.
+That bounded transport task is now implemented by the distinct studio plan,
+not by enabling SEND from this preview DTO. Its exact-plan, routing, stale
+source/reload, whole-plan rejection, pacing and partial-failure tests are
+recorded separately. Physical acceptance still must qualify the actual build.
 
 ## Studio Evidence Still Needed
 
@@ -70,8 +77,8 @@ verified d563 delivery. No procedure below is automatic authorization to SEND.
 
 A4 preparation remains offline-only. The existing generic PWM probe or an
 Overbridge knob movement is not proof that this new source-bound path delivered
-the intended value. General A4/BOTH audition still needs configured routing,
-reviewed armed transport, pacing/partial-failure recovery and physical evidence.
+the intended value. The new studio path supplies bounded routing and guarded
+transport, not general A4/BOTH performance qualification or physical evidence.
 Persistent KIT writes and automatic restore remain prohibited.
 
 ## Verification

@@ -490,16 +490,16 @@ See [the closeout plan](docs/superpowers/plans/2026-09-08-release-closeout.md),
 <a id="testing"></a>
 ## Testing
 
-Current local source verification (see the [October 15 closure report](docs/LIVE_CONTROL_CLOSURE_REPORT.md)); this is not an installed-build or hardware certification:
+Current local source verification (see the [October 15 A4 studio report](docs/A4_STUDIO_AUDITION_REPORT.md)); this is not an installed-build or hardware certification:
 
 | Suite | Count |
 |---|---|
-| Full Python suite (`pytest`, two workers) | 12,762 passed; 6 skipped; 6 warnings |
-| Architecture invariants (`tests/architecture/`) | 915 test items, included in the full suite |
+| Full Python suite (`pytest`, two workers) | 13,478 passed; 6 skipped; 6 warnings |
+| Architecture invariants (`tests/architecture/`) | 921 test items, included in the full suite |
 | V1.34 parity | 505 golden JSON files → 685 byte-identical test items |
-| Frontend (`desktop/web`, vitest) | 1,328 passed across 81 files; 100% coverage |
-| Python coverage | 14 touched modules: 100% lines/branches; project pure branch: 99.44% |
-| Browser journey | Edge desktop/mobile geometry and screenshots; mocked WebSocket, no hardware |
+| Frontend (`desktop/web`, vitest) | 1,412 passed across 82 files; 100% coverage |
+| Python coverage | All 99 PR-touched modules: 100% lines/branches; project pure branch: 99.44% |
+| Browser journeys | Two Edge desktop/mobile journeys with geometry checks and screenshots; mocked WebSocket, no hardware |
 
 The suite uses `pytest-xdist` (`-n auto`). Don't pass `-o addopts=''` for normal runs — it disables xdist and triples the runtime.
 

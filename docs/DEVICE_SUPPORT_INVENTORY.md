@@ -5,6 +5,11 @@ the current canonical catalogs, typed
 kit codecs, recipe validators, calibration records and Cockpit policy. It is
 not a replacement wire map and never grants hardware readiness.
 
+The inventory's live-policy/readiness dimensions are not an experimental trial
+grant. The separate [A4 studio increment](A4_STUDIO_AUDITION_REPORT.md) adds an
+explicitly unqualified scalar RAM-only path; general A4/BOTH stage holds and
+field-specific protections remain unchanged.
+
 ## Reproduce
 
 ```powershell
@@ -53,6 +58,7 @@ typed-recipe compatibility. Missing source layouts are explicit gaps.
 | Rytm targeted mutation | Depth, seed, targets/locks, source-linked candidates and exact prepared CC7 plan | In-scope paired controls refuse the entire plan; source must be manually restored and freshly captured before each Show Forge audition |
 | A4 native recipes | Typed enums, coupled pitch, exact Q8.8 frequencies and Q8.7 depth components in offline kit files | General Cockpit mutation/audition is narrower; native encoding evidence is not live-send evidence |
 | Show Kit Forge A4 | Source-linked, parameter-scoped native offline candidates; exact domain-index sampling, canonical render/readback and unknown-byte isolation | General A4/BOTH SEND remains blocked; source-unknown selectors, independent FIN, OXI AMP and default-only fields are immutable |
+| A4 unqualified studio trial | Distinct canonical plan for 25 exact scalar CC7 bindings, configured channels/output, fresh source capture, manual reload and per-action confirmation; cooperative ArmedApply delivery | Operator-present RAM-only experiment, not physical qualification or general stage readiness; an exact-source package and supervised device acceptance are still required |
 | Favorites/packages | Local candidate selection, favorite records, exact retained files and validated show-pack persistence | Not a hardware save or restore; manual instrument save and fresh return captures are required |
 | Recovery | Applied-delta receipts and local history are available; local UNDO does not restore hardware | Stop, manually reload the backed-up saved KIT and freshly capture it before another candidate; automated hardware restoration is not implemented |
 | Pi | PR #252 touchscreen and packaging groundwork | Non-simulation appliance APPLY refuses; ARM64, boot, kiosk and physical acceptance remain unproven |

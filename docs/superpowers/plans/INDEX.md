@@ -15,8 +15,8 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 
 | Date | Plan | Status | PR |
 |---|---|---|---|
-| 2026-10-15 | [A4 armed studio audition](2026-10-15-a4-armed-studio-audition.md) | in-flight; bounded unqualified RAM-only path implemented, composed verification and review underway | Existing #254 |
-| 2026-10-15 | [Live control closure](2026-10-15-live-control-closure.md) | in-flight; bounded local software verified, integration review and A4 transport/hardware work pending | Local source branch |
+| 2026-10-15 | [A4 armed studio audition](2026-10-15-a4-armed-studio-audition.md) | in-flight; bounded studio software verified, protected integration review and physical acceptance separate | Existing #254 |
+| 2026-10-15 | [Live control closure](2026-10-15-live-control-closure.md) | in-flight; mapping checkpoint verified, subsequent bounded A4 transport implemented; protected review/hardware pending | Existing #254 |
 | 2026-10-14 | [MIDI CSV reconciliation ledger](2026-10-14-midi-csv-ledger.md) | in-flight; descriptive reference ledger, integration verification and protected review pending | [#254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254) |
 | 2026-10-14 | [reference-sound-reliability](2026-10-14-reference-sound-reliability.md) | in-flight; signed-domain, pitch/quality diagnostics and packaged verification | [#254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254) |
 | 2026-10-12 | [native-representation-integration](2026-10-12-native-representation-integration.md) | in-flight; verified53 fallback preserved, security disposition recorded, protected approval and supervised experiment pending | [#254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254) |
