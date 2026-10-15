@@ -52,11 +52,12 @@ through the :class:`ExactPortOpener` Protocol
 
 from __future__ import annotations
 
+import asyncio
 import hmac
 import time
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Awaitable, Callable, Generator, Iterable, Mapping
 from dataclasses import dataclass
-from typing import ClassVar, Final, Literal, Protocol, runtime_checkable
+from typing import ClassVar, Final, Literal, Protocol, cast, runtime_checkable
 
 from ..devices import Device
 from ..observability.errors import MidiError
@@ -461,6 +462,82 @@ class ArmedApplySession:
           backup of ours. Permitted, and the only armed writes that are.
         """
 
+        steps = self._apply_steps(
+            device,
+            plan,
+            action_id=action_id,
+            mutates_kit=mutates_kit,
+            renderer=renderer,
+            inter_message_delay_seconds=inter_message_delay_seconds,
+        )
+        try:
+            while True:
+                try:
+                    delay = next(steps)
+                except StopIteration as complete:
+                    return cast(ArmedApplyResult, complete.value)
+                try:
+                    if delay > 0.0:
+                        self._sleep(delay)
+                except BaseException as exc:
+                    steps.throw(exc)
+        finally:
+            steps.close()
+
+    async def apply_async(
+        self,
+        device: Device,
+        plan: object,
+        *,
+        action_id: str,
+        mutates_kit: bool = True,
+        renderer: PlanRenderer | None = None,
+        inter_message_delay_seconds: float = 0.0,
+        async_sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    ) -> ArmedApplyResult:
+        """Apply through the same gates and send loop without blocking pacing.
+
+        The arguments and outcomes match :meth:`apply`. Only the driver
+        differs: it awaits ``async_sleep`` between messages, including at
+        zero delay so DISARM/cancellation can run. Authority and the exact
+        opened port are rechecked immediately before every send. Sleeper
+        errors are thrown back into the shared loop's protected send block
+        so partial counts and cancellation teardown stay identical.
+        """
+
+        steps = self._apply_steps(
+            device,
+            plan,
+            action_id=action_id,
+            mutates_kit=mutates_kit,
+            renderer=renderer,
+            inter_message_delay_seconds=inter_message_delay_seconds,
+        )
+        try:
+            while True:
+                try:
+                    delay = next(steps)
+                except StopIteration as complete:
+                    return cast(ArmedApplyResult, complete.value)
+                try:
+                    await async_sleep(delay)
+                except BaseException as exc:
+                    steps.throw(exc)
+        finally:
+            steps.close()
+
+    def _apply_steps(
+        self,
+        device: Device,
+        plan: object,
+        *,
+        action_id: str,
+        mutates_kit: bool,
+        renderer: PlanRenderer | None,
+        inter_message_delay_seconds: float,
+    ) -> Generator[float, None, ArmedApplyResult]:
+        """Own every gate, render, send and delivery outcome for both drivers."""
+
         # Finite bounds also reject NaN/infinity without converting huge ints.
         if (
             type(inter_message_delay_seconds) not in (int, float)
@@ -501,7 +578,7 @@ class ArmedApplySession:
         emit = device.to_cc_messages if renderer is None else renderer
         try:
             triples = tuple(emit(plan))
-        except BaseException:
+        except BaseException as exc:
             # Rendering runs while the port is ALREADY OPEN, so a renderer
             # that raises (malformed plan, device-strategy bug, Ctrl+C
             # between confirm and the first byte) must not leave the
@@ -510,13 +587,24 @@ class ArmedApplySession:
             # reached the wire yet, so this is a clean zero-byte refusal:
             # disarm (closing the port) and re-raise unchanged.
             self.disarm()
+            if not isinstance(exc, Exception):
+                exc.__dict__["armed_apply_outcome"] = ArmedApplyResult(
+                    device_id=device.device_id,
+                    ok=False,
+                    sent_count=0,
+                    reason="armed_apply_send_interrupted_auto_disarmed",
+                    expected_count=0,
+                    status="interrupted",
+                )
             raise
         expected = len(triples)
         sent = 0
         for triple in triples:
             try:
-                if sent > 0 and inter_message_delay_seconds > 0.0:
-                    self._sleep(inter_message_delay_seconds)
+                if sent > 0:
+                    yield inter_message_delay_seconds
+                if not self._armed or self._port is not port:
+                    break
                 port.send(triple)
                 sent += 1
             except _PORT_ERRORS as exc:
@@ -560,6 +648,25 @@ class ArmedApplySession:
                     status="interrupted",
                 )
                 raise
+        if sent < expected:
+            self.disarm()
+            raise ArmedApplyError(
+                "armed_apply_disarmed_during_send",
+                context={
+                    "device_id": device.device_id,
+                    "action_id": action_id,
+                    "sent_count": sent,
+                    "expected_count": expected,
+                },
+                partial_outcome=ArmedApplyResult(
+                    device_id=device.device_id,
+                    ok=False,
+                    sent_count=sent,
+                    reason="armed_apply_disarmed_during_send",
+                    expected_count=expected,
+                    status="interrupted",
+                ),
+            )
         return ArmedApplyResult(
             device_id=device.device_id,
             ok=True,
