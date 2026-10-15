@@ -52,19 +52,24 @@ through the :class:`ExactPortOpener` Protocol
 
 from __future__ import annotations
 
+import asyncio
 import hmac
-from collections.abc import Callable, Iterable, Mapping
+import time
+from collections.abc import Awaitable, Callable, Generator, Iterable, Mapping
 from dataclasses import dataclass
-from typing import ClassVar, Final, Literal, Protocol, runtime_checkable
+from typing import ClassVar, Final, Literal, Protocol, cast, runtime_checkable
 
 from ..devices import Device
 from ..observability.errors import MidiError
 
 __all__ = [
     "ArmedApplyError",
+    "ArmedApplyProgress",
     "ArmedApplyResult",
     "ArmedApplySession",
     "ArmedApplyStatus",
+    "ARMED_APPLY_CONTROL_FLOW_TYPES",
+    "ARMED_APPLY_FAILURE_TYPES",
     "ExactPortOpener",
     "KitMutationUnsupportedError",
     "OutputPortLike",
@@ -217,6 +222,21 @@ is what prevents that from happening, but the seam must still fail **closed**
 future port is handed something it cannot render.
 """
 
+ARMED_APPLY_CONTROL_FLOW_TYPES: Final[tuple[type[BaseException], ...]] = (
+    KeyboardInterrupt,
+    SystemExit,
+    asyncio.CancelledError,
+    GeneratorExit,
+)
+ARMED_APPLY_FAILURE_TYPES: Final[tuple[type[BaseException], ...]] = (
+    *_PORT_ERRORS,
+    *ARMED_APPLY_CONTROL_FLOW_TYPES,
+    LookupError,
+    ArithmeticError,
+    AssertionError,
+    MidiError,
+)
+
 
 def plan_readiness(plan: object) -> tuple[bool, str]:
     """Return ``(ready, readiness_reason)`` via the ReadyPlan duck.
@@ -279,6 +299,16 @@ class ArmedApplyResult:
     status: ArmedApplyStatus = "complete"
 
 
+@dataclass(frozen=True)
+class ArmedApplyProgress:
+    """Accepted-packet evidence, retained even when cleanup masks an exception."""
+
+    action_id: str
+    device_id: str
+    sent_count: int
+    expected_count: int
+
+
 class ArmedApplySession:
     """The one armed transmit state machine (frozen contract, test-pinned).
 
@@ -305,6 +335,7 @@ class ArmedApplySession:
         opener: ExactPortOpener,
         port_name: object,
         arm_token: object,
+        sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         """Capture the collaborators; refuse unusable configuration eagerly.
 
@@ -328,9 +359,11 @@ class ArmedApplySession:
         self._opener = opener
         self._port_name = port_name
         self._arm_token = arm_token
+        self._sleep = sleep
         self._port: OutputPortLike | None = None
         self._armed = False
         self._confirmed_action_ids: set[str] = set()
+        self._delivery_progress: ArmedApplyProgress | None = None
 
     @property
     def is_armed(self) -> bool:
@@ -343,6 +376,12 @@ class ArmedApplySession:
         """The exact output-port name this session targets."""
 
         return self._port_name
+
+    @property
+    def delivery_progress(self) -> ArmedApplyProgress | None:
+        """The last attempt's immutable progress, never output authority."""
+
+        return self._delivery_progress
 
     def arm(self, token: object) -> None:
         """Arm the session: validate the token, then open the exact port.
@@ -364,6 +403,7 @@ class ArmedApplySession:
             raise ArmedApplyError("armed_apply_token_required")
         if not hmac.compare_digest(token, self._arm_token):
             raise ArmedApplyError("armed_apply_token_mismatch")
+        self._delivery_progress = None
         try:
             port = self._opener.open_exact(self._port_name)
         except ArmedApplyError:
@@ -403,6 +443,7 @@ class ArmedApplySession:
         action_id: str,
         mutates_kit: bool = True,
         renderer: PlanRenderer | None = None,
+        inter_message_delay_seconds: float = 0.0,
     ) -> ArmedApplyResult:
         """Transmit ``plan`` through ``device``'s renderer — fully gated.
 
@@ -417,8 +458,15 @@ class ArmedApplySession:
         SEND contract forbids. Every gate below applies identically
         either way; only the projection differs.
 
+        ``inter_message_delay_seconds`` accepts only finite built-in integers
+        or floats in ``[0, 1]`` (not booleans). Invalid pacing disarms before
+        any rendering or send. The default zero never calls the injected
+        sleeper; positive pacing sleeps only between messages. Sleeper
+        failures use the same partial/interrupted outcomes as send failures.
+
         Gate order (each refusal is deliberate and test-pinned):
 
+        0. bounded pacing validation (raises and disarms when invalid),
         1. armed state (raises when disarmed),
         2. single-use per-action confirmation (raises when unconfirmed;
            the confirmation is consumed even if a later gate refuses),
@@ -450,6 +498,93 @@ class ArmedApplySession:
           backup of ours. Permitted, and the only armed writes that are.
         """
 
+        steps = self._apply_steps(
+            device,
+            plan,
+            action_id=action_id,
+            mutates_kit=mutates_kit,
+            renderer=renderer,
+            inter_message_delay_seconds=inter_message_delay_seconds,
+        )
+        try:
+            while True:
+                try:
+                    delay = next(steps)
+                except StopIteration as complete:
+                    return cast(ArmedApplyResult, complete.value)
+                try:
+                    if delay > 0.0:
+                        self._sleep(delay)
+                except ARMED_APPLY_FAILURE_TYPES as exc:
+                    steps.throw(exc)
+        finally:
+            steps.close()
+
+    async def apply_async(
+        self,
+        device: Device,
+        plan: object,
+        *,
+        action_id: str,
+        mutates_kit: bool = True,
+        renderer: PlanRenderer | None = None,
+        inter_message_delay_seconds: float = 0.0,
+        async_sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    ) -> ArmedApplyResult:
+        """Apply through the same gates and send loop without blocking pacing.
+
+        The arguments and outcomes match :meth:`apply`. Only the driver
+        differs: it awaits ``async_sleep`` between messages, including at
+        zero delay so DISARM/cancellation can run. Authority and the exact
+        opened port are rechecked immediately before every send. Sleeper
+        errors are thrown back into the shared loop's protected send block
+        so partial counts and cancellation teardown stay identical.
+        """
+
+        steps = self._apply_steps(
+            device,
+            plan,
+            action_id=action_id,
+            mutates_kit=mutates_kit,
+            renderer=renderer,
+            inter_message_delay_seconds=inter_message_delay_seconds,
+        )
+        try:
+            while True:
+                try:
+                    delay = next(steps)
+                except StopIteration as complete:
+                    return cast(ArmedApplyResult, complete.value)
+                try:
+                    await async_sleep(delay)
+                except ARMED_APPLY_FAILURE_TYPES as exc:
+                    steps.throw(exc)
+        finally:
+            steps.close()
+
+    def _apply_steps(
+        self,
+        device: Device,
+        plan: object,
+        *,
+        action_id: str,
+        mutates_kit: bool,
+        renderer: PlanRenderer | None,
+        inter_message_delay_seconds: float,
+    ) -> Generator[float, None, ArmedApplyResult]:
+        """Own every gate, render, send and delivery outcome for both drivers."""
+
+        self._delivery_progress = None
+        # Finite bounds also reject NaN/infinity without converting huge ints.
+        if (
+            type(inter_message_delay_seconds) not in (int, float)
+            or not 0.0 <= inter_message_delay_seconds <= 1.0
+        ):
+            self.disarm()
+            raise ArmedApplyError(
+                "armed_apply_inter_message_delay_invalid: "
+                "expected a finite int or float in [0, 1] seconds"
+            )
         if not self._armed or self._port is None:
             raise ArmedApplyError("armed_apply_not_armed")
         if action_id not in self._confirmed_action_ids:
@@ -478,9 +613,11 @@ class ArmedApplySession:
 
         port = self._port
         emit = device.to_cc_messages if renderer is None else renderer
+        rendered = False
         try:
             triples = tuple(emit(plan))
-        except BaseException:
+            rendered = True
+        except ARMED_APPLY_FAILURE_TYPES as exc:
             # Rendering runs while the port is ALREADY OPEN, so a renderer
             # that raises (malformed plan, device-strategy bug, Ctrl+C
             # between confirm and the first byte) must not leave the
@@ -489,12 +626,35 @@ class ArmedApplySession:
             # reached the wire yet, so this is a clean zero-byte refusal:
             # disarm (closing the port) and re-raise unchanged.
             self.disarm()
+            if not isinstance(exc, Exception):
+                exc.__dict__["armed_apply_outcome"] = ArmedApplyResult(
+                    device_id=device.device_id,
+                    ok=False,
+                    sent_count=0,
+                    reason="armed_apply_send_interrupted_auto_disarmed",
+                    expected_count=0,
+                    status="interrupted",
+                )
             raise
+        finally:
+            if not rendered:
+                self.disarm()
         expected = len(triples)
         sent = 0
+        self._delivery_progress = ArmedApplyProgress(action_id, device.device_id, sent, expected)
         for triple in triples:
+            accepted = False
             try:
+                if sent > 0:
+                    yield inter_message_delay_seconds
+                if not self._armed or self._port is not port:
+                    break
                 port.send(triple)
+                sent += 1
+                self._delivery_progress = ArmedApplyProgress(
+                    action_id, device.device_id, sent, expected
+                )
+                accepted = True
             except _PORT_ERRORS as exc:
                 # Auto-disarm on provider error (which closes the port).
                 # Never auto-re-arm: the operator must run the explicit
@@ -518,7 +678,7 @@ class ArmedApplySession:
                         status="partial",
                     ),
                 ) from exc
-            except BaseException as exc:
+            except ARMED_APPLY_FAILURE_TYPES as exc:
                 # KeyboardInterrupt / SystemExit / CancelledError land here.
                 # Without this arm the session stayed ARMED with the port
                 # OPEN — Ctrl+C during a burst left the operator holding an
@@ -536,7 +696,28 @@ class ArmedApplySession:
                     status="interrupted",
                 )
                 raise
-            sent += 1
+            finally:
+                if not accepted:
+                    self.disarm()
+        if sent < expected:
+            self.disarm()
+            raise ArmedApplyError(
+                "armed_apply_disarmed_during_send",
+                context={
+                    "device_id": device.device_id,
+                    "action_id": action_id,
+                    "sent_count": sent,
+                    "expected_count": expected,
+                },
+                partial_outcome=ArmedApplyResult(
+                    device_id=device.device_id,
+                    ok=False,
+                    sent_count=sent,
+                    reason="armed_apply_disarmed_during_send",
+                    expected_count=expected,
+                    status="interrupted",
+                ),
+            )
         return ArmedApplyResult(
             device_id=device.device_id,
             ok=True,

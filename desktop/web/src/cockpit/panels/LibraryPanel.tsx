@@ -14,6 +14,7 @@ import { useCockpitClient } from '../context';
 
 import { libraryPanelSpec, splitTags } from './libraryPanelSpec';
 import { PanelRenderer } from './PanelRenderer';
+import { RehearsalFavoriteControls } from './RehearsalFavoriteControls';
 
 export function LibraryPanel(): JSX.Element {
   const client = useCockpitClient();
@@ -132,6 +133,7 @@ export function LibraryPanel(): JSX.Element {
         {note !== null && <span className="cockpit-panel-note">{note}</span>}
       </div>
       <PanelRenderer spec={libraryPanelSpec(records)} />
+      <RehearsalFavoriteControls records={records} />
     </div>
   );
 }

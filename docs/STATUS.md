@@ -1,8 +1,382 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-09-21. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-10-15. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
+
+The October 15 A4 follow-on implements a distinct, explicitly unqualified
+studio RAM-only path for 25 exact CC7 scalar bindings. It reuses ArmedApply,
+configured track channels, canonical candidate/source replay and a fresh saved
+source capture plus manual reload. Cooperative delivery keeps DISARM reachable,
+consumes each plan before output, records partial/interrupted counts and revokes
+current hardware-readiness labels. OS-labelled A4 route filtering rejects known
+Rytm/generic routes but is not physical device authentication. General A4/BOTH
+performance output, paired/disputed fields, persistent writes and automatic
+restore remain blocked. Source verification passes at `b995d001`: 13,500 Python
+tests, 6 skips, 6 warnings in 1120.43 seconds; 921 architecture items and all 685
+frozen parity items pass. All 99 PR-touched production modules have 100% line/
+branch coverage, with project pure branch 99.44% at the unchanged 99% floor.
+Frontend: 1,412 tests across 82 files, all four coverage dimensions 100%; two
+responsive Edge journeys, strict typing, lint and build pass. PR254 remains the
+integration/review vehicle; there is no new installed build or physical receipt. See the
+[studio plan](superpowers/plans/2026-10-15-a4-armed-studio-audition.md) and
+[supervised procedure](hardware-validation/2026-10-15-a4-studio-audition.md).
+The [verification report](A4_STUDIO_AUDITION_REPORT.md) distinguishes repaired
+failed checkpoints from the final green composed run.
+
+Post-push review repaired failure-family receipt loss, dropped revoked-state
+events and cleanup-masked partial counts. Immutable action/device-bound progress
+survives disarm; ordinary delivery faults become outcomes while control-flow
+signals propagate. Focused fix review is clear. Current remote CI and protected
+review remain PR gates; the prior native-updater PR failure is retained in the
+report alongside its successful identical-tree push duplicate.
+
+The preceding mapping-only checkpoint on `codex/live-control-closure` added the narrow Rytm Sample
+Bit Reduction capture/planning path, corrects protected/unprojected inventory
+labels and exposes source-bound A4 CC7 conversion evidence for 25 scalar fields
+in the existing preparation report. Bounded local software verification passes
+at source checkpoint `20e82194`: 12762 Python tests, 6 skips, 6 warnings in
+1100.88 seconds; all 14 touched production modules have 100% line/branch coverage
+and project pure branch coverage is 99.44% at the unchanged 99% floor. Frontend
+1328 tests have 100% coverage; strict typing, lint and the responsive Edge
+browser journey pass. Integration review, packaging and physical acceptance
+remained pending at that checkpoint; the separate studio increment above adds
+bounded transport but not general A4 performance qualification.
+Versioned capture projections also preserve old favorites' replay, recall and
+export while newly authored candidates use the explicit expanded domain.
+No general A4/BOTH SEND hold or protected/paired control was unlocked by that mapping-only checkpoint. This is not a new
+installer, PR approval or hardware receipt; the d563 delivery below is unchanged.
+See the [closure plan](superpowers/plans/2026-10-15-live-control-closure.md) and
+[studio evidence matrix](LIVE_CONTROL_CLOSURE_REPORT.md).
+
+The October14 reference-sound reliability/catalog candidate is packaged and
+verified on PR254, source `d5634cae4ecdde78fe54ae49c99c373a49935753`. Signed Noise
+Fade inference, qualified pitch/octave/quality diagnostics, explicit audition
+segments and exact replay are implemented. The eleven-feature score is unchanged
+and is not percent accuracy. Uncertain references and unsuitable auditions hold
+refinement rather than changing protected tuning or silently normalizing audio.
+Post-push review identified fixed ledger-schema typing and persisted-session
+schema/downgrade repairs. The first3fe9ed53Windows build was cancelled before
+publication; replacement d563source/package acceptance now passes. CodeQLd563
+passes with zero open branch alerts. Human approval/physical acceptance are separate.
+
+All552 supplied MIDI Guide CSV rows are reconciled:403 complete-address matches,
+24 contextual partial matches,125 A4 reference-only rows and one independently
+supported BT Classic Sweep Depth omission. Exact source hashes, attribution and
+CC-BY-SA4 data licensing are retained. Descriptive additions grant no native
+offsets, selector safety, MIDI-domain conversion or SEND authority. See the
+[ledger](catalogs/midi-csv-reconciliation.md) and
+[active plan](superpowers/plans/2026-10-14-reference-sound-reliability.md).
+
+Final repair-source verification passes12343tests/6skips/6known warnings1115.89s
+with two workers;43finaltest-only cases also pass. Fresh full coverage proves89
+touched production files100%line/branch and99.44%project pure branch at unchanged
+99%floor. Strict89-module typing, default Python lint/format and Vulture80 pass.
+Schema2 frontend1326cases/81files passes100%allfourcoverage; actual both-device
+Python/Chromium reference journey passes35.0s without added retries/timeouts.
+Windows38633750348 and the exact package pass Pad2 plan16.167s, native precision
+40.769s and both-device/real-input reference88.240s, with0failed commands. The
+exact offline launcher starts disarmed/no port and passes guard/cleanup tests.
+Delivery `show-kit-forge-studio-d5634cae4ecd` is READY for offline rehearsal and
+the supervised scratch test, NOT SHOW-READY. Exactd563source CI passes33checks/
+1skip/0fail; human/physical gates remain separate. The previous
+12329pass/6fail coverage run stays failed evidence; frozen legacy expectations
+were repaired without changing their fixtures. FrozenV134 and pins are intact.
+
+Original WAVs, retained sessions, user app/data and all previous deliveries are
+preserved. Private real-input QA is a quality/persistence exercise, not a claim
+that historical takes were produced by a newly generated candidate. Real18-field
+A4 generation/every-selected-native readback pass; historical takes hold
+refinement for actual uncertainty/quality. Two failed package attempts were a
+QA-only F1 source-versus-rendered annotation assumption, repaired with separate
+canonical witnesses;38Node tests and a new package namespace pass. All owned
+test processes/listeners stopped; originals/fallback remain unchanged. The AL02
+compiler receipt was refreshed only for descriptive catalog dependency identity;
+its previous receipt is archived and the proof remains blocked with no SysEx.
+
+The verified October13 security/rehearsal fallback remains source
+`53a935d08582f3446259afb7494d6bdb79618263` on PR254:
+`C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-53a935d08582`.
+It is READY for a supervised, backed-up single-Pad2 scratch test, **NOT SHOW-READY**.
+The exact hashes, offline launcher and operator-present procedure are in its
+`studio-procedure/DELIVERY-RECEIPT.md`. Prior deliveries/user settings are preserved.
+
+CodeQL21-25 are independently dispositioned false positives for restricted
+client-ID flows;373focused cases and28pre-I/O command refusals pass, and removing
+the validator catches2 failures. Actual53 aggregate115103503126 and source CI
+38338223170/required-checks succeed. No scanner/protection/severity/pin was
+weakened; trusted-local-root limits remain explicit in the
+[security report](security/2026-10-13-codeql-path-disposition.md). Seven separate
+default-branch dependency alerts are not resolved by this focused disposition.
+
+Fallback acceptance includes exact server-plan inspection, fresh library ACKs,
+exact selected-candidate Preview,11877Windows tests and bounded actual Pad2,
+native and both-device reference journeys. Its receipt retains precise hashes,
+timings and resources. Those results do not certify October14 production changes.
+All source/scope/output/restore restrictions remain unchanged. No MIDI/USB access
+occurred and the user's older4317 app is untouched.
+
+Latest Eddie review remains October3 CHANGES_REQUESTED. Protected approval and
+historical Gate14/16 remain pending; no merge. First physical test: the
+[October14 three-stage handoff](hardware-validation/2026-10-14-reference-sound-session.md),
+10% candidate, exact ready plan, explicit Rytm arm/confirmation, DISARM, manual
+KIT reload, front-panel/listening recovery and fresh exact baseline. Separate
+disposable CY Ride saved-dump mapping follows only after recovery passes; a
+separate declared-note A4 take follows with output disabled. Arrival at9p.m.
+does not authorize hardware actions. General A4/BOTH, CY Ride SRC, paired
+precision, full unsaved synchronization and automatic restoration remain held.
+Fresh d563CodeQL38633717656 succeeds with zero open branch alerts; eight targeted
+post-push dimensions and the QA projection closure haveNoFindings. Use the new
+delivery's receipt, launcher and matching supervised hash block.
+
+The previously delivered reference-sound workflow below remains available.
+Both device paths now produce source-preserving local KIT candidates rather
+than Rytm proposals only. Exact PCM segments, scope/locks, recording comparison,
+bounded refinement and disarmed local favorite/reopen are implemented. The
+unchanged 187 adversarial cases pass after cancellation and stale-publication
+repairs; OS-backed publication locks preserve newer favorites. Frozen audio's
+Windows stdin/spawn deadlock is repaired: an intermediate executable completed
+both paths in 23.922 seconds. The real browser workflow passes in 19.8 seconds,
+including recording/refinement, local export and restart recall. The current
+broad verification passes11,457tests/5skips/6existingwarnings685.46s; all63touched
+production modules100%line/branch, package99.68%, pinnedtyping1.1.411clean.
+Frontend1292tests/81files31.51s passes allfourcoverage100%, TS/ESLint clean.
+The audio-enabled Windows delivery is now available from source `64d5c619`
+at `C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-64d5c6193ce2`.
+Its exact-source bundled worker proof passes24.578s, strict native both-device
+journey passes40.558s (one startup,47commands,zero failures), and unchanged
+offline launcher connects5.402s. The later test-only QA commits do not change
+those production binaries. Fresh CI at `63c5ccf2` passes; protected human review
+and physical recordings/application/recovery remain pending. The new bank
+rehearsal passes5400.0078683s/180cycles with two backend recoveries,180 export
+proofs and confirmed cleanup. Sampled private memory483.64-607.35MiB,
+10processes,minimumfree13.03GiB; queue13/256/zero drops,history2. The173negative
+importACKs are planned missing/occupied-ID refusals, not unexpected errors.
+Maximum legal8s/96kHz/stereo32bit frozen analysis passes27.640s on both paths.
+These tests remain distinct from the strict Reference sound journey and
+actual acoustic acceptance; production and deadlines are unchanged.
+No MIDI/USB operations or protected merges occurred. The older delivery below
+is preserved. See the new delivery's `studio-procedure/DELIVERY-RECEIPT.md` and
+the [active plan](superpowers/plans/2026-10-11-reference-sound-workflow.md).
+
+Offline Windows source `6e098f85ddeb48d9beb97f732f22e2f2152d86eb` is delivered
+at `C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-6e098f85ddeb`.
+The fresh packaged90minute run PASSED5400.0028376seconds/180cycles with two
+owned-backend recoveries and cleanup.180canonical export proofs, four cues /
+188candidates, exact disarmed recall and two full normal-launcher restarts pass.
+An isolated149->150deadline probe passed2.844s, with the unchanged5s limit.
+Private memory425.23-586.18MiB;10processes;handles3938-4032;minimum free14.59GiB;
+queue13/256,zero drops,history2for source reuse. One diagnostic-startup retry
+preceded the timed clock; earlier40/70minute failures are not combined.
+SourceCI33success/1intentionalskip; protected human review remains requested.
+READY for the tested offline scope, NOT READY for shows or hardware output.
+No MIDI/USB enumeration/open/arming/write occurred. Old deliveries/settings stay
+preserved. See the delivery's studio-procedure/DELIVERY-RECEIPT.md for hashes,
+accounting, limitations and the first backed-up Pad2 physical/recovery test.
+
+Historical source-verification and earlier runtime checkpoints follow; their
+pending/failed statements are not the current remaining-work decision above.
+
+Source `6e098f85` passes10860tests/5skips/6existingwarnings480.04s and
+all51touched modules100%line/branch. The exact84package100minute attempt failed
+after140cycles/~70minutes: generation completed after the five-second UI
+deadline, with its candidate retained atomically and safe cleanup. No bankloss
+or physical access is observed. Generation now shares one fresh complete proof
+and canonical source context and avoids repeated guarded artifact lookup;
+all protections and deadlines remain. New exact Windows37688652919 builds6e;
+affected-case proof and fresh90minute acceptance subsequently passed as above.
+The earlier40/70minute failures remain failed and are never combined.
+
+The resumed October7 reliability source `e96b4bc6` is verified, not yet a new
+delivery. Full10834tests pass with5skips/6existingwarnings471.68s; all51touched
+modules have100%line/branch coverage. Strict pinned typing and whole lint pass.
+It fixes the delivered missing-package generic error, rejects
+generation requests that drop current locks or expand targets, verifies direct
+favorite/selection transitions before publication, and permits unnamed exact
+KIT sources with local cue-label fallbacks. New adversarial source/profile/
+migration/rollback cases and read-only health queue statistics are integrated.
+The reproducible packaged-app driver passed a100-second trial, explicitly not
+endurance; the required90-120minute new-build rehearsal remains pending.
+The later1784package passed180seconds/sixcycles but its100minute attempt failed
+after81cycles/~40minutes, with safe cleanup. Its harness now awaits required
+favorite replacement confirmation. Measured near-deadline repeated recall proof
+is replaced with one fresh whole-bank verification per action; later requests
+still revalidate. Cache-only legacy recall preserves and validates available
+exact bytes before atomic retention. Final source acceptance passes; replacement
+package and uninterrupted100minute endurance were pending at that earlier
+checkpoint. That attempt later failed; the current fresh90minute requirement
+is stated above.
+The prior network interruption ended execution without timed acceptance. Fresh
+resume15:37:39UTC, ceiling23:37:39UTC October7. Older db2daf6c Windows build
+37545232133 succeeded but was not delivered. PR CI37544839205 failed the
+native hydrate_reload mount guard while31other native cases passed; push CI
+37544832928 passed. Retained artifacts do not establish the original cause.
+The fixture now orders App evaluation before driver startup and distinguishes
+initial/reloaded mount refusals, without retries or changed deadlines. Pending
+QA repairs use creation-ordered process ownership and categorical errors.
+Both later native jobs pass32scenarios;1784Windows/Linux source suites pass,
+while the separate Mac native-audio crash and required-checks remain failed.
+The new opt-in bounded cache diagnostic observes without algorithm/pin changes
+or clearing failure status. Its generated public reports are sanitized;
+re-export requires trusted, unchanged diagnostic output.
+MIDI stays off; old deliveries and
+the dirty primary checkout are preserved. Human and physical gates stay open.
+
+October 6 offline preparation is delivered from production
+`6eb5d4c1e3ed103b9870d935c3be2656857de708` in the same PR #254. Original framed
+files, exact native scopes, small/large previews, named local favorites, ordered
+bank copying and disarmed recall/restart passed the actual Windows executable.
+Library3/ShowBank3 retain exact originals, profiles/algorithms and generated A4
+frames for canonical replay. A4 has106policy rows/72potentially mutable keys,
+subject to source-known values; unknown/default-only, independent FIN and OXI
+AMP remain protected. No live output or physical readiness is promoted.
+
+Source verification:10593pass5skip6existingwarnings250.49s plus246affected cases
+after shared-fixture/format cleanup,23fresh metrics and202fresh pinned-annotation
+Library cases. All49touched production modules have100%lines/branches; combined
+99.6666068652%,purebranch99.3951612903%. Frontend1172tests100%allfourmeasures;
+browser35pass2explicit-skips1.1m plusfinalrecall8.2s. Exact pinned Pyright1.1.411,
+whole lint/deadcode/version and ordinary867architecture/697not-fast gates pass.
+Hosted6ebCI has31successes/three skips. Windows37523755117 succeeded; both binary
+hashes match the manifest. Actual package proved source import, scope/locks,
+zero-depth identity, exact favorite/bank copy, full restart and sidecar loss with
+fresh credentials. Bounded failure/cancel checks passed without partial state.
+All owned QA processes/listeners stopped; credentials moved outside delivery.
+Earlier8b/fa43 copies are hash-verified unchanged. Eight scoped reviews found no
+new blocking production issue. Receiptaf5a2b40 publication completed with31
+successful checks/three skips; this is the baseline for the later reliability pass.
+READY for offline preparation only, NOT READY for shows. Protected review and
+the first scoped Pad2 physical audition/manual reload/fresh dump remain pending.
+
+October 5 parameter-scope continuation is delivered for offline rehearsal on the same
+PR #254, not another PR. Server-validated page/item/control selection precedes
+generation, with exact excluded-value preservation, zero depth, lock/protection
+precedence and independent SEND revalidation. The Pad 2 rehearsal preset selects
+only four previously observed common controls. Local favorites extend the atomic
+library with schema 2 and restore exact source/recipe/candidate state disarmed.
+The production-handler browser journey passed scope, favorite recall, backend
+restart and the 600px layout check, without MIDI actions. Source-frozen Python
+acceptance: 10,209 passed, five skipped, six warnings in 305.67 seconds; all 35
+touched production modules have 100% lines/branches, project pure-branch
+coverage 99.3804607%. Frontend acceptance: 1,135 tests, 100% across four metrics.
+Browser composition: 34 passed, two explicit skips in 59.2 seconds, one worker,
+zero retries. Strict typing, lint, dead-code and version checks pass. Eight final
+source review dimensions are clear; two minor receipt ambiguities were corrected.
+Production `8b6b2ce0a3308d231fdde4e2e5d11ca0c95136aa` has 31 successful hosted
+checks and three explicit skips; Windows run 37397240969 succeeded. The new
+portable copy passed actual-executable scope/favorite recall, full restart and
+owned-sidecar/fresh-token recovery with MIDI off. Both hashes match its manifest;
+QA processes are stopped and credentials excluded from delivery. See the current
+source-bound run-report receipt.
+The previous `fa43f863` copy below is preserved and does
+not contain these new controls. Physical and show readiness remain pending.
+
+The [captured Rytm mapping correction](superpowers/plans/2026-10-01-rytm-captured-machine-mapping.md)
+is integrated into the existing direct-base Studio PR #254 on
+`codex/studio-evidence-handoff`, assembled in the local
+`codex/studio-rytm-mapping` checkout. Its October 3 review at `0138d00b` requests
+eligibility corrections, not more exhaustive studio calibration. All 224 SRC catalog
+rows have descriptive bindings, closing 68 unnamed rows across 11 families.
+Existing compact aliases retain precedence; exact machine/NRPN-slot fallback
+keys reuse the canonical MIDI catalog. One conservative policy protects Level,
+new pitch/selectors and disputed semantic rows across capture, mutation,
+planning and inventory. Exact raw identity and physical pad compatibility are
+required; masked high-bit IDs and unverified tom facts gain no SRC authority.
+The October 5 repair blocks all eight CY Ride SRC controls, including compact
+aliases and constructed mixed proposals, until saved-slot associations are
+proved. Of 29 newly eligible fallback controls, 25 remain documented-only
+guarded-CC7 eligible across ten families; eligibility is not physical
+validation. Retained init/RIO frames now project 64/61 SRC values plus 264
+common values, 328/325 total, without changing frame bytes. Synthetic families
+remain software contracts, not physical evidence. The reproducible row-level
+audit is in [Mapping boundaries](RYTM_MAPPING_STATUS.md). Studio SRC display is
+implemented. The clean October 5 final composition passed 10,048 tests, five skips
+and six warnings in 324.94 seconds. All 22 touched production modules have
+100% line/branch coverage; combined coverage is 99.66%, pure branch 99.37%.
+Frontend verification passed 1,075 tests with 100% coverage; the single-worker
+browser suite passed 33 scenarios with two explicit skips in 56.9 seconds. Strict typing,
+Ruff, Black, isort, Vulture and version checks pass. The identified Windows
+1.34.0 Studio copy at `fa43f86399394bd44ae97e2d48510f8b85a9fe7a` built in
+hosted run [37341458245](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/37341458245).
+Its actual-binary MIDI-off smoke passed startup, targeting/locks, small/large
+previews, explicit whole-plan refusals, unavailable capture/export refusal,
+local bank metadata persistence, backend recovery/fresh credentials and full
+restart disarmed. The 10% smoke candidate was blocked by paired LFO precision;
+no hardware audition or candidate/favorite recapture is claimed by this smoke.
+All eight review dimensions and final production-source delta checks are clear.
+Physical rehearsal and protected approval remain pending; READY for offline
+practice only, NOT READY for shows. See the source-bound
+[delivery receipt](superpowers/plans/2026-10-01-rytm-captured-machine-mapping_RUN_REPORT.md#identified-windows-candidate).
+
+The historical Python composition at `4bc21952` passed 9,927 tests, with five skips
+and six existing warnings in 280.92s. All 21 touched production modules have
+100% line/branch coverage; combined coverage is99.66%, pure branch99.37%.
+Strict typing and whole-tree lint/dead-code/version checks pass. The
+unknown-machine API refusal now has a regression. The earlier`2a3789` hosted
+PR/push runs both passed 191 Rust tests,32 native WebView scenarios and two
+Windows installer handoffs each. Those historical results certify2a3789 only;
+normal final publication, post-push review and new mapping CI remain pending.
+Cargo is unavailable locally; locked package identities/checksums are unchanged.
+
+The prior studio server receipt was `2a19b094`, with the hash-verified
+`8cfa6f7b` frontend and outputs disarmed; no listener remains on the usual
+Studio ports at the October 5 software preflight. Its earlier input-only KIT 01
+capture projected324 values and verified XT Classic on pads6–8. The separate A4 helper source
+`76634665` passed 10,691 tests; two individually authorized CC74/channel 1 PWM
+Depth actions were observed at1, followed by manual KIT 01 reload to0 without
+saving. The original zero-send attempt remains failed evidence. No general
+A4/BOTH or automatic recovery authority is granted.
+
+The [CY Ride inbound check](hardware-validation/2026-10-01-cy-ride-inbound-address-check.md)
+observed isolated TYP C→D→C on CC20 and HIT48→49→50→49→48 on CC19, MIDI 11.
+The operator manually reloaded saved KIT 01 and confirmed TYP C/HIT48. No output,
+SAVE, native-frame capture or automatic recovery was performed; native
+association and full value domains remain unverified, so all CY Ride SRC rows
+stay blocked, not only those two controls.
+The earlier approved16-message Rytm pad 2 audition checked four controls and
+manual recovery, with pad1 unchanged. Neither bounded observation establishes
+Pi/touchscreen/offline or touring readiness.
+
+The [studio evidence handoff](superpowers/plans/2026-10-01-studio-evidence-handoff.md)
+is implemented in [PR #254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254)
+on the remote `codex/studio-evidence-handoff` branch, directly based on
+`modularize-v1.34`. It extracts shared Studio safety repairs from PR #252:
+cancellable capture and stale-result refusal, passive preview retention,
+side-effect-free rejected DISARM, duplicate exact input-name refusal, and
+whole-plan refusal for unverified paired controls. The passive
+[device support inventory](DEVICE_SUPPORT_INVENTORY.md) separates catalog,
+native-file, live-send and physical-evidence coverage. The software handoff
+verification opened no MIDI ports; the separate studio observation above has
+its own limited scope. PR #252 is now titled
+touchscreen UI and Pi packaging groundwork; non-simulation appliance APPLY and
+deployment remain held for their own evidence. PR #248 is merged in current
+integration head `892aaffc`; older results below are historical receipts, not
+verification of this new handoff revision. Final Windows software verification:
+9,795 Python tests passed, five skipped; combined coverage 99.65%, with every
+touched production module at 100% line/branch coverage (pure branch 99.37%).
+The pre-push hook passed 860 architecture and 697 not-fast/parity tests,
+including all 685 frozen V1.34 cases. Frontend: 1,053 tests
+passed at 100% measured coverage; browser: 33 passed, two skipped with disabled
+MIDI. Lint, strict touched-module typing, dead-code checks and the production
+web build passed. New-head CI and maintainer review remain required. The local
+cache uses Python 3.12.14, Pyright 1.1.407 and Vite 8.0.14; clean CI must verify
+the pinned toolchain. The handoff revision's general physical acceptance remains
+pending; its earlier software receipts do not cover this new mapping correction.
+
+Review followup strengthens typed inventory schemas, reuses canonical A4
+converters, and clarifies manual hardware recovery. Cancelled capture records
+structured RED/error telemetry. A test-only in-memory browser harness verifies
+the exact positive confirmation/send contract without enabling any shipped
+fake-port switch or granting hardware evidence. An intermittent CI
+malformed-import timeout is addressed by splitting independent test cases,
+without increasing timeouts, retries or skips.
+
+The scoped ten-question maintainability audit is now recorded in the plan.
+Its formal receipt was added after PR open. Eddie acknowledged that handoff
+timing deviation in his [October 1 review](https://github.com/buzzijose-hub/RytmRandomizer/pull/254#pullrequestreview-5379158634).
+It is not represented as a timely pre-plan audit. The additional mapping
+assessment is also retrospective, and the post-merge reassessment and review
+of the new revision remain outstanding; Gate 14 stays unchecked.
 
 Show Kit Forge merged through PR #238 on September 8 as one
 versioned, paired Analog Rytm/Analog Four preparation workflow. It keeps
@@ -36,8 +410,9 @@ port nor attests that the source was restored in working RAM.
 
 The Rytm audition route reuses Cockpit's existing PREPARE plus exact
 plan-id/port confirmation and `ArmedApply` RAM-only SEND. The software route
-exists, but the operator-present one-pad send, untouched-pad check, and restore
-rehearsal have not yet been performed for this bundle. Cockpit never saves a
+exists. The October 1 observation above records a limited one-pad trial on the
+running Pi integration source; it does not validate every control in this bundle.
+Cockpit never saves a
 KIT persistently: after choosing a favorite, the operator must save on each
 instrument and make fresh input-only captures. Candidate verification compares
 the promoted semantic projection; a separate show-time preflight compares the
@@ -92,6 +467,59 @@ Digitakt #240 remains a separate passive device PR; it is not included as merged
 support in this updater checkpoint.
 
 ## Recent Cleanup
+
+- 2026-10-15: Added a separate unqualified A4 RAM-only studio plan and explicit
+  routing/confirmation controls, reusing canonical native review and ArmedApply.
+  Cooperative delivery preserves DISARM/disconnect responsiveness and truthful
+  interruption counts. Review repairs cover owned-operation overlap, diagnostic
+  redaction, metrics, shared fixtures and neutral transport timing ownership.
+  Final composed verification is recorded in A4_STUDIO_AUDITION_REPORT.md;
+  physical acceptance and a new exact-source installer remain pending.
+
+- 2026-10-12: Integrated the reference-sound workflow and genuine frozen-audio
+  packaging repair. Both paths generate verified local KIT candidates; exact
+  audio segments, supplied-recording comparison and bounded refinement retain
+  source/scope/locks and local favorites. Current locking and source-slot
+  protection repairs remain in verification. New data snapshots and one command
+  contract are explicit; V1.34 fixtures are untouched. AL02's historical blocked
+  receipt is archived byte-identically, while its current receipt refreshes only
+  build time and the public-device-facade dependency hash. It remains blocked
+  with 18 gaps and emits no kit. Final package, CI/review and physical acceptance
+  remain separate pending gates.
+
+- 2026-10-05: PR #254 review repair blocks all CY Ride SRC rows and audits
+  29 previously eligible fallback rows: 25 remain documented-only eligible,
+  four newly refused. No hardware validation is inferred. Adopted PR #240's
+  reachable/rejected/accepted stale-token probe while retaining #254's shared
+  production beacon TLS fix; retrieved detached capture errors promptly and
+  replaced the test harness's private snapshot-factory import. Registry edges
+  are explicit in architecture prose/diagram. Frozen offline `lev` cleanup is
+  tracked in [issue #256](https://github.com/buzzijose-hub/RytmRandomizer/issues/256).
+  The next physical gate is one isolated Pad 2 rehearsal with manual recovery,
+  followed by favorite persistence/save/recapture, not an all-parameter matrix.
+  Exact new verification and portable-build receipts remain pending.
+
+- 2026-10-01: Integrated the [captured Rytm mapping correction](superpowers/plans/2026-10-01-rytm-captured-machine-mapping.md)
+  into PR #254 delivery: exact XT Classic tom identity and existing machine SRC
+  projection, composed real-frame regressions and an explicit remaining-gap
+  inventory. Published the software increment at `2f0f5be0`; actual pre-push
+  lint/typing, 860 architecture and 697 not-fast tests passed. Eight scoped
+  reviews found no new production blocker; retrospective process exceptions
+  need maintainer acceptance. The mapping-only local runtime at `2a19b094`
+  passed fresh input-only capture/UI verification. General A4/Pi/touring
+  readiness is unvalidated; protected new-head checks/review remain required.
+
+- 2026-10-01: Delivered [PR #254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254)
+  as a direct-base Studio evidence handoff, separate from Pi groundwork #252.
+  Added the reproducible canonical support inventory, cancellable capture and
+  stale-result protection, passive preview retention, non-mutating rejected
+  DISARM, exact-input ambiguity refusal and whole-plan paired-control blocking.
+  Review followup adds typed inventory contracts, canonical converter reuse,
+  cancellation telemetry and an exact in-memory browser SEND contract. Local
+  Python, frontend, browser, coverage, architecture, parity and static gates
+  pass. Primary-checkout changes and dependency pins are preserved; no real
+  MIDI/USB access occurred. Maintainer review and all physical observations
+  remain outstanding, including manual saved-KIT reload/recapture recovery.
 
 - 2026-09-21: Resumed the six-PR closeout and verified #248's hosted checks at
   `e2e46d6e`, including both required aggregates and actual Windows acceptance.

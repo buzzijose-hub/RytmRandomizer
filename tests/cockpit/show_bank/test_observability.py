@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -20,17 +18,6 @@ from .conftest import build_show_bank_harness as _harness
 from .conftest import generate_show_bank_candidates as _generate
 
 pytestmark = pytest.mark.fast
-
-
-@pytest.fixture
-def package_logs(caplog: pytest.LogCaptureFixture) -> Iterator[pytest.LogCaptureFixture]:
-    logger = logging.getLogger("rytm_randomizer")
-    logger.addHandler(caplog.handler)
-    try:
-        with caplog.at_level(logging.DEBUG, logger=logger.name):
-            yield caplog
-    finally:
-        logger.removeHandler(caplog.handler)
 
 
 def test_generation_and_hardware_claim_revocation_are_traceable(

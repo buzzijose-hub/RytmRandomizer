@@ -36,7 +36,7 @@ export function libraryPanelSpec(records: LibraryRecord[] | null): PanelSpecDict
       ],
       required_actions: [],
       blocked_actions: [],
-      safety_lines: ['captured records only — no hardware path'],
+      safety_lines: ['local records only — not hardware KIT saves'],
     };
   }
   return {
@@ -49,9 +49,10 @@ export function libraryPanelSpec(records: LibraryRecord[] | null): PanelSpecDict
         kind: 'table',
         rows: [],
         table: {
-          columns: ['Kit', 'Device', 'Captured', 'Tags', 'Record id'],
+          columns: ['Kit', 'Kind', 'Device', 'Captured', 'Tags', 'Record id'],
           rows: records.map((record) => [
             record.kit_name,
+            record.record_kind === 'rehearsal_favorite' ? 'Local favorite' : 'Capture',
             record.device_id,
             record.captured_at,
             record.tags.join(', '),
@@ -63,6 +64,6 @@ export function libraryPanelSpec(records: LibraryRecord[] | null): PanelSpecDict
     ],
     required_actions: [],
     blocked_actions: [],
-    safety_lines: ['captured records only — no hardware path'],
+    safety_lines: ['local records only — not hardware KIT saves'],
   };
 }

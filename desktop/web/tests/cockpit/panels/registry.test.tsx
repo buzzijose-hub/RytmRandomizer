@@ -19,6 +19,8 @@ import { PANEL_REGISTRY, panelsForRegion } from '../../../src/cockpit/panels/reg
 import { FakeCockpitClient } from '../_fixtures';
 
 const EXPECTED_BOTTOM_PANEL_IDS: ReadonlyArray<string> = [
+  'mutation-parameters',
+  'reference-sound',
   'live-midi-monitor',
   'connection-doctor',
   'library',
@@ -30,6 +32,8 @@ const EXPECTED_BOTTOM_PANEL_IDS: ReadonlyArray<string> = [
 
 /** Each bottom panel's own root testid, in manifest order. */
 const EXPECTED_BOTTOM_TESTIDS: ReadonlyArray<string> = [
+  'mutation-parameters-panel',
+  'reference-sound-panel',
   'live-midi-monitor',
   'connection-doctor',
   'library-panel',

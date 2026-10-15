@@ -1,0 +1,28 @@
+# Reference Sound Run Log
+
+> Status: in-flight (append-only working-block evidence).
+
+Append-only recorded events; UTC. Synthetic tests are not physical observations.
+
+2026-10-12T03:42:18Z | kickoff | Existing PR254/2cf9f72b and verified6e098f85 delivery inspected; dirty primary preserved; MIDI/USB disabled; eight-hour working block.
+2026-10-12T05:00:00Z | checkpoint | Renderer/runtime/session integration and six reproduced cancellation/stale-favorite repairs under verification; actual frozen worker timeout retained as failure.
+2026-10-12T06:08:00Z | checkpoint | Source046210c8; UI/frozen repair merged; intermediate frozen both-device23.922s proof recorded; final delivery pending.
+2026-10-12T06:24:00Z | browser-proof | Both-device actual browser journey passed19.8s; selector/import-ready harness failures remain separate failed attempts.
+2026-10-12T06:40:00Z | checkpoint | Typing, duplicate-feedback, categorical recovery and serializer repairs integrated; full11432-item run in progress; no source editing during it.
+2026-10-12T06:44:08Z | broad-result | 11423pass/4architecturefail/5skip/6warnings706.71s; package99.65%; failures not waived.
+2026-10-12T06:51:54Z | repair | Sourcee13a7d51; all four architecture causes and actual refusal/huge-number cases pass99focused checks; new full run started.
+2026-10-12T07:03:56Z | broad-result | 11455pass/5skip/6warnings697.13s; package99.67%; strict touched-file gate reports one redundant uncovered catch.
+2026-10-12T07:06:00Z | source-freeze-candidate | Source7cf12e1a removes redundant catch and strengthens exact nonzero PCM width evidence; final broad coverage running; pins/parity unchanged.
+2026-10-12T07:22:00Z | final-worker-repair | Source92b64b9c contains submission failure and cooperative-cancellation telemetry fixes; targeted ownership regressions pass; new broad run starts.
+2026-10-12T07:34:48Z | source-acceptance | 11457pass5skip6warnings685.46s; package99.68%; all63touched100%line/branch; pinnedPyright1.1.411clean. Frontend1292tests/81files31.51s allfourcoverage100%; TS/ESLint clean. Exact Windows package/CI/physical acceptance still pending.
+2026-10-12T07:50:37Z | interrupted-native-proof | Exact64d5 package both-device UI proof passes41.301s after one diagnostic startup retry; not clean first-attempt or endurance acceptance.
+2026-10-12T08:04:18Z | strict-startup-failure | One-attempt native QA debug listener unavailable; distinct websocket/debug ports recorded; owned cleanup confirmed; deadline not increased.
+2026-10-12T08:35:54Z | fresh-ci | Run38221193854 at63c5ccf2 succeeds after test-only caplog isolation and cross-platform lock contract repairs; production64d5 binaries unchanged.
+2026-10-12T08:40:25Z | launcher-proof | Unchanged offline launcher in hash-identical private copy connects5.402s; MIDI/updatesoff and identity-pinned cleanup pass.
+2026-10-12T08:42:21Z | strict-native-proof | Missing isolated Windows known folder fixed in QA only;40.558s one startup/CDP523ms/47commands/zero failures, both devices plus backend restart recall; min sampled13.439GiBfree/max587.797MiBprivate; cleanup confirmed.
+2026-10-12T09:56:10Z | delivery-accounting | Public receipt and focused physical checklist added to64d5 delivery; original receipts/settings preserved. New sustained run delegated within remaining block; not yet counted as passed.
+2026-10-12T09:57:14Z | timed-rehearsal-start | New64d5 packaged bank/favorite run02 starts90minutes,30sinterval,strictoneattempt underQAcommita82fc57c. Initialalias-expectation setupfailure cleaned and retained separately. Reference sound strict proof is separate, not an endurance mode.
+2026-10-12T10:10:07Z | maintenance-checkpoint | Six clean integrated owned worktrees removed after resolved-path checks and private evidence preservation; unrelated worktrees/deliveries untouched. Timed app remains MIDIoff; latest early sample10processes/~506MiBprivate/13.46GiBfree/queue0/drops0/history2. Final acceptance pending.
+2026-10-12T11:27:14Z | endurance-acceptance | New64d5 packaged bank run passes5400.0078683s/180cycles/two owned-backend recoveries/180export proofs; four cues188candidates.173planned negative importACKs preserve work.180samples private483.64-607.35MiB/10processes/handles3918-4021/minfree13.03GiB/queue13of256/zero drops/history2/journal0-1. Cleanup verifies zero owned processes/listeners. Not90minutesofreferenceinference or physical sound matching.
+2026-10-12T11:31:17Z | maximum-input-acceptance | Unchanged64d5 sidecar passes both reference workflows with8s96kHz32bitstereo768000frame PCM in27.640s,exit0,developerpathsremoved,ownedsidecarstopped. No production or deadline changes. Normal launcher cold-copy setup independently clarified: no external known-folder provisioning.
+2026-10-12T11:36:00Z | publication-repair | Normalprepush blocksisort on preserved historical diagnostic script insideprivateworkerarchive; allothergates pass. Archive moved byte-identically to .codex/private-artifacts/reference-sound-20261012/worker-evidence outsideactivecode; exactdiagnosticSHAverified. No lint/testsettings orhooksbypassed. Normalhookrerunrequired.

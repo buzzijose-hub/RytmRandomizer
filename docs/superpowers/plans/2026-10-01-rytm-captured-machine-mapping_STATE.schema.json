@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/buzzijose-hub/RytmRandomizer/rytm-captured-machine-mapping-state.schema.json",
+  "title": "Captured Rytm Machine Mapping Checkpoint",
+  "description": "Documents the existing local plan checkpoint and evidence receipts. This schema does not implement scheduling, protected merge, or hardware authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "updated_at", "status", "phase",
+    "prototype_source", "prototype_worktree", "delivery_start_source",
+    "delivery_worktree", "delivery_pr", "delivery_branch", "delivery_base",
+    "auto_merge", "scheduled_jobs", "local_budget_minutes",
+    "local_budget_checkpoint", "local_budget_deadline",
+    "historical_elapsed_time_recorded", "work", "receipts", "remaining",
+    "limits", "recovery", "local_termination", "plan_termination",
+    "budget_exhaustion_status", "user_stop_status"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "updated_at": { "$ref": "#/$defs/timestamp" },
+    "status": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Recorded plan status; does not imply protected approval or hardware readiness."
+    },
+    "phase": { "$ref": "#/$defs/nonemptyString" },
+    "prototype_source": { "$ref": "#/$defs/sourceSha" },
+    "prototype_worktree": { "$ref": "#/$defs/nonemptyString" },
+    "delivery_start_source": { "$ref": "#/$defs/sourceSha" },
+    "delivery_worktree": { "$ref": "#/$defs/nonemptyString" },
+    "delivery_pr": { "const": 254 },
+    "delivery_branch": { "const": "codex/studio-evidence-handoff" },
+    "delivery_assembly_branch": { "const": "codex/studio-rytm-mapping" },
+    "delivery_base": { "const": "modularize-v1.34" },
+    "auto_merge": { "const": false },
+    "scheduled_jobs": {
+      "type": "array",
+      "maxItems": 0,
+      "description": "This local correction creates no scheduled jobs."
+    },
+    "local_budget_minutes": { "type": "integer", "minimum": 1 },
+    "local_budget_checkpoint": { "$ref": "#/$defs/timestamp" },
+    "local_budget_deadline": { "$ref": "#/$defs/timestamp" },
+    "local_budget_scope": { "const": "historical-Oct02-only-not-the-current-Oct05-session" },
+    "oct06_started_at": { "$ref": "#/$defs/timestamp" },
+    "oct06_deadline": { "$ref": "#/$defs/timestamp" },
+    "oct06_checkpoint": { "$ref": "#/$defs/sourceSha" },
+    "reliability_started_at": { "$ref": "#/$defs/timestamp" },
+    "reliability_deadline": { "$ref": "#/$defs/timestamp" },
+    "reliability_resumed_at": { "$ref": "#/$defs/timestamp" },
+    "reliability_resume_deadline": { "$ref": "#/$defs/timestamp" },
+    "reliability_resume_source": { "$ref": "#/$defs/sourceSha" },
+    "historical_elapsed_time_recorded": { "type": "boolean" },
+    "work": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mapping_implementation", "inventory", "dimension_reviews",
+        "plan_records", "delivery_integration", "final_delivery_checks",
+        "protected_review_and_merge", "post_merge_maintainability_audit"
+      ],
+      "properties": {
+        "mapping_implementation": { "$ref": "#/$defs/nonemptyString" },
+        "inventory": { "$ref": "#/$defs/nonemptyString" },
+        "dimension_reviews": { "$ref": "#/$defs/nonemptyString" },
+        "plan_records": { "$ref": "#/$defs/nonemptyString" },
+        "delivery_integration": { "$ref": "#/$defs/nonemptyString" },
+        "final_delivery_checks": { "$ref": "#/$defs/nonemptyString" },
+        "protected_review_and_merge": { "$ref": "#/$defs/nonemptyString" },
+        "post_merge_maintainability_audit": { "$ref": "#/$defs/nonemptyString" }
+      }
+    },
+    "receipts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/receipt" },
+      "description": "Historical failed and passing observations remain separately scoped; source details may be recorded in scope/result."
+    },
+    "remaining": { "$ref": "#/$defs/stringList" },
+    "limits": { "$ref": "#/$defs/stringList" },
+    "recovery": { "$ref": "#/$defs/stringList" },
+    "local_termination": { "$ref": "#/$defs/nonemptyString" },
+    "plan_termination": { "$ref": "#/$defs/nonemptyString" },
+    "budget_exhaustion_status": { "const": "BUDGET_EXCEEDED" },
+    "user_stop_status": { "const": "INTERRUPTED" }
+  },
+  "$defs": {
+    "nonemptyString": { "type": "string", "minLength": 1 },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "sourceSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "percentage": { "type": "string", "pattern": "^[0-9]+(?:\\.[0-9]+)?%$" },
+    "stringList": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/nonemptyString" }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "result"],
+      "properties": {
+        "scope": { "$ref": "#/$defs/nonemptyString" },
+        "result": { "$ref": "#/$defs/nonemptyString" },
+        "passing_verdict": { "type": "boolean" },
+        "final_delivery_verdict": { "type": "boolean" },
+        "hardware_observation": { "type": "boolean" },
+        "combined_coverage": { "$ref": "#/$defs/percentage" },
+        "pure_branch_coverage": { "$ref": "#/$defs/percentage" },
+        "touched_production_modules": { "type": "integer", "minimum": 0 },
+        "touched_line_branch_coverage": { "$ref": "#/$defs/percentage" }
+      }
+    }
+  }
+}

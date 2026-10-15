@@ -14,10 +14,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from threading import Lock
-from typing import Final, Literal, Protocol, TypedDict
+from threading import Event, Lock
+from typing import Final, Literal, Protocol, TypedDict, runtime_checkable
 
 from ...data import RYTM_MACHINE_PROFILES
+from ...data.analog_four_saved_kit_layout import A4_SNAPSHOT_LAYOUT_WORKING_KIT
 from ...devices import (
     AnalogFourKitSnapshot,
     RegisteredSavedKitCaptureCapability,
@@ -100,6 +101,17 @@ class SysexCaptureProvider(Protocol):
     ) -> tuple[bytes, ...]:
         """Receive complete framed SysEx messages from one input port."""
 
+        ...
+
+
+@runtime_checkable
+class CancellableSysexCaptureProvider(SysexCaptureProvider, Protocol):
+    """Optional cooperative input cancellation supplied by the app-owned provider."""
+
+    def capture_sysex_messages_cancellable(
+        self, port_name: str, *, timeout_seconds: float, cancel_event: Event
+    ) -> tuple[bytes, ...]:
+        """Stop polling and close the input promptly when cancellation is signalled."""
         ...
 
 
@@ -249,14 +261,17 @@ def _decode_capture_result(
             layout_items=layout_items,
         )
     if device_id == ANALOG_FOUR_DEVICE_ID and isinstance(snapshot, AnalogFourKitSnapshot):
+        working = snapshot.snapshot_layout == A4_SNAPSHOT_LAYOUT_WORKING_KIT
         layout_items = tuple(
             KitCaptureLayoutItem(
                 index=index,
                 label=f"T{index}",
-                status="mutation_ready",
+                status="captured_mapping_pending" if working else "mutation_ready",
                 detail=(
-                    "Filter 1 Frequency is verified for offline captured-kit "
-                    "mutation; every other parameter remains mapping-blocked"
+                    "Working KIT RAM response: freshness, pending edits and atomicity are unverified; passive evidence only"
+                    if working
+                    else "Indexed KIT bank response; native field eligibility is source-dependent. "
+                    "Protocol/storage versions do not identify installed firmware; no live output authority."
                 ),
             )
             for index in sorted(A4_LANE_POLICY.available_ids)
@@ -269,7 +284,11 @@ def _decode_capture_result(
             frame_bytes=len(frame),
             captured_at=captured_at,
             snapshot_layout=snapshot.snapshot_layout,
-            parameter_readiness="filter1_frequency_offline_ready",
+            parameter_readiness=(
+                "exact_kit_anchor_offsets_candidate"
+                if working
+                else "filter1_frequency_offline_ready"
+            ),
             snapshot=snapshot,
             frame=bytes(frame),
             layout_items=layout_items,
@@ -334,6 +353,7 @@ class KitCaptureService:
         port_name: str,
         *,
         timeout_seconds: float = CAPTURE_TIMEOUT_SECONDS,
+        cancel_event: Event | None = None,
     ) -> KitCaptureResult:
         """Receive exactly one complete current-kit frame and decode its anchor."""
 
@@ -366,17 +386,30 @@ class KitCaptureService:
                 device_id=narrowed_device_id,
             ):
                 try:
-                    frames = self._provider.capture_sysex_messages(
-                        port_name,
-                        timeout_seconds=timeout_seconds,
-                    )
+                    if cancel_event is not None and cancel_event.is_set():
+                        raise StateError("current-kit capture cancelled")
+                    if cancel_event is not None and isinstance(
+                        self._provider, CancellableSysexCaptureProvider
+                    ):
+                        frames = self._provider.capture_sysex_messages_cancellable(
+                            port_name, timeout_seconds=timeout_seconds, cancel_event=cancel_event
+                        )
+                    else:
+                        frames = self._provider.capture_sysex_messages(
+                            port_name,
+                            timeout_seconds=timeout_seconds,
+                        )
                 except (OSError, RuntimeError, TypeError, ValueError) as exc:
+                    if cancel_event is not None and cancel_event.is_set():
+                        raise StateError("current-kit capture cancelled") from exc
                     _record_capture_refusal(
                         "receive_failed",
                         device_id=narrowed_device_id,
                         exception_type=type(exc).__name__,
                     )
                     raise
+                if cancel_event is not None and cancel_event.is_set():
+                    raise StateError("current-kit capture cancelled")
                 if len(frames) != 1:
                     _record_capture_refusal(
                         "frame_count_invalid",
@@ -395,6 +428,8 @@ class KitCaptureService:
         finally:
             self._capture_lock.release()
 
+        if cancel_event is not None and cancel_event.is_set():
+            raise StateError("current-kit capture cancelled")
         _logger.info(
             "cockpit_current_kit_captured",
             extra={
@@ -414,6 +449,7 @@ __all__ = [
     "ANALOG_RYTM_DEVICE_ID",
     "CAPTURE_DEVICE_IDS",
     "CAPTURE_TIMEOUT_SECONDS",
+    "CancellableSysexCaptureProvider",
     "KitCaptureDeviceId",
     "KitCaptureLayoutItem",
     "KitCaptureLayoutItemDict",

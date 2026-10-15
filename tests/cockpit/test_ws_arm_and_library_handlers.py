@@ -26,8 +26,8 @@ from pathlib import Path
 import pytest
 from cockpit.conftest import (
     TEST_WS_TOKEN,
-    _make_default_snapshot,
     complete_handshake,
+    make_default_snapshot,
 )
 from fastapi.testclient import TestClient
 
@@ -48,7 +48,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     INITIAL_EVENT_COUNT,
     WS_SUBPROTOCOL,
 )
-from rytm_randomizer.cockpit.ws.server import APP_VERSION, create_app
+from rytm_randomizer.cockpit.ws.server import APP_VERSION, ConnectionRegistry, create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
 from rytm_randomizer.senders.armed_apply import ArmedApplyError
 
@@ -107,7 +107,7 @@ def _make_session(tmp_path: Path, *, arm_secret: str | None = _ARM_TOKEN) -> Coc
     arming must then fail closed.
     """
 
-    initial = _make_default_snapshot()
+    initial = make_default_snapshot()
     session = CockpitSession(
         profile_registry=ProfileRegistry(tmp_path / "profiles"),
         history_store=HistoryStore(),
@@ -969,6 +969,7 @@ def test_bootstrap_event_set_is_authoritative_for_unwired_sessions(tmp_path: Pat
         "kit_captures_changed",
         "mutation_targets_changed",
         "mutation_locks_changed",
+        "mutation_parameters_changed",
         "dual_machine_stage_changed",
         "performance_console_changed",
     ]
@@ -1012,6 +1013,7 @@ def test_health_endpoint_is_token_free_and_read_only(tmp_path: Path) -> None:
         "version": APP_VERSION,
         "mode": "mock",
         "connection_phase": "disconnected",
+        "outbound_queue": ConnectionRegistry().queue_diagnostics(),
     }
 
 
@@ -1026,6 +1028,7 @@ def test_health_endpoint_reflects_armed_session(tmp_path: Path) -> None:
         "version": APP_VERSION,
         "mode": "live",
         "connection_phase": "armed",
+        "outbound_queue": ConnectionRegistry().queue_diagnostics(),
     }
 
 

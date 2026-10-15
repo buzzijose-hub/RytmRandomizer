@@ -48,7 +48,8 @@ from rytm_randomizer.guardrails.schema import Confidence, SourceType
 from rytm_randomizer.observability.errors import DataError
 
 from .feature_report import FeatureReport, compute_feature_report_hash
-from .runtime_types import require_runtime_type
+from .reference_audio_diagnostics import ReferenceAudioDiagnostics
+from .runtime_types import LibrosaApi, require_runtime_type
 
 _AUDIO_SAMPLE_RATE: Final[int] = 22_050
 _AUDIO_HOP_LENGTH: Final[int] = 512
@@ -116,27 +117,6 @@ class _ArrayResult(Protocol):
 class _NumpyApi(Protocol):
     abs: Callable[..., object]
     asarray: Callable[..., _ArrayResult]
-
-
-class _OnsetApi(Protocol):
-    onset_strength: Callable[..., object]
-    onset_detect: Callable[..., object]
-
-
-class _FeatureApi(Protocol):
-    spectral_centroid: Callable[..., object]
-    spectral_flatness: Callable[..., object]
-    rms: Callable[..., object]
-    zero_crossing_rate: Callable[..., object]
-
-
-class _LibrosaApi(Protocol):
-    onset: _OnsetApi
-    feature: _FeatureApi
-    get_duration: Callable[..., float]
-    load: Callable[..., tuple[object, int]]
-    stft: Callable[..., object]
-    fft_frequencies: Callable[..., object]
 
 
 @dataclass(frozen=True)
@@ -246,6 +226,7 @@ class AudioFeatureAnalysis:
     feature_report: FeatureReport
     synthesis_features: AudioSynthesisFeatures
     dna_evidence: AudioDnaEvidence = EMPTY_AUDIO_DNA_EVIDENCE
+    diagnostics: ReferenceAudioDiagnostics | None = None
 
     @property
     def audio_sha256(self) -> str:
@@ -391,7 +372,7 @@ def _finalize(report_without_hash: FeatureReport) -> FeatureReport:
     return dataclasses.replace(report_without_hash, content_hash=digest)
 
 
-def _require_librosa() -> tuple[_LibrosaApi, _NumpyApi]:
+def _require_librosa() -> tuple[LibrosaApi, _NumpyApi]:
     """Lazy-import ``librosa`` + ``numpy``; raise if either is missing.
 
     Returns the modules so callers can use them without a second
@@ -408,7 +389,7 @@ def _require_librosa() -> tuple[_LibrosaApi, _NumpyApi]:
             "Audio feature extraction requires the 'style' optional extra. "
             'Install it with: pip install -e ".[style,dev]"'
         ) from exc
-    return cast(_LibrosaApi, librosa), cast(_NumpyApi, numpy)
+    return cast(LibrosaApi, librosa), cast(_NumpyApi, numpy)
 
 
 def require_audio_analysis_dependencies() -> None:

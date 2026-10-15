@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, Literal, TypeAlias
 
+from .elektron_midi_descriptions import RYTM_MACHINE_REFERENCE_NOTES, MidiReferenceNote
+
 SupportStatus: TypeAlias = Literal["mutable_v134", "machine_selectable"]
 MUTABLE_V134: Final[SupportStatus] = "mutable_v134"
 MACHINE_SELECTABLE: Final[SupportStatus] = "machine_selectable"
@@ -14,12 +16,24 @@ MACHINE_SELECTABLE: Final[SupportStatus] = "machine_selectable"
 
 @dataclass(frozen=True)
 class RytmMachineProfile:
+    """Canonical identity/compatibility, not a native-to-MIDI conversion.
+
+    ``machine_value`` remains the existing identity used by native codecs and
+    legacy recipes. A third-party MIDI range cannot replace that contract.
+    """
+
     key: str
     label: str
     family: str
     machine_value: int
     support_status: SupportStatus
     role_tags: tuple[str, ...]
+
+    @property
+    def reference_notes(self) -> tuple[MidiReferenceNote, ...]:
+        """Return provenance-bearing conflicts without rewriting identities."""
+
+        return RYTM_MACHINE_REFERENCE_NOTES.get(self.key, ())
 
 
 @dataclass(frozen=True)

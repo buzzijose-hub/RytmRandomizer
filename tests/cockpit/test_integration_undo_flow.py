@@ -30,6 +30,7 @@ def _send_once(ws: object) -> str:
     send_cmd(ws, "set_depth", depth=0.55)
     prepare_send_plan(ws)
     ack = send_cmd(ws, "send")
+    assert ack["ok"] is True, ack
     drain_events(ws, 5)
     return ack["new_snapshot_id"]
 
@@ -73,9 +74,9 @@ def test_undo_emits_snapshot_matching_target(cockpit_ws: object) -> None:
 
     snapshot = next(e for e in events if e["type"] == EVENT_SNAPSHOT_CHANGED)["snapshot"]
     assert snapshot["snapshot_id"] == "01HXY5Q9PJM00000000000ROOT"
-    # Root snapshot's pad 1 had {"tun": 32, "dec": 80, "lev": 110}.
+    # Root snapshot's pad 1 had {"tun": 32, "dec": 80, "flt": 110}.
     pad1 = next(p for p in snapshot["pads"] if p["pad_id"] == 1)
-    assert pad1["params"] == {"tun": 32, "dec": 80, "lev": 110}
+    assert pad1["params"] == {"tun": 32, "dec": 80, "flt": 110}
 
 
 def test_undo_twice_after_two_sends_walks_back_two_steps(cockpit_ws: object) -> None:
@@ -86,12 +87,14 @@ def test_undo_twice_after_two_sends_walks_back_two_steps(cockpit_ws: object) -> 
     drain_events(cockpit_ws, 1)
     send_cmd(cockpit_ws, "set_depth", depth=0.5)
     prepare_send_plan(cockpit_ws, request_id="req-prepare-1")
-    send_cmd(cockpit_ws, "send", request_id="req-send-1")
+    send_ack = send_cmd(cockpit_ws, "send", request_id="req-send-1")
+    assert send_ack["ok"] is True, send_ack
     drain_events(cockpit_ws, 5)
     # SEND #2
     send_cmd(cockpit_ws, "set_depth", request_id="req-depth-2", depth=0.6)
     prepare_send_plan(cockpit_ws, request_id="req-prepare-2")
-    send_cmd(cockpit_ws, "send", request_id="req-send-2")
+    send_ack = send_cmd(cockpit_ws, "send", request_id="req-send-2")
+    assert send_ack["ok"] is True, send_ack
     drain_events(cockpit_ws, 5)
 
     # UNDO #1: should land on the SEND #1 snapshot (not root yet).

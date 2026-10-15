@@ -12,6 +12,7 @@ import { CockpitClientProvider } from '../../../src/cockpit/context';
 import { useCockpitStore } from '../../../src/state';
 
 import { FakeCockpitClient, libraryRecordA, libraryRecordB } from '../_fixtures';
+import { rehearsalRecord } from '../parameterScopeFixture';
 
 describe('libraryPanelSpec (pure)', () => {
   it('renders the not-loaded placeholder for a null slice', () => {
@@ -24,8 +25,8 @@ describe('libraryPanelSpec (pure)', () => {
     const spec = libraryPanelSpec([libraryRecordA, libraryRecordB]);
     expect(spec.status_badges[0]).toMatchObject({ label: '2 record(s)', tone: 'ok' });
     expect(spec.sections[0]!.table!.rows).toEqual([
-      ['INDUSTRIAL KIT', 'analog_rytm_mk2', '2026-07-01T10:00:00+00:00', 'techno', 'abc123'],
-      ['ACID BANK', 'analog_four_mk2', '2026-07-02T11:00:00+00:00', '', 'def456'],
+      ['INDUSTRIAL KIT', 'Capture', 'analog_rytm_mk2', '2026-07-01T10:00:00+00:00', 'techno', 'abc123'],
+      ['ACID BANK', 'Capture', 'analog_four_mk2', '2026-07-02T11:00:00+00:00', '', 'def456'],
     ]);
   });
 
@@ -36,6 +37,9 @@ describe('libraryPanelSpec (pure)', () => {
       'percussive',
     ]);
     expect(splitTags('')).toEqual([]);
+  });
+  it('labels local favorites separately from imported captures', () => {
+    expect(libraryPanelSpec([rehearsalRecord]).sections[0]?.table?.rows[0]?.[1]).toBe('Local favorite');
   });
 });
 

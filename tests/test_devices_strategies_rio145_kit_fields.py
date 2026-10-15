@@ -60,6 +60,22 @@ pytestmark = pytest.mark.fast
 _FIXTURE_DIR = Path(__file__).parent / "fixtures" / "rio145"
 
 
+@pytest.mark.parametrize(
+    "raw,label",
+    [(0, "-128.00"), (16383, "-0.00"), (16384, "(0)"), (16385, "+0.00"), (32767, "+127.99")],
+)
+def test_ordinary_rytm_lfo_label_keeps_its_own_signed_contract_and_exact_numeric_value(
+    raw: int, label: str
+) -> None:
+    _, kit = _rytm_fixture("RYTM_Test1_Init_Kit.syx")
+    sound = kit.sound(0)
+    sound.lfo_depth_raw16 = raw
+    before = sound.to_bytes()
+    assert sound.lfo_depth_device_label == label
+    assert sound.lfo_depth == (raw - 16384) / 128
+    assert sound.to_bytes() == before
+
+
 def _a4_fixture(name: str) -> tuple[bytes, A4Kit]:
     frame = (_FIXTURE_DIR / name).read_bytes()
     decoded = ElektronNativeObjectMessage.from_bytes(frame)
@@ -86,8 +102,14 @@ def test_exact_fixed_point_accessors_share_legacy_field_layout(field: str) -> No
     assert sound.get_fixed_8_8(field) == 64.00390625
     sound.set_fixed_8_8(field, 64.1)
     assert sound.get_fixed_8_8_raw(field) == round(64.1 * 256)
-    sound.set_fixed_8_8_raw(field, 0x7FFF)
-    assert sound.get_fixed_8_8(field) == 127.99609375
+    maximum = 0x7FFE if field == "filter1_frequency" else 0x7FFF
+    sound.set_fixed_8_8_raw(field, maximum)
+    assert sound.get_fixed_8_8(field) == maximum / 256
+    if field == "filter1_frequency":
+        before = sound.to_bytes()
+        with pytest.raises(ElektronKitFieldError, match="0..32766"):
+            sound.set_fixed_8_8_raw(field, 0x7FFF)
+        assert sound.to_bytes() == before
     assert kit.sound(2).to_bytes() == original
 
 

@@ -2940,6 +2940,7 @@ dependencies = [
  "log",
  "nix",
  "reqwest",
+ "rustls",
  "semver",
  "serde",
  "serde_json",

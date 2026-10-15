@@ -1,7 +1,10 @@
+import type { PadState, SrcParameter } from '../ws/protocol';
+
 export interface ParameterDefinition {
   key: string;
   code: string;
   label: string;
+  src?: SrcParameter;
 }
 
 export interface ParameterGroup {
@@ -73,3 +76,21 @@ export const RYTM_PARAMETER_GROUPS: ReadonlyArray<ParameterGroup> = [
     ],
   },
 ];
+
+export function parameterGroupsForPad(pad: PadState): ReadonlyArray<ParameterGroup> {
+  if (pad.src_parameters === undefined || pad.src_parameters.length === 0) {
+    return RYTM_PARAMETER_GROUPS;
+  }
+  return [
+    {
+      title: 'Synth',
+      params: pad.src_parameters.map((src) => ({
+        key: src.key,
+        code: `CC${src.cc_msb}`,
+        label: src.parameter,
+        src,
+      })),
+    },
+    ...RYTM_PARAMETER_GROUPS.slice(1),
+  ];
+}

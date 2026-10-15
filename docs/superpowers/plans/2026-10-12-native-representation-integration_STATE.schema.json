@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "phase", "started_at", "updated_at", "source_commit", "reference_pr", "midi_disabled", "completed", "pending"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "phase": {"enum": ["integrating", "verifying", "packaging", "package_validation", "hardware_validation_pending", "interrupted"]},
+    "started_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "source_commit": {"type": "string", "pattern": "^[0-9a-f]{8,40}$"},
+    "reference_pr": {"const": 254},
+    "midi_disabled": {"const": true},
+    "completed": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "pending": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  }
+}

@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Final, Literal, TypeAlias
 
+from .elektron_midi_descriptions import RYTM_MIDI_DESCRIPTIONS, MidiParameterDescription
 from .rytm_machine_catalog import RYTM_MACHINE_PROFILES, RYTM_PAD_CAPABILITIES
 
 RiskTier: TypeAlias = Literal["low", "medium", "high"]
@@ -15,6 +16,43 @@ MutationStatus: TypeAlias = Literal[
 ]
 ParameterValueKind: TypeAlias = Literal["continuous", "selector"]
 ParameterValueOrientation: TypeAlias = Literal["zero_based", "centered"]
+RytmCaptureProjection: TypeAlias = Literal["captured-cc7-v1", "captured-cc7-sample-bit-v2"]
+RYTM_CAPTURE_PROJECTION_V1: Final[RytmCaptureProjection] = "captured-cc7-v1"
+RYTM_CAPTURE_PROJECTION_V2: Final[RytmCaptureProjection] = "captured-cc7-sample-bit-v2"
+RYTM_CAPTURE_PROJECTIONS: Final[tuple[RytmCaptureProjection, ...]] = (
+    RYTM_CAPTURE_PROJECTION_V1,
+    RYTM_CAPTURE_PROJECTION_V2,
+)
+
+# These are projection refusals, not missing MIDI addresses or calibration facts.
+RYTM_COCKPIT_PENDING_SRC_PARAMETERS: Final[Mapping[tuple[str, str], str]] = MappingProxyType(
+    {
+        ("ut_impulse", "Polarity"): "src_selector_encoding_unverified",
+        ("cy_ride", "Hit Decay"): "src_native_slot_semantics_unverified",
+        ("cy_ride", "Cymbal Type"): "src_native_slot_semantics_unverified",
+        ("dual_vco", "Osc 2 Detune"): "src_requires_guarded_detune_window",
+        ("sy_chip", "Waveform"): "src_selector_encoding_unverified",
+        ("sy_chip", "Speed"): "src_mode_encoding_unverified",
+        ("sy_raw", "Noise Level"): "src_snapshot_projection_omitted",
+    }
+)
+RYTM_COCKPIT_ADDITIONAL_SRC_PITCH_PARAMETERS: Final[frozenset[str]] = frozenset(
+    {
+        "Tune",
+        "Detune",
+        "Osc 1 Tune",
+        "Bend",
+        "Offset 2",
+        "Offset 3",
+        "Offset 4",
+        "Tune 1",
+        "Tune 2",
+        "Tune 3",
+        "Tune 4",
+        "Tune 5",
+        "Tune 6",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -35,6 +73,19 @@ class AnalogRytmCcMapping:
     value_kind: ParameterValueKind = "continuous"
     value_orientation: ParameterValueOrientation = "zero_based"
     machine_key: str | None = None
+
+    @property
+    def reference_description(self) -> MidiParameterDescription | None:
+        """Exact-context reference facts, separate from all executable fields.
+
+        Kept out of dataclass fields so persisted/asdict catalog DTOs do not
+        change. Shared CCs and NRPN slots never identify a description alone.
+        """
+
+        key = (self.section, self.parameter)
+        if self != ANALOG_RYTM_ALL_CC_BY_SECTION_AND_PARAMETER.get(key):
+            return None
+        return RYTM_MIDI_DESCRIPTIONS.get(key)
 
 
 @dataclass(frozen=True)
@@ -772,6 +823,29 @@ ANALOG_RYTM_MANUAL_NOTE_TRIGGERS: Final[tuple[AnalogRytmNoteTrigger, ...]] = (
 )
 
 
+def analog_rytm_snapshot_general_mapping_supported(mapping: AnalogRytmCcMapping) -> bool:
+    """Describe general captured primary-byte scope, not hardware validation.
+
+    Sample Bit Reduction is an exact documentary exception. The rest of SAMPLE
+    stays outside capture promotion; paired precision is checked at SEND.
+    """
+
+    return (
+        mapping.machine_key is None
+        and (
+            (
+                mapping.mutation_status == "validated_runtime"
+                and mapping.scope in {"filter", "amp", "lfo"}
+            )
+            or mapping
+            == ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER[("SAMPLE", "Sample Bit Reduction")]
+        )
+        and mapping.nrpn_msb == 1
+        and mapping.nrpn_lsb is not None
+        and mapping.parameter not in {"Level", "Track Level", "Amp Volume"}
+    )
+
+
 def get_machine_src_mappings(machine_key: str) -> tuple[AnalogRytmCcMapping, ...]:
     """Return manual-backed SRC mappings for a known Rytm machine key."""
 
@@ -820,6 +894,13 @@ __all__ = [
     "ParameterValueKind",
     "ParameterValueOrientation",
     "RiskTier",
+    "RYTM_CAPTURE_PROJECTION_V1",
+    "RYTM_CAPTURE_PROJECTION_V2",
+    "RYTM_CAPTURE_PROJECTIONS",
+    "RytmCaptureProjection",
+    "RYTM_COCKPIT_ADDITIONAL_SRC_PITCH_PARAMETERS",
+    "RYTM_COCKPIT_PENDING_SRC_PARAMETERS",
+    "analog_rytm_snapshot_general_mapping_supported",
     "get_analog_rytm_catalog_summary",
     "get_machine_src_mappings",
 ]

@@ -1,0 +1,9 @@
+{
+  "parameter": "Filter1 Frequency",
+  "section": "FILTERS",
+  "encoder": "A",
+  "cc_msb": 18,
+  "cc_lsb": 50,
+  "nrpn_msb": 1,
+  "nrpn_lsb": 40
+}

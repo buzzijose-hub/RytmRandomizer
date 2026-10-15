@@ -11,13 +11,23 @@ The dataclass MUST be:
 
 from __future__ import annotations
 
+import re
 from dataclasses import FrozenInstanceError
 from datetime import datetime, timezone
+from pathlib import Path
 from types import MappingProxyType
+from typing import get_type_hints
 
 import pytest
 
-from rytm_randomizer.cockpit.data.snapshot import PadState, Snapshot
+from rytm_randomizer.cockpit.data.rytm_parameter_map import (
+    cockpit_parameter_key,
+    cockpit_parameter_live_blockers,
+    cockpit_parameter_mapping,
+)
+from rytm_randomizer.cockpit.data.snapshot import PadState, Snapshot, SrcParameterDict
+from rytm_randomizer.data.analog_rytm_midi import ANALOG_RYTM_MACHINE_SRC_BY_MACHINE
+from rytm_randomizer.data.rytm_machine_catalog import RYTM_PAD_CAPABILITIES
 
 pytestmark = pytest.mark.fast
 
@@ -249,3 +259,87 @@ def test_snapshot_to_dict_keys_are_stable() -> None:
     # captured_at must be ISO 8601 so downstream JSON layers don't need a custom encoder.
     assert isinstance(data["captured_at"], str)
     assert data["captured_at"] == _FIXED_TS.isoformat()
+
+
+@pytest.mark.parametrize("machine_key", ANALOG_RYTM_MACHINE_SRC_BY_MACHINE)
+def test_pad_src_metadata_matches_canonical_catalog_and_shared_policy(machine_key: str) -> None:
+    pad_id = next(
+        pad.pad for pad in RYTM_PAD_CAPABILITIES if machine_key in pad.allowed_machine_keys
+    )
+    pad = PadState(pad_id=pad_id, machine=machine_key)
+    metadata = pad.to_dict()["src_parameters"]
+    catalog = ANALOG_RYTM_MACHINE_SRC_BY_MACHINE[machine_key]
+    assert len(metadata) == len(catalog)
+    assert len({item["key"] for item in metadata}) == len(catalog)
+    for item, row in zip(metadata, catalog, strict=True):
+        key = cockpit_parameter_key(machine_key, row.section, row.parameter)
+        assert key is not None
+        assert cockpit_parameter_mapping(machine_key, key) == row
+        assert item == {
+            "key": key,
+            "parameter": row.parameter,
+            "machine_key": machine_key,
+            "channel": pad_id - 1,
+            "cc_msb": row.cc_msb,
+            "cc_lsb": row.cc_lsb,
+            "nrpn_msb": row.nrpn_msb,
+            "nrpn_lsb": row.nrpn_lsb,
+            "mutation_status": row.mutation_status,
+            "pad_compatible": True,
+            "live_blockers": list(cockpit_parameter_live_blockers(machine_key, key)),
+        }
+    assert pad.params == {}
+
+
+def test_pad_src_metadata_names_namespaced_and_legacy_keys_without_changing_values() -> None:
+    pad = PadState(1, "SY Dual VCO", {"src_dual_vco_2": 72})
+    decay = next(row for row in pad.to_dict()["src_parameters"] if row["cc_msb"] == 18)
+    assert decay["key"] == "src_dual_vco_2"
+    assert decay["parameter"] == "Osc 1 Decay"
+    assert decay["mutation_status"] == "documented_only"
+    assert decay["live_blockers"] == []
+    assert PadState.from_dict(pad.to_dict()) == pad
+    assert pad.to_dict()["params"] == {"src_dual_vco_2": 72}
+    bd_decay = next(row for row in _make_pad().to_dict()["src_parameters"] if row["key"] == "dec")
+    assert bd_decay["parameter"] == "Decay"
+
+
+def test_pad_src_metadata_keeps_absent_pending_controls_blocked() -> None:
+    pad = PadState(12, "CY Ride")
+    metadata = pad.to_dict()["src_parameters"]
+    pending = next(row for row in metadata if row["parameter"] == "Hit Decay")
+    assert pending["live_blockers"] == list(
+        cockpit_parameter_live_blockers(pad.machine, pending["key"])
+    )
+    assert pending["live_blockers"]
+    assert pending["key"] not in pad.params
+    assert len(metadata) == len(ANALOG_RYTM_MACHINE_SRC_BY_MACHINE["cy_ride"])
+
+
+def test_pad_src_metadata_marks_incompatible_pads_and_unknown_machines_truthfully() -> None:
+    rows = PadState(1, "CY Ride").to_dict()["src_parameters"]
+    assert rows
+    assert all(not row["pad_compatible"] for row in rows)
+    assert PadState(1, "unrecognized machine").to_dict()["src_parameters"] == []
+
+
+def test_pad_src_metadata_is_derived_not_imported_or_aliased() -> None:
+    pad = _make_pad()
+    data = pad.to_dict()
+    data["src_parameters"][0]["parameter"] = "untrusted label"
+    data["src_parameters"][0]["live_blockers"].clear()
+    restored = PadState.from_dict(data)
+    assert restored == pad
+    assert restored.to_dict() == pad.to_dict()
+    legacy = {"pad_id": pad.pad_id, "machine": pad.machine, "params": dict(pad.params)}
+    assert PadState.from_dict(legacy) == pad
+
+
+def test_src_metadata_python_dto_matches_typescript_protocol_fields() -> None:
+    protocol = Path(__file__).resolve().parents[2] / "desktop/web/src/ws/protocol.ts"
+    source = protocol.read_text(encoding="utf-8")
+    interface = re.search(r"export interface SrcParameter \{([^}]+)\}", source)
+    assert interface is not None
+    fields = set(re.findall(r"^\s*(\w+)\s*:", interface[1], flags=re.MULTILINE))
+    assert fields == set(get_type_hints(SrcParameterDict))
+    assert "src_parameters?: SrcParameter[]" in source

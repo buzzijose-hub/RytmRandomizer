@@ -412,14 +412,14 @@
     "parameters": [
       "Noise Fade"
     ],
-    "scale": "unipolar",
+    "scale": "bipolar",
     "intercept": 10.0,
     "terms": [
       {
         "feature_keys": [
           "tail"
         ],
-        "coefficient": 96.0
+        "coefficient": 53.0
       }
     ],
     "output_multiplier": 1.0

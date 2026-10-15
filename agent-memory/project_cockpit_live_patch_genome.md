@@ -66,12 +66,13 @@ description + A4 track
     -> Patch Genome workspace
 ```
 
-The authoritative bootstrap now has eleven ordered whole-state events:
+The authoritative bootstrap now has twelve ordered whole-state events:
 `session_status`, `snapshot_changed`, `profile_changed`,
 `profile_catalog_changed`, `history_updated`, `patch_genome_changed`,
 `kit_captures_changed`, `mutation_targets_changed`, `mutation_locks_changed`,
-`dual_machine_stage_changed`, and `performance_console_changed`. A wired
-connection manager may append `connection_changed` as event 12. Keep the
+`mutation_parameters_changed`, `dual_machine_stage_changed`, and
+`performance_console_changed`. A wired connection manager may append
+`connection_changed` as event 13. Keep the
 Python TypedDicts, TypeScript discriminated unions, Zustand setters, event
 guards, and tests synchronized when this shape changes.
 
@@ -172,15 +173,27 @@ guards, and tests synchronized when this shape changes.
 ## Current continuation seam
 
 The Rytm capture-to-mutation bridge and self-contained installer composition
-are delivered. Continue only with evidence that cannot be produced safely in
-software:
+are delivered at the October 5 receipt. October 6 production source
+`6eb5d4c1e3ed103b9870d935c3be2656857de708` is delivered on the same PR #254:
+optional native-field Device capability, 106 policy rows / 72 potentially
+mutable A4 field keys, Library schema 3 exact original frames and portable
+ShowBank v3 replay. The source-bound Windows copy passed actual executable
+offline import, scoped small/large mutation, local favorite, ordered-bank
+export/import, exact disarmed restart and owned-backend-loss recovery. Hosted
+source checks are 31 successful / three skipped. Use the source-bound plan
+receipt and `Launch-Offline.ps1`; older deliveries remain unchanged. This is
+READY for tested offline preparation, NOT READY for shows or general live use.
+Independent FIN, OXI AMP, unknown selectors and default-only fields remain
+read-only. No native-file result grants live sending or physical readiness.
+The remaining physical evidence includes:
 
 1. Rehearse physical Rytm capture, one-pad target-minus-lock SEND, untouched-pad
    verification, disarm, and manual reload of the original hardware KIT.
    Cockpit has no persistent restore operation; SAVE is refused.
 2. The August 28 saved captures already establish Filter 1 Frequency's
    offset, exact unsigned Q8.8 encoding, and Track 1-4 stride. Show Kit Forge
-   promotes only offline generation for that field. Do not repeat this
+   retains that renderer as the legacy algorithm; the newer native offline
+   algorithm has separate field-level policy/evidence. Do not repeat this
    mapping capture matrix. Validate the generated four-track scratch file
    by manually loading, listening, saving on the instrument, and recapturing;
    see `docs/hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md`.

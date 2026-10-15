@@ -156,11 +156,13 @@ def test_registered_store_returns_the_declaration_or_none() -> None:
 
 def test_current_schema_version_returns_none_for_an_unknown_store() -> None:
     assert current_schema_version("nope") is None
-    assert current_schema_version(registered_store_ids()[0]) == 1
+    known = registered_store_ids()[0]
+    assert current_schema_version(known) == PERSISTED_STATE_STORES[known].schema_version
 
 
 def test_require_schema_version_returns_the_version_or_raises() -> None:
-    assert require_schema_version(registered_store_ids()[0]) == 1
+    known = registered_store_ids()[0]
+    assert require_schema_version(known) == PERSISTED_STATE_STORES[known].schema_version
     with pytest.raises(ValueError, match="not registered"):
         require_schema_version("nope")
 
@@ -203,7 +205,7 @@ def test_a_zero_or_negative_version_field_is_rejected() -> None:
 def test_a_pre_envelope_file_migrates_rather_than_being_discarded() -> None:
     """The headline of rule 3, end to end through ``classify_payload``."""
 
-    known = registered_store_ids()[0]
+    known = "profile_registry"
     decision = classify_payload(known, {"kit_name": "AL02"})
     assert decision.code == "persisted_state.ok"
     assert decision.accepted and not decision.refused
@@ -256,12 +258,12 @@ def test_state_from_a_newer_app_is_refused_with_both_versions_named() -> None:
     decision = classify_payload(known, {PERSISTED_STATE_VERSION_FIELD: 9})
     assert decision.code == "persisted_state.schema_newer_than_app"
     assert decision.from_version == 9
-    assert decision.to_version == 1
+    assert decision.to_version == current_schema_version(known)
     assert decision.payload is None, "a refusal must never hand back truncated state"
     assert decision.detail == {
         "reason": "state_written_by_newer_app",
         "found_version": 9,
-        "app_version": 1,
+        "app_version": current_schema_version(known),
     }
 
 
@@ -314,9 +316,7 @@ def test_a_full_chain_runs_in_order_and_stamps_the_new_version() -> None:
 def test_classify_routes_an_older_payload_into_the_migration_chain() -> None:
     """The seam between classification and migration.
 
-    Every store registered today is at version 1, so this hand-off has
-    no natural caller yet — it is the path the *first* real bump will
-    take, and it must be proven now rather than discovered then. A
+    Library retention exercises the first real bump. A separate
     hypothetical v2 store is supplied through ``classify_payload``'s
     ``store=`` parameter; the registry itself is a read-only
     ``MappingProxyType`` and is never mutated by a test.
@@ -608,12 +608,7 @@ def test_profile_registry_still_skips_a_malformed_profile(tmp_path: Path) -> Non
 # The first-real-bump paths, exercised before the first real bump.
 # ---------------------------------------------------------------------------
 #
-# Both registered stores are at version 1 today, so their ``migrated``
-# arms — the ones that call ``record_persisted_state_migration`` — have no
-# natural caller yet. They are also the arms that will run, on every
-# operator's machine, the first time a store's schema_version is bumped.
-# Discovering a bug in them *then* means discovering it in production, so
-# each store's seam is driven here with a stubbed decision.
+# Keep the metric seams covered independently of the declared migrations.
 
 
 def _migrated_decision(store_id: str, payload: Mapping[str, object]) -> PersistedStateDecision:
@@ -646,6 +641,8 @@ def test_library_store_counts_a_migration_and_still_returns_the_record(
         "captured_at": "2026-01-01T00:00:00Z",
         "tags": [],
         "payload_hex": "f0f7",
+        "record_kind": "capture",
+        "rehearsal": None,
     }
     (tmp_path / "mig01.json").write_text(json.dumps(record), encoding="utf-8")
 

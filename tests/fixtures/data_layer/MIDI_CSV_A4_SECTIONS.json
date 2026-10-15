@@ -1,0 +1,17 @@
+{
+  "Amp": "synth",
+  "CVs": "cv",
+  "FX: Chorus": "fx",
+  "FX: Delay": "fx",
+  "FX: Extern In": "fx",
+  "FX: LFOs": "fx",
+  "FX: Reverb": "fx",
+  "Filters": "synth",
+  "Modulation": "synth",
+  "Performance": "performance",
+  "Synth: Noise": "synth",
+  "Synth: OSC": "synth",
+  "Synth: OSC1": "synth",
+  "Synth: OSC2": "synth",
+  "Track": "synth"
+}

@@ -9,6 +9,8 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { CockpitClientProvider } from '../../src/cockpit/context';
 import { PadCard } from '../../src/cockpit/PadCard';
 import { useCockpitStore } from '../../src/state';
+import type { PadState, SrcParameter } from '../../src/ws/protocol';
+import { parameterGroupsForPad, RYTM_PARAMETER_GROUPS } from '../../src/cockpit/parameterGroups';
 
 import { FakeCockpitClient, candidate, snapshot } from './_fixtures';
 
@@ -137,5 +139,123 @@ describe('PadCard', () => {
     ]);
     expect(screen.getByTestId('pad-card-1')).toHaveClass('targeted');
     expect(screen.getByRole('button', { name: 'Remove pad 1' })).toBePressed();
+  });
+
+  it('preserves legacy groups for an empty canonical metadata list', () => {
+    const pad = { ...snapshot.pads[0]!, src_parameters: [] };
+    expect(parameterGroupsForPad(pad)).toBe(RYTM_PARAMETER_GROUPS);
+  });
+});
+
+const srcDecay: SrcParameter = {
+  key: 'src_dual_vco_2',
+  parameter: 'Osc 1 Decay',
+  machine_key: 'dual_vco',
+  channel: 0,
+  cc_msb: 18,
+  cc_lsb: null,
+  nrpn_msb: 1,
+  nrpn_lsb: 2,
+  mutation_status: 'documented_only',
+  pad_compatible: true,
+  live_blockers: [],
+};
+
+function srcPad(row: SrcParameter = srcDecay, params = { [row.key]: 72 }): PadState {
+  return { pad_id: 1, machine: 'SY Dual VCO', params, src_parameters: [row] };
+}
+
+function srcCandidate(key = srcDecay.key) {
+  return {
+    ...candidate,
+    pad_deltas: [{ pad_id: 1, proposed_params: { [key]: 91 }, changed_keys: [key] }],
+  };
+}
+
+describe('PadCard canonical SRC', () => {
+  beforeEach(() => useCockpitStore.getState().reset());
+  afterEach(() => useCockpitStore.getState().reset());
+
+  it('renders canonical names and exact wire facts with numeric CC7 values', () => {
+    const fake = renderWith(<PadCard pad={srcPad()} previewCandidate={null} previewOn={false} />);
+    expect(screen.getByText('Osc 1 Decay')).toBeInTheDocument();
+    expect(screen.getByText('CC7 / Ch 1 / CC 18')).toBeInTheDocument();
+    expect(screen.getByText('NRPN 1:2')).toBeInTheDocument();
+    expect(screen.getByText('Catalog: documented only')).toBeInTheDocument();
+    expect(within(screen.getByTestId('knob-CC18')).getByText('72')).toBeInTheDocument();
+    expect(screen.queryByText('Sweep Time')).not.toBeInTheDocument();
+    expect(screen.getByText('Sample')).toBeInTheDocument();
+    expect(screen.getByText('Filter Frequency')).toBeInTheDocument();
+    expect(screen.queryByText(/Blocked:/)).not.toBeInTheDocument();
+    expect(fake.sent).toEqual([]);
+  });
+
+  it('keeps absent pending SRC controls visible with exact backend refusal codes', () => {
+    const pending = { ...srcDecay, parameter: 'Osc 2 Detune', live_blockers: ['src_requires_guarded_detune_window'] };
+    renderWith(<PadCard pad={srcPad(pending, {})} previewCandidate={srcCandidate()} previewOn={true} />);
+    expect(screen.getByText('Osc 2 Detune')).toBeInTheDocument();
+    expect(screen.getByText('value unavailable')).toBeInTheDocument();
+    expect(screen.getByText('Blocked: value unavailable')).toBeInTheDocument();
+    expect(screen.getByText('Blocked: src_requires_guarded_detune_window')).toBeInTheDocument();
+    expect(screen.queryByTestId('knob-CC18')).not.toBeInTheDocument();
+  });
+
+  it('renders policy-blocked values but never draws their proposed ghost', () => {
+    const blocked = { ...srcDecay, live_blockers: ['src_cy_ride_slot_unverified'] };
+    renderWith(<PadCard pad={srcPad(blocked)} previewCandidate={srcCandidate()} previewOn={true} />);
+    expect(screen.getByTestId('knob-CC18')).toBeInTheDocument();
+    expect(screen.getByText('Blocked: src_cy_ride_slot_unverified')).toBeInTheDocument();
+    expect(screen.queryByTestId('knob-ghost-CC18')).not.toBeInTheDocument();
+  });
+
+  it('shows multiple blockers, incompatible pads and paired addresses without implying precision support', () => {
+    const row = {
+      ...srcDecay,
+      channel: 11,
+      cc_lsb: 50,
+      pad_compatible: false,
+      live_blockers: ['src_pitch_protected', 'src_selector_protected'],
+    };
+    renderWith(<PadCard pad={srcPad(row)} previewCandidate={srcCandidate()} previewOn={true} />);
+    expect(screen.getByText('CC7 / Ch 12 / CC 18 + 50')).toBeInTheDocument();
+    expect(screen.getByText('Blocked: incompatible pad')).toBeInTheDocument();
+    expect(screen.getByText('Blocked: src_pitch_protected')).toBeInTheDocument();
+    expect(screen.getByText('Blocked: src_selector_protected')).toBeInTheDocument();
+    expect(screen.getByText('Blocked: paired_control_precision_unverified')).toBeInTheDocument();
+    expect(screen.queryByTestId('knob-ghost-CC18')).not.toBeInTheDocument();
+  });
+
+  it.each([
+    { pad_compatible: false, cc_lsb: null },
+    { pad_compatible: true, cc_lsb: 50 },
+  ])('suppresses a preview independently for incompatibility or pairing: %s', (facts) => {
+    renderWith(
+      <PadCard pad={srcPad({ ...srcDecay, ...facts })} previewCandidate={srcCandidate()} previewOn={true} />,
+    );
+    expect(screen.queryByTestId('knob-ghost-CC18')).not.toBeInTheDocument();
+    expect(screen.getByTestId('knob-CC18')).toBeInTheDocument();
+  });
+
+  it.each([
+    { nrpn_msb: null, nrpn_lsb: 2 },
+    { nrpn_msb: 1, nrpn_lsb: null },
+  ])('does not invent an incomplete NRPN address: %s', (address) => {
+    renderWith(<PadCard pad={srcPad({ ...srcDecay, ...address })} previewCandidate={null} previewOn={false} />);
+    expect(screen.getByText('NRPN unavailable')).toBeInTheDocument();
+  });
+
+  it('preserves numeric preview ghosts, target toggles and authoritative locks', () => {
+    const fake = renderWith(<PadCard pad={srcPad()} previewCandidate={srcCandidate()} previewOn={true} />);
+    expect(screen.getByTestId('knob-ghost-CC18')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Target pad 1' }));
+    expect(screen.getByTestId('pad-card-1')).toHaveClass('targeted');
+    expect(screen.getByTestId('knob-ghost-CC18')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Lock pad 1' }));
+    expect(screen.getByTestId('pad-card-1')).toHaveClass('locked');
+    expect(screen.queryByTestId('knob-ghost-CC18')).not.toBeInTheDocument();
+    expect(fake.sent).toEqual([
+      { type: 'set_mutation_targets', device_id: 'analog_rytm_mk2', target_ids: [1] },
+      { type: 'set_pad_lock', pad_id: 1, locked: true },
+    ]);
   });
 });

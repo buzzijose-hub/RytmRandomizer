@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   applyEntryMove,
+  analogFourCandidateLabel,
   findActiveBank,
   findEntry,
   fingerprintMatchLabel,
@@ -18,6 +19,17 @@ import { forgeEntry, readyEntry, showBankState } from './showKitForgeFixture';
 const bank = showBankState.banks[0] as ShowBank;
 
 describe('Show Kit Forge model selectors', () => {
+  it('projects F1 labels without collapsing native collisions or changing F2 labels', () => {
+    for (const native of [16256, 16257, 16258]) {
+      expect(analogFourCandidateLabel('filter1_frequency', native, String(native / 256))).toBe('63.50');
+    }
+    expect(analogFourCandidateLabel('filter1_frequency', 32766, '127.9921875')).toBe('127.99');
+    for (const native of [32767, -1, 1.5, Number.NaN]) {
+      expect(analogFourCandidateLabel('filter1_frequency', native, 'invalid')).toBe('unavailable');
+    }
+    expect(analogFourCandidateLabel('filter2_frequency', 1, '0.00390625')).toBe('0.00390625');
+  });
+
   it('preserves unsaved metadata through unrelated authoritative revisions', () => {
     expect(shouldAdoptServerDraft(false, true, false)).toBe(false);
     expect(shouldAdoptServerDraft(true, true, false)).toBe(true);

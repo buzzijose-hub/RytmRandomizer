@@ -34,16 +34,18 @@ import logging
 import sys
 import types
 from collections.abc import Iterator, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any, Callable, Final
 
 import pytest
 
 if TYPE_CHECKING:
+    from rytm_randomizer.devices import Device
     from rytm_randomizer.devices.strategies.analog_four_saved_kit_writer import (
         AnalogFourSavedKitMutation,
     )
+    from rytm_randomizer.senders.armed_apply import ArmedApplySession
     from rytm_randomizer.style_analysis import AudioFeatureAnalysis, FeatureReport
 
 
@@ -371,6 +373,9 @@ def analog_four_saved_kit_frame(
     from rytm_randomizer.data.analog_four_saved_kit_layout import (
         A4_KIT_OBJECT_TRACK_SOUND_SIZE,
         A4_KIT_OBJECT_TRACKS_OFFSET,
+        A4_KIT_STORAGE_MARKER,
+        A4_KIT_SYNTH_TRACK_COUNT,
+        A4_SOUND_STORAGE_TRAILER,
     )
     from rytm_randomizer.devices.strategies.analog_four_offset_manifest import (
         A4_CHECKSUM_PACKED_OFFSET,
@@ -387,15 +392,22 @@ def analog_four_saved_kit_frame(
     from rytm_randomizer.snapshot.envelope import pack_elektron_7bit as pack
 
     unpacked = bytearray(A4_SAVED_KIT_UNPACKED_SIZE if unpacked_size is None else unpacked_size)
+    if len(unpacked) >= len(A4_KIT_STORAGE_MARKER):
+        unpacked[:4] = A4_KIT_STORAGE_MARKER
     unpacked[A4_KIT_NAME_OFFSET : A4_KIT_NAME_OFFSET + A4_KIT_NAME_LENGTH] = name[
         :A4_KIT_NAME_LENGTH
     ].ljust(A4_KIT_NAME_LENGTH, b"\x00")
     # Valid native Sound headers make this fixture usable by the canonical
     # typed saved-KIT accessor. Apply deliberate malformed overrides afterward.
     sound_header = A4_SOUND_SIGNATURE + A4_SOUND_FORMAT_MARKER
-    for offset in range(A4_KIT_OBJECT_TRACKS_OFFSET, len(unpacked), A4_KIT_OBJECT_TRACK_SOUND_SIZE):
+    for track in range(A4_KIT_SYNTH_TRACK_COUNT):
+        offset = A4_KIT_OBJECT_TRACKS_OFFSET + track * A4_KIT_OBJECT_TRACK_SOUND_SIZE
         if offset + A4_KIT_OBJECT_TRACK_SOUND_SIZE <= len(unpacked):
             unpacked[offset : offset + len(sound_header)] = sound_header
+            trailer_start = offset + A4_KIT_OBJECT_TRACK_SOUND_SIZE - len(A4_SOUND_STORAGE_TRAILER)
+            unpacked[trailer_start : trailer_start + len(A4_SOUND_STORAGE_TRAILER)] = (
+                A4_SOUND_STORAGE_TRAILER
+            )
     for offset, value in (unpacked_overrides or {}).items():
         unpacked[offset] = value
 
@@ -494,6 +506,36 @@ def elektron_syx_message(payload: bytes) -> bytes:
     return bytes([0xF0]) + payload + bytes([0xF7])
 
 
+@pytest.fixture
+def rytm_rio_return_frame() -> bytes:
+    """Load the retained OS 1.72 target-unit RIO KIT return without MIDI I/O."""
+
+    return (
+        Path(__file__).parent / "fixtures" / "rio145" / "RYTM_RIO145_AR_CORE_RETURN_Kit.syx"
+    ).read_bytes()
+
+
+def rytm_frame_with_machine_values(frame: bytes, machine_values: Mapping[int, int]) -> bytes:
+    """Alter only declared machine bytes through the canonical offline KIT codec."""
+
+    from rytm_randomizer.data.analog_rytm_kit_layout import (
+        RYTM_SOUND_MACHINE_TYPE_OFFSET,
+        analog_rytm_track_sound_offset,
+    )
+    from rytm_randomizer.devices.strategies.analog_rytm_saved_kit_codec import (
+        decode_analog_rytm_saved_kit_frame,
+        encode_analog_rytm_saved_kit_frame,
+    )
+
+    saved_kit = decode_analog_rytm_saved_kit_frame(frame)
+    unpacked = bytearray(saved_kit.unpacked)
+    for pad, machine_value in machine_values.items():
+        unpacked[analog_rytm_track_sound_offset(pad, RYTM_SOUND_MACHINE_TYPE_OFFSET)] = (
+            machine_value
+        )
+    return encode_analog_rytm_saved_kit_frame(saved_kit.header, bytes(unpacked))
+
+
 def analog_four_minimal_kit_payload(name: bytes = b"A4 KIT") -> bytes:
     """Build the minimal Analog Four kit payload shape used by passive reports."""
 
@@ -553,3 +595,79 @@ def no_sleep() -> Callable[[float], None]:
         return None
 
     return _impl
+
+
+_PORT: Final[str] = "fake paced output"
+_TOKEN: Final[str] = "paced-arm-token"
+_ACTION: Final[str] = "paced-action"
+_PACKETS: Final[tuple[tuple[int, int, int], ...]] = ((0, 74, 1), (2, 71, 127), (15, 7, 0))
+
+
+@dataclass(frozen=True)
+class _PacingPlan:
+    packets: tuple[tuple[int, int, int], ...] = _PACKETS
+    ready: bool = True
+    readiness_reason: str = "not ready for pacing"
+
+
+@dataclass
+class _PacingIO:
+    """Shared fake event ledger for synchronous and cooperative delivery."""
+
+    events: list[tuple[str, object]] = field(default_factory=list)
+    sent: list[object] = field(default_factory=list)
+    sleeps: list[float] = field(default_factory=list)
+    opened: list[str] = field(default_factory=list)
+    rendered: list[object] = field(default_factory=list)
+    send_error: BaseException | None = None
+    sleep_error: BaseException | None = None
+    close_error: BaseException | None = None
+    send_fail_after: int = 0
+    sleep_fail_after: int = 0
+    send_attempts: int = 0
+    closed: int = 0
+
+    def open_exact(self, port_name: str) -> _PacingIO:
+        assert port_name == _PORT
+        self.opened.append(port_name)
+        return self
+
+    def render(self, plan: object) -> Iterator[tuple[int, int, int]]:
+        assert isinstance(plan, _PacingPlan)
+        self.rendered.append(plan)
+        return iter(plan.packets)
+
+    def send(self, message: object) -> None:
+        self.send_attempts += 1
+        if self.send_error is not None and len(self.sent) >= self.send_fail_after:
+            raise self.send_error
+        self.sent.append(message)
+        self.events.append(("send", message))
+
+    def sleep(self, seconds: float) -> None:
+        self.sleeps.append(seconds)
+        self.events.append(("sleep", seconds))
+        if self.sleep_error is not None and len(self.sleeps) > self.sleep_fail_after:
+            raise self.sleep_error
+
+    def close(self) -> None:
+        self.closed += 1
+        self.events.append(("close", None))
+        if self.close_error is not None:
+            raise self.close_error
+
+
+@pytest.fixture
+def pacing_rig() -> Iterator[tuple[ArmedApplySession, _PacingIO, Device]]:
+    """One fake armed session shared by pacing and async-delivery tests."""
+    from rytm_randomizer.devices import get_device
+    from rytm_randomizer.senders.armed_apply import ArmedApplySession
+
+    io = _PacingIO()
+    session = ArmedApplySession(opener=io, port_name=_PORT, arm_token=_TOKEN, sleep=io.sleep)
+    session.arm(_TOKEN)
+    session.confirm(_ACTION)
+    try:
+        yield session, io, get_device("analog_four_mk2")
+    finally:
+        session.disarm()

@@ -518,7 +518,8 @@ def test_aggregate_scan_bounds_and_failed_export_reservation_are_enforced(
     assert not (service.package_root / "oversized.show-pack").exists()
     monkeypatch.setattr(export_module, "SHOW_PACK_MAX_TOTAL_BYTES", 64 * 1024 * 1024)
 
-    def fail_publication(_artifacts, *, overwrite=False):
+    def fail_publication(_artifacts, *, overwrite=False, redact_diagnostics=False):
+        assert redact_diagnostics is True
         raise RuntimeError(f"publication failed: {overwrite}")
 
     monkeypatch.setattr(export_module, "atomic_write_set", fail_publication)
@@ -562,7 +563,7 @@ def test_capture_codec_failure_cannot_produce_verified_package(
 ) -> None:
     service, exported, bank, frames = _strict_package(tmp_path)
     source_frame = frames[bank.entries[0].rytm_source.sysex.artifact_id]
-    original_decode = export_module.decode_kit_capture_frame
+    original_decode = store_module.decode_kit_capture_frame
 
     def damaged_decode(device_id, frame_bytes):
         if frame_bytes == source_frame:
@@ -579,7 +580,7 @@ def test_capture_codec_failure_cannot_produce_verified_package(
             )
         return original_decode(device_id, frame_bytes)
 
-    monkeypatch.setattr(export_module, "decode_kit_capture_frame", damaged_decode)
+    monkeypatch.setattr(store_module, "decode_kit_capture_frame", damaged_decode)
     with pytest.raises(DataError, match="codec") as failure:
         service.verify(exported.package_id)
     assert failure.value.context["category"] == "framing"
@@ -679,11 +680,11 @@ def test_recapture_projection_failure_is_bound_to_the_recorded_artifact(
             recorded_result = result
         return result
 
-    def unavailable_recapture_projection(result, *args):
+    def unavailable_recapture_projection(result, *args, **kwargs):
         # Source and candidate projections still use the real implementation.
         if result is recorded_result:
             raise ValueError("registered recapture projection unavailable")
-        return original_semantics(result, *args)
+        return original_semantics(result, *args, **kwargs)
 
     monkeypatch.setattr(export_module, "_decoded_capture", remember_recorded_result)
     monkeypatch.setattr(export_module, boundary, unavailable_recapture_projection)

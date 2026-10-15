@@ -1,0 +1,5 @@
+[
+  "tests/fixtures/rio145/A4_Test1_Init_Kit.syx",
+  "tests/fixtures/rio145/A4_RIO145_CORE_RETURN_Kit.syx",
+  "specs/rio145/come_to_rio_a4_core.json"
+]

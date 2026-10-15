@@ -1,0 +1,67 @@
+{
+  "env2_depth_a": [
+    "tests/fixtures/rio145/A4_Test4_T1_ENV2_DEPA_P1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test5_T1_ENV2_DEPA_M1_Kit.syx"
+  ],
+  "env2_depth_b": [
+    "tests/fixtures/rio145/A4_Test4_T1_ENV2_DEPA_P1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test5_T1_ENV2_DEPA_M1_Kit.syx"
+  ],
+  "envf_depth_a": [
+    "tests/fixtures/rio145/A4_Test4_T1_ENV2_DEPA_P1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test5_T1_ENV2_DEPA_M1_Kit.syx"
+  ],
+  "envf_depth_b": [
+    "tests/fixtures/rio145/A4_Test4_T1_ENV2_DEPA_P1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test5_T1_ENV2_DEPA_M1_Kit.syx"
+  ],
+  "filter1_frequency": [
+    "tests/fixtures/analog_four_saved_kit/filter1_freq_127_source.syx",
+    "tests/fixtures/analog_four_saved_kit/filter1_freq_000_expected.syx",
+    "tests/fixtures/analog_four_saved_kit/filter1_freq_063_50_expected.syx"
+  ],
+  "filter2_resonance": [
+    "tests/fixtures/analog_four_saved_kit/filter2_res_000_source.syx",
+    "tests/fixtures/analog_four_saved_kit/filter2_res_127_expected.syx"
+  ],
+  "lfo1_depth_a": [
+    "tests/fixtures/rio145/A4_Test4_T1_ENV2_DEPA_P1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test5_T1_ENV2_DEPA_M1_Kit.syx"
+  ],
+  "lfo1_depth_b": [
+    "tests/fixtures/rio145/A4_Test4_T1_ENV2_DEPA_P1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test5_T1_ENV2_DEPA_M1_Kit.syx"
+  ],
+  "lfo2_depth_a": [
+    "tests/fixtures/rio145/A4_Test4_T1_ENV2_DEPA_P1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test5_T1_ENV2_DEPA_M1_Kit.syx"
+  ],
+  "lfo2_depth_b": [
+    "tests/fixtures/rio145/A4_Test4_T1_ENV2_DEPA_P1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test5_T1_ENV2_DEPA_M1_Kit.syx"
+  ],
+  "osc1_fine": [
+    "tests/fixtures/rio145/A4_Test2_T1_OSC1_FIN_P1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test3_T1_OSC1_FIN_M1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test6_T1_OSC1_FIN_P2_Kit.syx",
+    "tests/fixtures/rio145/A4_Test7_T1_OSC1_FIN_M2_Kit.syx"
+  ],
+  "osc1_tune": [
+    "tests/fixtures/rio145/A4_Test2_T1_OSC1_FIN_P1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test3_T1_OSC1_FIN_M1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test6_T1_OSC1_FIN_P2_Kit.syx",
+    "tests/fixtures/rio145/A4_Test7_T1_OSC1_FIN_M2_Kit.syx"
+  ],
+  "osc2_fine": [
+    "tests/fixtures/rio145/A4_Test2_T1_OSC1_FIN_P1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test3_T1_OSC1_FIN_M1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test6_T1_OSC1_FIN_P2_Kit.syx",
+    "tests/fixtures/rio145/A4_Test7_T1_OSC1_FIN_M2_Kit.syx"
+  ],
+  "osc2_tune": [
+    "tests/fixtures/rio145/A4_Test2_T1_OSC1_FIN_P1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test3_T1_OSC1_FIN_M1_Kit.syx",
+    "tests/fixtures/rio145/A4_Test6_T1_OSC1_FIN_P2_Kit.syx",
+    "tests/fixtures/rio145/A4_Test7_T1_OSC1_FIN_M2_Kit.syx"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "a4": {
+    "checked_pages": [
+      37,
+      97,
+      98,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107
+    ],
+    "findings": [
+      "FX NRPN bank2 and CV bank3 are distinct from synth/performance context.",
+      "Envelope/LFO MIDI tables document addresses, not exact ordinal-to-native conversion.",
+      "CSV reference tracks can include FX/CV pages that the synth saved-field strategy does not cover.",
+      "July physical enum corrections supersede plugin/list-index hypotheses; general A4/BOTH remains held."
+    ],
+    "method": "official PDF text inspection; no document bytes redistributed",
+    "not_checked": "OS1.51C manual does not prove installed OS1.55 target behavior or physical acceptance.",
+    "version": "OS1.51C_220204"
+  },
+  "rytm": {
+    "checked_pages": [
+      85,
+      86,
+      87,
+      93,
+      94,
+      105,
+      108
+    ],
+    "findings": [
+      "BT Classic Sweep Depth: CC19, NRPN1:3; absent from supplied CSV, not from manual.",
+      "CY Ride Hit Decay: CC19/NRPN1:3; Cymbal Type: CC20/NRPN1:4; agrees with narrow inbound receipts.",
+      "General SRC ordering differs from front-panel parameter ordering; machine context is mandatory.",
+      "LFO Depth pairs CC109/118; CSV and native representation cannot certify paired output or restore.",
+      "MIDI appendix establishes addresses, not narrower ranges, enum inverses or per-row physical receipts."
+    ],
+    "method": "read-only official PDF fetch and local pypdf extraction; originals untouched",
+    "not_checked": "No target-unit outbound, native-slot, precision, freshness or restore experiment.",
+    "pages": 114,
+    "retrieved_bytes": 13216102,
+    "retrieved_sha256": "6485fc5eee11cd210913fa6041cde889b74ddaff19042220cea1db4b7b5d985f",
+    "version": "OS1.72_250130"
+  }
+}

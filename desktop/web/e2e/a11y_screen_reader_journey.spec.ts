@@ -36,7 +36,7 @@ test.describe('SR-equivalent journey', () => {
       '12 pads mapped',
     );
     await expect(page.getByTestId('device-rail-rytm-pad-1')).toContainText('BD Hard');
-    await expect(page.getByTestId('device-rail-rytm-pad-12')).toContainText('BD Acoustic');
+    await expect(page.getByTestId('device-rail-rytm-pad-12')).toContainText('CB Classic');
     await expect(deviceStatus.getByRole('region', { name: 'Analog Four MKII' })).toContainText(
       '4 tracks staged',
     );

@@ -6,6 +6,10 @@ from dataclasses import dataclass
 from hashlib import sha256
 from typing import Final
 
+from ...data.analog_four_saved_kit_layout import (
+    A4_SNAPSHOT_LAYOUT_WORKING_KIT,
+    AnalogFourKitSourceKind,
+)
 from ...snapshot.envelope import ELEKTRON_MFR_ID, read_ascii_name
 from .analog_four_offset_manifest import (
     A4_CANDIDATE_KIT_TYPE_BYTE,
@@ -102,5 +106,9 @@ def _decode_saved_kit_payload(raw: bytes, *, slot: int) -> AnalogFourKitSnapshot
         raw=bytes(raw),
         offsets_promoted=False,
         unpacked=decoded.unpacked,
-        snapshot_layout=A4_SNAPSHOT_LAYOUT_SAVED_KIT,
+        snapshot_layout=(
+            A4_SNAPSHOT_LAYOUT_WORKING_KIT
+            if decoded.source_kind is AnalogFourKitSourceKind.WORKING_RAM
+            else A4_SNAPSHOT_LAYOUT_SAVED_KIT
+        ),
     )

@@ -30,6 +30,7 @@ Current baseline used while creating / refreshing this document:
 | Registry, lookup, inspection | `rytm_randomizer/registry.py`, `rytm_randomizer/profile_lookup.py`, `rytm_randomizer/inspection.py`, `rytm_randomizer/validation.py`, `rytm_randomizer/cli_registry.py` |
 | Report surfaces | `rytm_randomizer/reports/__init__.py` + `reports/{_passive_section,formatter,manual_feedback_packet,cockpit_send_plan_operator_readiness,cockpit_send_plan_rehearsal_surface,controller_brain_rehearsal,controller_mapping_profile_catalog,reference_style_blueprint,local_model_copilot,analog_four_baseline,analog_four_kit_catalog,analog_four_patch_genome,analog_four_patch_learning,analog_four_patch_corpus,analog_four_patch_send_plan,analog_four_oxi_macro_set_planner,analog_four_style_kit_readiness,analog_four_style_mutation_intent,analog_four_style_mutation_mock_preview,analog_four_style_snapshot_routing,dual_machine_style_kit_readiness,dual_machine_style_kit_selection,dual_machine_style_live_audition,dual_machine_style_mutation_intent,dual_machine_style_mutation_mock_preview,dual_machine_style_performance_set_plan,dual_machine_style_selection_mock_preview,dual_machine_style_snapshot_routing,live_analyzer_handoff,live_analyzer_targets,live_command_deck,live_control_surface,live_gui_action_reducer,live_gui_analyzer_frame,live_gui_analyzer_overlay,live_gui_analyzer_readiness,live_gui_capture_queue,live_gui_capture_review,live_gui_controller_state,live_gui_desktop_app_plan,live_gui_desktop_blueprint,live_gui_desktop_component_contract,live_gui_desktop_view_model,live_gui_implementation_bridge,live_gui_interaction_script,live_gui_performance_console_model,live_gui_playback_transcript,live_gui_playback_validation,live_gui_rehearsal_session,live_gui_render_tree,live_gui_screen_contract,live_gui_sidecar_session,live_gui_test_harness_contract,live_gui_test_harness_readiness,live_performance_readiness,live_performance_runbook,live_performance_state,live_set_cockpit,live_show_export,live_stage_rehearsal_state,live_stage_snapshot_routing,live_transition_timeline,rytm_machine_matrix,rytm_snapshot_pad_compatibility,rytm_snapshot_intelligence,rytm_snapshot_mutation_preview,rytm_style_kit_readiness,rytm_style_mutation_intent,rytm_style_mutation_mock_preview,rytm_style_mutation_render_plan,rytm_style_snapshot_routing,style_performance_arcs,style_profiles,style_targets}.py` plus `reports/performance_console/{live_kit_capture_workbench,live_kit_package_audition,live_kit_operator_package,live_kit_operator_review_ledger,payload_helpers}.py` (subpackage; was the old top-level `reports.py`) |
 | Long-form reference report | `rytm_randomizer/reports/reference_audio_atlas.py` |
+| Passive support inventory | `rytm_randomizer/reports/device_support_inventory.py`, `rytm_randomizer/data/device_support_inventory.py`, canonical MIDI/field/calibration catalogs, typed field codecs and passive Cockpit binding/stage policy |
 | Local AI packets | `rytm_randomizer/local_ai/{provider,local_model,rag,mutation_intent}.py` |
 | Behavior parity evaluators | `rytm_randomizer/behavior/*.py` (subpackage; was 8 top-level `behavior_*.py` files) |
 | Runtime-adjacent state | `rytm_randomizer/state/{anchor,group,pad_mode,scene,selection,anchor_validation,selected_target_validation,selected_isolated_pad_validation}.py` |
@@ -176,6 +177,7 @@ flowchart TB
         ShowBankPkg["show_bank/ nested subpackage<br/>forge · readiness · workspace<br/>store · export"]
         ShowBankData["data/show_bank.py<br/>immutable paired evidence DTOs"]
         ShowBankServices["capture/ · engine/<br/>export/ · profiles/<br/>reused Cockpit services"]
+        SupportPolicy["data/rytm_parameter_map.py + data/stage.py<br/>passive key bindings + authority blockers"]
     end
 
     subgraph GuardrailsPkg["guardrails/"]
@@ -188,6 +190,7 @@ flowchart TB
     subgraph ReportsPkg["reports/ subpackage<br/>(was reports.py)"]
         RInit["__init__.py<br/>report builders"]
         RFormatter["formatter.py<br/>PassiveReportHeader"]
+        RSupportInventory["device_support_inventory.py<br/>canonical support/evidence view<br/>text / JSON; no readiness grant"]
         RManualFeedback["manual_feedback_packet.py<br/>passive manual feedback evidence packet<br/>+ registered CliCommand"]
         RMatrix["rytm_machine_matrix.py<br/>12-pad machine report + CliCommand"]
         RSnapshot["rytm_snapshot_pad_compatibility.py<br/>snapshot-safe pad/machine report + CliCommand"]
@@ -342,6 +345,9 @@ flowchart TB
     SendHardware --> RealAdapter
 
     ReportsPkg --> RFormatter
+    RSupportInventory --> DataLayer
+    RSupportInventory --> DevicesPkg
+    RSupportInventory --> SupportPolicy
     ReportsPkg --> RegistryCore
     ReportsPkg --> BehaviorPkg
     ReportsPkg --> StyleAnalysis
@@ -529,7 +535,8 @@ classDiagram
 
 - **Protocol vs class.** `Device`, `SnapshotDecoder`, `MutationPlanner`, `MessageRenderer`, `MidiOutbox` are `@runtime_checkable Protocol`s. They're not inherited from — concrete classes match structurally. This is Gate 6 (type-system hygiene) and lets PR #21 / PR #36's `AnalogFourDevice` drop in without inheritance gymnastics.
 - **Composition over inheritance.** `AnalogRytmDevice` and `AnalogFourDevice` construct strategy instances in `__init__` and delegate their convenience methods to them. The Rytm device also exposes the narrow optional `AnalogRytmSavedKitCodecCapability`; both registered families structurally opt into `SavedKitCaptureCapability`, resolved through `devices/saved_kit_capture.py`, without widening the base `Device` Protocol. Cockpit capture therefore imports neither concrete family codec. The strategies don't know about each other except through their shared device-family types (`RytmKitSnapshot`, `RytmMutationPlan`, `RytmPlanEvent`, `AnalogFourKitSnapshot`, and `AnalogFourMutationPlan`).
-- **Optional offline A4 capability.** Forge calls the public `devices.get_analog_four_filter1_frequency_candidate_capability()` resolver, which narrows the existing registered A4 device to `AnalogFourFilter1FrequencyCandidateCapability`. Its pure strategy produces only local Filter 1 Frequency candidate bytes with `hardware_send_validated = false`; it does not widen `Device` or create an A4 SEND path.
+- **Optional offline A4 capabilities.** Forge resolves native-field or legacy Filter 1 Frequency capabilities through the registered Device. Native policy has 106 rows / 72 potentially mutable keys with source-known, OXI AMP, independent FIN and default-only protection. Both reuse the canonical field codec/isolated renderer, keep `hardware_send_validated = false`, and do not widen mandatory `Device` or create A4 SEND.
+  Device composition and native validation both derive the synth-track count from the canonical saved-KIT data constant; no second literal count authority exists.
 - **Import-time registration.** `analog_rytm.py` calls `register_device(AnalogRytmDevice())` at module load. The `devices/__init__.py` imports `analog_rytm` for the side effect; consumers get a non-empty registry on first import.
 - **Adding a new family** = one device class + three strategy modules + register at import. No parallel sibling subpackages allowed (enforced by `test_device_protocol_enforcement.py`).
 
@@ -1204,6 +1211,7 @@ flowchart LR
 
     subgraph ReportCmds["Direct read-only report commands"]
         Report["report<br/>format_registry_report()"]
+        DeviceSupportInventory["device-support-inventory-report<br/>text or --json"]
         MockMapper["mock-mapper-report"]
         Runtime["runtime-plan-report"]
         Active["active-boundary-report"]
@@ -1266,6 +1274,10 @@ flowchart LR
         A4AudioPatchRefine["analog-four-audio-patch-refine<br/>one render -> accept or one corrected candidate"]
     end
 
+    subgraph A4InspectionCmds["Passive A4 source-kind inspection"]
+        A4WorkingCompare["a4-working-kit-compare<br/>six supplied frames; JSON inspection only"]
+    end
+
     subgraph RytmLocalCmds["Passive Analog Rytm local-file commands"]
         AL16RytmExport["al16-rytm-kit-export<br/>recipe + initialized kit -> verified evidence"]
         AL16RytmMappingEvidence["al16-rytm-mapping-evidence<br/>initialized + configured kits -> review packet"]
@@ -1283,15 +1295,24 @@ flowchart LR
     CLI --> BrowseCmds
     CLI --> StyleBrowseCmds
     CLI --> A4LocalCmds
+    CLI --> A4InspectionCmds
     CLI --> RytmLocalCmds
     CLI --> RIO145LocalCmds
 
     ReportCmds --> ReportsPkg["reports/<br/>(PassiveReportHeader + builders)"]
+    DeviceSupportInventory --> SupportInventory["reports/device_support_inventory.py<br/>canonical evidence inventory"]
+    SupportInventory --> SupportFacts["existing Rytm/A4 catalogs + field schemas<br/>layout / calibration / evidence references"]
+    SupportInventory --> SupportCodecs["existing typed native field codecs<br/>passive Cockpit key bindings + stage policy"]
+    SupportInventory --> SupportEvidence["catalog coverage / native saved-file support<br/>live transport + precision / physical proof<br/>independent dimensions; no SEND grant"]
     ReferenceAudioAtlasReport --> ReferenceAudioAtlasCore["style_analysis/reference_audio_atlas.py<br/>bounded sequential extraction + diversity selection"]
     ReferenceAudioAtlasCore --> AtlasReuse["existing A4 patch genome + reference-style blueprint"]
     BrowseCmds --> RegistryCore["registry.py<br/>profile_lookup.py<br/>inspection.py"]
     StyleBrowseCmds --> ReportsPkg
     A4LocalCmds --> A4ExportPipeline["cockpit/export/<br/>saved-kit writer + batch + rank + bounded refinement"]
+    A4WorkingCompare --> WorkingRegistry["cli_registry.py<br/>registered passive CliCommand"]
+    WorkingRegistry --> WorkingAdapter["reports/analog_four_working_kit_comparison_cli.py"]
+    WorkingAdapter --> WorkingReport["bounded file report / all raw and body differences"]
+    WorkingReport --> WorkingCapture["registered Device capture capability<br/>no query / send / restore grant"]
     RytmLocalCmds --> RytmExportAdapter["cockpit/export/al16_rytm_cli.py<br/>arguments + process status"]
     RytmExportAdapter --> RytmExportService["cockpit/export/al16_rytm_kit.py<br/>fail-closed audit + atomic evidence"]
     AL16RytmMappingEvidence --> RytmMappingAdapter["cockpit/export/al16_rytm_mapping_closure_cli.py<br/>passive arguments + atomic JSON output"]
@@ -1314,6 +1335,14 @@ flowchart LR
 ```
 
 **Architecture test:** `test_real_midi_import_safety.py` + `test_real_midi_passive_cli_safety.py` enforce that the passive CLI never imports `mido` or `rtmidi` and never opens a real port (hardware safety boundaries from CONTRIBUTING.md).
+
+The support report has no provider, enumeration, mutation, PREPARE or ArmedApply
+edge. It derives current evidence and blockers from canonical owners rather
+than maintaining another support registry. JSON and text are review outputs,
+not capability promotion or a physical observation. Native Q8.8 support does
+not imply fractional or paired MIDI readiness. See
+[Device Support Inventory](DEVICE_SUPPORT_INVENTORY.md) for reproduction and
+the independent support dimensions.
 
 ---
 
@@ -2026,6 +2055,7 @@ flowchart LR
 
     subgraph Reports["Passive reports"]
         RegistryC["report"]
+        DeviceSupportInventory["device-support-inventory-report [--json]<br/>evidence only; no hardware discovery"]
         MockMapper["mock-mapper-report"]
         Runtime["runtime-plan-report"]
         Active["active-boundary-report"]
@@ -2053,6 +2083,7 @@ flowchart LR
         A4PatchCorpus["analog-four-patch-corpus-report"]
         A4PatchSendPlan["analog-four-patch-send-plan-report"]
         A4SavedKitExport["analog-four-saved-kit-export --source K --output O --filter2-resonance T:V [...]"]
+        A4WorkingCompare["a4-working-kit-compare<br/>six files + explicit track/origin"]
         AL16RytmExport["al16-rytm-kit-export --reference K --recipe R --destination-slot N --output O"]
         RIO145Commands["rio145-*<br/>inspect / diff / roundtrip / A4+Rytm build+return / OXI manifest"]
         AL16RytmMappingEvidence["al16-rytm-mapping-evidence --reference K --configured C --recipe R --gap-manifest G --expected-gap-manifest-sha256 H --report O"]
@@ -2093,6 +2124,7 @@ flowchart LR
     CLI --> Reports
 
     CliRegistry -->|"registered passive command:<br/>rytm-12-pad-machine-matrix-report"| CLI
+    CliRegistry -->|"registered passive command:<br/>device-support-inventory-report"| CLI
     CliRegistry -->|"registered passive command:<br/>manual-feedback-packet-report"| CLI
     CliRegistry -->|"registered passive command:<br/>rytm-snapshot-pad-compatibility-report"| CLI
     CliRegistry -->|"registered passive command:<br/>rytm-snapshot-intelligence-report"| CLI
@@ -2114,6 +2146,10 @@ flowchart LR
     CliRegistry -->|"registered passive command:<br/>analog-four-patch-corpus-report"| CLI
     CliRegistry -->|"registered passive command:<br/>analog-four-patch-send-plan-report"| CLI
     CliRegistry -->|"registered local-file command:<br/>analog-four-saved-kit-export"| CLI
+    CliRegistry -->|"registered passive comparison command:<br/>a4-working-kit-compare"| CLI
+    A4WorkingCompare --> WorkingAdapter["reports/analog_four_working_kit_comparison_cli.py"]
+    WorkingAdapter --> WorkingReport["bounded supplied-file report<br/>all hashes/differences and repeat/save/recovery checks"]
+    WorkingReport --> WorkingCapture["registered Device capture capability<br/>no query / send / restore authority"]
     CliRegistry -->|"registered passive local-file commands:<br/>six rio145-* commands"| CLI
     CliRegistry -->|"registered passive command:<br/>al16-rytm-mapping-evidence"| CLI
     CliRegistry -->|"registered passive-hardware command:<br/>analog-four-audio-patch-batch"| CLI
@@ -2143,6 +2179,8 @@ flowchart LR
 **Current nuance:**
 
 - The `cli.py` is visibility-first. No active execution / send / hardware-test command is wired here.
+- `a4-working-kit-compare` routes the existing registry to a bounded supplied-file adapter/report and canonical capture capability. It distinguishes indexed52/working58, exact words/labels and all differences; it cannot acquire replies or promote physical freshness/recovery.
+- `device-support-inventory-report` exposes canonical catalog, saved-file, transport/precision and physical-proof dimensions independently. It never grants output authority, promotes offsets, discovers a port or establishes show readiness.
 - `app.py` is the interactive entry point and is the ONLY surface where the `--arm` flag triggers real MIDI. The A4 manifest reader validates the complete stored CC/NRPN plan before the app constructs the provider; the passive CLI, local SysEx writer, batch generator, eight-candidate DNA workspace, ranker, bounded render refinement, and local-model copilot never open a port.
 - `audio-patch-dna` decodes the source audio once, displays exactly eight fixed candidate directions, and writes deterministic comparison artifacts. Only an explicit `--select` paired with `--source-kit` invokes the existing passive A4 file exporter, using the precomputed selected candidate without a second audio decode.
 - `audio-patch-studio-session` composes that selected export with one SHA-verified recorded render and one bounded accept/refine pass. Its JSON state is the durable commit marker; repeated requests are idempotent, artifact drift fails closed, and the service remains file-only.
@@ -2234,7 +2272,7 @@ The diagrams DO NOT claim that the project currently has:
 
 - Real MIDI sending in the passive default (an explicit arm is always required)
 - Automatic *output* arming from port discovery (enumeration and input opens are passive; nothing arms itself)
-- A4 Cockpit SEND, destination-slot rewriting, or general captured-A4 saved-KIT mutation. Show Kit Forge's one exception is a local-file-only Filter 1 Frequency candidate renderer with `hardware_send_validated = false`.
+- General-stage A4 Cockpit SEND, destination-slot rewriting, or unrestricted captured-A4 mutation. The separate unqualified studio boundary permits bounded scalar RAM attempts, not stage readiness. Offline candidates and the legacy F1 algorithm retain `hardware_send_validated = false`.
 - Restore-to-device / persistent kit writes (refused at the seam — no capture-before-write or restore path exists)
 - A repo-wide single transmit path (the cockpit routes through the ArmedApply seam; legacy `app.py` still owns allowlisted output paths)
 - `analog_four/` / `rytm/` / `essence/` top-level subpackages (anti-pattern, rejected by arch tests in §10)
@@ -2293,7 +2331,7 @@ flowchart TB
     subgraph ArmedSeam["ArmedApply seam (the cockpit's only output path)"]
         ArmedApply["senders/armed_apply.py<br/>· ArmedApplySession<br/>· arm(token) + confirm(action) + apply()<br/>· refuses persistent kit writes"]
         ExactOpener["senders/hardware.py<br/>ExactOutputOpener<br/>· fail-closed exact-name match"]
-        MidoProvider["mido_provider.py<br/>· lazy mido import<br/>· real MIDI port lifecycle"]
+        MidoProvider["mido_provider.py<br/>· lazy mido import<br/>· real MIDI port lifecycle<br/>· validate CC fields and reconstruct<br/>  neutral or legacy public-type messages"]
     end
 
     Rytm["Elektron Analog Rytm MK2<br/>(USB MIDI)"]
@@ -2908,8 +2946,8 @@ sequenceDiagram
     alt token matches
         Endpoint-->>TauriShell: {"ok": true}
         Note over Endpoint: BOOTSTRAP
-        Endpoint-->>TauriShell: 1 session_status<br/>2 snapshot_changed<br/>3 profile_changed<br/>4 profile_catalog_changed<br/>5 history_updated<br/>6 patch_genome_changed<br/>7 kit_captures_changed<br/>8 mutation_targets_changed<br/>9 mutation_locks_changed<br/>10 dual_machine_stage_changed<br/>11 performance_console_changed
-        Note over Endpoint,TauriShell: Optional 12 connection_changed<br/>when a connection manager is wired
+        Endpoint-->>TauriShell: 1 session_status<br/>2 snapshot_changed<br/>3 profile_changed<br/>4 profile_catalog_changed<br/>5 history_updated<br/>6 patch_genome_changed<br/>7 kit_captures_changed<br/>8 mutation_targets_changed<br/>9 mutation_locks_changed<br/>10 mutation_parameters_changed<br/>11 dual_machine_stage_changed<br/>12 performance_console_changed
+        Note over Endpoint,TauriShell: Optional 13 connection_changed<br/>when a connection manager is wired
         Note over Endpoint: COMMAND LOOP (SX1)
         loop until disconnect
             TauriShell->>Endpoint: text frame
@@ -3146,7 +3184,12 @@ sequenceDiagram
 flowchart LR
     Operator["Operator"] --> CaptureUI["Capture Current Kit<br/>exact input selection"]
     CaptureUI --> InputBoundary["app --arm<br/>--cockpit-kit-capture-sidecar<br/>INPUT ONLY"]
-    InputBoundary --> Codecs["Rytm/A4 saved-KIT codecs<br/>family + checksum + length<br/>exact decode/re-encode"]
+    InputBoundary --> UniqueInput["fresh input listing at open<br/>exactly one matching name<br/>ambiguity refuses before open"]
+    UniqueInput --> CaptureProvider["SysexCaptureProvider<br/>optional CancellableSysexCaptureProvider<br/>legacy bounded receive fallback"]
+    CaptureProvider --> Reservation["capture reservation held<br/>through decode + source adoption"]
+    Reservation --> Codecs["Rytm/A4 saved-KIT codecs<br/>family + checksum + length<br/>exact decode/re-encode"]
+    CaptureTeardown["cancel / disconnect / context invalidated"] --> CancelCapture["cancel input polling<br/>reject stale-generation result<br/>retain previous verified source"]
+    CancelCapture --> CaptureBlocked["no new source adoption"]
 
     Codecs --> RytmAnchor["Verified Rytm anchor"]
     Codecs --> A4Anchor["Verified A4 anchor"]
@@ -3156,24 +3199,46 @@ flowchart LR
 
     Scope["effective scope<br/>(targets or complete domain)<br/>minus locks"] --> RytmLane
     Scope --> A4Lane
+    ParameterScope["canonical page / item / parameter selection<br/>null = legacy all; empty = none<br/>validate before proposals; locks/protection win"] --> RytmLane
+    ParameterScope --> A4Offline
+    ParameterScope --> Prepare
+    ScopeFacade["cockpit/parameter_scope.py<br/>public facade only"] --> CaptureMetadata["cockpit/capture/parameter_scope.py<br/>catalog / Device / snapshot domain"]
+    ScopeFacade --> PureCellValidator["cockpit/engine/parameter_scope.py<br/>pure canonical cell validator"]
+    CaptureMetadata --> ParameterScope
+    LocalFavorites --> PureCellValidator
+    LocalFavorites --> FavoriteDTO["cockpit.data<br/>immutable source / recipe / candidate"]
+    LocalFavorites["LibraryStore schema 3<br/>original framed source + semantic favorite<br/>profile / scope / locks / seed / depth"] --> LocalRecall["verify deterministic values<br/>disarm; invalidate plan<br/>fresh preparation required"]
+    LocalFavorites --> SourceFiles["file sources via registered codec<br/>no live-capture freshness"]
+    SourceFiles --> PortableBank["ShowBank v3<br/>immutable recipe/profile/native algorithm<br/>original + generated frames retained"]
+    PortableBank --> BankReplay["export/import exact replay<br/>explicit unused bank ID<br/>catalog-only; disarmed recall"]
+    PortableBank --> RecallCheck["validate source / recipe / profile / frame<br/>before publishing local selection"]
+    RecallCheck --> LocalRecall
+    LocalFavorites --> SensitiveWrite["shared atomic writer<br/>opt-in redacted diagnostics<br/>recovery bytes preserved"]
+    ArtifactReader["cockpit.export.reader<br/>bounded stable-identity reads<br/>duplicate-key JSON refusal"] --> LocalFavorites
+    ArtifactReader --> PortableBank
+    RytmLane --> LocalFavorites
+    LocalRecall --> RytmLane
     Coordinator["DualMachineStageCoordinator<br/>whole-state revision"] --> RytmLane
     Coordinator --> A4Lane
 
     RytmLane --> Prepare["PREPARE<br/>exact plan id + pads + count"]
-    Prepare --> Confirm["per-action confirm:true<br/>same current plan id"]
+    Prepare --> Precision["whole-plan precision check<br/>no paired-control projection<br/>no fractional MIDI"]
+    Precision -->|"ready"| Confirm["per-action confirm:true<br/>same current plan id"]
+    Precision -->|"unverified paired row"| BlockedPlan["retain blocked plan + reasons<br/>no subset send"]
     Confirm --> ArmedApply["senders/armed_apply.py<br/>sole Cockpit output handle"]
     ArmedApply --> Rytm["Analog Rytm RAM-only CC"]
 
-    A4Lane --> A4Offline["Filter 1 Frequency only<br/>offline captured-KIT candidate<br/>Q8.8 · stride 350"]
+    A4Lane --> A4Offline["optional native-field Device capability<br/>106 policy rows / 72 potentially mutable keys<br/>exact domain indices / source-known values"]
     A4Offline --> LocalFile["local bytes only<br/>hardware_send_validated=false"]
-    A4Lane --> A4Block["BLOCKED<br/>A4 SEND + every other<br/>unpromoted saved-KIT field"]
+    A4Lane --> A4Block["BLOCKED<br/>general-stage A4 SEND; OXI AMP; independent FIN<br/>unknown/default-only native fields"]
 
     OXI["OXI One<br/>sequencing / notes / triggers<br/>mutes / pattern motion"] --> Rytm
     OXI --> A4["Analog Four"]
     Coordinator -.->|"no direct control"| OXI
 
     Disconnect["capture timeout / malformed frame<br/>Rytm output disconnect / stale scope"] --> Coordinator
-    Coordinator --> Recovery["lane-local failure/revoke<br/>Rytm reconnect or re-capture<br/>preview + PREPARE again"]
+    Coordinator --> Recovery["lane-local failure/revoke<br/>Rytm manual reload + fresh capture<br/>reselect / preview / arm / PREPARE"]
+    PassiveTeardown["passive browser disconnect / rejected DISARM"] --> RetainIdentity["preserve offline source<br/>candidate / plan identity<br/>same sidecar session; no authority"]
 
     style InputBoundary fill:#eef,stroke:#448
     style ArmedApply fill:#fee,stroke:#a44
@@ -3188,9 +3253,20 @@ one lane cannot promote, arm, or corrupt the other lane. Rytm physical
 connection state comes from the armed-output manager; A4 capture/session state
 does not claim continuous hot-plug monitoring. Rytm plans are bound
 to the captured source, effective scope, candidate, and exact plan id. A4
-remains useful for capture, target/lock rehearsal, and narrow offline Filter 1
-Frequency file generation, while its live output authority is structurally
+remains useful for capture, target/lock rehearsal, and scoped evidence-backed
+native offline generation, with the legacy F1 algorithm retained. Its live authority is structurally
 blocked.
+Capture cancellation and stale-result refusal do not adopt or erase a verified
+source. Armed disconnect revokes output evidence; passive browser disconnect
+and rejected DISARM do not erase offline work within the same running sidecar
+session. This is not durable local retention or a hardware save. A plan
+containing an unverified paired row remains blocked as a whole, even if
+single-CC packets also exist. Parameter selection happens before generation;
+the exact SEND boundary independently rejects out-of-scope proposed values.
+Durable local favorite recall restores reviewed values and scope, not a hardware
+KIT or live output grant. A4 parameter selection remains within its promoted
+source-known native offline fields; unknown/default-only, OXI AMP and independent
+coupled components stay immutable.
 
 ## 37. Show Kit Forge Evidence and Show-Time Readiness
 
@@ -3201,19 +3277,27 @@ flowchart TD
     Forge --> RytmCandidate["Rytm candidate metadata<br/>available for selection"]
     RytmCandidate --> SourceReload["before every live audition<br/>manually reload immutable Rytm source KIT"]
     SourceReload --> SourceCapture["fresh exact source capture<br/>clears current candidate + plan"]
-    SourceCapture --> Reselect["Select for audition → Preview Rytm<br/>Prepare exact plan → arm exact output"]
+    SourceCapture --> Reselect["Select for audition → Preview Rytm<br/>arm exact output → Prepare exact plan"]
     Reselect --> ExactConfirm["exact port + current plan id<br/>manual reload acknowledgment<br/>per-action confirmation"]
     ExactConfirm --> ArmedApply["ArmedApply<br/>RAM-only SEND"]
     ArmedApply --> LiveUnsaved["live unsaved audition<br/>not favorite · not saved"]
+    ArmedApply --> ManualRestore["DISARM + manually reload source KIT<br/>fresh exact baseline recapture<br/>physical recovery observation"]
+    ManualRestore -->|"every later candidate/attempt"| SourceReload
 
-    Forge --> A4Candidate["A4 Filter 1 Frequency<br/>offline saved-KIT bytes only"]
-    Calibration["data calibration record + saved-KIT field schema"] --> FieldCodec["generic A4 field codec + calibrated renderer<br/>exact Q8.8 / canonical byte isolation"]
+    Forge --> A4Candidate["A4 scoped native fields<br/>legacy F1 algorithm retained<br/>offline saved-KIT bytes only"]
+    Calibration["canonical native facts / policy / evidence<br/>saved-KIT field schema"] --> FieldCodec["generic A4 field codec + isolated renderer<br/>exact native grids / protected bytes"]
     FieldCodec --> A4Candidate
     Validation["guardrails/input_validation<br/>shared strict primitives"] -.-> Store
     Domains["snapshot/mutation_scope<br/>registry-derived device domain"] -.-> Forge
     A4Candidate --> A4Preparation["inert preparation report<br/>revalidate retained source + candidate<br/>freshness / scope / recovery / port intent"]
     A4Preparation --> NoA4Send
-    A4Candidate --> NoA4Send["A4 SEND blocked<br/>hardware_send_validated=false"]
+    A4Preparation --> A4ScalarReview["source-bound native / CC7 evidence<br/>25 explicit scalar bindings<br/>unsupported changes retained"]
+    A4ScalarReview --> NoA4Send
+    ProjectionVersion["recorded Rytm capture projection<br/>unversioned recipe = V1<br/>new recipe = Sample Bit V2"] --> Forge
+    ProjectionVersion --> Favorite
+    A4Candidate --> NoA4Send["offline report grants no SEND<br/>hardware_send_validated=false<br/>separate studio exception below"]
+    ExistingScratch["existing four-track scratch fixture<br/>fixed slot 20 / frame / hash"] --> ScratchReturn["manual transfer to disposable slot 20<br/>inspect / listen / save on A4<br/>fresh capture + byte/semantic review"]
+    ScratchReturn --> OfflineEvidence["offline field evidence only<br/>not paired/fractional MIDI<br/>not A4/BOTH SEND authority"]
 
     LiveUnsaved --> Favorite["operator marks paired favorite"]
     A4Candidate --> Favorite
@@ -3231,6 +3315,12 @@ flowchart TD
     OXI["OXI owns sequencing / triggers / mutes"] -.-> Pair
     Store["revisioned canonical JSON<br/>explicit content-addressed retention"] --- Favorite
     Pack["verified .show-pack<br/>cue order + recovery + checksums<br/>manifest published last"] --- Store
+    Store --> ArtifactErrors["canonical artifact error categories<br/>path-free recovery messages"]
+    Store --> RecallProof["one complete fresh bank proof per recall action<br/>atomic publication"]
+    RecallProof --> RecallContext["frozen CandidateRecallContext<br/>exact verified source / candidate"]
+    RecallContext --> RecallProjection["WS published-selection correspondence check<br/>disarmed local adoption; no filesystem replay"]
+    ScopeGuard["authoritative current targets / locks<br/>reject stale scope expansion"] --> Forge
+    Queue["existing bounded outbound queues"] --> Health["GET /health<br/>aggregate depth / high-water / drops only"]
 
     style ArmedApply fill:#fee,stroke:#a44
     style A4Candidate fill:#eef,stroke:#448
@@ -3255,12 +3345,59 @@ hardware attempt or disconnect and explicit manual reload acknowledgment.
 Capturing invalidates the current candidate and plan, so selection and PREPARE
 must follow that capture. A saved-KIT dump alone does not prove that unsaved RAM
 was restored.
-The A4 branch has no SEND edge at all: the generated four-track Filter 1
+The offline A4 branch has no SEND edge: the generated four-track Filter 1
 Frequency scratch artifact must be transferred, saved, and recaptured manually
 before any physical observation is recorded. The frozen preparation report
 always has `ready=false` and `hardware_send_validated=false`. Saved-KIT Q8.8
 evidence does not establish a paired-CC/NRPN transport conversion; the existing
-seven-bit CC audition seam and persistent-KIT refusal remain unchanged.
+seven-bit CLI audition seam and persistent-KIT refusal remain unchanged.
+The separate unqualified studio boundary below adds an operator-present,
+RAM-only Cockpit attempt for 25 exact scalar mappings. It does not promote
+this offline report, unlock paired Filter 1 transport or grant stage readiness.
+The bounded first physical test is one Rytm Pad 2 candidate at 10%, Pad 1
+protected and all A4 tracks locked, followed by manual restoration. Local
+candidate/bank save and source reset never save or reload hardware. The
+separate legacy `--arm --a4-send-param` probe is one integer, non-paired CC on
+one configured spare-kit track; it has no Forge SEND edge and cannot bypass
+a blocked candidate. No exhaustive mapping matrix is requested. Pi #252 is
+touch UI/packaging groundwork: non-simulation APPLY is refused and deployment
+is on hold pending focused work. Touch/display behavior and packaging have no
+validated acceptance edge here.
+
+## Captured Rytm machine projection
+
+The support inventory's registered-device summary separately follows
+`devices.all_devices()` through a canonical evidence-family data mapping.
+Missing family evidence yields a visible zero-row `no_support_evidence` entry;
+it grants no mutation or transport authority.
+
+```mermaid
+flowchart LR
+    Frame["Input-only immutable KIT frame"] --> Decode["Registered Rytm strategy + native round-trip"]
+    Decode --> Facts["Promoted machine facts<br/>exact XT ID 8 on pads 6–8"]
+    Decode --> Anchor["Canonical snapshot-shell anchor"]
+    Anchor --> Source["Machine SRC rows"]
+    Source --> Owner["SRC or exact owning machine section"]
+    Owner --> Proof["Matching promoted machine fact<br/>exact raw ID + compatible pad"]
+    Facts --> Proof
+    Proof --> CC["Exact canonical CC reverse match"]
+    Anchor -->|"common-page values"| CC
+    CC --> Eligible["Shared conservative SRC blockers<br/>descriptive names retain refused rows"]
+    Eligible --> Snapshot["Cockpit semantic snapshot<br/>protected rows omitted"]
+    Eligible -. "same policy" .-> Inventory["Passive support inventory"]
+    Registry["devices.all_devices()<br/>every registered Device"] --> Inventory
+    Evidence["Pure data evidence-family mapping<br/>missing evidence stays explicit"] --> Inventory
+    Snapshot --> Plan["Existing target-minus-locks + paired-control refusal"]
+    Plan --> Armed["Existing exact-plan confirmation + ArmedApply"]
+```
+
+Unknown aliases and unpromoted tom SRC rows are omitted while the original
+frame remains intact. The report's `reports -> devices` registry edge cannot
+open an output adapter. Continuous documented-only SRC rows can be eligible
+under the existing guarded-CC7 policy without physical validation; the entire
+CY Ride SRC family is refused pending native saved-slot evidence. This
+projection changes no MIDI boundary or restore authority. See
+[the source-bound mapping audit](RYTM_MAPPING_STATUS.md).
 
 <a id="38-auto-update-flow-designed--spec-complete-implementation-pending"></a>
 <a id="37-auto-update-flow-designed--spec-complete-implementation-pending"></a>
@@ -3297,7 +3434,8 @@ flowchart LR
     Doctor["Connection Doctor export<br/>bounded update_journal or unavailable"] --> Bridge
     Effects --> Exit["shared backend teardown"]
     Exit --> Install["consented verified-byte install<br/>key + platform evidence required"]
-    Transport -. "optional separate request" .-> Counters["GitHub counters -> fleet snapshot -> dashboard"]
+    Transport -. "optional separate request" .-> Beacon["Independent beacon<br/>ensure process crypto provider<br/>then build client"]
+    Beacon --> Counters["GitHub counters -> fleet snapshot -> dashboard"]
     Fixture["debug native-test recorder<br/>real verifier; 32 recorded terminal cases"] -. "acceptance boundary" .-> Transport
     Handoff["native-install-e2e<br/>2 actual signed Windows PE handoffs<br/>temporary fixture copy only"] -. "plugin install boundary" .-> Install
 ```
@@ -3305,7 +3443,9 @@ flowchart LR
 No key means metadata discovery with an explicit unavailable-download message,
 not staged bytes or install consent. Channel/freeze are native launch settings.
 Consent and skips are process-local. The activity tail is diagnostic; asynchronous
-beacon completion records a closed outcome without gating updates. Fleet estimates
+beacon completion records a closed outcome without gating updates. The beacon preserves an installed crypto
+provider or initializes the already locked ring provider before client construction;
+an asynchronous updater check is not an initialization guarantee. Fleet estimates
 cannot grant installation authority. No part of this graph authorizes MIDI
 output, hardware saving or physical validation.
 
@@ -3315,3 +3455,133 @@ PE handoffs from unverified production NSIS/MSI, macOS/Linux installation,
 publisher signing and production distribution. See [release assembly](BUILDING_INSTALLERS.md#verified-updater-release-assembly)
 for the four target formats and [native acceptance](../desktop/web/native-e2e/README.md)
 for the isolated fixture contract.
+
+## Reference Sound Workflow
+
+### Native Representation And Source-Kind Boundary
+
+```mermaid
+flowchart LR
+    Facts[Separate immutable A4 F1 / Rytm LFO contracts] --> Helpers[Typed Device representation helpers]
+    Frames[Exact supplied raw KIT frames] --> Codec[Existing family codec / unchanged coordinates]
+    Codec --> Indexed[0x52 indexed source validation]
+    Codec --> Working[0x58 working RAM / inspect only]
+    Working --> Retained[Raw retention / source-kind provenance]
+    Indexed --> Candidate[Existing scoped candidate / exact native words]
+    Candidate --> Replay[Unchanged v1 DTO / strict favorite replay]
+    Candidate --> Projection[Operator-only forward label projection]
+    Helpers --> Projection
+    Projection --> UI[Native values / device labels / wire loss]
+    SixFiles[Six explicit experiment files] --> Compare[Passive comparison / every raw and body difference]
+    Codec --> Compare
+    Helpers --> Compare
+    Compare --> Report[No query / send / restore / hardware grant]
+```
+
+Working frames cannot supply indexed sources or saved favorite/preflight
+evidence, including the no-change/fully locked case. Body equality does not
+establish source kind, pending-edit freshness, atomicity or installed firmware.
+The [studio experiment](NATIVE_WORKING_KIT_STUDIO_EXPERIMENT.md) requires
+separate operator observations and manual recovery.
+
+### Reference Audio Workflow
+
+```mermaid
+flowchart LR
+    UI[Reference sound panel] --> WS[Authenticated reference_sound command / bounded upload]
+    WS --> Owner[Owned cancellation / context fence]
+    Owner --> Session[ReferenceSoundWorkspace]
+    Session --> Records[reference_sound_records / strict typed wire records]
+    Records --> Facade[export/reference_sound_analysis facade]
+    Facade --> Lower[style_analysis/reference_sound_analysis / canonical validators and serializer]
+    WS --> Errors[reference_sound_errors / closed reason codes and fixed messages]
+    Library[Original-frame LibraryStore] --> Session
+    Session --> Worker[Spawned audio analysis / bounded native worker]
+    Worker --> Analysis[Measurements / exact segment provenance]
+    Analysis --> DNA[Existing eight directions / native inference]
+    DNA --> Codec[Device codec / native field capability]
+    Codec --> Proof[Re-decode / approved byte-diff proof]
+    Proof --> Prepared[PreparedReferenceSound / immutable result / no worker publication]
+    Prepared --> Owner
+    Owner --> Store[Registered schema2 store / OS lock + manifest CAS + atomic write set]
+    Legacy[Original v1 manifest / unchanged on read] --> Authenticate[Verify original checksum]
+    Authenticate --> Migrate[Canonical envelope-only v1 to v2 migration]
+    Migrate --> Records
+    Recording[Supplied audition recording] --> Worker
+    Recording --> Range[Explicit sample range / retain original + segment]
+    Range --> Worker
+    Worker --> Quality[Original PCM levels / clipping / note activity / qualified pYIN]
+    Quality --> Pitch[Separate pitch + octave diagnostics / no tuning writes]
+    Analysis --> Metric[Unchanged 11-feature weighted L1]
+    Metric --> Hold[Server quality + pitch hold / bounded residual refinement]
+    Pitch --> Hold
+    Hold --> DNA
+    Store --> Version[Retained inference version / exact legacy Noise Fade replay]
+    Version --> DNA
+    Store --> Refresh[Measure missing reference diagnostics / preserve session + candidates]
+    Refresh --> Worker
+    Store --> Recall[Exact disarmed reopen / local favorites]
+    Store --> Export[Explicit scratch slot / local SysEx download]
+    Hardware[Manual instrument load / recording / save / reload] -. physical evidence pending .-> Recording
+```
+
+This workflow grants no MIDI output authority. Rytm SRC/machine fields are
+preserved in this reference-sound scope; the existing Cockpit's separately
+documented eligible SRC controls are not revoked or expanded. Restrictions on
+unverified A4/BOTH sending, paired MIDI conversion and automatic restoration
+remain held. A similarity score is a defined feature comparison of supplied
+audio, not a probability, synthetic preview or physical sound-match certificate.
+
+## MIDI Guide Reference Reconciliation
+
+```mermaid
+flowchart TD
+    CSV[Licensed original CSVs / pinned SHA256 + Git blob] --> Reader[Existing guarded regular-file identity reader]
+    Reader --> Parse[midi_csv_source / lossless bounded rows]
+    Evidence[Audit-v2 / provenance / duplicate-key JSON refusal] --> Reader
+    Data[Canonical Data / descriptions + source schema] --> Parse
+    Parse --> Match[midi_csv_matcher / machine-track context + addresses]
+    Inventory[Existing Device support inventory / native evidence + policy] --> Match
+    Match --> Rows[midi_csv_ledger_rows / claims distinct from executable domains]
+    Data --> Rows
+    Shapes[midi_csv_records / nested typed claims] --> Rows
+    Rows --> Ledger[midi_csv_reconciliation / all 552 rows + gaps]
+    Ledger --> Tool[Thin file-only script]
+    Tool --> Check[Nonwriting reproducibility check]
+    Tool --> Publish[Existing atomic write set / JSON + Markdown]
+    Publish --> Handoff[Separate unresolved studio experiments]
+    Holds[A4-BOTH / CY Ride / paired precision / OXI protection] -. unchanged .-> Inventory
+```
+
+This is a documentary reference path, not another mutation, MIDI or restoration
+workflow. Missing cells and conflicting claims remain explicit. Descriptive
+enum labels do not grant native authoring, output readiness or physical validation.
+
+## A4 Unqualified Studio Audition Boundary
+
+```mermaid
+flowchart TD
+    Sources[Retained original frames and local selected recipe] --> Verify[Canonical native replay and source isolation]
+    Capture[Fresh matching indexed input capture] --> Verify
+    Scope[Current targets minus locks and parameter cells] --> Verify
+    Verify --> Scalars[25 exact native to CC7 bindings]
+    Scalars --> Plan[Immutable all-or-nothing studio plan]
+    Routing[Explicit channels and exact A4-labelled output] --> Plan
+    Plan --> Confirm[Unqualified trial and manual reload acknowledgments]
+    Confirm --> Recheck[Reconstruct complete plan at SEND]
+    Recheck --> Consume[Consume preparation and advance source cutoff]
+    Consume --> Task[Owned async WS task and mutation reservation]
+    Task --> Armed[Shared ArmedApply gates and cooperative paced loop]
+    Disarm[DISARM or disconnect] --> Armed
+    Armed --> Progress[Immutable accepted-message progress before cleanup]
+    Progress --> Receipt[Finally-based receipt and revoked readiness events]
+    Fault[Delivery or cleanup fault] --> Receipt
+    Control[Task or process control] --> Receipt
+    Receipt -->|Only for control signals| Propagate[Re-raise original task or process control]
+    Holds[General A4/BOTH and persistent writes blocked] -. unchanged .-> Plan
+    Offline[Offline preparation report remains non-authorizing] -. no grant .-> Verify
+```
+
+Port labels are a conservative route filter, not authenticated device identity.
+Physical routing, response and manual reload/listening recovery remain separate
+operator-present acceptance tests. No automatic hardware restoration occurs.

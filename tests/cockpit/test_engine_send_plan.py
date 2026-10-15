@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import datetime, timezone
 
 import pytest
@@ -316,3 +317,102 @@ def test_prepare_send_plan_blocks_profile_and_snapshot_mismatch() -> None:
 def test_prepare_send_plan_returns_none_without_profile_or_candidate() -> None:
     assert prepare_send_plan(_snapshot(), None, _candidate(), frozenset()) is None
     assert prepare_send_plan(_snapshot(), _profile(), None, frozenset()) is None
+
+
+@pytest.mark.parametrize("include_supported_change", [False, True])
+def test_prepare_send_plan_blocks_whole_plan_when_changed_control_requires_a_pair(
+    include_supported_change: bool,
+) -> None:
+    params = {"lfo_depth": 81}
+    if include_supported_change:
+        params["tun"] = 45
+    candidate = replace(
+        _candidate(),
+        pad_deltas=(_delta(1, **params),),
+        estimated_midi_msgs=len(params),
+    )
+
+    plan = prepare_send_plan(_snapshot(), _profile(), candidate, frozenset())
+    again = prepare_send_plan(_snapshot(), _profile(), candidate, frozenset())
+
+    assert plan is not None
+    assert plan == again
+    assert plan.ready is False
+    assert plan.readiness_reason == "paired_control_precision_unverified"
+    assert "paired_control_precision_unverified" in plan.blocked_reasons
+    assert all(packet.parameter != "lfo_depth" for packet in plan.packets)
+    assert [packet.parameter for packet in plan.packets] == (
+        ["tun"] if include_supported_change else []
+    )
+
+
+@pytest.mark.parametrize(
+    "locks,targets",
+    [(frozenset({2}), frozenset()), (frozenset(), frozenset({1}))],
+)
+def test_prepare_send_plan_preserves_supported_changes_when_paired_control_is_outside_scope(
+    locks: frozenset[int], targets: frozenset[int]
+) -> None:
+    candidate = replace(
+        _candidate(),
+        pad_deltas=(_delta(1, tun=45), _delta(2, lfo_depth=81)),
+        estimated_midi_msgs=2,
+    )
+
+    plan = prepare_send_plan(_snapshot(), _profile(), candidate, locks, targets)
+
+    assert plan is not None
+    assert plan.ready is True
+    assert plan.blocked_reasons == ()
+    assert [packet.to_dict() for packet in plan.packets] == [
+        {"pad_id": 1, "parameter": "tun", "channel": 0, "control": 17, "value": 45}
+    ]
+
+
+def test_prepare_send_plan_does_not_block_when_paired_parameter_is_unchanged() -> None:
+    source = _snapshot()
+    snapshot = replace(
+        source,
+        pads=(
+            replace(source.pads[0], params={**source.pads[0].params, "lfo_depth": 81}),
+            source.pads[1],
+        ),
+    )
+    candidate = replace(
+        _candidate(),
+        pad_deltas=(
+            PadDelta(
+                pad_id=1,
+                proposed_params={"tun": 45, "lfo_depth": 81},
+                changed_keys=frozenset({"tun"}),
+            ),
+        ),
+        estimated_midi_msgs=1,
+    )
+
+    plan = prepare_send_plan(snapshot, _profile(), candidate, frozenset())
+
+    assert plan is not None
+    assert plan.ready is True
+    assert [packet.parameter for packet in plan.packets] == ["tun"]
+
+
+def test_prepare_send_plan_preserves_other_refusals_when_paired_control_is_changed() -> None:
+    candidate = replace(
+        _candidate(
+            source_snapshot_id="stale-source", profile_id="stale-profile", safety_status="high_risk"
+        ),
+        pad_deltas=(_delta(1, lfo_depth=81),),
+        estimated_midi_msgs=1,
+    )
+
+    plan = prepare_send_plan(_snapshot(), _profile(), candidate, frozenset())
+
+    assert plan is not None
+    assert plan.blocked_reasons == (
+        "profile_mismatch",
+        "source_snapshot_mismatch",
+        "candidate_high_risk",
+        "paired_control_precision_unverified",
+        "no_sendable_changes",
+    )

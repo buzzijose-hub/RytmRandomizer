@@ -553,6 +553,37 @@ describe('CockpitClient — connect / open / status', () => {
 });
 
 describe('CockpitClient — message dispatch', () => {
+  it('preserves optional canonical SRC metadata through the existing JSON event parser', () => {
+    const h = makeHarness();
+    const events: Event[] = [];
+    h.client.on('snapshot_changed', (event) => events.push(event));
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    const event: Event = {
+      type: 'snapshot_changed',
+      snapshot: {
+        snapshot_id: 'captured-src', device: 'analog_rytm_mk2',
+        captured_at: '2026-10-05T12:00:00Z', scene_slot: null, bpm: null,
+        pads: [{
+          pad_id: 1, machine: 'SY Dual VCO', params: { src_dual_vco_2: 72 },
+          src_parameters: [{
+            key: 'src_dual_vco_2', parameter: 'Osc 1 Decay', machine_key: 'dual_vco',
+            channel: 0, cc_msb: 18, cc_lsb: null, nrpn_msb: 1, nrpn_lsb: 2,
+            mutation_status: 'documented_only', pad_compatible: true, live_blockers: [],
+          }],
+        }],
+      },
+    };
+    h.currentSocket().emitMessage(event);
+    expect(events).toEqual([event]);
+    const legacy: Event = { ...event, snapshot: { ...event.snapshot, pads: [{
+      pad_id: 1, machine: 'BD Hard', params: { dec: 80 },
+    }] } };
+    h.currentSocket().emitMessage(legacy);
+    expect(events).toEqual([event, legacy]);
+    h.client.close();
+  });
+
   it('routes recognized events to their handlers', () => {
     const h = makeHarness();
     const events: Event[] = [];
@@ -676,6 +707,57 @@ describe('CockpitClient — message dispatch', () => {
 });
 
 describe('CockpitClient — send / ack correlation', () => {
+  it('preserves retained original/recording read kinds and recording identity in the actual wire envelope', async () => {
+    const h = makeHarness(); h.client.connect(); h.currentSocket().emitOpen();
+    const original: Command = { type: 'reference_sound', action: 'read_audio', session_id: 'retained-session', offset: 192 * 1024, audio_kind: 'original' };
+    const originalRead = h.client.send(original);
+    expect(JSON.parse(h.currentSocket().sent.at(-1)!)).toEqual({ request_id: 'r1', command: original });
+    h.currentSocket().emitMessage(ack('r1', { reference_sound: { audio_chunk: 'AQID', size: 192 * 1024 + 3, offset: 192 * 1024, sha256: 'original-sha' } }));
+    await expect(originalRead).resolves.toMatchObject({ reference_sound: { sha256: 'original-sha', offset: 192 * 1024 } });
+    const recording: Command = { type: 'reference_sound', action: 'read_audio', session_id: 'retained-session', offset: 0,
+      audio_kind: 'recording', recording_sha256: 'recognized-recording-sha' };
+    const recordingRead = h.client.send(recording);
+    expect(JSON.parse(h.currentSocket().sent.at(-1)!)).toEqual({ request_id: 'r2', command: recording });
+    h.currentSocket().emitMessage(ack('r2', { reference_sound: { audio_chunk: 'AQID', size: 44, offset: 0, sha256: 'recognized-recording-sha' } }));
+    await expect(recordingRead).resolves.toMatchObject({ reference_sound: { sha256: 'recognized-recording-sha' } });
+    h.client.close();
+  });
+
+  it('correlates typed reference-sound chunk and explicit-destination export envelopes', async () => {
+    const h = makeHarness();
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    const chunk: Command = { type: 'reference_sound', action: 'upload_chunk', upload_id: 'owned-upload', offset: 0, chunk: 'AQID' };
+    const uploaded = h.client.send(chunk);
+    expect(JSON.parse(h.currentSocket().sent.at(-1)!)).toEqual({ command: chunk, request_id: 'r1' });
+    h.currentSocket().emitMessage(ack('r1', { reference_sound: { upload_id: 'owned-upload', received: 3 } }));
+    await expect(uploaded).resolves.toMatchObject({ reference_sound: { upload_id: 'owned-upload', received: 3 } });
+    const exported = h.client.send({ type: 'reference_sound', action: 'export', session_id: 'sound-session', candidate_id: 'native-candidate', destination_slot: 127 });
+    expect(JSON.parse(h.currentSocket().sent.at(-1)!)).toMatchObject({ command: { type: 'reference_sound', action: 'export', destination_slot: 127 }, request_id: 'r2' });
+    h.currentSocket().emitMessage(ack('r2', { reference_sound: { sysex_base64: '8AH3', sha256: 'exported-envelope-sha', candidate_id: 'native-candidate', destination_slot: 127 } }));
+    await expect(exported).resolves.toMatchObject({ reference_sound: { destination_slot: 127, candidate_id: 'native-candidate' } });
+    h.client.close();
+  });
+
+  it('keeps bounded reference analysis pending past the ordinary timeout while cancellation remains independent', async () => {
+    const h = makeHarness({ ackTimeoutMs: 5000 });
+    h.client.connect();
+    h.currentSocket().emitOpen();
+    const generated = h.client.send({ type: 'reference_sound', action: 'generate', session_id: 'sound-session', source_record_id: 'native-source',
+      device_id: 'analog_four_mk2', target: 2, parameters: ['osc1_level'], locks: ['osc2_level'], strength: 0.5 }, { timeoutMs: 70_000 });
+    const settled = vi.fn();
+    void generated.then(settled);
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(settled).not.toHaveBeenCalled();
+    const cancelled = h.client.send({ type: 'reference_sound', action: 'cancel' });
+    h.currentSocket().emitMessage(ack('r2', { reference_sound: { cancelled: true } }));
+    await expect(cancelled).resolves.toMatchObject({ reference_sound: { cancelled: true } });
+    h.currentSocket().emitMessage(ack('r1', { ok: false, message: 'Audio operation cancelled. Existing sessions and favorites are unchanged.' }));
+    await expect(generated).resolves.toMatchObject({ ok: false });
+    expect(h.currentSocket().sent.filter((frame) => JSON.parse(frame).command?.action === 'generate')).toHaveLength(1);
+    h.client.close();
+  });
+
   it('round-trips a command through to an ack', async () => {
     const h = makeHarness();
     h.client.connect();

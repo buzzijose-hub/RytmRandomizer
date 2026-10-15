@@ -410,6 +410,13 @@ class RytmSound:
     def lfo_depth(self) -> float:
         return decode_rytm_mod_depth(self.lfo_depth_raw16)
 
+    @property
+    def lfo_depth_device_label(self) -> str:
+        """Ordinary-Sound LFO label, distinct from its exact numeric value."""
+        from .analog_rytm_lfo_depth_representation import rytm_lfo_depth_native_to_screen
+
+        return rytm_lfo_depth_native_to_screen(self.lfo_depth_raw16)
+
     @lfo_depth.setter
     def lfo_depth(self, value: float) -> None:
         self.lfo_depth_raw16 = encode_rytm_mod_depth(value)
