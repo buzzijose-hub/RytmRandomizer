@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
+from dataclasses import FrozenInstanceError
 from inspect import signature
 
 import pytest
@@ -87,6 +88,71 @@ def test_apply_async_defaults_to_cooperative_asyncio_sleep() -> None:
     assert parameters["async_sleep"].default is asyncio.sleep
     assert parameters["async_sleep"].kind is parameters["async_sleep"].KEYWORD_ONLY
     assert parameters["inter_message_delay_seconds"].default == 0.0
+
+
+@pytest.mark.parametrize("driver", ["sync", "async"])
+@pytest.mark.parametrize("accepted", [0, 1, 2])
+def test_delivery_progress_survives_cleanup_masking_the_original_fault(
+    pacing_rig: tuple[ArmedApplySession, _PacingIO, Device], driver: str, accepted: int
+) -> None:
+    session, io, device = pacing_rig
+    assert session.delivery_progress is None
+    io.send_error, io.send_fail_after = OSError("send failed"), accepted
+    io.close_error = KeyError("close failed")
+    with pytest.raises(KeyError):
+        if driver == "async":
+            asyncio.run(
+                session.apply_async(
+                    device, _PacingPlan(), action_id=_ACTION, mutates_kit=False, renderer=io.render
+                )
+            )
+        else:
+            session.apply(
+                device, _PacingPlan(), action_id=_ACTION, mutates_kit=False, renderer=io.render
+            )
+    progress = session.delivery_progress
+    assert progress is not None
+    assert (
+        progress.action_id,
+        progress.device_id,
+        progress.sent_count,
+        progress.expected_count,
+    ) == (_ACTION, device.device_id, accepted, len(_PACKETS))
+    with pytest.raises(FrozenInstanceError):
+        progress.sent_count = 999
+    assert not session.is_armed and io.closed == 1
+    session.disarm()
+    assert session.delivery_progress is progress
+
+
+@pytest.mark.parametrize("driver", ["sync", "async"])
+def test_new_attempt_and_explicit_rearm_clear_previous_progress(
+    pacing_rig: tuple[ArmedApplySession, _PacingIO, Device], driver: str
+) -> None:
+    session, io, device = pacing_rig
+
+    def apply(action: str) -> ArmedApplyResult:
+        if driver == "async":
+            return asyncio.run(
+                session.apply_async(
+                    device, _PacingPlan(), action_id=action, mutates_kit=False, renderer=io.render
+                )
+            )
+        return session.apply(
+            device, _PacingPlan(), action_id=action, mutates_kit=False, renderer=io.render
+        )
+
+    assert apply(_ACTION).ok
+    assert session.delivery_progress.sent_count == len(_PACKETS)
+    with pytest.raises(ArmedApplyError, match="not_confirmed"):
+        apply("unconfirmed-next-action")
+    assert session.delivery_progress is None
+    session.confirm(_ACTION)
+    assert apply(_ACTION).ok
+    session.disarm()
+    assert session.delivery_progress is not None
+    session.arm(_TOKEN)
+    assert session.delivery_progress is None
 
 
 @pytest.mark.parametrize("delay", [0.0, 0.125, 1.0])

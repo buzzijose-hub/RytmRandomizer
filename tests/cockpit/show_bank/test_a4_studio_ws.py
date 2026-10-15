@@ -24,14 +24,20 @@ from rytm_randomizer.cockpit.data.show_bank import A4_NATIVE_MUTATION_ALGORITHM
 from rytm_randomizer.cockpit.device import MockDeviceAdapter
 from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
-from rytm_randomizer.cockpit.ws import handlers
+from rytm_randomizer.cockpit.ws import a4_studio_handlers, handlers
 from rytm_randomizer.cockpit.ws import server as ws_server
 from rytm_randomizer.cockpit.ws.protocol import WS_SUBPROTOCOL
 from rytm_randomizer.cockpit.ws.server import create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
-from rytm_randomizer.devices import Device
+from rytm_randomizer.devices import Device, get_device
+from rytm_randomizer.observability.errors import MidiError
 from rytm_randomizer.observability.metrics import get_metrics
-from rytm_randomizer.senders.armed_apply import ArmedApplyResult, ArmedApplySession, PlanRenderer
+from rytm_randomizer.senders.armed_apply import (
+    ArmedApplyError,
+    ArmedApplyResult,
+    ArmedApplySession,
+    PlanRenderer,
+)
 
 from .conftest import ShowBankHarness, build_show_bank_harness
 
@@ -39,19 +45,27 @@ pytestmark = [pytest.mark.fast, pytest.mark.usefixtures("offline_hardware_denied
 _TEST_ARM_SECRET: Final[str] = "studio-test-capability"
 
 
+class UnexpectedStudioFault(Exception):
+    pass
+
+
 class StudioPort(RecordingOut):
     def __init__(self) -> None:
         super().__init__()
         self.closed = 0
         self.fail_after: int | None = None
+        self.send_error: BaseException | None = None
+        self.close_error: BaseException | None = None
 
     def send(self, message: object) -> None:
         if self.fail_after is not None and len(self.sent) >= self.fail_after:
-            raise OSError("fake studio output failed")
+            raise self.send_error or OSError("fake studio output failed")
         super().send(message)
 
     def close(self) -> None:
         self.closed += 1
+        if self.close_error is not None:
+            raise self.close_error
 
 
 @dataclass
@@ -349,6 +363,199 @@ def test_a4_partial_provider_failure_reports_counts_disarms_and_requires_reload(
     assert case.session.a4_studio_plan is None
     assert case.send()["ok"] is False
     assert len(case.provider.port.sent) == 1
+
+
+@pytest.mark.parametrize(
+    "error_type", [MidiError, ArithmeticError, AssertionError, KeyError, UnexpectedStudioFault]
+)
+def test_a4_recognized_faults_keep_counts_and_publish_revoked_authority(
+    studio_case: StudioCase, error_type: type[Exception]
+) -> None:
+    case = studio_case
+    assert case.arm()["ok"] and case.prepare()["ok"]
+    plan = case.session.a4_studio_plan
+    assert plan is not None
+    before = sum(get_metrics().cc_sent_by_channel.values())
+    case.provider.port.fail_after = 1
+    case.provider.port.send_error = error_type("injected delivery fault")
+    result = case.send()
+    assert result["ok"] is False
+    assert result["a4_studio_outcome"]["sent_count"] == 1
+    assert result["a4_studio_outcome"]["expected_count"] == len(plan.send_plan.packets)
+    assert sum(get_metrics().cc_sent_by_channel.values()) == before + 1
+    assert case.session.error_journal.entries[-1].context["sent_count"] == "1"
+    events = case.session.pending_events
+    status = next(event for event in events if event["type"] == "session_status")
+    assert status["armed"] is False
+    assert any(event["type"] == "dual_machine_stage_changed" for event in events)
+    assert any(
+        event["type"] == "mutation_previewed" and event["candidate"] is None for event in events
+    )
+
+
+def test_a4_close_fault_cannot_erase_already_accepted_packets(studio_case: StudioCase) -> None:
+    case = studio_case
+    assert case.arm()["ok"] and case.prepare()["ok"]
+    plan = case.session.a4_studio_plan
+    assert plan is not None
+    case.provider.port.fail_after = 1
+    case.provider.port.close_error = KeyError("injected close fault")
+    result = case.send()
+    assert result["ok"] is False
+    assert result["a4_studio_outcome"]["sent_count"] == 1
+    assert result["a4_studio_outcome"]["expected_count"] == len(plan.send_plan.packets)
+    assert case.session.error_journal.entries[-1].context["sent_count"] == "1"
+    assert case.session.armed_apply is None and case.provider.port.closed == 1
+
+
+@pytest.mark.parametrize("drift", ["action", "device"])
+def test_failure_receipt_ignores_progress_from_another_action_or_device(
+    studio_case: StudioCase, drift: str
+) -> None:
+    case = studio_case
+    assert case.arm()["ok"] and case.prepare()["ok"]
+    plan, armed = case.session.a4_studio_plan, case.session.armed_apply
+    assert plan is not None and armed is not None
+    action = "another-action" if drift == "action" else plan.plan_id
+    device_id = ANALOG_RYTM_DEVICE_ID if drift == "device" else ANALOG_FOUR_DEVICE_ID
+    armed.confirm(action)
+    assert armed.apply(
+        get_device(device_id),
+        plan.send_plan,
+        action_id=action,
+        mutates_kit=False,
+        renderer=handlers.cockpit_send_plan_triples,
+    ).ok
+    receipt = a4_studio_handlers._failure_result(armed, plan)
+    assert receipt.sent_count == 0 and receipt.expected_count == len(plan.send_plan.packets)
+
+
+def test_failure_receipt_never_labels_delivered_packets_as_zero_byte_refusal(
+    studio_case: StudioCase,
+) -> None:
+    case = studio_case
+    assert case.arm()["ok"] and case.prepare()["ok"]
+    plan, armed = case.session.a4_studio_plan, case.session.armed_apply
+    assert plan is not None and armed is not None
+    armed.confirm(plan.plan_id)
+    assert armed.apply(
+        get_device(ANALOG_FOUR_DEVICE_ID),
+        plan.send_plan,
+        action_id=plan.plan_id,
+        mutates_kit=False,
+        renderer=handlers.cockpit_send_plan_triples,
+    ).ok
+    receipt = a4_studio_handlers._failure_result(armed, plan, status="refused")
+    assert receipt.sent_count == len(plan.send_plan.packets) and receipt.status == "interrupted"
+
+
+def test_exception_receipt_cannot_promote_a_tagged_success(studio_case: StudioCase) -> None:
+    case = studio_case
+    assert case.arm()["ok"] and case.prepare()["ok"]
+    plan, armed = case.session.a4_studio_plan, case.session.armed_apply
+    assert plan is not None and armed is not None
+    error = RuntimeError("injected tagged fault")
+    error.__dict__["armed_apply_outcome"] = ArmedApplyResult(
+        ANALOG_FOUR_DEVICE_ID, True, 0, expected_count=len(plan.send_plan.packets)
+    )
+    receipt = a4_studio_handlers._failure_result(armed, plan, error=error)
+    assert receipt.ok is False and receipt.status == "interrupted" and receipt.sent_count == 0
+
+
+def test_final_cleanup_fault_still_journals_and_queues_revoked_state(
+    studio_case: StudioCase, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    case = studio_case
+    assert case.arm()["ok"] and case.prepare()["ok"]
+
+    def fail_confirmation(self: ArmedApplySession, action_id: object) -> None:
+        raise ValueError("injected pre-delivery fault")
+
+    monkeypatch.setattr(ArmedApplySession, "confirm", fail_confirmation)
+    case.provider.port.close_error = KeyError("injected final cleanup fault")
+    result = case.send()
+    assert result["ok"] is False
+    assert case.session.error_journal.entries[-1].context["sent_count"] == "0"
+    assert any(
+        event["type"] == "session_status" and event["armed"] is False
+        for event in case.session.pending_events
+    )
+    assert case.provider.port.sent == [] and case.provider.port.closed == 1
+
+
+def test_internal_delivery_cancellation_is_not_swallowed_by_result_collection(
+    studio_case: StudioCase,
+) -> None:
+    case = studio_case
+    assert case.arm()["ok"] and case.prepare()["ok"]
+    case.provider.port.fail_after = 1
+    case.provider.port.send_error = asyncio.CancelledError("injected delivery cancellation")
+    with pytest.raises(asyncio.CancelledError):
+        case.send()
+    assert case.session.error_journal.entries[-1].context["sent_count"] == "1"
+    assert case.session.armed_apply is None and case.provider.port.closed == 1
+    assert any(
+        event["type"] == "session_status" and event["armed"] is False
+        for event in case.session.pending_events
+    )
+
+
+def test_confirmation_race_returns_zero_byte_receipt_and_revoked_state(
+    studio_case: StudioCase, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    case = studio_case
+    assert case.arm()["ok"] and case.prepare()["ok"]
+
+    def refuse_confirmation(self: ArmedApplySession, action_id: object) -> None:
+        raise ArmedApplyError("injected confirmation race")
+
+    monkeypatch.setattr(ArmedApplySession, "confirm", refuse_confirmation)
+    result = case.send()
+    assert result["ok"] is False and result["a4_studio_outcome"]["sent_count"] == 0
+    assert result["a4_studio_outcome"]["status"] == "refused"
+    assert case.session.armed_apply is None and case.provider.port.closed == 1
+
+
+def test_actual_websocket_fault_receipt_is_followed_by_revoked_state(
+    studio_case: StudioCase,
+) -> None:
+    case = studio_case
+    assert case.arm()["ok"] and case.prepare()["ok"]
+    plan = case.session.a4_studio_plan
+    assert plan is not None
+    case.provider.port.fail_after = 1
+    case.provider.port.send_error = KeyError("injected send fault")
+    with TestClient(create_app(case.session, token=TEST_WS_TOKEN)) as client:
+        with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+            complete_handshake(ws)
+            result = send_cmd(
+                ws,
+                "show_bank_send_a4_studio_audition",
+                request_id="fault-send",
+                send_plan_id=plan.plan_id,
+                confirm=True,
+                source_reloaded=True,
+                acknowledge_unvalidated_hardware=True,
+            )
+            assert result["ok"] is False and result["a4_studio_outcome"]["sent_count"] == 1
+            ws.send_json({"request_id": "after-fault", "command": {"type": "diagnostics"}})
+            updates = []
+            for _ in range(64):
+                frame = ws.receive_json()
+                if frame.get("request_id") == "after-fault":
+                    break
+                updates.append(frame)
+            else:
+                pytest.fail("diagnostics ACK missing after failed studio SEND")
+            assert any(
+                frame.get("type") == "session_status" and frame["armed"] is False
+                for frame in updates
+            )
+            assert any(
+                frame.get("type") == "send_plan_changed" and frame["send_plan"] is None
+                for frame in updates
+            )
+            assert any(frame.get("type") == "dual_machine_stage_changed" for frame in updates)
 
 
 @pytest.mark.parametrize(

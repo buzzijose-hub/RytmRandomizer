@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable, Mapping
+from dataclasses import replace
 from types import MappingProxyType
 from typing import Final
 
@@ -17,7 +18,14 @@ from ...guardrails.input_validation import (
 )
 from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
-from ...senders.armed_apply import ArmedApplyError, ArmedApplyResult
+from ...senders.armed_apply import (
+    ARMED_APPLY_CONTROL_FLOW_TYPES,
+    ARMED_APPLY_FAILURE_TYPES,
+    ArmedApplyError,
+    ArmedApplyResult,
+    ArmedApplySession,
+    ArmedApplyStatus,
+)
 from ..capture import ANALOG_FOUR_DEVICE_ID
 from ..data.a4_studio_audition import (
     MIDI_MESSAGE_SETTLE_SECONDS,
@@ -82,6 +90,48 @@ def _record_outcome(
     _logger.info("a4_studio_outcome", extra=context)
     if not result.ok:
         get_metrics().record_error("cockpit.a4_studio_delivery_failed")
+
+
+def _failure_result(
+    armed: ArmedApplySession,
+    plan: A4StudioAuditionPlan,
+    *,
+    error: BaseException | None = None,
+    status: ArmedApplyStatus = "interrupted",
+    reason: str = "a4_studio_delivery_interrupted",
+) -> ArmedApplyResult:
+    tagged = getattr(error, "armed_apply_outcome", None)
+    result = (
+        replace(
+            tagged, ok=False, status="interrupted" if tagged.status == "complete" else tagged.status
+        )
+        if isinstance(tagged, ArmedApplyResult)
+        else ArmedApplyResult(
+            device_id=ANALOG_FOUR_DEVICE_ID,
+            ok=False,
+            sent_count=0,
+            expected_count=len(plan.send_plan.packets),
+            status=status,
+            reason=reason,
+        )
+    )
+    progress = armed.delivery_progress
+    if (
+        progress is not None
+        and progress.action_id == plan.plan_id
+        and progress.device_id == ANALOG_FOUR_DEVICE_ID
+    ):
+        return replace(
+            result,
+            sent_count=progress.sent_count,
+            expected_count=progress.expected_count,
+            status=(
+                "interrupted"
+                if progress.sent_count > 0 and result.status == "refused"
+                else result.status
+            ),
+        )
+    return result
 
 
 def _rebuild(
@@ -192,83 +242,88 @@ async def send_a4_studio(cmd: dict[str, object], session: CockpitSession) -> Han
         disarm_session_on_teardown,
     )
 
+    result: ArmedApplyResult | None = None
+    events: list[dict[str, object]] = []
     session.a4_studio_sending = True
     try:
         await asyncio.sleep(0)
         armed.confirm(plan.plan_id)
-        result = await armed.apply_async(
-            get_device(ANALOG_FOUR_DEVICE_ID),
-            plan.send_plan,
-            action_id=plan.plan_id,
-            mutates_kit=False,
-            renderer=cockpit_send_plan_triples,
-            inter_message_delay_seconds=MIDI_MESSAGE_SETTLE_SECONDS,
+        # Gather owns and awaits the delivery child, including cancellation.
+        # Ordinary failures become data; process/task control still propagates.
+        delivery_task = asyncio.create_task(
+            armed.apply_async(
+                get_device(ANALOG_FOUR_DEVICE_ID),
+                plan.send_plan,
+                action_id=plan.plan_id,
+                mutates_kit=False,
+                renderer=cockpit_send_plan_triples,
+                inter_message_delay_seconds=MIDI_MESSAGE_SETTLE_SECONDS,
+            )
         )
+        delivery = (await asyncio.gather(delivery_task, return_exceptions=True))[0]
+        if isinstance(delivery, ARMED_APPLY_CONTROL_FLOW_TYPES):
+            # Re-observe the child's original control signal with its traceback.
+            delivery_task.result()
+        if isinstance(delivery, ArmedApplyError):
+            result = delivery.partial_outcome or _failure_result(
+                armed, plan, error=delivery, status="refused", reason="armed_send_refused"
+            )
+        elif isinstance(delivery, BaseException):
+            result = _failure_result(armed, plan, error=delivery)
+        else:
+            result = delivery
     except ArmedApplyError as exc:
-        result = exc.partial_outcome or ArmedApplyResult(
-            device_id=ANALOG_FOUR_DEVICE_ID,
-            ok=False,
-            sent_count=0,
-            expected_count=len(plan.send_plan.packets),
+        result = exc.partial_outcome or _failure_result(
+            armed,
+            plan,
+            error=exc,
             status="refused",
             reason="armed_send_refused",
         )
-    except (
-        asyncio.CancelledError,
-        KeyboardInterrupt,
-        SystemExit,
-        LookupError,
-        OSError,
-        TypeError,
-        ValueError,
-        RuntimeError,
-    ) as exc:
-        interrupted = getattr(exc, "armed_apply_outcome", None)
-        if not isinstance(interrupted, ArmedApplyResult):
-            interrupted = ArmedApplyResult(
-                device_id=ANALOG_FOUR_DEVICE_ID,
-                ok=False,
-                sent_count=0,
-                expected_count=len(plan.send_plan.packets),
-                status="interrupted",
-                reason="a4_studio_interrupted_before_delivery",
-            )
-        disarm_session_on_teardown(session)
-        _record_outcome(session, plan, interrupted)
-        raise
+    except ARMED_APPLY_FAILURE_TYPES as exc:
+        if isinstance(exc, ARMED_APPLY_CONTROL_FLOW_TYPES):
+            raise
+        result = _failure_result(armed, plan, error=exc)
     finally:
         session.a4_studio_sending = False
-        if session.armed_apply is not None and not session.armed_apply.is_armed:
-            disarm_session_on_teardown(session)
-    _record_outcome(session, plan, result)
+        terminal = result or _failure_result(armed, plan)
+        cleanup_completed = False
+        try:
+            if not terminal.ok or (
+                session.armed_apply is not None and not session.armed_apply.is_armed
+            ):
+                disarm_session_on_teardown(session)
+            cleanup_completed = True
+        finally:
+            _record_outcome(session, plan, terminal)
+            if terminal.ok:
+                session.unsaved_sends += 1
+            session.stage_coordinator.record_send(ANALOG_FOUR_DEVICE_ID, succeeded=terminal.ok)
+            events = [
+                build_session_status(session),
+                {"type": EVENT_SEND_PLAN_CHANGED, "send_plan": None},
+                {
+                    "type": EVENT_DUAL_MACHINE_STAGE_CHANGED,
+                    "stage": session.stage_coordinator.state.to_dict(),
+                },
+                *revoked_events,
+            ]
+            if not terminal.ok:
+                events.append({"type": EVENT_MUTATION_PREVIEWED, "candidate": None})
+            if result is None or not cleanup_completed:
+                session.pending_events.extend(events)
     outcome: A4StudioAuditionOutcome = {
-        "status": result.status,
-        "sent_count": result.sent_count,
-        "expected_count": result.expected_count,
-        "reason": result.reason,
+        "status": terminal.status,
+        "sent_count": terminal.sent_count,
+        "expected_count": terminal.expected_count,
+        "reason": terminal.reason,
     }
-    if not result.ok:
-        disarm_session_on_teardown(session)
-    else:
-        session.unsaved_sends += 1
-    session.stage_coordinator.record_send(ANALOG_FOUR_DEVICE_ID, succeeded=result.ok)
-    events: list[dict[str, object]] = [
-        build_session_status(session),
-        {"type": EVENT_SEND_PLAN_CHANGED, "send_plan": None},
-        {
-            "type": EVENT_DUAL_MACHINE_STAGE_CHANGED,
-            "stage": session.stage_coordinator.state.to_dict(),
-        },
-        *revoked_events,
-    ]
-    if not result.ok:
-        events.append({"type": EVENT_MUTATION_PREVIEWED, "candidate": None})
     ack: dict[str, object] = {
-        "ok": result.ok,
+        "ok": terminal.ok,
         "a4_studio_outcome": outcome,
         "source_reload_required": True,
     }
-    if not result.ok:
+    if not terminal.ok:
         ack.update(
             {
                 "code": ERR_VALIDATION,

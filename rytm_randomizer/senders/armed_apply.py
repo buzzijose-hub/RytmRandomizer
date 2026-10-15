@@ -64,9 +64,12 @@ from ..observability.errors import MidiError
 
 __all__ = [
     "ArmedApplyError",
+    "ArmedApplyProgress",
     "ArmedApplyResult",
     "ArmedApplySession",
     "ArmedApplyStatus",
+    "ARMED_APPLY_CONTROL_FLOW_TYPES",
+    "ARMED_APPLY_FAILURE_TYPES",
     "ExactPortOpener",
     "KitMutationUnsupportedError",
     "OutputPortLike",
@@ -219,15 +222,15 @@ is what prevents that from happening, but the seam must still fail **closed**
 future port is handed something it cannot render.
 """
 
-_CONTROL_FLOW_ERRORS: Final[tuple[type[BaseException], ...]] = (
+ARMED_APPLY_CONTROL_FLOW_TYPES: Final[tuple[type[BaseException], ...]] = (
     KeyboardInterrupt,
     SystemExit,
     asyncio.CancelledError,
     GeneratorExit,
 )
-_APPLY_FAILURES: Final[tuple[type[BaseException], ...]] = (
+ARMED_APPLY_FAILURE_TYPES: Final[tuple[type[BaseException], ...]] = (
     *_PORT_ERRORS,
-    *_CONTROL_FLOW_ERRORS,
+    *ARMED_APPLY_CONTROL_FLOW_TYPES,
     LookupError,
     ArithmeticError,
     AssertionError,
@@ -296,6 +299,16 @@ class ArmedApplyResult:
     status: ArmedApplyStatus = "complete"
 
 
+@dataclass(frozen=True)
+class ArmedApplyProgress:
+    """Accepted-packet evidence, retained even when cleanup masks an exception."""
+
+    action_id: str
+    device_id: str
+    sent_count: int
+    expected_count: int
+
+
 class ArmedApplySession:
     """The one armed transmit state machine (frozen contract, test-pinned).
 
@@ -350,6 +363,7 @@ class ArmedApplySession:
         self._port: OutputPortLike | None = None
         self._armed = False
         self._confirmed_action_ids: set[str] = set()
+        self._delivery_progress: ArmedApplyProgress | None = None
 
     @property
     def is_armed(self) -> bool:
@@ -362,6 +376,12 @@ class ArmedApplySession:
         """The exact output-port name this session targets."""
 
         return self._port_name
+
+    @property
+    def delivery_progress(self) -> ArmedApplyProgress | None:
+        """The last attempt's immutable progress, never output authority."""
+
+        return self._delivery_progress
 
     def arm(self, token: object) -> None:
         """Arm the session: validate the token, then open the exact port.
@@ -383,6 +403,7 @@ class ArmedApplySession:
             raise ArmedApplyError("armed_apply_token_required")
         if not hmac.compare_digest(token, self._arm_token):
             raise ArmedApplyError("armed_apply_token_mismatch")
+        self._delivery_progress = None
         try:
             port = self._opener.open_exact(self._port_name)
         except ArmedApplyError:
@@ -494,7 +515,7 @@ class ArmedApplySession:
                 try:
                     if delay > 0.0:
                         self._sleep(delay)
-                except _APPLY_FAILURES as exc:
+                except ARMED_APPLY_FAILURE_TYPES as exc:
                     steps.throw(exc)
         finally:
             steps.close()
@@ -536,7 +557,7 @@ class ArmedApplySession:
                     return cast(ArmedApplyResult, complete.value)
                 try:
                     await async_sleep(delay)
-                except _APPLY_FAILURES as exc:
+                except ARMED_APPLY_FAILURE_TYPES as exc:
                     steps.throw(exc)
         finally:
             steps.close()
@@ -553,6 +574,7 @@ class ArmedApplySession:
     ) -> Generator[float, None, ArmedApplyResult]:
         """Own every gate, render, send and delivery outcome for both drivers."""
 
+        self._delivery_progress = None
         # Finite bounds also reject NaN/infinity without converting huge ints.
         if (
             type(inter_message_delay_seconds) not in (int, float)
@@ -595,7 +617,7 @@ class ArmedApplySession:
         try:
             triples = tuple(emit(plan))
             rendered = True
-        except _APPLY_FAILURES as exc:
+        except ARMED_APPLY_FAILURE_TYPES as exc:
             # Rendering runs while the port is ALREADY OPEN, so a renderer
             # that raises (malformed plan, device-strategy bug, Ctrl+C
             # between confirm and the first byte) must not leave the
@@ -619,6 +641,7 @@ class ArmedApplySession:
                 self.disarm()
         expected = len(triples)
         sent = 0
+        self._delivery_progress = ArmedApplyProgress(action_id, device.device_id, sent, expected)
         for triple in triples:
             accepted = False
             try:
@@ -628,6 +651,9 @@ class ArmedApplySession:
                     break
                 port.send(triple)
                 sent += 1
+                self._delivery_progress = ArmedApplyProgress(
+                    action_id, device.device_id, sent, expected
+                )
                 accepted = True
             except _PORT_ERRORS as exc:
                 # Auto-disarm on provider error (which closes the port).
@@ -652,7 +678,7 @@ class ArmedApplySession:
                         status="partial",
                     ),
                 ) from exc
-            except _APPLY_FAILURES as exc:
+            except ARMED_APPLY_FAILURE_TYPES as exc:
                 # KeyboardInterrupt / SystemExit / CancelledError land here.
                 # Without this arm the session stayed ARMED with the port
                 # OPEN — Ctrl+C during a burst left the operator holding an
