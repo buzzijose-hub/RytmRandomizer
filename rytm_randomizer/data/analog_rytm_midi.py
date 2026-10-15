@@ -816,6 +816,29 @@ ANALOG_RYTM_MANUAL_NOTE_TRIGGERS: Final[tuple[AnalogRytmNoteTrigger, ...]] = (
 )
 
 
+def analog_rytm_snapshot_general_mapping_supported(mapping: AnalogRytmCcMapping) -> bool:
+    """Describe general captured primary-byte scope, not hardware validation.
+
+    Sample Bit Reduction is an exact documentary exception. The rest of SAMPLE
+    stays outside capture promotion; paired precision is checked at SEND.
+    """
+
+    return (
+        mapping.machine_key is None
+        and (
+            (
+                mapping.mutation_status == "validated_runtime"
+                and mapping.scope in {"filter", "amp", "lfo"}
+            )
+            or mapping
+            == ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER[("SAMPLE", "Sample Bit Reduction")]
+        )
+        and mapping.nrpn_msb == 1
+        and mapping.nrpn_lsb is not None
+        and mapping.parameter not in {"Level", "Track Level", "Amp Volume"}
+    )
+
+
 def get_machine_src_mappings(machine_key: str) -> tuple[AnalogRytmCcMapping, ...]:
     """Return manual-backed SRC mappings for a known Rytm machine key."""
 
@@ -866,6 +889,7 @@ __all__ = [
     "RiskTier",
     "RYTM_COCKPIT_ADDITIONAL_SRC_PITCH_PARAMETERS",
     "RYTM_COCKPIT_PENDING_SRC_PARAMETERS",
+    "analog_rytm_snapshot_general_mapping_supported",
     "get_analog_rytm_catalog_summary",
     "get_machine_src_mappings",
 ]
