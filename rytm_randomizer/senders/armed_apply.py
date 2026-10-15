@@ -219,6 +219,21 @@ is what prevents that from happening, but the seam must still fail **closed**
 future port is handed something it cannot render.
 """
 
+_CONTROL_FLOW_ERRORS: Final[tuple[type[BaseException], ...]] = (
+    KeyboardInterrupt,
+    SystemExit,
+    asyncio.CancelledError,
+    GeneratorExit,
+)
+_APPLY_FAILURES: Final[tuple[type[BaseException], ...]] = (
+    *_PORT_ERRORS,
+    *_CONTROL_FLOW_ERRORS,
+    LookupError,
+    ArithmeticError,
+    AssertionError,
+    MidiError,
+)
+
 
 def plan_readiness(plan: object) -> tuple[bool, str]:
     """Return ``(ready, readiness_reason)`` via the ReadyPlan duck.
@@ -479,7 +494,7 @@ class ArmedApplySession:
                 try:
                     if delay > 0.0:
                         self._sleep(delay)
-                except BaseException as exc:
+                except _APPLY_FAILURES as exc:
                     steps.throw(exc)
         finally:
             steps.close()
@@ -521,7 +536,7 @@ class ArmedApplySession:
                     return cast(ArmedApplyResult, complete.value)
                 try:
                     await async_sleep(delay)
-                except BaseException as exc:
+                except _APPLY_FAILURES as exc:
                     steps.throw(exc)
         finally:
             steps.close()
@@ -576,9 +591,11 @@ class ArmedApplySession:
 
         port = self._port
         emit = device.to_cc_messages if renderer is None else renderer
+        rendered = False
         try:
             triples = tuple(emit(plan))
-        except BaseException as exc:
+            rendered = True
+        except _APPLY_FAILURES as exc:
             # Rendering runs while the port is ALREADY OPEN, so a renderer
             # that raises (malformed plan, device-strategy bug, Ctrl+C
             # between confirm and the first byte) must not leave the
@@ -597,9 +614,13 @@ class ArmedApplySession:
                     status="interrupted",
                 )
             raise
+        finally:
+            if not rendered:
+                self.disarm()
         expected = len(triples)
         sent = 0
         for triple in triples:
+            accepted = False
             try:
                 if sent > 0:
                     yield inter_message_delay_seconds
@@ -607,6 +628,7 @@ class ArmedApplySession:
                     break
                 port.send(triple)
                 sent += 1
+                accepted = True
             except _PORT_ERRORS as exc:
                 # Auto-disarm on provider error (which closes the port).
                 # Never auto-re-arm: the operator must run the explicit
@@ -630,7 +652,7 @@ class ArmedApplySession:
                         status="partial",
                     ),
                 ) from exc
-            except BaseException as exc:
+            except _APPLY_FAILURES as exc:
                 # KeyboardInterrupt / SystemExit / CancelledError land here.
                 # Without this arm the session stayed ARMED with the port
                 # OPEN — Ctrl+C during a burst left the operator holding an
@@ -648,6 +670,9 @@ class ArmedApplySession:
                     status="interrupted",
                 )
                 raise
+            finally:
+                if not accepted:
+                    self.disarm()
         if sent < expected:
             self.disarm()
             raise ArmedApplyError(

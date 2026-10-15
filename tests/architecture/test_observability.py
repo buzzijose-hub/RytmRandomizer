@@ -183,8 +183,8 @@ def test_print_allowlist_files_actually_exist() -> None:
 # entire package where it would be defensible is best-effort cleanup paths
 # (e.g. closing a MIDI port during shutdown); even those have been narrowed
 # in WS-U to the realistic OSError/RuntimeError/AttributeError family. The
-# allow-list below is empty; we keep the constant so a future principled
-# exception can be added with a clear comment.
+# only remaining broad catch is the tracing context manager below. ArmedApply
+# uses typed failure families plus unconditional failure cleanup instead.
 ALLOW_LIST_BROAD_EXCEPT: frozenset[tuple[str, int]] = frozenset(
     {
         # observability/tracing.py:167 — the operation() context manager intentionally
@@ -193,26 +193,6 @@ ALLOW_LIST_BROAD_EXCEPT: frozenset[tuple[str, int]] = frozenset(
         # exception propagates. The handler re-raises; nothing is silently swallowed.
         # This is the one place in the package where catching everything is correct.
         ("rytm_randomizer/observability/tracing.py", 167),
-        # senders/armed_apply.py:510 — ArmedApplySession.apply()'s send loop
-        # intentionally catches BaseException (including KeyboardInterrupt /
-        # SystemExit / CancelledError) so the armed session DISARMS — which
-        # closes the exclusive hardware output port — before the exception
-        # propagates. Catching only the port-error families left a Ctrl+C
-        # mid-burst with the session ARMED and the port OPEN until process
-        # exit. The handler tags the exception with the partial-delivery
-        # outcome and re-raises the ORIGINAL exception; nothing is swallowed
-        # and no control-flow exception is converted. Same shape, and same
-        # justification, as the tracing entry above.
-        ("rytm_randomizer/senders/armed_apply.py", 521),
-        # senders/armed_apply.py:483 — the RENDER step of the same apply()
-        # runs while the port is already open but before any byte reaches
-        # the wire. A renderer that raises (malformed plan, device-strategy
-        # bug, Ctrl+C between confirm and first send) previously left the
-        # session ARMED holding the exclusive handle, because only the send
-        # loop below was guarded. Same justification as the entry above:
-        # disarm (closing the port), then re-raise the ORIGINAL exception
-        # unchanged — a clean zero-byte refusal, nothing swallowed.
-        ("rytm_randomizer/senders/armed_apply.py", 483),
     }
 )
 

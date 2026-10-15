@@ -27,6 +27,61 @@ from rytm_randomizer.senders.armed_apply import (
 pytestmark = pytest.mark.fast
 
 
+@pytest.mark.parametrize("driver", ["sync", "async"])
+@pytest.mark.parametrize("stage", ["render", "send", "sleep"])
+def test_unexpected_programmer_faults_still_release_the_owned_port(
+    pacing_rig: tuple[ArmedApplySession, _PacingIO, Device], driver: str, stage: str
+) -> None:
+    session, io, device = pacing_rig
+
+    class UnexpectedFault(Exception):
+        pass
+
+    failure = UnexpectedFault("unmodeled collaborator fault")
+    if stage == "send":
+        io.send_error, io.send_fail_after = failure, 1
+
+    def render(plan: object) -> Iterable[tuple[int, int, int]]:
+        if stage == "render":
+            raise failure
+        return io.render(plan)
+
+    def sleep(delay: float) -> None:
+        if stage == "sleep":
+            raise failure
+        io.sleep(delay)
+
+    async def async_sleep(delay: float) -> None:
+        sleep(delay)
+
+    with pytest.raises(UnexpectedFault) as caught:
+        if driver == "async":
+            asyncio.run(
+                session.apply_async(
+                    device,
+                    _PacingPlan(),
+                    action_id=_ACTION,
+                    mutates_kit=False,
+                    renderer=render,
+                    inter_message_delay_seconds=0.02,
+                    async_sleep=async_sleep,
+                )
+            )
+        else:
+            session._sleep = sleep
+            session.apply(
+                device,
+                _PacingPlan(),
+                action_id=_ACTION,
+                mutates_kit=False,
+                renderer=render,
+                inter_message_delay_seconds=0.02,
+            )
+    assert caught.value is failure
+    assert not session.is_armed and io.closed == 1
+    assert len(io.sent) == (0 if stage == "render" else 1)
+
+
 def test_apply_async_defaults_to_cooperative_asyncio_sleep() -> None:
     parameters = signature(ArmedApplySession.apply_async).parameters
     assert parameters["async_sleep"].default is asyncio.sleep

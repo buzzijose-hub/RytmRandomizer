@@ -89,3 +89,12 @@ the separate studio exception. Historic PR254 Gate14/16 deviations are not
 retroactively cleared by this increment's audit/execution record.
 
 Final full-source test/coverage and remote publication results remain pending.
+
+The first full coverage attempt was stopped and is not acceptance evidence.
+An architecture-only retry identified relocated broad catches; the repair uses
+explicit backend/control-flow failure families and finally-based port cleanup,
+with new unknown-collaborator fault tests for both drivers. Two obsolete
+line-numbered ArmedApply broad-catch exemptions were removed, not expanded.
+The focused 805-test coverage diagnostic passed its tests but intentionally
+failed the whole-package 99% floor because it did not run the whole suite; its
+XML is diagnostic only. Final package coverage comes from a fresh full run.

@@ -213,7 +213,16 @@ async def send_a4_studio(cmd: dict[str, object], session: CockpitSession) -> Han
             status="refused",
             reason="armed_send_refused",
         )
-    except BaseException as exc:
+    except (
+        asyncio.CancelledError,
+        KeyboardInterrupt,
+        SystemExit,
+        LookupError,
+        OSError,
+        TypeError,
+        ValueError,
+        RuntimeError,
+    ) as exc:
         interrupted = getattr(exc, "armed_apply_outcome", None)
         if not isinstance(interrupted, ArmedApplyResult):
             interrupted = ArmedApplyResult(
