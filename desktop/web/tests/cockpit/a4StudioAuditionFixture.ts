@@ -1,6 +1,6 @@
 import type { A4StudioAuditionPlan } from '../../src/ws/protocol';
 import { forgeEntry, showBankState } from './showKitForgeFixture';
-import pythonDto from './a4StudioAudition.python.json';
+import pythonDto from './a4StudioAudition.python.json' with { type: 'json' };
 
 // Python test_a4_studio_plan pins only the source ULID, then calls with_mutations((
 // AnalogFourNativeMutation('osc1_level', 1, 100),)).prepare().to_dict(),

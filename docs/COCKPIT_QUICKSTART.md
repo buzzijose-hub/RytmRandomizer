@@ -391,8 +391,10 @@ targets and locks, and independent coordinated stage state. Show Kit Forge may
 render evidence-backed native fields for selected, unlocked A4 tracks as offline
 saved-KIT candidates. Studio's canonical parameter table shows mutable and
 protected fields separately; a known source value is required. This renderer
-grants no output authority: **A4 SEND remains blocked**, and unpromoted native
-fields, independent FIN and OXI AMP remain immutable.
+grants no output authority: **general-stage A4 SEND remains blocked**, and
+unpromoted native fields, independent FIN and OXI AMP remain immutable. The
+separate source-only [unqualified studio trial](hardware-validation/2026-10-15-a4-studio-audition.md)
+is a bounded scalar RAM exception, not an offline-renderer or show-readiness grant.
 
 The Style Crates queue also includes a passive Analog Four set-plan card. It
 renders the current/up-next A4 `warehouse-arc` macro sequence from
@@ -450,9 +452,12 @@ favorites rather than a single live mutation.
    **Review A4 preparation** revalidates the selected candidate's exact source,
    bytes, track scope and recovery evidence. An optional exact output name is
    review intent only. The report expires when the cue, capture, scope, port
-   intent or session changes, and A4 SEND remains blocked even when its bytes
+   intent or session changes, and this offline report never enables A4 SEND even when its bytes
    verify. Physical scratch evidence and a separately verified live MIDI value
    mapping are still required; a saved-KIT Q8.8 value is not a live packet.
+   The distinct **A4 studio audition** section on the October 15 source follow-on
+   has its own routing, acknowledgment, fresh-capture and confirmation lifecycle;
+   follow the linked supervised procedure, not this offline report's controls.
    With every A4 track locked, the paired A4 artifact preserves the source
    bytes exactly. Before each live Show Forge SEND, manually reload the Rytm
    source and take a fresh exact source dump through the device rail. Capturing

@@ -1,5 +1,7 @@
 """Shared transport timing facts, without MIDI I/O dependencies."""
 
+from __future__ import annotations
+
 from typing import Final
 
 MIDI_MESSAGE_SETTLE_SECONDS: Final[float] = 0.02

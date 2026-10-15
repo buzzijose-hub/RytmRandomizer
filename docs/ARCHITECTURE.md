@@ -853,8 +853,10 @@ between the default Analog Rytm MKII 12-pad snapshot view and an Analog Four
 MKII four-track staged view that consumes the existing A4 role/zone vocabulary.
 The A4 surface also renders OXI-style Anchor / Shape / Pressure / Space macro
 rows as frontend-only review metadata. Verified A4 KIT capture and lock-aware
-zero-event planning exist, but A4 SEND remains blocked until saved-KIT semantic
-offsets are promoted from codec, stride, and physical evidence. OXI One remains
+zero-event planning exist. General A4 stage SEND remains blocked; the separate
+unqualified studio boundary in section 6.2 permits only exact scalar RAM trials
+with canonical source review and explicit routing/confirmation. Offline reports
+still confer no output authority. OXI One remains
 the owner of sequencing, notes, triggers, mutes, and pattern motion; Cockpit
 does not claim direct OXI control.
 

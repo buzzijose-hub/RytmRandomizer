@@ -29,8 +29,11 @@ before testing. Preserve the old delivery and all original kit/audio files.
    through the input-only capture control. Confirm it matches the saved source;
    a saved-state dump alone cannot prove unsaved RAM was restored.
 4. In A4 studio audition, choose the exact A4 output and enter all four actual
-   track channels. Acknowledge the unqualified RAM-only trial and manual reload.
-   Explicitly arm the A4 output, then prepare the studio plan.
+   track channels. Acknowledge the unqualified RAM-only trial and explicitly arm
+   the A4 output. Arming resets confirmation controls: acknowledge the trial and
+   manual reload again, then prepare the studio plan. If a capture or reconnect
+   cleared the active candidate, select the same retained candidate again first;
+   never regenerate merely to bypass stale-source or scope blockers.
 5. Check track, CC number, wire channel, exact value and plan identity. Wire
    channels are 0-based; the configured controls are 1-based. Confirm only that
    exact plan. Any blocker ends this attempt: do not drop unsupported rows.

@@ -65,5 +65,27 @@ and frontend workers use disjoint worktrees and are archived after integration.
 The source reuses canonical native conversion, preparation validators, packets,
 exact output opening and ArmedApply. No environment switch, new device registry,
 root module, hardware dependency update or parity regeneration is introduced.
-The post-audit and exact final test/review/source checkpoint will be recorded
-before publication.
+### Maintainability Post-Audit
+
+| Pre-audit item | Post-audit disposition |
+| --- | --- |
+| 1. Onboarding | Existing workspace/WS/protocol boundaries retained; source-only procedure linked from quickstart. |
+| 2. Naming | Explicit studio-only plan/control/outcome types; general stage remains blocked. |
+| 3. Coupling | Removed forbidden WS timing import; neutral fact is exposed through the cockpit data boundary, without architecture allowlist growth. |
+| 4. Facts | Canonical 25-binding map and unchanged 20 ms interval reused; no copied conversion or CC table. |
+| 5. Configuration | Explicit volatile routing and confirmations; no new environment read or persisted grant. |
+| 6. Tests | Shared pacing fixture moved to conftest; real canonical producer fixture and actual WS stop/disconnect/overlap regressions added. |
+| 7. Dev loop | At most two test workers; composed source checkpoint and runner results recorded, not inferred from worker reports. |
+| 8. Errors | Repaired artifact redaction and refusal RED accounting; categorical reasons and accepted-packet counts survive interruption. |
+| 9. Release | Existing PR254 only; preserved d563 delivery, no protected merge or physical acceptance claimed. |
+| 10. Extension | Async/sync delivery share one gate loop; unsupported changed fields block the whole plan. No additional sender abstraction warranted. |
+
+The first dimensional review found and repaired import ownership, loose receipt
+typing, diagnostic redaction/accounting, missing reverse-family regression and
+an owned-operation overlap that could delay DISARM. Follow-up targeted reviews
+clear those repairs; a missing future-annotations directive in the new neutral
+data module was also corrected. Docs reconcile old categorical A4 holds with
+the separate studio exception. Historic PR254 Gate14/16 deviations are not
+retroactively cleared by this increment's audit/execution record.
+
+Final full-source test/coverage and remote publication results remain pending.

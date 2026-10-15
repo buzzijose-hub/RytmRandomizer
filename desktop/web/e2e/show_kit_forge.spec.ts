@@ -2,12 +2,84 @@
 import { expect, test } from '@playwright/test';
 
 import type { CommandEnvelope, Event } from '../src/ws/protocol';
-import { history, profile, readyDualMachineStage, sendPlan, sessionMock, snapshot } from '../tests/cockpit/_fixtures';
+import { connectionListening, history, profile, readyDualMachineStage, sendPlan, sessionMock, snapshot } from '../tests/cockpit/_fixtures';
 import { forgeCaptures, forgeEntry, showBankState } from '../tests/cockpit/showKitForgeFixture';
 import { parameterEvent } from '../tests/cockpit/parameterScopeFixture';
 import { a4TransportReport } from '../tests/cockpit/a4PreparationFixture';
+import { studioPlan, studioPort } from '../tests/cockpit/a4StudioAuditionFixture';
 
 import { trackConsoleErrors } from './fixtures/console_guard';
+
+test('A4 studio routing and exact confirmation remain bounded at desktop and mobile sizes', async ({ page }, testInfo) => {
+  const errors = trackConsoleErrors(page);
+  const sent: CommandEnvelope[] = [];
+  const armedSession = { ...sessionMock, armed: true, armed_device_id: 'analog_four_mk2' as const, midi_port: studioPort };
+  const events: Event[] = [
+    { type: 'session_status', ...sessionMock },
+    { type: 'connection_changed', connection: { ...connectionListening, available_outputs: [studioPort] } },
+    { type: 'snapshot_changed', snapshot },
+    { type: 'profile_changed', profile },
+    { type: 'history_updated', history },
+    { type: 'kit_captures_changed', captures: forgeCaptures },
+    { type: 'show_bank_changed', show_bank: showBankState },
+  ];
+  await page.route('**/favicon.ico', route => route.fulfill({ status: 204 }));
+  await page.routeWebSocket('ws://127.0.0.1:4317/ws', socket => {
+    socket.onMessage(message => {
+      const payload = JSON.parse(message.toString()) as CommandEnvelope | { type: 'hello' };
+      if ('type' in payload) { for (const event of events) socket.send(JSON.stringify(event)); return; }
+      sent.push(payload);
+      socket.send(JSON.stringify({ request_id: payload.request_id, ok: true,
+        ...(payload.command.type === 'show_bank_prepare_a4_studio_audition' ? { a4_studio_plan: studioPlan } : {}),
+        ...(payload.command.type === 'show_bank_send_a4_studio_audition' ? {
+          a4_studio_outcome: { status: 'complete', sent_count: 1, expected_count: 1, reason: '' },
+        } : {}),
+      }));
+      if (payload.command.type === 'arm') socket.send(JSON.stringify({ type: 'session_status', ...armedSession }));
+      if (payload.command.type === 'show_bank_list') socket.send(JSON.stringify({ type: 'show_bank_changed', show_bank: showBankState }));
+    });
+  });
+  await page.addInitScript(() => {
+    Object.assign(window, { __RYTM_RAND_WS_TOKEN__: 'mock-browser-token', __RYTM_RAND_ARM_SECRET__: 'mock-arm-capability' });
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/');
+  const panel = page.getByRole('region', { name: 'A4 studio audition', exact: true });
+  await expect(panel.getByLabel('A4 USB output')).toHaveValue('');
+  await panel.getByLabel('A4 USB output').selectOption(studioPort);
+  for (const [index, channel] of [2, 4, 6, 8].entries()) {
+    await panel.getByRole('spinbutton', { name: `A4 track ${index + 1} channel (1-16)` }).fill(String(channel));
+  }
+  await panel.getByRole('checkbox', { name: /I acknowledge this A4 hardware/ }).check();
+  await panel.getByRole('button', { name: 'Arm A4 studio output' }).click();
+  await expect(panel).toContainText(`A4 studio output armed on ${studioPort}`);
+  await panel.getByRole('checkbox', { name: /I acknowledge this A4 hardware/ }).check();
+  await panel.getByRole('checkbox', { name: /I manually reloaded/ }).check();
+  await panel.getByRole('button', { name: 'Prepare A4 studio plan' }).click();
+  const table = panel.getByRole('table', { name: 'Prepared A4 studio send plan' });
+  await expect(table.locator('tbody tr')).toHaveCount(1);
+  await expect(panel.getByRole('button', { name: 'Send exact A4 studio plan' })).toBeDisabled();
+  for (const width of [1440, 600, 390]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await table.scrollIntoViewIfNeeded();
+    expect(await panel.evaluate(element => {
+      const bounds = element.getBoundingClientRect();
+      return bounds.left >= 0 && bounds.right <= innerWidth;
+    })).toBe(true);
+    expect(await panel.locator('button, label, code').evaluateAll(elements => elements.every(element => {
+      const range = document.createRange(); range.selectNodeContents(element);
+      const bounds = element.getBoundingClientRect();
+      return [...range.getClientRects()].every(rect => rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1);
+    }))).toBe(true);
+    await page.screenshot({ path: testInfo.outputPath(`a4-studio-${width}.png`) });
+  }
+  await panel.getByRole('checkbox', { name: /I confirm sending/ }).check();
+  await panel.getByRole('button', { name: 'Send exact A4 studio plan' }).click();
+  await expect(panel.getByRole('status')).toContainText('A4 studio outcome: complete. Sent 1 of 1.');
+  await expect(table).not.toBeAttached();
+  expect(sent.filter(item => item.command.type === 'show_bank_send_a4_studio_audition')).toHaveLength(1);
+  errors.assertClean();
+});
 
 test('Show Kit Forge displays paired evidence and rehearses exact offline audition at two viewport sizes', async ({ page }, testInfo) => {
   await page.route('**/favicon.ico', (route) => route.fulfill({ status: 204 }));

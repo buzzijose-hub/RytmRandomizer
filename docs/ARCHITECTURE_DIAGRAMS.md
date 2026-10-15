@@ -2272,7 +2272,7 @@ The diagrams DO NOT claim that the project currently has:
 
 - Real MIDI sending in the passive default (an explicit arm is always required)
 - Automatic *output* arming from port discovery (enumeration and input opens are passive; nothing arms itself)
-- A4 Cockpit SEND, destination-slot rewriting, or unrestricted captured-A4 mutation. Show Kit Forge supports scoped evidence-backed native offline candidates and the legacy F1 algorithm, always with `hardware_send_validated = false`.
+- General-stage A4 Cockpit SEND, destination-slot rewriting, or unrestricted captured-A4 mutation. The separate unqualified studio boundary permits bounded scalar RAM attempts, not stage readiness. Offline candidates and the legacy F1 algorithm retain `hardware_send_validated = false`.
 - Restore-to-device / persistent kit writes (refused at the seam — no capture-before-write or restore path exists)
 - A repo-wide single transmit path (the cockpit routes through the ArmedApply seam; legacy `app.py` still owns allowlisted output paths)
 - `analog_four/` / `rytm/` / `essence/` top-level subpackages (anti-pattern, rejected by arch tests in §10)
@@ -3230,7 +3230,7 @@ flowchart LR
 
     A4Lane --> A4Offline["optional native-field Device capability<br/>106 policy rows / 72 potentially mutable keys<br/>exact domain indices / source-known values"]
     A4Offline --> LocalFile["local bytes only<br/>hardware_send_validated=false"]
-    A4Lane --> A4Block["BLOCKED<br/>A4 SEND; OXI AMP; independent FIN<br/>unknown/default-only native fields"]
+    A4Lane --> A4Block["BLOCKED<br/>general-stage A4 SEND; OXI AMP; independent FIN<br/>unknown/default-only native fields"]
 
     OXI["OXI One<br/>sequencing / notes / triggers<br/>mutes / pattern motion"] --> Rytm
     OXI --> A4["Analog Four"]
@@ -3295,7 +3295,7 @@ flowchart TD
     A4ScalarReview --> NoA4Send
     ProjectionVersion["recorded Rytm capture projection<br/>unversioned recipe = V1<br/>new recipe = Sample Bit V2"] --> Forge
     ProjectionVersion --> Favorite
-    A4Candidate --> NoA4Send["A4 SEND blocked<br/>hardware_send_validated=false"]
+    A4Candidate --> NoA4Send["offline report grants no SEND<br/>hardware_send_validated=false<br/>separate studio exception below"]
     ExistingScratch["existing four-track scratch fixture<br/>fixed slot 20 / frame / hash"] --> ScratchReturn["manual transfer to disposable slot 20<br/>inspect / listen / save on A4<br/>fresh capture + byte/semantic review"]
     ScratchReturn --> OfflineEvidence["offline field evidence only<br/>not paired/fractional MIDI<br/>not A4/BOTH SEND authority"]
 

@@ -207,7 +207,7 @@ The cockpit targets **WCAG 2.2 AA** and enforces it in CI: an axe audit runs aga
 
 **Live-set sound design.** Three hours into a warehouse set, you need the kit to evolve without losing the bones. The app is already listening to the Rytm; capture the kit you are playing, morph or scope-randomize around it, watch the ghost preview, lock the kick, arm, confirm, send. What goes out is live-dial CC into working memory — your saved kit on the device is untouched, so reloading it is the way back.
 
-**Dual-machine rigs.** If you run an Analog Four MK2 alongside the Rytm, the same surface can capture both machines and manage separate targets, locks, and stage state. Captured-A4 semantic planning is deliberately zero-event and unsendable until saved-KIT offsets, encodings, track stride, round trips, and physical behavior are proven; this Cockpit flow has no A4 output authority.
+**Dual-machine rigs.** If you run an Analog Four MK2 alongside the Rytm, the same surface can capture both machines and manage separate targets, locks, and stage state. General A4 stage output remains blocked. A distinct, unqualified studio flow supports RAM-only trials of 25 exact scalar mappings with explicit routing, source reload, fresh capture and confirmation; offline preparation never grants output authority. Physical acceptance and show readiness remain separate.
 
 **Studio profile authoring.** Drop a folder of reference tracks into the wizard, review the trait bars, save as `kind="user"`. You get a deployable model that captures *that sound* — a reference, not a copy.
 
