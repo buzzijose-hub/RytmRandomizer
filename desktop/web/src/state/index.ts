@@ -132,6 +132,7 @@ export function bindClientToStore(
     client.on('session_status', (ev) => {
       store.getState().setSessionStatus({
         armed: ev.armed,
+        ...(ev.armed_device_id === undefined ? {} : { armed_device_id: ev.armed_device_id }),
         midi_port: ev.midi_port,
         mode: ev.mode,
         connection_phase: ev.connection_phase,

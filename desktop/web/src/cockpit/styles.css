@@ -4148,6 +4148,49 @@ html,
   overflow-wrap: anywhere;
 }
 
+.a4-studio-audition-panel {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.a4-studio-audition-panel > *,
+.a4-studio-routing > label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.a4-studio-routing {
+  display: grid;
+  grid-template-columns: minmax(160px, 2fr) repeat(4, minmax(90px, 1fr));
+  gap: 12px;
+}
+
+.a4-studio-routing :is(input, select) {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.a4-studio-attestation {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.a4-studio-attestation input {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+}
+
+.a4-studio-table {
+  min-width: 480px;
+}
+
+@media (max-width: 800px) {
+  .a4-studio-routing { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .a4-studio-routing > label:first-child { grid-column: 1 / -1; }
+}
+
 .a4-transport-table {
   min-width: 520px;
   table-layout: fixed;
