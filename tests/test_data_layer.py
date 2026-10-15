@@ -971,6 +971,26 @@ def test_csv_reconciliation_owns_context_schema_but_reuses_source_provenance():
         data.MIDI_CSV_MANUAL_CHECKS["rytm"]["version"] = "unverified"
 
 
+def test_native_transport_and_capture_eligibility_share_the_canonical_data_exports():
+    from rytm_randomizer.data import analog_four_native_transport as transport
+    from rytm_randomizer.data import analog_rytm_midi as rytm
+
+    assert data.A4_NATIVE_CC7_BINDINGS is transport.A4_NATIVE_CC7_BINDINGS
+    assert len(data.A4_NATIVE_CC7_BINDINGS) == 25
+    assert len(data.A4_NATIVE_TRANSPORT_CONFLICTS) == 6
+    assert data.RYTM_CAPTURE_PROJECTIONS == (
+        data.RYTM_CAPTURE_PROJECTION_V1,
+        data.RYTM_CAPTURE_PROJECTION_V2,
+    )
+    assert data.A4_NATIVE_TRANSPORT_OUTPUT_HOLDS is transport.A4_NATIVE_TRANSPORT_OUTPUT_HOLDS
+    assert rytm.analog_rytm_snapshot_general_mapping_supported(
+        rytm.ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER[("SAMPLE", "Sample Bit Reduction")]
+    )
+    assert not rytm.analog_rytm_snapshot_general_mapping_supported(
+        rytm.ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER[("SAMPLE", "Sample Tune")]
+    )
+
+
 if __name__ == "__main__":
     test_data_layer_exports_are_non_empty()
     test_machine_cc_is_15_everywhere()

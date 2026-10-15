@@ -675,6 +675,7 @@ export interface ShowKitRecipe {
   /** Immutable authored intelligence; legacy recipes omit this. */
   profile?: ProfileModel;
   a4_algorithm?: 'filter1-frequency-v1' | 'native-fields-v1';
+  rytm_projection?: 'captured-cc7-v1' | 'captured-cc7-sample-bit-v2';
 }
 
 export interface ShowAnalogFourCandidateValue {
@@ -785,6 +786,27 @@ export type A4PreparationBlocker =
   | 'persistent_kit_write_prohibited';
 
 /** Offline preparation evidence. This record has no hardware authority. */
+export interface A4NativeTransportPreview {
+  schema_version: 'a4-native-transport-preview-v1';
+  mapping_complete: boolean;
+  changes: {
+    track_id: number;
+    parameter: string;
+    before_native: number;
+    after_native: number;
+    cc_number: number | null;
+    before_cc7: number | null;
+    after_cc7: number | null;
+    roundtrip_exact: boolean;
+    blockers: string[];
+  }[];
+  blocked_reasons: string[];
+  ready: false;
+  hardware_send_validated: false;
+  channel_routing_verified: false;
+  output_authority: 'offline-review-only';
+}
+
 export interface A4PreparationReport {
   schema_version: 'a4-preparation-v1';
   preparation_id: string;
@@ -808,6 +830,7 @@ export interface A4PreparationReport {
   candidate_is_local: boolean;
   candidate_bytes_verified: boolean;
   current_source_verified: boolean;
+  transport_preview?: A4NativeTransportPreview | null;
   changes: ({
     track_id: number;
     parameter: string;

@@ -171,6 +171,38 @@ def _native(field: str) -> DeviceSupportParameter:
     )
 
 
+def test_inventory_refuses_protected_and_unprojected_common_controls() -> None:
+    rows = {
+        (row["section"], row["field"]): row
+        for row in _rows(build_device_support_inventory())
+        if row["device"] == "rytm" and row["surface"] == "midi_catalog" and row["machine"] is None
+    }
+    for mapping in ANALOG_RYTM_MANUAL_CC.values():
+        if mapping.machine_key is not None:
+            continue
+        row = rows[(mapping.section, mapping.parameter)]
+        if mapping.mutation_status in ("locked_default", "forbidden"):
+            assert row["live_send"] == "blocked"
+            assert "mandatory_parameter_protection" in row["blockers"]
+    for parameter in (
+        "Sample Tune",
+        "Sample Fine tune",
+        "Sample Slot",
+        "Sample Start",
+        "Sample End",
+        "Sample Loop",
+        "Sample Level",
+    ):
+        row = rows[("SAMPLE", parameter)]
+        assert row["live_send"] == "blocked"
+        assert "captured_source_projection_unavailable" in row["blockers"]
+    sample_bit = rows[("SAMPLE", "Sample Bit Reduction")]
+    assert sample_bit["live_send"] == "conditional_guarded_cc7"
+    assert sample_bit["blockers"] == ()
+    assert sample_bit["locations"] == (0x32,)
+    assert sample_bit["protection"] == "documented_only"
+
+
 def test_inventory_is_reproducible_and_complete_against_catalogs() -> None:
     first = build_device_support_inventory()
     assert json.dumps(first, sort_keys=True) == json.dumps(

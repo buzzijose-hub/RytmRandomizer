@@ -85,7 +85,7 @@ function PreparationRequest({ bank, entry, disabled }: Props): JSX.Element {
   }
 
   return (
-    <section className="show-kit-forge-section" aria-label="A4 audition preparation">
+    <section className="show-kit-forge-section a4-preparation-panel" aria-label="A4 audition preparation">
       <h4>A4 audition preparation — output blocked</h4>
       <p>Review the selected candidate and recovery evidence. This action does not open a port or send MIDI.</p>
       <label>Intended A4 output name (review only)
@@ -103,6 +103,17 @@ function PreparationRequest({ bank, entry, disabled }: Props): JSX.Element {
           Track {change.track_id} {change.parameter}: {change.before_screen_value} → {change.after_screen_value}
           {' '}Native {'before_encoded_native' in change ? change.before_encoded_native : change.before_raw_q8_8} → {'after_encoded_native' in change ? change.after_encoded_native : change.after_raw_q8_8}
         </li>)}</ul>
+        {report.transport_preview != null && <details>
+          <summary>CC7 mapping evidence: {report.transport_preview.mapping_complete ? 'complete' : 'incomplete'}</summary>
+          <div className="show-kit-forge-table-scroll" tabIndex={0} role="region" aria-label="A4 CC7 mapping table"><table className="show-kit-forge-cue-table a4-transport-table" aria-label="A4 native to CC7 mapping evidence">
+            <thead><tr><th>Track</th><th>Parameter</th><th>CC</th><th>Before</th><th>After</th><th>Mapping</th></tr></thead>
+            <tbody>{report.transport_preview.changes.map((change) => <tr key={`${change.track_id}:${change.parameter}`}>
+              <td>{change.track_id}</td><td>{change.parameter}</td><td>{change.cc_number ?? 'N/A'}</td>
+              <td>{change.before_cc7 ?? 'N/A'}</td><td>{change.after_cc7 ?? 'N/A'}</td>
+              <td>{change.roundtrip_exact ? 'Exact' : change.blockers.join(', ')}</td>
+            </tr>)}</tbody>
+          </table></div>
+        </details>}
         <details><summary>Candidate verification details</summary>
           <dl>
             <dt>Review ID</dt><dd><code>{report.preparation_id}</code></dd>

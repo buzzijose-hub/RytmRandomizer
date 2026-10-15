@@ -420,12 +420,20 @@ def test_corrupt_native_package_claims_and_scopes_are_refused_before_clean_store
     assert path.read_bytes() == modified
 
 
-@pytest.mark.parametrize("field", ["filter2_resonance", A4_FILTER1_FREQUENCY_PARAMETER])
+@pytest.mark.parametrize(
+    "fields,exact",
+    [
+        (("filter2_resonance",), True),
+        ((A4_FILTER1_FREQUENCY_PARAMETER,), False),
+        (("filter2_resonance", "osc1_pwm_depth"), False),
+        (("osc1_level", "filter1_resonance", "env2_decay"), True),
+    ],
+)
 def test_native_preparation_verifies_parameter_cells_and_normalizes_f1_alias(
-    tmp_path: Path, field: str
+    tmp_path: Path, fields: tuple[str, ...], exact: bool
 ) -> None:
     journey = _journey(tmp_path)
-    (candidate,) = _generate(journey, fields=(field,), count=1)
+    (candidate,) = _generate(journey, fields=fields, count=1)
     entry = journey.workspace.bank(journey.bank_id).entry(journey.entry_id)
     source = journey.originals[ANALOG_FOUR_DEVICE_ID]
     frame = _frame(journey, candidate)
@@ -445,6 +453,23 @@ def test_native_preparation_verifies_parameter_cells_and_normalizes_f1_alias(
         entry=entry, source_frame=source, candidate_frame=frame, context=context
     )
     assert report.candidate_bytes_verified
+    preview = report.transport_preview
+    assert preview is not None and preview.changes
+    assert preview.mapping_complete is exact
+    assert preview.ready is preview.hardware_send_validated is False
+    assert preview.channel_routing_verified is False
+    assert preview.output_authority == "offline-review-only"
+    assert (
+        report.ready is False and "a4_live_transport_mapping_unverified" in report.blocked_reasons
+    )
+    assert {row.track_id for row in preview.changes} == {1}
+    if exact:
+        assert all(row.roundtrip_exact for row in preview.changes)
+        assert all(row.before_cc7 == row.before_native for row in preview.changes)
+        assert all(row.after_cc7 == row.after_native for row in preview.changes)
+    else:
+        assert any(row.blockers for row in preview.changes)
+    assert report.to_dict()["transport_preview"] == preview.to_dict()
     forged = replace(
         candidate,
         recipe=replace(
@@ -463,6 +488,7 @@ def test_native_preparation_verifies_parameter_cells_and_normalizes_f1_alias(
     assert (
         not report.candidate_bytes_verified and "candidate_bytes_invalid" in report.blocked_reasons
     )
+    assert report.transport_preview is None
 
 
 def test_import_copy_is_create_only_and_revokes_session_output_intent(tmp_path: Path) -> None:

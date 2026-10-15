@@ -15,6 +15,7 @@ Requirements gates for all plans: [`docs/PLAN_REQUIREMENTS.md`](../../PLAN_REQUI
 
 | Date | Plan | Status | PR |
 |---|---|---|---|
+| 2026-10-15 | [Live control closure](2026-10-15-live-control-closure.md) | in-flight; bounded software implementation, local verification and studio evidence pending | Local source branch |
 | 2026-10-14 | [MIDI CSV reconciliation ledger](2026-10-14-midi-csv-ledger.md) | in-flight; descriptive reference ledger, integration verification and protected review pending | [#254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254) |
 | 2026-10-14 | [reference-sound-reliability](2026-10-14-reference-sound-reliability.md) | in-flight; signed-domain, pitch/quality diagnostics and packaged verification | [#254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254) |
 | 2026-10-12 | [native-representation-integration](2026-10-12-native-representation-integration.md) | in-flight; verified53 fallback preserved, security disposition recorded, protected approval and supervised experiment pending | [#254](https://github.com/buzzijose-hub/RytmRandomizer/pull/254) |

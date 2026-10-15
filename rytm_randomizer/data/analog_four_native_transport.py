@@ -61,10 +61,18 @@ A4_NATIVE_TRANSPORT_PAIRED_REASON: Final[str] = "paired_precision_requires_separ
 A4_NATIVE_TRANSPORT_ENUM_REASON: Final[str] = "native_enum_transport_unverified"
 A4_NATIVE_TRANSPORT_UNMAPPED_REASON: Final[str] = "native_cc7_mapping_unverified"
 A4_NATIVE_TRANSPORT_CONTRACT_REASON: Final[str] = "native_cc7_contract_mismatch"
-A4_NATIVE_TRANSPORT_HOLDS: Final[tuple[str, ...]] = (
+A4PermanentOutputBlocker = Literal[
     "a4_hardware_audition_validation_pending",
     "a4_live_transport_mapping_unverified",
     "persistent_kit_write_prohibited",
+]
+A4_NATIVE_TRANSPORT_OUTPUT_HOLDS: Final[tuple[A4PermanentOutputBlocker, ...]] = (
+    "a4_hardware_audition_validation_pending",
+    "a4_live_transport_mapping_unverified",
+    "persistent_kit_write_prohibited",
+)
+A4_NATIVE_TRANSPORT_HOLDS: Final[tuple[str, ...]] = (
+    *A4_NATIVE_TRANSPORT_OUTPUT_HOLDS,
     "channel_routing_unverified",
 )
 A4_NATIVE_TRANSPORT_SCHEMA_VERSION: Final[Literal["a4-native-transport-preview-v1"]] = (
@@ -172,6 +180,7 @@ __all__ = [
     "A4_NATIVE_TRANSPORT_CONTRACT_REASON",
     "A4_NATIVE_TRANSPORT_ENUM_REASON",
     "A4_NATIVE_TRANSPORT_HOLDS",
+    "A4_NATIVE_TRANSPORT_OUTPUT_HOLDS",
     "A4_NATIVE_TRANSPORT_PAIRED_REASON",
     "A4_NATIVE_TRANSPORT_SCHEMA_VERSION",
     "A4_NATIVE_TRANSPORT_UNMAPPED_REASON",

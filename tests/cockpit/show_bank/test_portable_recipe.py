@@ -16,6 +16,7 @@ from rytm_randomizer.cockpit.data.show_bank import (
     ShowKitRecipe,
     ShowKitScope,
 )
+from rytm_randomizer.data.analog_rytm_midi import RYTM_CAPTURE_PROJECTION_V1
 
 from .conftest import build_show_bank_harness
 
@@ -49,6 +50,7 @@ def test_legacy_recipe_keeps_six_key_wire_form_without_fabricated_profile(tmp_pa
         123,
         ShowKitScope(RYTM_SHOW_KIT_DEVICE_ID),
         ShowKitScope(A4_SHOW_KIT_DEVICE_ID),
+        rytm_projection=RYTM_CAPTURE_PROJECTION_V1,
     )
     assert len(recipe.to_dict()) == 6
     assert ShowKitRecipe.from_dict(recipe.to_dict()) == recipe

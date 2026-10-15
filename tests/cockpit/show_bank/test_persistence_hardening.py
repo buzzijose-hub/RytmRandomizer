@@ -680,11 +680,11 @@ def test_recapture_projection_failure_is_bound_to_the_recorded_artifact(
             recorded_result = result
         return result
 
-    def unavailable_recapture_projection(result, *args):
+    def unavailable_recapture_projection(result, *args, **kwargs):
         # Source and candidate projections still use the real implementation.
         if result is recorded_result:
             raise ValueError("registered recapture projection unavailable")
-        return original_semantics(result, *args)
+        return original_semantics(result, *args, **kwargs)
 
     monkeypatch.setattr(export_module, "_decoded_capture", remember_recorded_result)
     monkeypatch.setattr(export_module, boundary, unavailable_recapture_projection)

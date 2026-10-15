@@ -32,6 +32,7 @@ from ...observability.logging import get_logger
 from ...observability.metrics import get_metrics
 from ...observability.tracing import trace
 from ..capture import KitCaptureResult, cockpit_snapshot_from_rytm_capture, decode_kit_capture_frame
+from ..capture.projection import project_rytm_capture_snapshot
 from ..data import Snapshot
 from ..data.show_bank import (
     A4_NATIVE_MUTATION_ALGORITHM,
@@ -457,11 +458,14 @@ def _verify_entry_candidates(
     """Reproduce candidate semantics from the decoded immutable source."""
 
     for candidate in entry.candidates:
+        candidate_source = project_rytm_capture_snapshot(
+            source_snapshot, candidate.recipe.rytm_projection
+        )
         if candidate.recipe.profile is not None:
             try:
                 reproduced = forge_candidate_pair(
                     entry=entry,
-                    rytm_source_snapshot=source_snapshot,
+                    rytm_source_snapshot=candidate_source,
                     analog_four_source_frame=frames_by_artifact_id[
                         entry.analog_four_source.sysex.artifact_id
                     ],
@@ -506,7 +510,7 @@ def _verify_entry_candidates(
                 )
         try:
             expected_rytm = rytm_semantic_fingerprint(
-                source_snapshot,
+                candidate_source,
                 candidate.rytm_candidate,
             )
         except (KeyError, TypeError, ValueError) as exc:
@@ -570,9 +574,12 @@ def _verify_entry_recaptures(
         recapture = entry.rytm_recapture
         try:
             observed = rytm_capture_semantic_fingerprint(
-                decoded_captures[recapture.capture.capture_id]
+                decoded_captures[recapture.capture.capture_id],
+                projection=favorite.recipe.rytm_projection,
             )
-            source = rytm_capture_semantic_fingerprint(rytm_source)
+            source = rytm_capture_semantic_fingerprint(
+                rytm_source, projection=favorite.recipe.rytm_projection
+            )
         except (KeyError, TypeError, ValueError) as exc:
             raise DataError(
                 "show-pack Rytm recapture semantic comparison failed",

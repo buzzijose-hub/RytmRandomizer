@@ -127,7 +127,8 @@ def test_unmodified_retained_captures_expose_only_verified_primary_byte_subset(
             assert f"src_{family}_2" in pad.params
         assert f"src_{family}_1" not in pad.params  # newly exposed tuning stays protected
         assert f"src_{family}_0" not in pad.params
-    assert sum(len(pad.params) for pad in snapshot.pads) == src_count + 264
+    assert sum(len(pad.params) for pad in snapshot.pads) == src_count + 276
+    assert all("sample_bit" in pad.params for pad in snapshot.pads)
     assert capture.frame == frame and capture.round_trip_verified
 
 
@@ -217,6 +218,7 @@ def test_unknown_high_bit_incompatible_and_unverified_tom_identity_cannot_gain_s
     pad = cockpit_snapshot_from_rytm_capture(capture).pads[pad_id - 1]
     assert set(pad.params).issubset(
         {
+            "sample_bit",
             "filter_attack",
             "filter_decay",
             "filter_sustain",

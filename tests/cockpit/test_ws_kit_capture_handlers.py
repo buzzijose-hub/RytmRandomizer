@@ -402,11 +402,17 @@ def test_target_unit_capture_preserves_machine_src_through_targeted_planning(
         seed,
         target_pad_ids=targets,
         locked_pad_ids=locks,
+        parameter_depths={
+            (pad.pad_id, key): 0.1
+            for pad in snapshot.pads
+            for key in pad.params
+            if key != "lfo_depth"
+        },
     )
     assert {delta.pad_id for delta in candidate.pad_deltas} == targets - locks
     assert all(delta.changed_keys for delta in candidate.pad_deltas)
-    # Fixed seeds exercise the public all-parameter engine without changing
-    # paired LFO Depth or stripping common fields from the captured anchor.
+    # Explicitly exclude the paired control while retaining every source cell;
+    # adding an eligible field must not turn a random seed into a safety policy.
     assert all(
         delta.changed_keys & expected_src[delta.pad_id].keys() for delta in candidate.pad_deltas
     )
@@ -543,6 +549,7 @@ def test_unverified_tom_capture_does_not_acquire_sendable_machine_src(
         0.1,
         8,
         target_pad_ids=frozenset({6}),
+        parameter_depths={(6, key): 0.1 for key in pad.params if key != "lfo_depth"},
     )
     changed_keys = session.current_candidate.pad_deltas[0].changed_keys
     assert changed_keys

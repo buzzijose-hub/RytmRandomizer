@@ -26,6 +26,7 @@ from ..capture import (
     cockpit_snapshot_from_rytm_capture,
     decode_kit_capture_frame,
 )
+from ..capture.projection import project_rytm_capture_snapshot
 from ..data import MutationCandidate, ProfileModel, Snapshot, new_ulid
 from ..data.a4_preparation import A4PreparationReport
 from ..data.parameter_scope import DEFAULT_PARAMETER_SELECTION, ParameterSelection
@@ -1094,7 +1095,13 @@ class ShowKitForgeWorkspace:
         selected = entry.selected_candidate
         if selected is None:
             raise ValueError("select a candidate before preparing an audition")
-        return entry, self._source_snapshot(bank, entry), selected
+        return (
+            entry,
+            project_rytm_capture_snapshot(
+                self._source_snapshot(bank, entry), selected.recipe.rytm_projection
+            ),
+            selected,
+        )
 
     def source_snapshot(self, bank_id: str, entry_id: str) -> Snapshot:
         """Return a cue's immutable Rytm source projection."""
@@ -1118,7 +1125,11 @@ class ShowKitForgeWorkspace:
     ) -> tuple[Snapshot, ShowKitCandidate, bytes]:
         """Verify retained source/recipe/frame before any local recall transition."""
         context = self._verified_candidate_context(self.bank(bank_id), entry_id, candidate_id)
-        return context.source, context.candidate, context.analog_four_frame
+        return (
+            project_rytm_capture_snapshot(context.source, context.candidate.recipe.rytm_projection),
+            context.candidate,
+            context.analog_four_frame,
+        )
 
     def _verified_candidate_context(
         self, bank: ShowBank, entry_id: str, candidate_id: str
@@ -1221,7 +1232,13 @@ class ShowKitForgeWorkspace:
         published_entry = updated.entry(entry_id)
         published_candidate = published_entry.candidate_by_id(candidate_id)
         context = replace(
-            context, bank=updated, entry=published_entry, candidate=published_candidate
+            context,
+            bank=updated,
+            entry=published_entry,
+            candidate=published_candidate,
+            source=project_rytm_capture_snapshot(
+                context.source, published_candidate.recipe.rytm_projection
+            ),
         )
         self._publish(updated, already_saved=True)
         self._active_entry_ids[bank_id] = entry_id
@@ -1340,8 +1357,12 @@ class ShowKitForgeWorkspace:
             bank,
             entry_id,
             rytm_reference,
-            source_semantic_fingerprint=rytm_capture_semantic_fingerprint(source_rytm),
-            observed_semantic_fingerprint=rytm_capture_semantic_fingerprint(rytm),
+            source_semantic_fingerprint=rytm_capture_semantic_fingerprint(
+                source_rytm, projection=favorite.recipe.rytm_projection
+            ),
+            observed_semantic_fingerprint=rytm_capture_semantic_fingerprint(
+                rytm, projection=favorite.recipe.rytm_projection
+            ),
             comparison_reason=(
                 "Compared the promoted mapped Rytm state; unknown captured bytes were "
                 "retained but were not treated as mapped parameters."

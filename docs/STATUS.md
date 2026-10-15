@@ -1,8 +1,19 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-10-14. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-10-15. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
+
+Local source work on `codex/live-control-closure` adds the narrow Rytm Sample
+Bit Reduction capture/planning path, corrects protected/unprojected inventory
+labels and exposes source-bound A4 CC7 conversion evidence for 25 scalar fields
+in the existing preparation report. Integration verification is in progress.
+Versioned capture projections also preserve old favorites' replay, recall and
+export while newly authored candidates use the explicit expanded domain.
+No A4/BOTH SEND hold or protected/paired control is unlocked. This is not a new
+installer, PR approval or hardware receipt; the d563 delivery below is unchanged.
+See the [closure plan](superpowers/plans/2026-10-15-live-control-closure.md) and
+[studio evidence matrix](LIVE_CONTROL_CLOSURE_REPORT.md).
 
 The October14 reference-sound reliability/catalog candidate is packaged and
 verified on PR254, source `d5634cae4ecdde78fe54ae49c99c373a49935753`. Signed Noise

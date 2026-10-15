@@ -22,6 +22,7 @@ from ...devices import (
     AnalogFourNativeMutation,
     get_analog_four_filter1_frequency_candidate_capability,
     get_analog_four_native_field_capability,
+    preview_analog_four_native_cc_transport,
     resolve_saved_kit_capture_capability,
     validate_analog_four_indexed_source,
 )
@@ -34,7 +35,7 @@ from ..data.a4_preparation import (
     A4PreparationChange,
     A4PreparationReport,
 )
-from ..data.parameter_scope import A4_NATIVE_PARAMETER_ALIASES
+from ..data.parameter_scope import A4_NATIVE_PARAMETER_ALIASES, A4_NATIVE_PARAMETER_KEYS
 from ..data.show_bank import (
     AnalogFourCandidateValue,
     AnalogFourNativeCandidateValue,
@@ -343,6 +344,23 @@ def prepare_a4_audition(
     if entry.analog_four_source.hardware_slot is None:
         blockers.append("recovery_slot_required")
     capture = context.current_capture
+    transport_preview = None
+    if verified and source_frame is not None:
+        transport_preview = preview_analog_four_native_cc_transport(
+            source_frame,
+            tuple(
+                AnalogFourNativeMutation(
+                    A4_NATIVE_PARAMETER_KEYS.get(change.parameter, change.parameter),
+                    change.track_id,
+                    (
+                        change.after_encoded_native
+                        if isinstance(change, A4NativePreparationChange)
+                        else change.after_raw_q8_8
+                    ),
+                )
+                for change in changes
+            ),
+        )
     return A4PreparationReport(
         entry_id=entry.entry_id,
         candidate_id=None if candidate is None else candidate.candidate_id,
@@ -367,6 +385,7 @@ def prepare_a4_audition(
         current_source_verified=current_verified,
         changes=changes,
         blocked_reasons=tuple(blockers),
+        transport_preview=transport_preview,
     )
 
 

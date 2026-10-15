@@ -90,6 +90,11 @@ def test_ws_review_revalidates_candidate_but_never_grants_send(
     assert report["candidate_bytes_verified"] is True
     assert report["ready"] is report["hardware_send_validated"] is False
     assert report["source_reloaded"] is False
+    assert report["transport_preview"]["changes"] == []
+    assert report["transport_preview"]["mapping_complete"] is True
+    assert "no_a4_changes" in report["blocked_reasons"]
+    assert report["transport_preview"]["ready"] is False
+    assert report["transport_preview"]["channel_routing_verified"] is False
     assert "current_capture_stale" in report["blocked_reasons"]
     assert report["output_port_name"] == "Exact A4 intent"
     assert harness.workspace.bank(harness.bank_id) == before

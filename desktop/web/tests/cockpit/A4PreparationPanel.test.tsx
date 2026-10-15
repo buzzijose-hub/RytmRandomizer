@@ -7,23 +7,9 @@ import { useCockpitStore } from '../../src/state';
 import type { A4PreparationReport, CommandAck, ShowBank, ShowBankEntry } from '../../src/ws/protocol';
 import { candidate, connectionFault, connectionListening, FakeCockpitClient, readyDualMachineStage } from './_fixtures';
 import { forgeCaptures, forgeEntry, showBankState } from './showKitForgeFixture';
+import { a4PreparationReport as report, a4TransportReport } from './a4PreparationFixture';
 
 const bank = showBankState.banks[0] as ShowBank;
-const report: A4PreparationReport = {
-  schema_version: 'a4-preparation-v1', preparation_id: 'review-1', entry_id: forgeEntry.entry_id,
-  candidate_id: forgeEntry.selected_candidate_id, device_id: 'analog_four_mk2',
-  source_capture_id: 'source-a4', source_fingerprint: 'source', source_frame_sha256: 'source-sha',
-  candidate_frame_sha256: 'candidate-sha', current_capture_fingerprint: 'source',
-  current_capture_at: '2026-09-07T12:00:00Z', capture_after: '2026-09-07T11:00:00Z',
-  checked_at: '2026-09-07T12:01:00Z', target_ids: [1], locked_ids: [], effective_ids: [1],
-  output_port_name: 'A4 studio', recovery_slot: 20, source_reloaded: false,
-  candidate_is_local: true, candidate_bytes_verified: true, current_source_verified: true,
-  changes: [{ track_id: 1, parameter: 'filter1_frequency', before_raw_q8_8: 0,
-    after_raw_q8_8: 4096, before_screen_value: '0', after_screen_value: '16', unpacked_offsets: [128, 129] }],
-  blocked_reasons: ['source_reload_required', 'a4_hardware_audition_validation_pending',
-    'a4_live_transport_mapping_unverified', 'persistent_kit_write_prohibited'],
-  ready: false, hardware_send_validated: false, output_authority: 'offline-review-only',
-};
 
 function mount(fake: FakeCockpitClient, entry: ShowBankEntry = forgeEntry, disabled = false) {
   useCockpitStore.setState({ previewCandidate: candidate, connection: connectionListening, dualMachineStage: readyDualMachineStage });
@@ -39,6 +25,26 @@ async function requestReview(): Promise<void> {
 afterEach(() => act(() => useCockpitStore.getState().reset()));
 
 describe('A4 preparation review', () => {
+  it.each([true, false])('displays source-bound CC7 mapping evidence without creating a send plan (complete=%s)', async (complete) => {
+    const fake = new FakeCockpitClient();
+    fake.ackQueue.push({ request_id: 'mapping', ok: true, a4_preparation: a4TransportReport(complete) });
+    mount(fake);
+    await requestReview();
+    expect(screen.getByText(`CC7 mapping evidence: ${complete ? 'complete' : 'incomplete'}`)).toBeInTheDocument();
+    const table = screen.getByRole('table', { name: 'A4 native to CC7 mapping evidence', hidden: true });
+    expect(table).toHaveTextContent('osc1_level');
+    expect(table).toHaveTextContent('69');
+    expect(table).toHaveTextContent('Exact');
+    if (!complete) {
+      expect(table).toHaveTextContent('N/A');
+      expect(table).toHaveTextContent('native_transport_scale_conflict');
+    }
+    expect(screen.getByRole('status')).toHaveTextContent('A4 SEND remains blocked.');
+    expect(fake.sent).toHaveLength(1);
+    expect(fake.sent[0]?.type).toBe('show_bank_list');
+    expect(useCockpitStore.getState().sendPlan).toBeNull();
+  });
+
   it('dispatches only an explicit read-only review and displays blocked verified evidence', async () => {
     const fake = new FakeCockpitClient();
     fake.ackQueue.push({ request_id: 'review', ok: true, a4_preparation: report });

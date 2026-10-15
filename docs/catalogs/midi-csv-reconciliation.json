@@ -8,7 +8,7 @@
     "source_revision": "07cdc166601b1980af77202f03e87a22f707d4e5",
     "supersedes": "audit.json was an intermediate comparison limited to A4 CC rows and excluding generic Rytm SRC aliases; use this v2 comparison instead."
   },
-  "catalog_inventory_sha256": "bf1a4ddc18c69447f00d24e8e0ea82d28827a68a5685353d32e1e31edc83185e",
+  "catalog_inventory_sha256": "b3c8a02340832cc129d4fb891df68757c19720c73c9ea3234c850a7db0dfaf45",
   "code_license": "PolyForm-Noncommercial-1.0.0",
   "entries": [
     {
@@ -46844,6 +46844,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -47079,6 +47080,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -47268,6 +47270,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -47514,6 +47517,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -47760,6 +47764,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -48006,6 +48011,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -48252,6 +48258,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -48441,6 +48448,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -48687,6 +48696,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -48933,6 +48944,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -49730,6 +49743,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -49919,6 +49934,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -50154,6 +50171,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -50389,6 +50407,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -50635,6 +50654,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -50859,6 +50879,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -51083,6 +51104,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -51307,6 +51329,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -51563,6 +51586,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -51752,6 +51776,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -51941,6 +51967,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -52130,6 +52158,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -52319,6 +52349,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -52508,6 +52540,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -52697,6 +52731,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -52886,6 +52922,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -53075,6 +53113,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -53264,6 +53304,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -53453,6 +53495,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -53642,6 +53686,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -53831,6 +53877,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -54083,7 +54131,7 @@
         }
       },
       "live_send": {
-        "inventory_status": "conditional_guarded_cc7",
+        "inventory_status": "blocked",
         "ledger_grants_send": false,
         "physical_validation_granted": false,
         "runtime_binding": "sample_tune",
@@ -54118,6 +54166,7 @@
         }
       ],
       "physical_blockers": [
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -54159,7 +54208,7 @@
       "raw_record": "Elektron,Analog Rytm MKII,Sample,Sample: Tune,,24,,40,88,,1,8,40,88,,centered,,\n",
       "recovery": {
         "automatic_restore": false,
-        "inventory_status": "manual_saved_kit_reload_and_fresh_capture; local_history_only",
+        "inventory_status": "manual_only",
         "source_reload": "manual_reload_and_fresh_capture; local_history_is_not_a_device_backup"
       },
       "source": {
@@ -54326,7 +54375,7 @@
         }
       },
       "live_send": {
-        "inventory_status": "conditional_guarded_cc7",
+        "inventory_status": "blocked",
         "ledger_grants_send": false,
         "physical_validation_granted": false,
         "runtime_binding": "sample_fine",
@@ -54361,6 +54410,7 @@
         }
       ],
       "physical_blockers": [
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -54402,7 +54452,7 @@
       "raw_record": "Elektron,Analog Rytm MKII,Sample,Sample: Fine Tune,,25,,0,127,,1,9,0,127,,centered,,\n",
       "recovery": {
         "automatic_restore": false,
-        "inventory_status": "manual_saved_kit_reload_and_fresh_capture; local_history_only",
+        "inventory_status": "manual_only",
         "source_reload": "manual_reload_and_fresh_capture; local_history_is_not_a_device_backup"
       },
       "source": {
@@ -54720,7 +54770,7 @@
         }
       },
       "live_send": {
-        "inventory_status": "conditional_guarded_cc7",
+        "inventory_status": "blocked",
         "ledger_grants_send": false,
         "physical_validation_granted": false,
         "runtime_binding": "sample_slot",
@@ -54755,6 +54805,8 @@
         }
       ],
       "physical_blockers": [
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -54796,7 +54848,7 @@
       "raw_record": "Elektron,Analog Rytm MKII,Sample,Sample: Slot,,27,,0,127,,1,11,0,127,,0-based,,0: Off; 1~127: Sample\n",
       "recovery": {
         "automatic_restore": false,
-        "inventory_status": "manual_saved_kit_reload_and_fresh_capture; local_history_only",
+        "inventory_status": "manual_only",
         "source_reload": "manual_reload_and_fresh_capture; local_history_is_not_a_device_backup"
       },
       "source": {
@@ -54956,7 +55008,7 @@
         }
       },
       "live_send": {
-        "inventory_status": "conditional_guarded_cc7",
+        "inventory_status": "blocked",
         "ledger_grants_send": false,
         "physical_validation_granted": false,
         "runtime_binding": "sample_start",
@@ -54991,6 +55043,7 @@
         }
       ],
       "physical_blockers": [
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -55032,7 +55085,7 @@
       "raw_record": "Elektron,Analog Rytm MKII,Sample,Sample: Start,,28,,0,120,,1,12,0,120,,0-based,,\n",
       "recovery": {
         "automatic_restore": false,
-        "inventory_status": "manual_saved_kit_reload_and_fresh_capture; local_history_only",
+        "inventory_status": "manual_only",
         "source_reload": "manual_reload_and_fresh_capture; local_history_is_not_a_device_backup"
       },
       "source": {
@@ -55192,7 +55245,7 @@
         }
       },
       "live_send": {
-        "inventory_status": "conditional_guarded_cc7",
+        "inventory_status": "blocked",
         "ledger_grants_send": false,
         "physical_validation_granted": false,
         "runtime_binding": "sample_end",
@@ -55227,6 +55280,7 @@
         }
       ],
       "physical_blockers": [
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -55268,7 +55322,7 @@
       "raw_record": "Elektron,Analog Rytm MKII,Sample,Sample: End,,29,,0,120,,1,13,0,120,,0-based,,\n",
       "recovery": {
         "automatic_restore": false,
-        "inventory_status": "manual_saved_kit_reload_and_fresh_capture; local_history_only",
+        "inventory_status": "manual_only",
         "source_reload": "manual_reload_and_fresh_capture; local_history_is_not_a_device_backup"
       },
       "source": {
@@ -55439,7 +55493,7 @@
         }
       },
       "live_send": {
-        "inventory_status": "conditional_guarded_cc7",
+        "inventory_status": "blocked",
         "ledger_grants_send": false,
         "physical_validation_granted": false,
         "runtime_binding": "sample_loop",
@@ -55474,6 +55528,7 @@
         }
       ],
       "physical_blockers": [
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -55515,7 +55570,7 @@
       "raw_record": "Elektron,Analog Rytm MKII,Sample,Sample: Loop,,30,,0,1,,1,14,0,1,,0-based,,0: Off; 1: On\n",
       "recovery": {
         "automatic_restore": false,
-        "inventory_status": "manual_saved_kit_reload_and_fresh_capture; local_history_only",
+        "inventory_status": "manual_only",
         "source_reload": "manual_reload_and_fresh_capture; local_history_is_not_a_device_backup"
       },
       "source": {
@@ -55629,7 +55684,7 @@
         }
       },
       "live_send": {
-        "inventory_status": "conditional_guarded_cc7",
+        "inventory_status": "blocked",
         "ledger_grants_send": false,
         "physical_validation_granted": false,
         "runtime_binding": "sample_level",
@@ -55664,6 +55719,8 @@
         }
       ],
       "physical_blockers": [
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -55705,7 +55762,7 @@
       "raw_record": "Elektron,Analog Rytm MKII,Sample,Sample: Level,,31,,0,127,,1,15,0,127,,0-based,,\n",
       "recovery": {
         "automatic_restore": false,
-        "inventory_status": "manual_saved_kit_reload_and_fresh_capture; local_history_only",
+        "inventory_status": "manual_only",
         "source_reload": "manual_reload_and_fresh_capture; local_history_is_not_a_device_backup"
       },
       "source": {
@@ -58843,7 +58900,7 @@
         }
       },
       "live_send": {
-        "inventory_status": "conditional_guarded_cc7",
+        "inventory_status": "blocked",
         "ledger_grants_send": false,
         "physical_validation_granted": false,
         "runtime_binding": "amp_volume",
@@ -58878,6 +58935,8 @@
         }
       ],
       "physical_blockers": [
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -58919,7 +58978,7 @@
       "raw_record": "Elektron,Analog Rytm MKII,Amp,Amp: Volume,,7,,0,127,,1,31,0,127,,0-based,,\n",
       "recovery": {
         "automatic_restore": false,
-        "inventory_status": "manual_saved_kit_reload_and_fresh_capture; local_history_only",
+        "inventory_status": "manual_only",
         "source_reload": "manual_reload_and_fresh_capture; local_history_is_not_a_device_backup"
       },
       "source": {
@@ -59746,7 +59805,7 @@
         }
       },
       "live_send": {
-        "inventory_status": "conditional_guarded_cc7",
+        "inventory_status": "blocked",
         "ledger_grants_send": false,
         "physical_validation_granted": false,
         "runtime_binding": "lfo_destination",
@@ -59781,6 +59840,8 @@
         }
       ],
       "physical_blockers": [
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -59822,7 +59883,7 @@
       "raw_record": "Elektron,Analog Rytm MKII,LFO,LFO: Destination,,105,,0,41,,1,35,0,41,,0-based,,\n",
       "recovery": {
         "automatic_restore": false,
-        "inventory_status": "manual_saved_kit_reload_and_fresh_capture; local_history_only",
+        "inventory_status": "manual_only",
         "source_reload": "manual_reload_and_fresh_capture; local_history_is_not_a_device_backup"
       },
       "source": {
@@ -60971,6 +61032,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -61217,6 +61279,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -61441,6 +61504,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -61630,6 +61694,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -61819,6 +61885,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -62008,6 +62075,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -62197,6 +62265,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -62386,6 +62455,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -62575,6 +62646,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -62764,6 +62836,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -62953,6 +63026,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -63142,6 +63216,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -63331,6 +63406,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -63520,6 +63596,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -63709,6 +63786,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -63898,6 +63977,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -64087,6 +64167,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -64276,6 +64357,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -64522,6 +64604,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -64768,6 +64851,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -64957,6 +65041,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -65192,6 +65277,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -65427,6 +65513,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -65616,6 +65703,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -65872,6 +65960,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -66128,6 +66217,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -66317,6 +66407,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -66506,6 +66597,8 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "mandatory_parameter_protection",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -66697,6 +66790,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -66888,6 +66982,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -67079,6 +67174,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -67270,6 +67366,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -67461,6 +67558,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -67652,6 +67750,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -67843,6 +67942,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",
@@ -68034,6 +68134,7 @@
       ],
       "physical_blockers": [
         "no_cockpit_compact_key_binding",
+        "captured_source_projection_unavailable",
         "A saved-KIT dump cannot certify unsaved working-state synchronization.",
         "BOTH is not an output grant; A4 remains blocked by stage policy.",
         "A raw Tune value is not a universal note lookup; require machine-specific approved evidence.",

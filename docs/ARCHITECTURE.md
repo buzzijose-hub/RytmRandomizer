@@ -156,6 +156,8 @@ on one line for an existing module, you probably need a new module instead.
 | `devices/strategies/analog_four_saved_kit_candidate.py` | Pure calibrated saved-KIT candidate rendering through the canonical A4 field codec; revalidates calibration/field agreement, exact values, track bounds, roundtrip and byte isolation, with offline-only output authority. |
 | `devices/strategies/analog_four_filter1_frequency_candidate.py` | Typed Filter 1 Frequency adapter for offline captured-KIT evidence; delegates exact calibration/value/byte validation to the shared A4 saved-KIT candidate renderer. Always reports `hardware_send_validated = false`; owns no file or MIDI I/O. |
 | `devices/strategies/analog_four_native_fields.py` | Optional source-bound native domains/readback/mutation capability over canonical field facts and shared renderer; sparse enum sampling, coupled precision and mandatory protection, never live authority. |
+| `data/analog_four_native_transport.py` | Immutable bindings and inert preview records for 25 unambiguous native/CC7 scalar representations; no channels, packets or readiness grant. |
+| `devices/strategies/analog_four_native_transport.py` | Pure source-bound scalar transport evidence using the canonical native renderer; retains unsupported rows and never constructs a hardware plan. |
 | `devices/strategies/analog_four_kit_fields.py` | Typed copy-on-edit A4 saved-KIT and sound-field views over canonical layout facts; preserves unknown bytes and performs no framing or hardware I/O. |
 | `devices/strategies/analog_four_kit_recipe.py` | Conservative passive A4 semantic recipe compiler that edits only mapped fields in a valid native object and preserves unknown and device-wide data. |
 | `devices/strategies/analog_rytm_saved_kit_codec.py` | Pure initialized Rytm saved-kit frame codec; validates envelope, length, and checksum while providing byte-identical decode/encode. |
@@ -212,6 +214,7 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/stage/{coordinator,policy}.py` | Hardware-inert lane orchestration plus registry-derived device domains/authority policy; no codec or port ownership. |
 | `cockpit/data/a4_preparation.py` | Frozen candidate-bound A4 preparation report and closed blockers; output authority is always offline-only and cannot be imported as a grant. |
 | `cockpit/show_bank/a4_preparation.py` | Pure review of exact source/candidate bytes, current capture, scope, recovery and port intent through registered capabilities; never creates packets, enumerates or opens MIDI. |
+| `cockpit/capture/projection.py` | Pure recorded-version Rytm snapshot view for exact historical recipe replay; preserves raw captures and strips only the V2 Sample Bit field for V1. |
 | `cockpit/show_bank/forge.py` | Pure deterministic paired candidate generation. Rytm reuses captured-anchor mutation planning; A4 resolves optional native-field rendering through Device capabilities, preserves protected bytes and cannot create output authority. |
 | `cockpit/show_bank/readiness.py` | Pure lifecycle transitions, semantic favorite-recapture comparison, exact full-capture show-time preflight, cue-order readiness, and non-destructive source return. |
 | `cockpit/show_bank/workspace.py` | Authoritative session orchestration for paired sources, candidates, favorites, retained evidence, and fresh preflight. Composes capture/history/stage and the existing Rytm exact-plan ArmedApply boundary; invalidates stale live state and never grants A4 SEND or persistent SAVE authority. |
@@ -709,7 +712,12 @@ A shared conservative policy omits protected/disputed values from capture,
 freezes them in canonical-device mutation, refuses changed protected proposals
 at planning and reports the same blockers in the passive inventory. Historical
 offline `lev` arithmetic remains byte-frozen but cannot grant live output.
-Common-page projection keeps its existing rules. Exact XT Classic ID 8 on pads
+Common-page projection retains its existing rules and adds only the explicitly
+bound Sample Bit Reduction primary byte (CC26); its documentary status is not
+relabeled physical validation. The general capture eligibility predicate is
+shared by the snapshot anchor and passive inventory so unavailable SAMPLE
+projections and mandatory protection cannot appear as conditional live support.
+Exact XT Classic ID 8 on pads
 6–8 has retained initialized and returned KIT evidence; other tom facts remain
 pending. Descriptive alias closure and remaining semantic/precision blockers are listed in
 [RYTM_MAPPING_STATUS.md](RYTM_MAPPING_STATUS.md). This projection grants no new
@@ -724,6 +732,24 @@ The passive support report enumerates `devices.all_devices()` for its
 IDs with existing family evidence rows. Unmapped IDs remain visible with zero
 rows and `no_support_evidence`; no registration implies parameter or transport
 support. JSON/text registry-set regressions cover future registrations.
+
+A4 preparation adds source-bound native/CC7 evidence only after canonical
+candidate/frame verification. Its device strategy composes the existing native
+capability and 25 explicit data bindings, retaining before/after values and
+per-field conversion refusals. Six conflicting display contracts, native enum
+ordinals and paired precision are not guessed. The report contains no channel
+routing or executable packets; permanent A4 output blockers, current-session
+checks and mandatory field protections remain unchanged. The frontend consumes
+this evidence through `show_bank_list` / `a4_preparation`, not `prepare_send`.
+
+Rytm capture domains are recipe-versioned. Unversioned persisted recipes parse
+as `captured-cc7-v1` and retain their exact old serialization, mapped fingerprint
+and PRNG inputs. Newly authored recipes carry `captured-cc7-sample-bit-v2`.
+The pure `cockpit/capture/projection.py` view removes only Sample Bit for V1;
+raw frames and original capture identity are unchanged. Forge, replay, recall,
+audition and recapture comparison consume the recorded version. Generation
+after recalling an old favorite uses the full verified source and a new V2
+recipe, never rewrites the favorite or infers a version from proposed values.
 
 The `rytm_randomizer.cockpit` subpackage is the live-performance GUI surface
 and the home of the portable mutation engine. It hosts the actual

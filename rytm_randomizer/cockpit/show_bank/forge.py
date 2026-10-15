@@ -18,6 +18,7 @@ from ...data.analog_four_sysex_calibration import (
     A4_FILTER1_FREQUENCY_PARAMETER,
     analog_four_sysex_calibration_for,
 )
+from ...data.analog_rytm_midi import RYTM_CAPTURE_PROJECTION_V2, RytmCaptureProjection
 from ...devices import (
     AnalogFourFilter1FrequencyCandidateMutation,
     AnalogFourNativeMutation,
@@ -32,6 +33,7 @@ from ..capture import (
     KitCaptureResult,
     cockpit_snapshot_from_rytm_capture,
 )
+from ..capture.projection import project_rytm_capture_snapshot
 from ..data import MutationCandidate, ProfileModel, Snapshot
 from ..data.parameter_scope import A4_NATIVE_PARAMETER_ALIASES, A4_NATIVE_PARAMETER_KEYS
 from ..data.show_bank import (
@@ -214,10 +216,12 @@ def rytm_semantic_fingerprint(source: Snapshot, candidate: MutationCandidate) ->
     return _fingerprint(_resulting_rytm_snapshot_payload(source, candidate))
 
 
-def rytm_capture_semantic_fingerprint(result: KitCaptureResult) -> str:
+def rytm_capture_semantic_fingerprint(
+    result: KitCaptureResult, *, projection: RytmCaptureProjection = RYTM_CAPTURE_PROJECTION_V2
+) -> str:
     """Fingerprint the mapped semantic state in a fresh Rytm recapture."""
 
-    snapshot = cockpit_snapshot_from_rytm_capture(result)
+    snapshot = project_rytm_capture_snapshot(cockpit_snapshot_from_rytm_capture(result), projection)
     return _fingerprint(
         [
             {
@@ -388,6 +392,9 @@ def forge_candidate_pair(  # noqa: PLR0913 - explicit immutable sources, recipe,
 ) -> ForgedCandidatePair:
     """Generate one deterministic paired candidate without touching hardware."""
 
+    rytm_source_snapshot = project_rytm_capture_snapshot(
+        rytm_source_snapshot, recipe.rytm_projection
+    )
     if entry.rytm_source.snapshot_id != rytm_source_snapshot.snapshot_id:
         raise ValueError("Rytm source snapshot does not match the immutable show-bank anchor")
     if profile.profile_id != recipe.profile_id:

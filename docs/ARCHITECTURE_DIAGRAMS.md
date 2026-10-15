@@ -3291,6 +3291,10 @@ flowchart TD
     Domains["snapshot/mutation_scope<br/>registry-derived device domain"] -.-> Forge
     A4Candidate --> A4Preparation["inert preparation report<br/>revalidate retained source + candidate<br/>freshness / scope / recovery / port intent"]
     A4Preparation --> NoA4Send
+    A4Preparation --> A4ScalarReview["source-bound native / CC7 evidence<br/>25 explicit scalar bindings<br/>unsupported changes retained"]
+    A4ScalarReview --> NoA4Send
+    ProjectionVersion["recorded Rytm capture projection<br/>unversioned recipe = V1<br/>new recipe = Sample Bit V2"] --> Forge
+    ProjectionVersion --> Favorite
     A4Candidate --> NoA4Send["A4 SEND blocked<br/>hardware_send_validated=false"]
     ExistingScratch["existing four-track scratch fixture<br/>fixed slot 20 / frame / hash"] --> ScratchReturn["manual transfer to disposable slot 20<br/>inspect / listen / save on A4<br/>fresh capture + byte/semantic review"]
     ScratchReturn --> OfflineEvidence["offline field evidence only<br/>not paired/fractional MIDI<br/>not A4/BOTH SEND authority"]

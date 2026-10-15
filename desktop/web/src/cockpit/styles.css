@@ -4132,6 +4132,37 @@ html,
   padding-left: 18px;
 }
 
+.a4-preparation-panel {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.a4-preparation-panel > * {
+  min-width: 0;
+}
+
+.a4-preparation-panel input {
+  max-width: 100%;
+}
+
+.a4-preparation-panel [role='status'] {
+  overflow-wrap: anywhere;
+}
+
+.a4-transport-table {
+  min-width: 520px;
+  table-layout: fixed;
+}
+
+.a4-transport-table th,
+.a4-transport-table td {
+  overflow-wrap: anywhere;
+}
+
+.a4-transport-table :is(th, td):nth-child(1) { width: 32px; }
+.a4-transport-table :is(th, td):nth-child(3),
+.a4-transport-table :is(th, td):nth-child(4),
+.a4-transport-table :is(th, td):nth-child(5) { width: 54px; }
+
 .show-kit-forge-link-button {
   min-height: 24px !important;
   padding: 2px 5px !important;

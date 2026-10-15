@@ -7,6 +7,12 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Final, Literal, TypedDict
 
+from ...data.analog_four_native_transport import (
+    A4_NATIVE_TRANSPORT_OUTPUT_HOLDS,
+    A4PermanentOutputBlocker,
+    AnalogFourNativeTransportPreview,
+    AnalogFourNativeTransportPreviewDict,
+)
 from ...guardrails.input_validation import canonical_json_bytes
 from .stage import ANALOG_FOUR_DEVICE_ID, StageDeviceId
 
@@ -27,15 +33,11 @@ A4PreparationBlocker = Literal[
     "current_source_mismatch",
     "output_port_intent_required",
     "recovery_slot_required",
-    "a4_hardware_audition_validation_pending",
-    "a4_live_transport_mapping_unverified",
-    "persistent_kit_write_prohibited",
+    A4PermanentOutputBlocker,
 ]
 
 A4_PREPARATION_PERMANENT_BLOCKERS: Final[tuple[A4PreparationBlocker, ...]] = (
-    "a4_hardware_audition_validation_pending",
-    "a4_live_transport_mapping_unverified",
-    "persistent_kit_write_prohibited",
+    A4_NATIVE_TRANSPORT_OUTPUT_HOLDS
 )
 
 
@@ -132,6 +134,7 @@ class A4PreparationReportDict(TypedDict):
     candidate_bytes_verified: bool
     current_source_verified: bool
     changes: list[A4PreparationChangeDict | A4NativePreparationChangeDict]
+    transport_preview: AnalogFourNativeTransportPreviewDict | None
     blocked_reasons: list[A4PreparationBlocker]
     ready: Literal[False]
     hardware_send_validated: Literal[False]
@@ -168,6 +171,7 @@ class A4PreparationReport:
     current_source_verified: bool
     changes: tuple[A4PreparationChange | A4NativePreparationChange, ...]
     blocked_reasons: tuple[A4PreparationBlocker, ...]
+    transport_preview: AnalogFourNativeTransportPreview | None = None
     preparation_id: str = field(default="", init=False)
     ready: Literal[False] = field(default=False, init=False)
     hardware_send_validated: Literal[False] = field(default=False, init=False)
@@ -213,6 +217,9 @@ class A4PreparationReport:
             "candidate_bytes_verified": self.candidate_bytes_verified,
             "current_source_verified": self.current_source_verified,
             "changes": [change.to_dict() for change in self.changes],
+            "transport_preview": (
+                None if self.transport_preview is None else self.transport_preview.to_dict()
+            ),
             "blocked_reasons": list(self.blocked_reasons),
             "ready": self.ready,
             "hardware_send_validated": self.hardware_send_validated,

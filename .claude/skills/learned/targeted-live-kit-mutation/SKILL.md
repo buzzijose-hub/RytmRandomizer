@@ -167,6 +167,23 @@ focused work. Use
 `docs/hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md` for the
 ordered operator-present gates and evidence-specific unlock limits.
 
+For native-to-MIDI closure, reuse `devices/strategies/analog_four_native_transport.py`
+and its explicit 25-field scalar table rather than assuming every native U7
+accessor has the same MIDI/display domain. Six retained display conflicts,
+paired words and enum ordinals remain separate refusals. Mapping completeness
+is not SEND readiness; the preview owns no channels or executable packets.
+Rytm general-capture support is shared with inventory through
+`data/analog_rytm_midi.py::analog_rytm_snapshot_general_mapping_supported`;
+an address alias without a captured source value is not composed live support.
+Expanding captured keys also changes sorted PRNG inputs and mapped semantic
+fingerprints. Preserve historical recipes with their recorded capture projection:
+unversioned Show Kit recipes mean V1, while new recipes explicitly use Sample Bit
+V2. Never infer that version from proposed parameter keys. Exercise an actual
+previous-source manifest through replay, recall and export; generating both
+halves of a round trip with current code cannot detect this compatibility bug.
+Package `data.__all__` exports only uppercase constants; helper functions stay
+public in their owning leaf modules rather than bypassing that namespace rule.
+
 For Studio parameter scopes, distinguish null/all eligible from an explicit
 empty selection. Resolve cells through canonical source-backed metadata before
 proposals, preserve excluded native values before any clamp, and enforce actual

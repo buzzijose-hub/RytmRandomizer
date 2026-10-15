@@ -533,7 +533,9 @@ def test_legacy_recall_without_registry_profile_is_refused_and_grants_no_output(
     restarted = ShowKitForgeWorkspace(workspace.store)
     session = _session(restarted, bank.bank_id, entry.entry_id, tmp_path)
     assert session.profile_registry.get(legacy.recipe.profile_id) is None
-    assert len(legacy.recipe.to_dict()) == 6
+    assert len(legacy.recipe.to_dict()) == 7
+    assert "profile" not in legacy.recipe.to_dict()
+    assert legacy.recipe.to_dict()["rytm_projection"] == "captured-cc7-sample-bit-v2"
     before = _disk(workspace.store.root)
     ack = asyncio.run(
         handlers.handle_command(

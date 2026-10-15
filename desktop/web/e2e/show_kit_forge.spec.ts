@@ -5,10 +5,12 @@ import type { CommandEnvelope, Event } from '../src/ws/protocol';
 import { history, profile, readyDualMachineStage, sendPlan, sessionMock, snapshot } from '../tests/cockpit/_fixtures';
 import { forgeCaptures, forgeEntry, showBankState } from '../tests/cockpit/showKitForgeFixture';
 import { parameterEvent } from '../tests/cockpit/parameterScopeFixture';
+import { a4TransportReport } from '../tests/cockpit/a4PreparationFixture';
 
 import { trackConsoleErrors } from './fixtures/console_guard';
 
 test('Show Kit Forge displays paired evidence and rehearses exact offline audition at two viewport sizes', async ({ page }, testInfo) => {
+  await page.route('**/favicon.ico', (route) => route.fulfill({ status: 204 }));
   const errors = trackConsoleErrors(page);
   const sent: CommandEnvelope[] = [];
   const pair = forgeEntry.candidates[0]!;
@@ -45,7 +47,10 @@ test('Show Kit Forge displays paired evidence and rehearses exact offline auditi
         return;
       }
       sent.push(payload);
-      socket.send(JSON.stringify({ request_id: payload.request_id, ok: true }));
+      socket.send(JSON.stringify({ request_id: payload.request_id, ok: true,
+        ...(payload.command.type === 'show_bank_list' && 'a4_preparation' in payload.command
+          ? { a4_preparation: a4TransportReport(false) } : {}),
+      }));
       if (payload.command.type === 'show_bank_list') {
         socket.send(JSON.stringify({ type: 'show_bank_changed', show_bank: showBankState }));
       }
@@ -107,8 +112,21 @@ test('Show Kit Forge displays paired evidence and rehearses exact offline auditi
   await page.screenshot({ path: testInfo.outputPath('show-kit-forge-desktop.png') });
   await forge.getByRole('heading', { name: 'Compare candidates', exact: true }).scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath('show-kit-forge-candidates.png') });
+  const preparation = forge.getByRole('region', { name: 'A4 audition preparation' });
+  await preparation.getByRole('button', { name: 'Review A4 preparation' }).click();
+  await preparation.getByText('CC7 mapping evidence: incomplete', { exact: true }).click();
+  const mappingTable = preparation.getByRole('table', { name: 'A4 native to CC7 mapping evidence' });
+  await expect(mappingTable).toBeVisible();
+  await expect(mappingTable).toContainText('osc1_level');
+  await expect(mappingTable).toContainText('native_transport_scale_conflict');
+  await expect(preparation).toContainText('A4 SEND remains blocked.');
+  await mappingTable.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: testInfo.outputPath('a4-transport-evidence-desktop.png') });
 
   await page.setViewportSize({ width: 600, height: 900 });
+  await mappingTable.scrollIntoViewIfNeeded();
+  expect(await preparation.evaluate((element) => element.getBoundingClientRect().right <= innerWidth)).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath('a4-transport-evidence-narrow.png') });
   await forge.locator('.show-kit-forge-header').scrollIntoViewIfNeeded();
   await expect(forge).toBeVisible();
   const bounds = await forge.boundingBox();
@@ -117,5 +135,17 @@ test('Show Kit Forge displays paired evidence and rehearses exact offline auditi
   await packets.scrollIntoViewIfNeeded();
   await page.screenshot({ path: testInfo.outputPath('packet-inspection-narrow.png') });
   await page.screenshot({ path: testInfo.outputPath('show-kit-forge-narrow.png') });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mappingTable.scrollIntoViewIfNeeded();
+  expect(await preparation.evaluate((element) => {
+    const bounds = element.getBoundingClientRect();
+    return bounds.left >= 0 && bounds.right <= innerWidth;
+  })).toBe(true);
+  expect(await mappingTable.locator('td').evaluateAll((cells) => cells.every((cell) => {
+    const range = document.createRange(); range.selectNodeContents(cell);
+    const bounds = cell.getBoundingClientRect();
+    return [...range.getClientRects()].every((rect) => rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1);
+  }))).toBe(true);
+  await page.screenshot({ path: testInfo.outputPath('a4-transport-evidence-mobile.png') });
   errors.assertClean();
 });

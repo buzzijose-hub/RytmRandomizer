@@ -41,7 +41,11 @@ from ..data.analog_rytm_kit_fields import (
     RYTM_TRACK_MACHINE_COMPATIBILITY,
 )
 from ..data.analog_rytm_kit_layout import RYTM_SOUND_FIELD_BY_NRPN_LSB
-from ..data.analog_rytm_midi import ANALOG_RYTM_MANUAL_CC, AnalogRytmCcMapping
+from ..data.analog_rytm_midi import (
+    ANALOG_RYTM_MANUAL_CC,
+    AnalogRytmCcMapping,
+    analog_rytm_snapshot_general_mapping_supported,
+)
 from ..data.device_support_inventory import (
     DEVICE_SUPPORT_EVIDENCE,
     DEVICE_SUPPORT_EVIDENCE_FAMILIES,
@@ -510,6 +514,15 @@ def _midi_rows() -> tuple[DeviceSupportRow, ...]:
             blockers.append("no_cockpit_compact_key_binding")
         else:
             blockers.extend(cockpit_parameter_live_blockers(mapping.machine_key or "unknown", key))
+        if mapping.machine_key is None and mapping.mutation_status in (
+            "locked_default",
+            "forbidden",
+        ):
+            blockers.append("mandatory_parameter_protection")
+        if mapping.machine_key is None and not analog_rytm_snapshot_general_mapping_supported(
+            mapping
+        ):
+            blockers.append("captured_source_projection_unavailable")
         if mapping.cc_lsb is not None:
             blockers.append("paired_control_precision_unverified")
         send = "conditional_guarded_cc7" if not blockers else "blocked"
