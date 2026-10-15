@@ -53,6 +53,7 @@ through the :class:`ExactPortOpener` Protocol
 from __future__ import annotations
 
 import hmac
+import time
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from typing import ClassVar, Final, Literal, Protocol, runtime_checkable
@@ -305,6 +306,7 @@ class ArmedApplySession:
         opener: ExactPortOpener,
         port_name: object,
         arm_token: object,
+        sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         """Capture the collaborators; refuse unusable configuration eagerly.
 
@@ -328,6 +330,7 @@ class ArmedApplySession:
         self._opener = opener
         self._port_name = port_name
         self._arm_token = arm_token
+        self._sleep = sleep
         self._port: OutputPortLike | None = None
         self._armed = False
         self._confirmed_action_ids: set[str] = set()
@@ -403,6 +406,7 @@ class ArmedApplySession:
         action_id: str,
         mutates_kit: bool = True,
         renderer: PlanRenderer | None = None,
+        inter_message_delay_seconds: float = 0.0,
     ) -> ArmedApplyResult:
         """Transmit ``plan`` through ``device``'s renderer — fully gated.
 
@@ -417,8 +421,15 @@ class ArmedApplySession:
         SEND contract forbids. Every gate below applies identically
         either way; only the projection differs.
 
+        ``inter_message_delay_seconds`` accepts only finite built-in integers
+        or floats in ``[0, 1]`` (not booleans). Invalid pacing disarms before
+        any rendering or send. The default zero never calls the injected
+        sleeper; positive pacing sleeps only between messages. Sleeper
+        failures use the same partial/interrupted outcomes as send failures.
+
         Gate order (each refusal is deliberate and test-pinned):
 
+        0. bounded pacing validation (raises and disarms when invalid),
         1. armed state (raises when disarmed),
         2. single-use per-action confirmation (raises when unconfirmed;
            the confirmation is consumed even if a later gate refuses),
@@ -450,6 +461,16 @@ class ArmedApplySession:
           backup of ours. Permitted, and the only armed writes that are.
         """
 
+        # Finite bounds also reject NaN/infinity without converting huge ints.
+        if (
+            type(inter_message_delay_seconds) not in (int, float)
+            or not 0.0 <= inter_message_delay_seconds <= 1.0
+        ):
+            self.disarm()
+            raise ArmedApplyError(
+                "armed_apply_inter_message_delay_invalid: "
+                "expected a finite int or float in [0, 1] seconds"
+            )
         if not self._armed or self._port is None:
             raise ArmedApplyError("armed_apply_not_armed")
         if action_id not in self._confirmed_action_ids:
@@ -494,7 +515,10 @@ class ArmedApplySession:
         sent = 0
         for triple in triples:
             try:
+                if sent > 0 and inter_message_delay_seconds > 0.0:
+                    self._sleep(inter_message_delay_seconds)
                 port.send(triple)
+                sent += 1
             except _PORT_ERRORS as exc:
                 # Auto-disarm on provider error (which closes the port).
                 # Never auto-re-arm: the operator must run the explicit
@@ -536,7 +560,6 @@ class ArmedApplySession:
                     status="interrupted",
                 )
                 raise
-            sent += 1
         return ArmedApplyResult(
             device_id=device.device_id,
             ok=True,
