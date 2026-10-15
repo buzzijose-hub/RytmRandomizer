@@ -16,6 +16,13 @@ MutationStatus: TypeAlias = Literal[
 ]
 ParameterValueKind: TypeAlias = Literal["continuous", "selector"]
 ParameterValueOrientation: TypeAlias = Literal["zero_based", "centered"]
+RytmCaptureProjection: TypeAlias = Literal["captured-cc7-v1", "captured-cc7-sample-bit-v2"]
+RYTM_CAPTURE_PROJECTION_V1: Final[RytmCaptureProjection] = "captured-cc7-v1"
+RYTM_CAPTURE_PROJECTION_V2: Final[RytmCaptureProjection] = "captured-cc7-sample-bit-v2"
+RYTM_CAPTURE_PROJECTIONS: Final[tuple[RytmCaptureProjection, ...]] = (
+    RYTM_CAPTURE_PROJECTION_V1,
+    RYTM_CAPTURE_PROJECTION_V2,
+)
 
 # These are projection refusals, not missing MIDI addresses or calibration facts.
 RYTM_COCKPIT_PENDING_SRC_PARAMETERS: Final[Mapping[tuple[str, str], str]] = MappingProxyType(
@@ -887,6 +894,10 @@ __all__ = [
     "ParameterValueKind",
     "ParameterValueOrientation",
     "RiskTier",
+    "RYTM_CAPTURE_PROJECTION_V1",
+    "RYTM_CAPTURE_PROJECTION_V2",
+    "RYTM_CAPTURE_PROJECTIONS",
+    "RytmCaptureProjection",
     "RYTM_COCKPIT_ADDITIONAL_SRC_PITCH_PARAMETERS",
     "RYTM_COCKPIT_PENDING_SRC_PARAMETERS",
     "analog_rytm_snapshot_general_mapping_supported",

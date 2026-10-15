@@ -30,6 +30,12 @@ from ...data.analog_four_sysex_calibration import (
     A4_FILTER1_FREQUENCY_PARAMETER,
     analog_four_sysex_calibration_for,
 )
+from ...data.analog_rytm_midi import (
+    RYTM_CAPTURE_PROJECTION_V1,
+    RYTM_CAPTURE_PROJECTION_V2,
+    RYTM_CAPTURE_PROJECTIONS,
+    RytmCaptureProjection,
+)
 from ...guardrails.input_validation import (
     require_boolean,
     require_exact_keys,
@@ -39,6 +45,7 @@ from ...guardrails.input_validation import (
     require_integer_tuple,
     require_object,
     require_sequence,
+    require_text,
     require_text_field,
     require_text_tuple,
     validate_filename_id,
@@ -652,6 +659,7 @@ class ShowKitRecipeDict(TypedDict):
     analog_four_scope: ShowKitScopeDict
     profile: NotRequired[dict[str, object]]
     a4_algorithm: NotRequired[str]
+    rytm_projection: NotRequired[str]
 
 
 @dataclass(frozen=True)
@@ -666,8 +674,12 @@ class ShowKitRecipe:
     analog_four_scope: ShowKitScope
     profile: ProfileModel | None = None
     a4_algorithm: str = A4_LEGACY_MUTATION_ALGORITHM
+    rytm_projection: RytmCaptureProjection = RYTM_CAPTURE_PROJECTION_V2
 
     def __post_init__(self) -> None:
+        projection = require_text(cast(object, self.rytm_projection), "rytm_projection", ValueError)
+        if projection not in RYTM_CAPTURE_PROJECTIONS:
+            raise ValueError("unsupported Rytm capture projection")
         _validate_text(self.profile_id, "profile_id", maximum=_MAX_NAME)
         object.__setattr__(self, "depth", require_float(self.depth, "depth", ValueError))
         if self.depth_preset not in SHOW_KIT_DEPTH_PRESET_VALUES:
@@ -704,6 +716,8 @@ class ShowKitRecipe:
         if self.profile is not None:
             result["profile"] = self.profile.to_dict()
             result["a4_algorithm"] = self.a4_algorithm
+        if self.rytm_projection != RYTM_CAPTURE_PROJECTION_V1:
+            result["rytm_projection"] = self.rytm_projection
         return result
 
     @classmethod
@@ -721,9 +735,17 @@ class ShowKitRecipe:
                     "analog_four_scope",
                 }
             )
-            | (frozenset(("profile", "a4_algorithm")) if "profile" in data else frozenset[str]()),
+            | (frozenset(("profile", "a4_algorithm")) if "profile" in data else frozenset[str]())
+            | (frozenset(("rytm_projection",)) if "rytm_projection" in data else frozenset[str]()),
             "recipe",
         )
+        projection = require_text(
+            data.get("rytm_projection", RYTM_CAPTURE_PROJECTION_V1),
+            "recipe.rytm_projection",
+            ValueError,
+        )
+        if projection not in RYTM_CAPTURE_PROJECTIONS:
+            raise ValueError("unsupported Rytm capture projection")
         return cls(
             profile_id=require_text_field(data, "profile_id", "recipe"),
             depth_preset=narrow_show_kit_depth_preset(
@@ -745,6 +767,7 @@ class ShowKitRecipe:
                 if "profile" not in data
                 else require_text_field(data, "a4_algorithm", "recipe")
             ),
+            rytm_projection=projection,
         )
 
 
