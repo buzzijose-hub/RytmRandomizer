@@ -19,8 +19,9 @@ from ..data.analog_rytm_kit_layout import (
     analog_rytm_track_sound_offset,
 )
 from ..data.analog_rytm_midi import (
-    ANALOG_RYTM_VALIDATED_RUNTIME_CC,
+    ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER,
     AnalogRytmCcMapping,
+    analog_rytm_snapshot_general_mapping_supported,
     get_machine_src_mappings,
 )
 from ..data.analog_rytm_style_recipes import AnalogRytmRenderedStyleEvent
@@ -169,7 +170,6 @@ _LEVEL_PARAMETERS: Final[frozenset[str]] = frozenset({"Level", "Track Level", "A
 _DUAL_VCO_DETUNE_PARAMETER: Final[str] = "Osc 2 Detune"
 _DUAL_VCO_DETUNE_LIVE_SAFE_RANGE: Final[tuple[int, int]] = (62, 79)
 _DUAL_VCO_DETUNE_WIDE_ANCHOR_MAX: Final[int] = 70
-_GENERAL_SCOPES: Final[frozenset[str]] = frozenset({"filter", "amp", "lfo"})
 _PROMOTED_SRC_MUTATION_STATUSES: Final[frozenset[str]] = frozenset(
     {"validated_runtime", "documented_only"}
 )
@@ -1260,17 +1260,6 @@ def _track_value(snapshot: RytmKitSnapshot, pad: int, nrpn_lsb: int) -> int | No
     return _clamp_midi_value(snapshot.unpacked[offset] & 0x7F)
 
 
-def _is_promoted_general_mapping(mapping: AnalogRytmCcMapping) -> bool:
-    return (
-        mapping.machine_key is None
-        and mapping.mutation_status == "validated_runtime"
-        and mapping.scope in _GENERAL_SCOPES
-        and mapping.nrpn_msb == 1
-        and mapping.nrpn_lsb is not None
-        and mapping.parameter not in _LEVEL_PARAMETERS
-    )
-
-
 def _is_promoted_src_mapping(mapping: AnalogRytmCcMapping) -> bool:
     return (
         mapping.mutation_status in _PROMOTED_SRC_MUTATION_STATUSES
@@ -1326,8 +1315,8 @@ def _general_anchor_events(
     profile: RytmMachineProfile | None,
 ) -> tuple[AnalogRytmRenderedStyleEvent, ...]:
     events: list[AnalogRytmRenderedStyleEvent] = []
-    for mapping in ANALOG_RYTM_VALIDATED_RUNTIME_CC:
-        if not _is_promoted_general_mapping(mapping) or mapping.nrpn_lsb is None:
+    for mapping in ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER.values():
+        if not analog_rytm_snapshot_general_mapping_supported(mapping) or mapping.nrpn_lsb is None:
             continue
         value = _track_value(snapshot, pad, mapping.nrpn_lsb)
         if value is None:
