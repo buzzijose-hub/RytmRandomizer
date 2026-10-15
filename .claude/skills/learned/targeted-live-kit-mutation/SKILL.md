@@ -7,6 +7,23 @@ metadata:
 
 # Targeted live-kit mutation
 
+## Bounded A4 Studio Delivery
+
+Unqualified studio plans are separate from permanently blocked offline reports.
+Reconstruct current retained bytes and all scope/routing/capture facts before
+every attempt; never import a report as an output grant. Configure exact track
+channels, conservatively filter OS-labelled output families, and state that
+port names are not authenticated physical identity. General stage readiness
+requires separate physical qualification.
+
+Paced delivery must not block the WS reader. Use the shared ArmedApply loop's
+cooperative async driver, an owned reader task and a session mutation reservation
+that leaves DISARM available. Recheck authority before every message, retain
+partial/interrupted counts before propagation, consume preparation before the
+first byte and publish revoked readiness after the attempt. Preserve historical
+receipt display even when session authority changes. Pin only random identity
+inputs in producer/consumer fixtures; keep native rendering and replay real.
+
 Use this skill when changing mutation scope, Cockpit target/lock state, captured
 kit adoption, or a send plan that could reach an Elektron device.
 

@@ -7,7 +7,8 @@ from collections.abc import Iterable
 from inspect import signature
 
 import pytest
-from test_armed_apply_pacing import (
+
+from conftest import (
     _ACTION,
     _PACKETS,
     _PORT,
@@ -15,8 +16,6 @@ from test_armed_apply_pacing import (
     _PacingIO,
     _PacingPlan,
 )
-from test_armed_apply_pacing import pacing_rig as pacing_rig
-
 from rytm_randomizer.devices import Device, get_device
 from rytm_randomizer.senders.armed_apply import (
     ArmedApplyError,

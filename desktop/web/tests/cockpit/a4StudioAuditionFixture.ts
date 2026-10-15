@@ -2,7 +2,7 @@ import type { A4StudioAuditionPlan } from '../../src/ws/protocol';
 import { forgeEntry, showBankState } from './showKitForgeFixture';
 import pythonDto from './a4StudioAudition.python.json';
 
-// Producer 646e0044: studio_case.__wrapped__(tmp).with_mutations((
+// Python test_a4_studio_plan pins only the source ULID, then calls with_mutations((
 // AnalogFourNativeMutation('osc1_level', 1, 100),)).prepare().to_dict(),
 // with explicit routing below and matching context.output_port_name.
 export const pythonStudioPlan = pythonDto as unknown as A4StudioAuditionPlan;

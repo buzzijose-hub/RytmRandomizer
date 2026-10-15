@@ -11,12 +11,27 @@ from dataclasses import dataclass, field
 from typing import Final, Literal, TypedDict
 
 from ...data.analog_four_saved_kit_layout import A4_KIT_SYNTH_TRACK_COUNT
+from ...data.midi_transport import MIDI_MESSAGE_SETTLE_SECONDS
 from ...guardrails.input_validation import require_int, require_text
 from .send_plan import CockpitSendPlan
 
 _MAX_OUTPUT_NAME: Final[int] = 256
 _MAX_CHANNEL: Final[int] = 16
 _CONTROL_CATEGORIES: Final[frozenset[str]] = frozenset({"Cc", "Cf", "Cs", "Zl", "Zp"})
+A4_STUDIO_USB_FAMILY_NAME: Final[str] = "analog four"
+A4_STUDIO_EXCLUDED_FAMILY_NAME: Final[str] = "rytm"
+
+
+def is_a4_studio_usb_output_name(name: str) -> bool:
+    """Conservatively require an OS-labelled A4 USB route, not physical proof.
+
+    Generic DIN interfaces and contradictory Rytm names cannot qualify for this
+    bounded trial. The operator still checks physical routing in the studio.
+    """
+    normalized = " ".join(name.casefold().split())
+    return (
+        A4_STUDIO_USB_FAMILY_NAME in normalized and A4_STUDIO_EXCLUDED_FAMILY_NAME not in normalized
+    )
 
 
 class A4StudioRoutingDict(TypedDict):
@@ -130,6 +145,8 @@ class A4StudioAuditionPlan:
 
 
 __all__ = [
+    "MIDI_MESSAGE_SETTLE_SECONDS",
+    "is_a4_studio_usb_output_name",
     "A4StudioAuditionPlan",
     "A4StudioAuditionPlanDict",
     "A4StudioRouting",

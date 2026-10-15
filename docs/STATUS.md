@@ -4,6 +4,19 @@ Last updated: 2026-10-15. This file is a hand-authored snapshot and is meant to 
 
 ## Current Snapshot
 
+The October 15 A4 follow-on implements a distinct, explicitly unqualified
+studio RAM-only path for 25 exact CC7 scalar bindings. It reuses ArmedApply,
+configured track channels, canonical candidate/source replay and a fresh saved
+source capture plus manual reload. Cooperative delivery keeps DISARM reachable,
+consumes each plan before output, records partial/interrupted counts and revokes
+current hardware-readiness labels. OS-labelled A4 route filtering rejects known
+Rytm/generic routes but is not physical device authentication. General A4/BOTH
+performance output, paired/disputed fields, persistent writes and automatic
+restore remain blocked. Source composition is under final verification; there
+is no new installed build or physical receipt. See the
+[studio plan](superpowers/plans/2026-10-15-a4-armed-studio-audition.md) and
+[supervised procedure](hardware-validation/2026-10-15-a4-studio-audition.md).
+
 Local source work on `codex/live-control-closure` adds the narrow Rytm Sample
 Bit Reduction capture/planning path, corrects protected/unprojected inventory
 labels and exposes source-bound A4 CC7 conversion evidence for 25 scalar fields
@@ -439,6 +452,14 @@ Digitakt #240 remains a separate passive device PR; it is not included as merged
 support in this updater checkpoint.
 
 ## Recent Cleanup
+
+- 2026-10-15: Added a separate unqualified A4 RAM-only studio plan and explicit
+  routing/confirmation controls, reusing canonical native review and ArmedApply.
+  Cooperative delivery preserves DISARM/disconnect responsiveness and truthful
+  interruption counts. Review repairs cover owned-operation overlap, diagnostic
+  redaction, metrics, shared fixtures and neutral transport timing ownership.
+  Final composed verification is recorded in A4_STUDIO_AUDITION_REPORT.md;
+  physical acceptance and a new exact-source installer remain pending.
 
 - 2026-10-12: Integrated the reference-sound workflow and genuine frozen-audio
   packaging repair. Both paths generate verified local KIT candidates; exact

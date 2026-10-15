@@ -3345,12 +3345,15 @@ hardware attempt or disconnect and explicit manual reload acknowledgment.
 Capturing invalidates the current candidate and plan, so selection and PREPARE
 must follow that capture. A saved-KIT dump alone does not prove that unsaved RAM
 was restored.
-The A4 branch has no SEND edge at all: the generated four-track Filter 1
+The offline A4 branch has no SEND edge: the generated four-track Filter 1
 Frequency scratch artifact must be transferred, saved, and recaptured manually
 before any physical observation is recorded. The frozen preparation report
 always has `ready=false` and `hardware_send_validated=false`. Saved-KIT Q8.8
 evidence does not establish a paired-CC/NRPN transport conversion; the existing
-seven-bit CC audition seam and persistent-KIT refusal remain unchanged.
+seven-bit CLI audition seam and persistent-KIT refusal remain unchanged.
+The separate unqualified studio boundary below adds an operator-present,
+RAM-only Cockpit attempt for 25 exact scalar mappings. It does not promote
+this offline report, unlock paired Filter 1 transport or grant stage readiness.
 The bounded first physical test is one Rytm Pad 2 candidate at 10%, Pad 1
 protected and all A4 tracks locked, followed by manual restoration. Local
 candidate/bank save and source reset never save or reload hardware. The
@@ -3553,3 +3556,28 @@ flowchart TD
 This is a documentary reference path, not another mutation, MIDI or restoration
 workflow. Missing cells and conflicting claims remain explicit. Descriptive
 enum labels do not grant native authoring, output readiness or physical validation.
+
+## A4 Unqualified Studio Audition Boundary
+
+```mermaid
+flowchart TD
+    Sources[Retained original frames and local selected recipe] --> Verify[Canonical native replay and source isolation]
+    Capture[Fresh matching indexed input capture] --> Verify
+    Scope[Current targets minus locks and parameter cells] --> Verify
+    Verify --> Scalars[25 exact native to CC7 bindings]
+    Scalars --> Plan[Immutable all-or-nothing studio plan]
+    Routing[Explicit channels and exact A4-labelled output] --> Plan
+    Plan --> Confirm[Unqualified trial and manual reload acknowledgments]
+    Confirm --> Recheck[Reconstruct complete plan at SEND]
+    Recheck --> Consume[Consume preparation and advance source cutoff]
+    Consume --> Task[Owned async WS task and mutation reservation]
+    Task --> Armed[Shared ArmedApply gates and cooperative paced loop]
+    Disarm[DISARM or disconnect] --> Armed
+    Armed --> Receipt[Complete or interrupted counts and revoked readiness events]
+    Holds[General A4/BOTH and persistent writes blocked] -. unchanged .-> Plan
+    Offline[Offline preparation report remains non-authorizing] -. no grant .-> Verify
+```
+
+Port labels are a conservative route filter, not authenticated device identity.
+Physical routing, response and manual reload/listening recovery remain separate
+operator-present acceptance tests. No automatic hardware restoration occurs.

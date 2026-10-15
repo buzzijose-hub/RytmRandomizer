@@ -185,7 +185,7 @@ describe('bounded A4 studio audition', () => {
     await click(sendLabel); expect(fake.sent).toHaveLength(1);
   });
 
-  it.each(['sent', 'partial', 'refused'])('reports %s counts, consumes the plan and requires another reload without promoting readiness', async (status) => {
+  it.each(['complete', 'partial', 'refused', 'interrupted'] as const)('reports %s counts, consumes the plan and requires another reload without promoting readiness', async (status) => {
     useCockpitStore.setState({ sessionStatus: armSession });
     const { fake } = mount(); await prepare(fake);
     fireEvent.click(screen.getByRole('checkbox', { name: /I confirm sending/ }));

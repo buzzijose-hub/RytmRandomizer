@@ -36,8 +36,10 @@ from __future__ import annotations
 
 from typing import Final, Literal, NotRequired, TypedDict
 
+from ...senders.armed_apply import ArmedApplyStatus
 from ..capture import KitCaptureDeviceId, KitCaptureResultDict
 from ..data.a4_preparation import A4PreparationReportDict
+from ..data.a4_studio_audition import A4StudioAuditionPlanDict
 from ..data.parameter_scope import ParameterCellDict, PerformanceParameterControl
 from ..data.show_bank import ShowBankWorkspaceStateDict
 from ..data.stage import DualMachineStageStateDict
@@ -325,6 +327,12 @@ COMMAND_LIST_CAPTURE_INPUTS: Final[Literal["list_capture_inputs"]] = "list_captu
 COMMAND_CAPTURE_CURRENT_KIT: Final[Literal["capture_current_kit"]] = "capture_current_kit"
 
 COMMAND_ARM: Final[Literal["arm"]] = "arm"
+COMMAND_SHOW_BANK_PREPARE_A4_STUDIO_AUDITION: Final[
+    Literal["show_bank_prepare_a4_studio_audition"]
+] = "show_bank_prepare_a4_studio_audition"
+COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION: Final[Literal["show_bank_send_a4_studio_audition"]] = (
+    "show_bank_send_a4_studio_audition"
+)
 """Explicit in-UI arm: swap the session onto the real-MIDI adapter.
 
 The only path that ever constructs the real device adapter — and it does
@@ -422,6 +430,8 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
             COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
             COMMAND_ARM,
+            COMMAND_SHOW_BANK_PREPARE_A4_STUDIO_AUDITION,
+            COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION,
             COMMAND_DISARM,
             COMMAND_DIAGNOSTICS,
             COMMAND_LIBRARY_LIST,
@@ -619,6 +629,7 @@ class SessionStatusEvent(TypedDict):
     unsaved_sends: int
     capture_enabled: bool
     app_version: str
+    armed_device_id: NotRequired[KitCaptureDeviceId]
 
 
 class ConnectionStateDict(TypedDict):
@@ -738,6 +749,15 @@ class ShowBankSourceSlotsAck(TypedDict):
     analog_four: int
 
 
+class A4StudioAuditionOutcome(TypedDict):
+    """Bounded delivery receipt; accepted packets do not prove device acceptance."""
+
+    status: ArmedApplyStatus
+    sent_count: int
+    expected_count: int
+    reason: str
+
+
 class CommandAck(TypedDict, total=False):
     """Server's reply to a :class:`CommandEnvelope`.
 
@@ -827,6 +847,8 @@ class CommandAck(TypedDict, total=False):
     show_bank: ShowBankWorkspaceStateDict
     show_bank_id: str
     a4_preparation: A4PreparationReportDict
+    a4_studio_plan: A4StudioAuditionPlanDict
+    a4_studio_outcome: A4StudioAuditionOutcome
     show_bank_entry_id: str
     candidate_ids: list[str]
     candidate_id: str
@@ -1056,6 +1078,31 @@ class ArmCommand(TypedDict, total=False):
     arm_token: str
     confirm: bool
     port_name: str | None
+    device_id: KitCaptureDeviceId
+    acknowledge_unvalidated_hardware: bool
+
+
+class PrepareA4StudioAuditionCommand(TypedDict):
+    """Canonical unqualified RAM-only preparation, never an imported report."""
+
+    type: Literal["show_bank_prepare_a4_studio_audition"]
+    bank_id: str
+    entry_id: str
+    expected_revision: int
+    output_port_name: str
+    track_channels: list[int]
+    source_reloaded: bool
+    acknowledge_unvalidated_hardware: bool
+
+
+class SendA4StudioAuditionCommand(TypedDict):
+    """One explicitly confirmed, previously prepared studio attempt."""
+
+    type: Literal["show_bank_send_a4_studio_audition"]
+    send_plan_id: str
+    confirm: bool
+    source_reloaded: bool
+    acknowledge_unvalidated_hardware: bool
 
 
 class DisarmCommand(TypedDict):
@@ -1347,6 +1394,10 @@ __all__ = [
     "CaptureCurrentKitCommand",
     "ClearMutationTargetsCommand",
     "COMMAND_ARM",
+    "COMMAND_SHOW_BANK_PREPARE_A4_STUDIO_AUDITION",
+    "COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION",
+    "PrepareA4StudioAuditionCommand",
+    "SendA4StudioAuditionCommand",
     "COMMAND_ANALYZE_PATCH_GENOME",
     "COMMAND_CAPTURE_CURRENT_KIT",
     "COMMAND_CLEAR_MUTATION_TARGETS",
@@ -1406,6 +1457,7 @@ __all__ = [
     "COMMAND_REFERENCE_SOUND",
     "COMMAND_UNDO",
     "CommandAck",
+    "A4StudioAuditionOutcome",
     "CommandEnvelope",
     "ConnectionChangedEvent",
     "ConnectionStateDict",

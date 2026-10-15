@@ -151,6 +151,9 @@ from .protocol import (
     COMMAND_SET_MUTATION_TARGETS,
     COMMAND_SET_PAD_LOCK,
     COMMAND_SET_REHEARSAL_PRESET,
+    COMMAND_SHOW_BANK_LIST,
+    COMMAND_SHOW_BANK_PREPARE_A4_STUDIO_AUDITION,
+    COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION,
     COMMAND_TOGGLE_PREVIEW,
     COMMAND_UNDO,
     ERR_INTERNAL,
@@ -242,7 +245,7 @@ def _build_session_status(session: CockpitSession) -> dict[str, object]:
     """Construct the ``session_status`` event payload from the live session."""
 
     armed = session_is_armed(session)
-    return {
+    status: dict[str, object] = {
         "type": EVENT_SESSION_STATUS,
         "armed": armed,
         "midi_port": _midi_port(session),
@@ -256,6 +259,12 @@ def _build_session_status(session: CockpitSession) -> dict[str, object]:
         # and nothing about it can transmit.
         "app_version": resolve_app_version(),
     }
+    if armed and session.armed_device_id == ANALOG_FOUR_DEVICE_ID:
+        status["armed_device_id"] = session.armed_device_id
+    return status
+
+
+build_session_status = _build_session_status
 
 
 def resolve_connection_phase(session: CockpitSession) -> str:
@@ -742,16 +751,22 @@ _HANDLER_INTERNAL_MESSAGE: Final[str] = "internal error processing command"
 
 
 def _is_local_artifact_command(cmd_type: str | None) -> bool:
+    from .a4_studio_handlers import A4_STUDIO_HANDLERS
     from .show_bank_handlers import SHOW_BANK_HANDLERS
 
-    return cmd_type in SHOW_BANK_HANDLERS or cmd_type in (
-        COMMAND_LIBRARY_LIST,
-        COMMAND_LIBRARY_SEARCH,
-        COMMAND_LIBRARY_TAG,
-        COMMAND_LIBRARY_DELETE,
-        COMMAND_LIBRARY_IMPORT_CAPTURES,
-        COMMAND_RETAIN_REHEARSAL_FAVORITE,
-        COMMAND_RECALL_REHEARSAL_FAVORITE,
+    return (
+        cmd_type in A4_STUDIO_HANDLERS
+        or cmd_type in SHOW_BANK_HANDLERS
+        or cmd_type
+        in (
+            COMMAND_LIBRARY_LIST,
+            COMMAND_LIBRARY_SEARCH,
+            COMMAND_LIBRARY_TAG,
+            COMMAND_LIBRARY_DELETE,
+            COMMAND_LIBRARY_IMPORT_CAPTURES,
+            COMMAND_RETAIN_REHEARSAL_FAVORITE,
+            COMMAND_RECALL_REHEARSAL_FAVORITE,
+        )
     )
 
 
@@ -1437,6 +1452,10 @@ async def _handle_prepare_send_plan(
 
 
 async def _handle_send(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
+    if session.armed_apply is not None and session.armed_device_id != ANALOG_RYTM_DEVICE_ID:
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "Rytm SEND cannot use an A4-armed output")
+        )
     if session.hardware_intent and session.armed_apply is None:
         # Context loss must refuse hardware intent even if teardown cleared
         # the candidate and plan. Never acknowledge a silent mock fallback.
@@ -2385,15 +2404,6 @@ def _record_cancelled_capture(device_id: str) -> None:
 _GUARDED_SEND_FAILED_FINGERPRINT: Final[str] = "cockpit.send.guarded_boundary_failed"
 """Journal fingerprint for a guarded-device apply failure."""
 
-_ARMED_SEND_DEVICE_ID: Final[str] = "analog_rytm_mk2"
-"""Registered device the cockpit's armed send reports against.
-
-The cockpit is Rytm-only today. The device is passed to the seam purely
-for its ``device_id`` (result attribution) and readiness vocabulary — the
-wire triples come from the plan's own preflight-resolved packets via
-:func:`_send_plan_triples`, never from a device strategy.
-"""
-
 
 def _send_plan_triples(plan: object) -> list[tuple[int, int, int]]:
     """Project a prepared :class:`CockpitSendPlan` into wire triples.
@@ -2457,7 +2467,7 @@ def _armed_send_over_seam(
             )
         )
 
-    device = get_device(_ARMED_SEND_DEVICE_ID)
+    device = get_device(ANALOG_RYTM_DEVICE_ID)
     try:
         armed.confirm(confirmed_plan_id)
         result = armed.apply(
@@ -2537,6 +2547,9 @@ def _armed_send_over_seam(
     return None
 
 
+cockpit_send_plan_triples = _send_plan_triples
+
+
 def _show_bank_state_events(session: CockpitSession) -> list[dict[str, object]]:
     workspace = session.show_kit_forge
     if workspace is None:
@@ -2567,6 +2580,8 @@ def _teardown_armed_state(session: CockpitSession) -> None:
     """
 
     cancel_pending_capture(session)
+    session.a4_studio_plan = None
+    session.a4_studio_generation += 1
     # Only revoked output authority invalidates a prepared Studio preview.
     # Passive transport loss still cancels input, but keeps inert review state.
     had_output_authority = session.armed_apply is not None or session.device.is_armed
@@ -2660,9 +2675,10 @@ def build_armed_watchdog(
         port_lost = armed_port is not None and armed_port not in state.available_outputs
         if not phase_lost and not port_lost:
             return
+        lost_device_id = session.armed_device_id
         _teardown_armed_state(session)
         session.stage_coordinator.record_connection(
-            ANALOG_RYTM_DEVICE_ID,
+            lost_device_id,
             connected=False,
         )
         session.error_journal.record(
@@ -2779,6 +2795,16 @@ def _arm_token_authorised(session: CockpitSession, supplied: object) -> bool:
 
 async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> HandlerResult:
     """Explicit in-UI arm: server-secret auth + confirm, then the ArmedApply seam."""
+    device_id = narrow_kit_capture_device_id(cmd.get("device_id", ANALOG_RYTM_DEVICE_ID))
+    if (
+        device_id == ANALOG_FOUR_DEVICE_ID
+        and cmd.get("acknowledge_unvalidated_hardware") is not True
+    ):
+        return HandlerResult(
+            ack=_error_ack(
+                ERR_VALIDATION, "A4 arm requires explicit unqualified studio acknowledgment"
+            )
+        )
 
     if cmd.get("confirm") is not True:
         return HandlerResult(
@@ -2820,6 +2846,25 @@ async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> Handle
     port_name = _resolve_arm_port_name(cmd)
     if not port_name:
         return HandlerResult(ack=_error_ack(ERR_VALIDATION, _ARM_PORT_REQUIRED))
+    from ..data.a4_studio_audition import (  # noqa: PLC0415
+        A4_STUDIO_USB_FAMILY_NAME,
+        is_a4_studio_usb_output_name,
+    )
+
+    if device_id == ANALOG_RYTM_DEVICE_ID and A4_STUDIO_USB_FAMILY_NAME in " ".join(
+        port_name.casefold().split()
+    ):
+        return HandlerResult(
+            ack=_error_ack(ERR_VALIDATION, "Rytm arm cannot target an Analog Four-labelled output")
+        )
+    if device_id == ANALOG_FOUR_DEVICE_ID:
+        if not is_a4_studio_usb_output_name(port_name):
+            return HandlerResult(
+                ack=_error_ack(
+                    ERR_VALIDATION,
+                    "A4 studio arm requires an explicitly Analog Four-named USB output",
+                )
+            )
     provider = session.arm_port_provider
     if provider is None:
         if importlib.util.find_spec("mido") is None:
@@ -2879,15 +2924,17 @@ async def _handle_arm(cmd: dict[str, object], session: CockpitSession) -> Handle
     # passive adapter keeps modelling snapshot/history state; the seam does
     # the transmitting.
     session.armed_apply = armed_apply
+    session.armed_device_id = device_id
     # Records the operator's INTENT to be live. Survives an involuntary
     # auto-disarm so a later SEND is refused rather than silently
     # downgraded to a mock write (see CockpitSession.hardware_intent).
     session.hardware_intent = True
     session.stage_coordinator.record_connection(
-        ANALOG_RYTM_DEVICE_ID,
+        device_id,
         connected=True,
     )
-    session.stage_coordinator.record_rytm_authority(armed=True)
+    if device_id == ANALOG_RYTM_DEVICE_ID:
+        session.stage_coordinator.record_rytm_authority(armed=True)
     return HandlerResult(
         ack={"ok": True, "armed": True, "midi_port": port_name},
         events=[
@@ -3209,6 +3256,13 @@ def _resolve_handler(cmd_type: str) -> HandlerFn | None:
 
     if cmd_type in _CORE_HANDLERS:
         return _CORE_HANDLERS[cmd_type]
+    if cmd_type in (
+        COMMAND_SHOW_BANK_PREPARE_A4_STUDIO_AUDITION,
+        COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION,
+    ):
+        from .a4_studio_handlers import A4_STUDIO_HANDLERS  # noqa: PLC0415
+
+        return A4_STUDIO_HANDLERS.get(cmd_type)
     if cmd_type == COMMAND_REFERENCE_SOUND:
         from .reference_sound_handlers import handle_reference_sound  # noqa: PLC0415
 
@@ -3366,6 +3420,27 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
             "request_id": request_id,
             **_error_ack(ERR_UNKNOWN_COMMAND, f"unknown command: {cmd_type!r}"),
         }
+    if session.a4_studio_sending and cmd_type not in (
+        COMMAND_DISARM,
+        COMMAND_DIAGNOSTICS,
+        COMMAND_SHOW_BANK_LIST,
+    ):
+        _metrics.record_ws_command(
+            _label, (time.perf_counter() - _t0) * 1000.0, error_code=ERR_VALIDATION
+        )
+        _logger.info(
+            "ws_command_refused",
+            extra={
+                "reason": "a4_studio_active",
+                "cmd_type": _label,
+                "request_id": request_id,
+                "outcome": "refused",
+            },
+        )
+        return {
+            "request_id": request_id,
+            **_error_ack(ERR_VALIDATION, "A4 studio audition is active; DISARM remains available"),
+        }
     # OBS O1 — wrap the handler invocation in operation() so every log
     # call inside the handler chain carries this request_id as the
     # op_id correlator. Operators correlating "the cockpit hung when I
@@ -3376,6 +3451,14 @@ async def handle_command(envelope: dict[str, object], session: CockpitSession) -
     op_name = f"ws.{_label}"
     with operation(op_name, logger=_logger, request_id=request_id):
         try:
+            if cmd_type not in (
+                COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION,
+                COMMAND_DIAGNOSTICS,
+                COMMAND_SHOW_BANK_LIST,
+                COMMAND_LIST_CAPTURE_INPUTS,
+            ):
+                session.a4_studio_plan = None
+                session.a4_studio_generation += 1
             result = await handler(cmd, session)
         except asyncio.CancelledError:
             _metrics.record_ws_command(
@@ -3501,7 +3584,9 @@ __all__ = [
     "HandlerResult",
     "WS_ERROR_CODES",
     "build_armed_watchdog",
+    "cockpit_send_plan_triples",
     "build_connection_changed",
+    "build_session_status",
     "build_mutation_parameters_changed",
     "cancel_pending_capture",
     "dispatcher_failure_ack",

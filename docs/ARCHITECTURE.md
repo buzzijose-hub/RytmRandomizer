@@ -134,7 +134,7 @@ on one line for an existing module, you probably need a new module instead.
 | `midi_io.py`                 | Leaf MIDI primitives: build CC, send param, apply state. `mido` is lazy.    |
 | `senders/midi_event_plan.py` | Generic CC/NRPN event-plan delivery loop; structural validation is owned by `behavior/midi_event_plan.py`. |
 | `senders/guarded.py`, `senders/hardware.py` | Generic guarded/mock and arm-gated Device plan senders. |
-| `senders/armed_apply.py` | ArmedApply seam: the single arm-gated boundary every **cockpit** outbound transmit routes through (explicit in-UI arm + per-action `confirm`; never auto-re-arms after reconnect; persistent kit/sound writes refused). Not repo-wide — the legacy V1.34 `app.py` entry point still opens its own ports at 10 sites under the CLI's `--arm` discipline, exempt via `_LEGACY_V134_TRANSMIT_MODULES` in `tests/architecture/test_armed_entry_points.py`. Migrating it requires teaching the seam paced delivery first: `app.py` sends through `midi_io.send_cc` (0.02s `MIDI_MESSAGE_SETTLE_SECONDS` per message + `record_cc_sent`), the seam writes raw triples unpaced. `shell.py` is **not** exempt — it transmits nothing, receiving an injected `Sender` from `app.py`. |
+| `senders/armed_apply.py` | ArmedApply seam: the single arm-gated boundary every **cockpit** outbound transmit routes through. Synchronous and cooperative asynchronous drivers share one gate/render/send loop; optional bounded pacing preserves partial counts and rechecks authority before every message. Persistent writes remain refused. Legacy V1.34 `app.py` retains its 10 allowlisted `--arm` port sites; migration still needs its streaming behavior and exact timing/metrics parity, not just the new pacing option. `shell.py` receives an injected Sender and opens no port. |
 | `randomization.py`           | Pure randomization core: zone/depth mutation, waveform pick.                |
 | `behavior/morph.py`          | Passive kit-morphing interpolation (current ↔ target, per-track/page, depth macro). Pure + deterministic; parity-pinned cross-language. |
 | `behavior/scope.py`          | Passive scoped-randomization masks + intensity scoping anchored on the current kit. Pure + deterministic. |
@@ -213,11 +213,15 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/data/show_bank.py` | Immutable Show Kit Forge DTOs, bounded wire dictionaries, evidence vocabularies, and derived `source -> candidate -> favorite -> hardware-saved -> verified -> show-ready` lifecycle. Selection and Rytm live audition remain distinct from favorite/save evidence. |
 | `cockpit/stage/{coordinator,policy}.py` | Hardware-inert lane orchestration plus registry-derived device domains/authority policy; no codec or port ownership. |
 | `cockpit/data/a4_preparation.py` | Frozen candidate-bound A4 preparation report and closed blockers; output authority is always offline-only and cannot be imported as a grant. |
-| `cockpit/show_bank/a4_preparation.py` | Pure review of exact source/candidate bytes, current capture, scope, recovery and port intent through registered capabilities; never creates packets, enumerates or opens MIDI. |
+| `cockpit/show_bank/a4_preparation.py` | Shared pure canonical source/candidate, current capture, scope and recovery review; the offline report wrapper retains permanent blockers and no packets. |
+| `cockpit/data/a4_studio_audition.py` | Immutable explicit routing and distinct unqualified studio plan; no inbound authority parser. Conservative A4-labelled route guard is not physical identity proof. |
+| `cockpit/show_bank/a4_studio_audition.py` | Canonical all-or-nothing projection of exact native scalar changes into reused CockpitSendPlan packets; hashes current source, capture, candidate, scope and routing into one plan identity. No I/O. |
+| `cockpit/ws/a4_studio_handlers.py` | Separate explicit studio preflight/attempt, full SEND-time reconstruction, active-operation reservation and cooperative ArmedApply delivery. Every attempt consumes preparation and reload evidence; interruption counts remain in the session journal. |
 | `cockpit/capture/projection.py` | Pure recorded-version Rytm snapshot view for exact historical recipe replay; preserves raw captures and strips only the V2 Sample Bit field for V1. |
 | `cockpit/show_bank/forge.py` | Pure deterministic paired candidate generation. Rytm reuses captured-anchor mutation planning; A4 resolves optional native-field rendering through Device capabilities, preserves protected bytes and cannot create output authority. |
 | `cockpit/show_bank/readiness.py` | Pure lifecycle transitions, semantic favorite-recapture comparison, exact full-capture show-time preflight, cue-order readiness, and non-destructive source return. |
-| `cockpit/show_bank/workspace.py` | Authoritative session orchestration for paired sources, candidates, favorites, retained evidence, and fresh preflight. Composes capture/history/stage and the existing Rytm exact-plan ArmedApply boundary; invalidates stale live state and never grants A4 SEND or persistent SAVE authority. |
+| `cockpit/show_bank/workspace.py` | Authoritative session orchestration for paired sources, candidates, favorites, retained evidence, and fresh preflight. Composes capture/history/stage and Rytm exact-plan delivery; rebuilds the separate unqualified A4 studio intent from canonical current-session facts. Never grants general A4 stage readiness, hardware qualification or persistent SAVE authority. |
+| `data/midi_transport.py` | Neutral owner of the unchanged 20 ms hardware-settle interval, re-exported by `midi_io` and the cockpit studio DTO boundary; no I/O imports or latency guarantee. |
 | `cockpit/show_bank/store.py` | Revisioned canonical-JSON store and explicit content-addressed SysEx retention using the shared atomic writer; validates bounds, framing, hashes, paths, and corruption categories. |
 | `cockpit/show_bank/export.py` | Self-contained `.show-pack` publication/verification/import beneath configured roots. Publishes the manifest last and rejects missing, extra, noncanonical, malformed, or hash-mismatched artifacts before import. |
 | `cockpit/export/reader.py` | Shared bounded, regular-file and stable-identity artifact reads plus duplicate-key JSON rejection; independent of Library and Show Bank stores. |
@@ -741,6 +745,26 @@ ordinals and paired precision are not guessed. The report contains no channel
 routing or executable packets; permanent A4 output blockers, current-session
 checks and mandatory field protections remain unchanged. The frontend consumes
 this evidence through `show_bank_list` / `a4_preparation`, not `prepare_send`.
+
+The distinct `show_bank_prepare_a4_studio_audition` and
+`show_bank_send_a4_studio_audition` commands enable only an explicitly
+acknowledged, unqualified studio experiment. They do not consume a serialized
+offline report or change its readiness. Configured distinct track channels,
+the exact A4-labelled output name, fresh matching indexed source capture,
+manual reload acknowledgment, local candidate replay and current parameter
+scope are mandatory. Imported catalogs, disputed scales and paired controls
+cannot create a partial executable subset. General A4/BOTH stage policy remains
+blocked, and hardware acceptance remains external evidence.
+
+The server runs paced studio SEND as owned off-reader work, alongside the
+existing capture/reference task mechanism. Its session reservation refuses
+concurrent mutation while keeping DISARM reachable. The shared ArmedApply
+generator checks the same open port before every packet; asynchronous sleeps
+permit disconnect/watchdog/disarm to stop the remainder. Preparation is consumed
+and the source cutoff advanced before delivery. Completed, partial and
+interrupted counts are recorded; revoked bank readiness and stale Rytm preview
+state are published to clients. No retries, persistent writes or automatic
+restoration are introduced.
 
 Rytm capture domains are recipe-versioned. Unversioned persisted recipes parse
 as `captured-cc7-v1` and retain their exact old serialization, mapped fingerprint
@@ -1753,8 +1777,11 @@ permits the distinct Filter 1 Frequency renderer to produce local candidate
 bytes for Tracks 1-4 using unsigned big-endian Q8.8, native offset 128, and a
 350-byte track stride. The renderer is not accepted by the legacy
 hardware-write-validated writer, always returns
-`hardware_send_validated = false`, and cannot send or save. A4 SEND,
-destination-slot rewriting, and every unpromoted A4 field remain blocked.
+`hardware_send_validated = false`, and cannot send or save. General A4 SEND,
+destination-slot rewriting and every unpromoted A4 field remain blocked.
+The separate October 15 unqualified studio path described in section 6.2 uses
+only the 25 exact CC7 scalar bindings; Filter 1 Frequency remains a paired
+precision refusal, not an exception to that field-specific boundary.
 
 This Show Kit Forge restriction is distinct from the existing legacy
 `app.py --arm --a4-send-param` probe: that operator-present helper sends one

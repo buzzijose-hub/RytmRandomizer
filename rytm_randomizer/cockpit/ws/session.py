@@ -45,7 +45,7 @@ from typing import TYPE_CHECKING, Final
 from ...observability.logging import get_logger
 from ...senders.armed_apply import ArmedApplySession
 from ...senders.hardware import OutputOpeningProvider
-from ..capture import KitCaptureDeviceId, KitCaptureResult, KitCaptureService
+from ..capture import ANALOG_RYTM_DEVICE_ID, KitCaptureDeviceId, KitCaptureResult, KitCaptureService
 from ..data import CockpitSendPlan, MutationCandidate, ProfileModel
 from ..data.parameter_scope import ParameterSelection
 from ..device import DeviceAdapter
@@ -57,6 +57,7 @@ from ..stage import DualMachineStageCoordinator
 from .wizard_session import WizardSession
 
 if TYPE_CHECKING:
+    from ..data.a4_studio_audition import A4StudioAuditionPlan
     from ..export.reference_sound_session import ReferenceSoundWorkspace
     from ..show_bank.export import ShowPackService
     from ..show_bank.workspace import ShowKitForgeWorkspace
@@ -158,6 +159,11 @@ class CockpitSession:
     explicit arm; cleared by ``disarm`` and by the armed watchdog when
     the device disappears (auto-disarm — never auto-re-arm).
     """
+
+    armed_device_id: KitCaptureDeviceId = ANALOG_RYTM_DEVICE_ID
+    a4_studio_plan: A4StudioAuditionPlan | None = None
+    a4_studio_generation: int = 0
+    a4_studio_sending: bool = False
 
     hardware_intent: bool = False
     """True from a successful ``arm`` until an EXPLICIT ``disarm``.

@@ -829,7 +829,12 @@ Rytm and A4 are independent lanes in the stage state. A Rytm capture, target,
 lock, candidate, plan, and armed authority cannot grant A4 authority. Rytm
 connection phases come from its armed-output manager; the A4 lane reflects
 capture/session evidence and is not continuous independent hot-plug telemetry.
-A4 live mutation and Cockpit SEND remain blocked. The 2026-08-28 captured
+General A4 stage mutation and SEND remain blocked. The source-only October 15
+follow-on adds a separate, unqualified RAM-only studio trial for 25 exact scalar
+bindings; it is not in the preserved d563 installer. Use only a separately
+packaged and verified exact-source build with the
+[supervised A4 studio procedure](hardware-validation/2026-10-15-a4-studio-audition.md).
+The 2026-08-28 captured
 saved-KIT evidence establishes the legacy offline Filter 1 Frequency path:
 unsigned big-endian Q8.8 over `0x0000..0x7F00`, native Track 1 offset 128, and
 350-byte track stride. Do not generalize that local-file capability to another
@@ -898,6 +903,10 @@ include this new command. See [Device Support Inventory](DEVICE_SUPPORT_INVENTOR
 for the independent dimensions and known gaps.
 
 Run the isolated stages in this order, stopping after each restored baseline:
+
+The table retains the earlier delivery's legacy CLI A4 probe. On the October 15
+source follow-on, the separately linked studio procedure is the Cockpit A4
+alternative; do not combine the two send paths or infer general-stage readiness.
 
 | Stage | Expected result | Evidence and recovery |
 |---|---|---|

@@ -88,6 +88,12 @@ def test_machine_cc_is_15_everywhere():
     assert pkg_constants.MACHINE_CC == 15
 
 
+def test_midi_transport_timing_has_one_neutral_owner() -> None:
+    from rytm_randomizer.midi_io import MIDI_MESSAGE_SETTLE_SECONDS
+
+    assert data.MIDI_MESSAGE_SETTLE_SECONDS == MIDI_MESSAGE_SETTLE_SECONDS == 0.02
+
+
 def test_conservative_cockpit_src_policy_does_not_claim_calibration() -> None:
     assert len(data.RYTM_COCKPIT_PENDING_SRC_PARAMETERS) == 7
     assert data.RYTM_COCKPIT_PENDING_SRC_PARAMETERS[("cy_ride", "Hit Decay")] == (

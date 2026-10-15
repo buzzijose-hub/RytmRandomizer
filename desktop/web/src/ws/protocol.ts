@@ -235,7 +235,7 @@ export interface A4StudioAuditionPlan {
 }
 
 export interface A4StudioAuditionOutcome {
-  status: string;
+  status: 'complete' | 'refused' | 'partial' | 'interrupted';
   sent_count: number;
   expected_count: number;
   reason: string;

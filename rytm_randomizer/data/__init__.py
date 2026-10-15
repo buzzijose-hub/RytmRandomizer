@@ -269,6 +269,7 @@ from .midi_event_kinds import (
     MIDI_EVENT_SKIP_NOT_READY,
     MIDI_EVENT_SKIP_PAIRED_CC_UNVERIFIED,
 )
+from .midi_transport import MIDI_MESSAGE_SETTLE_SECONDS
 from .morph_scope_params import DISCRETE_PARAM_NAMES
 from .param_maps import (
     BD_ACOUSTIC_DELTAS,
@@ -643,6 +644,7 @@ __all__ = [
     "STYLE_TARGET_VECTOR_AXES",
     "STYLE_TARGET_VECTORS",
     "MACHINE_CC",
+    "MIDI_MESSAGE_SETTLE_SECONDS",
     "BD_SHARP_PARAMS",
     "BD_HARD_PARAMS",
     "BD_FM_PARAMS",

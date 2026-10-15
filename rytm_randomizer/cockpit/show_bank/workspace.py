@@ -29,6 +29,7 @@ from ..capture import (
 from ..capture.projection import project_rytm_capture_snapshot
 from ..data import MutationCandidate, ProfileModel, Snapshot, new_ulid
 from ..data.a4_preparation import A4PreparationReport
+from ..data.a4_studio_audition import A4StudioAuditionPlan, A4StudioRouting
 from ..data.parameter_scope import DEFAULT_PARAMETER_SELECTION, ParameterSelection
 from ..data.show_bank import (
     A4_LEGACY_MUTATION_ALGORITHM,
@@ -904,6 +905,60 @@ class ShowKitForgeWorkspace:
             },
         )
         return report
+
+    # Explicit current-session fields cannot be reconstructed from a portable report.
+    def prepare_a4_studio_plan(  # noqa: PLR0913
+        self,
+        bank_id: str,
+        entry_id: str,
+        expected_revision: int,
+        *,
+        captures: Mapping[KitCaptureDeviceId, KitCaptureResult],
+        target_ids: Sequence[int],
+        locked_ids: Sequence[int],
+        parameter_selection: ParameterSelection,
+        active_candidate_id: str | None,
+        routing: A4StudioRouting,
+        session_generation: int,
+        source_reloaded: bool,
+        acknowledge_unvalidated_hardware: bool,
+    ) -> A4StudioAuditionPlan:
+        """Reconstruct a separate, unqualified RAM-only studio trial plan."""
+        from .a4_studio_audition import prepare_a4_studio_audition  # noqa: PLC0415
+
+        bank = self._checked_bank(bank_id, expected_revision)
+        self._require_editable_candidate_authority(bank)
+        if self._store.load(bank_id, revision=bank.revision, verify_retained=True) != bank:
+            raise ValueError("persisted bank changed; reload before studio preparation")
+        entry = bank.entry(entry_id)
+        selected = entry.selected_candidate
+        if selected is None:
+            raise ValueError("select a local candidate before studio preparation")
+        verified = self._verified_candidate_context(bank, entry_id, selected.candidate_id)
+        if parameter_selection != selected.recipe.analog_four_scope.parameters:
+            raise ValueError("A4 parameter selection changed; regenerate for the current scope")
+        active = bank_id == self._active_bank_id and entry_id == self._active_entry_ids.get(bank_id)
+        return prepare_a4_studio_audition(
+            bank_id=bank_id,
+            bank_revision=bank.revision,
+            entry=entry,
+            source_frame=verified.analog_four_source.frame,
+            candidate_frame=verified.analog_four_frame,
+            context=A4PreparationContext(
+                scope=MutationScope(frozenset(target_ids), frozenset(locked_ids)),
+                capture_after=self._a4_preparation_cutoff,
+                checked_at=self._clock(),
+                current_capture=captures.get(ANALOG_FOUR_DEVICE_ID),
+                active_candidate_id=active_candidate_id if active else None,
+                session_connected=True,
+                candidate_is_local=True,
+                source_reloaded=source_reloaded,
+                output_port_name=routing.output_port_name,
+            ),
+            routing=routing,
+            session_generation=session_generation,
+            acknowledge_unvalidated_hardware=acknowledge_unvalidated_hardware,
+        )
 
     def _source_snapshot(self, bank: ShowBank, entry: ShowBankEntry) -> Snapshot:
         frame = self._store.read_capture(entry.rytm_source)

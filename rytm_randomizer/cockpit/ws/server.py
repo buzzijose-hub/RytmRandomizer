@@ -146,6 +146,8 @@ from .protocol import (
     CLOSE_CODE_POLICY_VIOLATION,
     COMMAND_CAPTURE_CURRENT_KIT,
     COMMAND_REFERENCE_SOUND,
+    COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION,
+    ERR_VALIDATION,
     HANDSHAKE_AUTH_FAILED,
     HANDSHAKE_AUTH_REQUIRED,
     HELLO_FRAME_TYPE,
@@ -687,9 +689,9 @@ async def _reader_loop(
     shared ``session.pending_events`` hand-off cannot be clobbered by a
     sibling connection's reader.
 
-    Input capture alone runs as an owned task so DISARM stays reachable on
-    this connection. Its reservation refuses concurrent mutations, and
-    teardown cancels only the capture owned by this reader.
+    Capture, reference analysis and A4 studio delivery use one owned task so
+    DISARM stays reachable on this connection. Reservations refuse concurrent
+    mutations; teardown cancels and awaits only work owned by this reader.
     """
 
     async def dispatch(
@@ -722,10 +724,44 @@ async def _reader_loop(
             if (
                 isinstance(command, dict)
                 and cast("dict[str, object]", command).get("type")
-                in (COMMAND_CAPTURE_CURRENT_KIT, COMMAND_REFERENCE_SOUND)
+                == COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION
+                and capture_task is not None
+                and not capture_task.done()
+            ):
+                # Never run paced SEND inline behind another owned operation.
+                get_metrics().record_ws_command(
+                    COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION,
+                    0.0,
+                    error_code=ERR_VALIDATION,
+                )
+                _logger.info(
+                    "ws_command_refused",
+                    extra={
+                        "cmd_type": COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION,
+                        "reason": "owned_operation_active",
+                        "outcome": "refused",
+                    },
+                )
+                queue.put_frame(
+                    {
+                        "request_id": envelope.get("request_id"),
+                        "ok": False,
+                        "code": ERR_VALIDATION,
+                        "message": "An owned operation is active; wait or DISARM before A4 SEND",
+                    }
+                )
+                continue
+            if (
+                isinstance(command, dict)
+                and cast("dict[str, object]", command).get("type")
+                in (
+                    COMMAND_CAPTURE_CURRENT_KIT,
+                    COMMAND_REFERENCE_SOUND,
+                    COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION,
+                )
                 and (capture_task is None or capture_task.done())
             ):
-                # KIT capture and reference analysis own one off-reader task.
+                # Long operations own one off-reader task, including paced SEND.
                 # Their handlers reserve a cancellation fence before awaiting
                 # worker input; DISARM/cancel remain available on this connection.
                 acknowledged = asyncio.Event()

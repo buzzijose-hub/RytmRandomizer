@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
 from collections.abc import Sequence
 from dataclasses import FrozenInstanceError, dataclass, replace
 from datetime import timedelta
@@ -55,6 +56,20 @@ from rytm_randomizer.snapshot.mutation_scope import MutationScope
 
 pytestmark = [pytest.mark.fast, pytest.mark.usefixtures("offline_hardware_denied")]
 _Record = TypeVar("_Record")
+
+
+def test_frontend_studio_fixture_matches_canonical_python_producer(studio_case: StudioCase) -> None:
+    case = studio_case.with_mutations((AnalogFourNativeMutation("osc1_level", 1, 100),))
+    case = replace(
+        case,
+        routing=A4StudioRouting("Elektron Analog Four MKII Out", (2, 4, 6, 8)),
+        context=replace(case.context, output_port_name="Elektron Analog Four MKII Out"),
+    )
+    fixture = (
+        Path(__file__).resolve().parents[3]
+        / "desktop/web/tests/cockpit/a4StudioAudition.python.json"
+    )
+    assert json.loads(fixture.read_text(encoding="utf-8")) == case.prepare().to_dict()
 
 
 def _corrupt(record: _Record, **fields: object) -> _Record:
@@ -130,7 +145,12 @@ class StudioCase:
 
 
 @pytest.fixture
-def studio_case(tmp_path: Path) -> StudioCase:
+def studio_case(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> StudioCase:
+    # Stable identity only; frames, native rendering and validation remain real.
+    monkeypatch.setattr(
+        "rytm_randomizer.cockpit.capture.bridge.new_ulid",
+        lambda: "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+    )
     harness = build_show_bank_harness(tmp_path)
     candidate = generate_show_bank_candidates(harness, count=1, seed=8)[0]
     recipe = replace(

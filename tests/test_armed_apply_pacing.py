@@ -4,16 +4,14 @@ from __future__ import annotations
 
 import time
 from asyncio import CancelledError
-from collections.abc import Iterator
-from dataclasses import dataclass, field
 from decimal import Decimal
 from fractions import Fraction
 from inspect import signature
-from typing import Final
 
 import pytest
 
-from rytm_randomizer.devices import Device, get_device
+from conftest import _ACTION, _PACKETS, _PORT, _TOKEN, _PacingIO, _PacingPlan
+from rytm_randomizer.devices import Device
 from rytm_randomizer.senders.armed_apply import (
     ArmedApplyError,
     ArmedApplyResult,
@@ -22,81 +20,6 @@ from rytm_randomizer.senders.armed_apply import (
 )
 
 pytestmark = pytest.mark.fast
-
-_PORT: Final[str] = "fake paced output"
-_TOKEN: Final[str] = "paced-arm-token"
-_ACTION: Final[str] = "paced-action"
-_PACKETS: Final[tuple[tuple[int, int, int], ...]] = (
-    (0, 74, 1),
-    (2, 71, 127),
-    (15, 7, 0),
-)
-
-
-@dataclass(frozen=True)
-class _PacingPlan:
-    packets: tuple[tuple[int, int, int], ...] = _PACKETS
-    ready: bool = True
-    readiness_reason: str = "not ready for pacing"
-
-
-@dataclass
-class _PacingIO:
-    """One event ledger for the injected opener, output, renderer and sleeper."""
-
-    events: list[tuple[str, object]] = field(default_factory=list)
-    sent: list[object] = field(default_factory=list)
-    sleeps: list[float] = field(default_factory=list)
-    opened: list[str] = field(default_factory=list)
-    rendered: list[object] = field(default_factory=list)
-    send_error: BaseException | None = None
-    sleep_error: BaseException | None = None
-    close_error: BaseException | None = None
-    send_fail_after: int = 0
-    sleep_fail_after: int = 0
-    send_attempts: int = 0
-    closed: int = 0
-
-    def open_exact(self, port_name: str) -> _PacingIO:
-        assert port_name == _PORT
-        self.opened.append(port_name)
-        return self
-
-    def render(self, plan: object) -> Iterator[tuple[int, int, int]]:
-        assert isinstance(plan, _PacingPlan)
-        self.rendered.append(plan)
-        return iter(plan.packets)
-
-    def send(self, message: object) -> None:
-        self.send_attempts += 1
-        if self.send_error is not None and len(self.sent) >= self.send_fail_after:
-            raise self.send_error
-        self.sent.append(message)
-        self.events.append(("send", message))
-
-    def sleep(self, seconds: float) -> None:
-        self.sleeps.append(seconds)
-        self.events.append(("sleep", seconds))
-        if self.sleep_error is not None and len(self.sleeps) > self.sleep_fail_after:
-            raise self.sleep_error
-
-    def close(self) -> None:
-        self.closed += 1
-        self.events.append(("close", None))
-        if self.close_error is not None:
-            raise self.close_error
-
-
-@pytest.fixture
-def pacing_rig() -> Iterator[tuple[ArmedApplySession, _PacingIO, Device]]:
-    io = _PacingIO()
-    session = ArmedApplySession(opener=io, port_name=_PORT, arm_token=_TOKEN, sleep=io.sleep)
-    session.arm(_TOKEN)
-    session.confirm(_ACTION)
-    try:
-        yield session, io, get_device("analog_four_mk2")
-    finally:
-        session.disarm()
 
 
 def test_pacing_api_defaults_preserve_unpaced_delivery() -> None:
