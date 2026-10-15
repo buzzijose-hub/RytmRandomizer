@@ -23,6 +23,11 @@ partial/interrupted counts before propagation, consume preparation before the
 first byte and publish revoked readiness after the attempt. Preserve historical
 receipt display even when session authority changes. Pin only random identity
 inputs in producer/consumer fixtures; keep native rendering and replay real.
+Keep collaborator/backend and control-flow exception families explicit. Use
+finally-based port release for unmodeled faults, and test both sync and async
+render/send/sleep failures. Moving a legacy broad catch invalidates its old
+line-numbered exemption: remove obsolete exemptions instead of widening the
+allowlist. Run the complete architecture gate before expensive final coverage.
 
 Use this skill when changing mutation scope, Cockpit target/lock state, captured
 kit adoption, or a send plan that could reach an Elektron device.

@@ -10,7 +10,7 @@ from threading import Event, Timer
 from typing import Final
 
 import pytest
-from cockpit.conftest import TEST_WS_TOKEN, complete_handshake
+from cockpit.conftest import TEST_WS_TOKEN, complete_handshake, send_cmd
 from fastapi.testclient import TestClient
 
 from conftest import RecordingOut
@@ -209,6 +209,46 @@ def test_a4_studio_trial_sends_exact_configured_packets_and_consumes_plan(
     assert case.session.a4_studio_plan is not None and not case.session.a4_studio_plan.ready
     assert "current_capture_stale" in case.session.a4_studio_plan.blocked_reasons
     assert case.session.stage_coordinator.state.analog_four.authority_state == "blocked"
+
+
+def test_actual_websocket_prepares_and_delivers_canonical_a4_plan(studio_case: StudioCase) -> None:
+    case = studio_case
+    assert case.arm()["ok"]
+    with TestClient(create_app(case.session, token=TEST_WS_TOKEN)) as client:
+        with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+            complete_handshake(ws)
+            prepared = send_cmd(
+                ws,
+                "show_bank_prepare_a4_studio_audition",
+                request_id="studio-prepare",
+                bank_id=case.harness.bank_id,
+                entry_id=case.harness.entry_id,
+                expected_revision=case.harness.workspace.bank(case.harness.bank_id).revision,
+                output_port_name="Elektron Analog Four MKII Out",
+                track_channels=[6, 7, 8, 9],
+                source_reloaded=True,
+                acknowledge_unvalidated_hardware=True,
+            )
+            assert prepared["ok"] and prepared["a4_studio_plan"]["ready"]
+            plan = case.session.a4_studio_plan
+            assert plan is not None and plan.ready
+            expected = [
+                (packet.channel, packet.control, packet.value) for packet in plan.send_plan.packets
+            ]
+            delivered = send_cmd(
+                ws,
+                "show_bank_send_a4_studio_audition",
+                request_id="studio-deliver",
+                send_plan_id=plan.plan_id,
+                confirm=True,
+                source_reloaded=True,
+                acknowledge_unvalidated_hardware=True,
+            )
+            assert delivered["ok"] and delivered["a4_studio_outcome"]["status"] == "complete"
+            assert delivered["a4_studio_outcome"]["sent_count"] == len(expected)
+            assert case.provider.port.sent == expected
+            assert case.session.a4_studio_plan is None
+    assert case.provider.port.closed == 1
 
 
 @pytest.mark.parametrize(

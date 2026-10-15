@@ -69,7 +69,7 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
     ``COMMAND_TYPES`` is the union of the cockpit + wizard command
     surfaces; the wizard subset is folded in from :mod:`wizard_protocol`
     and asserted in the wizard test file. This test verifies the
-    16 cockpit-native commands remain present.
+    complete cockpit-native command set remains present.
     """
 
     individual = {
@@ -129,16 +129,26 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
         protocol.COMMAND_SHOW_BANK_RETAIN_CAPTURE,
         protocol.COMMAND_SHOW_BANK_IMPORT,
         protocol.COMMAND_SHOW_BANK_EXPORT,
+        protocol.COMMAND_SHOW_BANK_PREPARE_A4_STUDIO_AUDITION,
+        protocol.COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION,
     }
-    assert individual <= protocol.COMMAND_TYPES
+    assert individual == protocol.COMMAND_TYPES - protocol.WIZARD_COMMAND_TYPES
     assert isinstance(protocol.COMMAND_TYPES, frozenset)
-    # 56 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
-    assert len(protocol.COMMAND_TYPES) == 64
+    # 58 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
+    assert len(individual) == 58
+    assert len(protocol.COMMAND_TYPES) == 66
     assert protocol.COMMAND_REFERENCE_SOUND in protocol.COMMAND_TYPES
 
 
 def test_event_and_command_constants_match_spec_strings() -> None:
     """The discriminator strings on the wire match the spec verbatim."""
+
+    assert protocol.COMMAND_SHOW_BANK_PREPARE_A4_STUDIO_AUDITION == (
+        "show_bank_prepare_a4_studio_audition"
+    )
+    assert protocol.COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION == (
+        "show_bank_send_a4_studio_audition"
+    )
 
     assert protocol.EVENT_SNAPSHOT_CHANGED == "snapshot_changed"
     assert protocol.EVENT_MUTATION_PREVIEWED == "mutation_previewed"

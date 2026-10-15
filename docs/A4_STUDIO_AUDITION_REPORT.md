@@ -4,6 +4,37 @@ Status: implemented locally; final composed verification/review in progress.
 This is an unqualified studio RAM-only experiment, not general A4/BOTH show
 readiness, persistent KIT write support or a replacement installer.
 
+## Execution Ledger
+
+Checkpoint 2026-10-15 22:04 UTC. Frozen production source:
+`fa84d7bf4b0c0aaa7d1ecd8b03b6cf3456c7d99e`.
+
+| Gate | Observed State |
+| --- | --- |
+| Full Python/coverage | First complete run: 13,474 passed, 3 failed, 6 skipped, 6 warnings in 1116.73 seconds. All failures were stale 64-command assertions after the new two-command surface made 66. Not accepted. Failed log/JUnit/coverage archived under ignored `output/local/a4-fa84-contract-failed.*`; a fresh final run follows the contract repair. |
+| Architecture + async regression | 1,075 passed, one known warning, 78.90 seconds. |
+| Strict production typing | All 99 PR-touched modules pass with zero diagnostics. |
+| Coverage diagnostic | First full XML covers all 99 PR-touched modules at 100% lines/branches; whole-project pure branch 99.44%, unchanged 99% floor. This does not turn the failed test run into acceptance. |
+| Frontend | 1,412 tests / 82 files pass in 104.69 seconds; statements/branches/functions/lines all 100%. |
+| Browser | Two Edge journeys pass in 4.7 seconds, including exact A4 routing/confirmation at 1440/600/390 pixels and preserved offline review. Screenshots inspected; mocked WS only. |
+| Lint/build | Ruff, Black py311, isort, ESLint, TypeScript, Vulture80 and version drift check pass. Vite build passes with existing chunk/dynamic-import warnings. |
+| Review | Eight dimensions completed; identified repairs applied and targeted fix reviews clear. Full test/coverage outcome remains a separate gate. |
+| Remote | PR254 still at b613c705; no push, protected merge, new package or physical I/O. Four implementation worker worktrees archived after merge. |
+
+A 21:53 UTC resource spot-check showed approximately 15.38 GB free of 31.75 GB
+physical RAM and 19% aggregate CPU use. This is a point-in-time observation,
+not a continuous resource or hardware-performance guarantee.
+
+The final verification/publication phase has a 90-minute cap. Stop without a
+push on unresolved failures, interruption or remote divergence; preserve source
+and this ledger. Historical PR254 Gate14/16 deviations remain unresolved.
+
+The contract repair includes exact native-command set equality, explicit two-
+command identifiers and a positive real-WebSocket prepare/deliver journey tied
+to the protocol round-trip guard. It does not only raise a count or change any
+production behavior. Native rendering, fake-port packets and consumed authority
+are asserted through both new wire commands.
+
 ## Implementation
 
 - Integrates the prior f7186481 mapping/compatibility bundle as one source line.

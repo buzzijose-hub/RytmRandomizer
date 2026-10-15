@@ -561,7 +561,7 @@ def test_all_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
     """Pin invariant: every cockpit-native command has a matching round-trip test above.
 
     ``COMMAND_TYPES`` is the union of the cockpit + wizard command surfaces
-    (56 cockpit + 8 wizard = 64 total). This test pins the legacy cockpit-native
+    (58 cockpit + 8 wizard = 66 total). This test pins the legacy cockpit-native
     commands; the wizard subset is exercised end-to-end in
     ``test_integration_wizard_flow.py``. If a new cockpit command lands and
     this assertion is not extended, the file falls out of sync silently —
@@ -570,7 +570,7 @@ def test_all_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
 
     # 27 commands round-trip here; the 8 arm/diagnostics/library commands
     # are exercised in tests/cockpit/test_ws_arm_and_library_handlers.py.
-    assert len(COMMAND_TYPES) == 64
+    assert len(COMMAND_TYPES) == 66
     assert "reference_sound" in COMMAND_TYPES
     source = (
         Path(__file__).with_name("test_reference_sound_handlers.py").read_text(encoding="utf-8")
@@ -579,6 +579,27 @@ def test_all_cockpit_command_types_are_exercised(cockpit_ws: object) -> None:
         "def test_actual_ws_upload_scope_generation_favorite_playback_export_and_restart" in source
     )
     assert 'send_cmd(ws, "reference_sound"' in source
+    studio_source = Path(__file__).parent / "show_bank" / "test_a4_studio_ws.py"
+    studio_tree = ast.parse(studio_source.read_text(encoding="utf-8"))
+    studio_roundtrip = next(
+        node
+        for node in studio_tree.body
+        if isinstance(node, ast.FunctionDef)
+        and node.name == "test_actual_websocket_prepares_and_delivers_canonical_a4_plan"
+    )
+    exercised_studio_commands = {
+        arg.value
+        for call in ast.walk(studio_roundtrip)
+        if isinstance(call, ast.Call)
+        and isinstance(call.func, ast.Name)
+        and call.func.id == "send_cmd"
+        for arg in call.args
+        if isinstance(arg, ast.Constant) and isinstance(arg.value, str)
+    }
+    assert {
+        "show_bank_prepare_a4_studio_audition",
+        "show_bank_send_a4_studio_audition",
+    } <= exercised_studio_commands
     cockpit_native = {
         COMMAND_SELECT_PROFILE,
         COMMAND_SET_DEPTH,
