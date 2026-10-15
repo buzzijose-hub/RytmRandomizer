@@ -9,7 +9,7 @@
 
 [![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-orange.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](pyproject.toml)
-[![Tests](https://img.shields.io/badge/tests-12%2C762-9be8a0.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-13%2C500-9be8a0.svg)](#testing)
 [![WCAG](https://img.shields.io/badge/accessibility-WCAG%202.2%20AA-7cc4ff.svg)](docs/ACCESSIBILITY.md)
 [![Phase 1 · Cockpit](https://img.shields.io/badge/Phase%201%20%C2%B7%20Cockpit-shipped-7cc4ff.svg)](#cockpit)
 [![Phase 2 · Wizard](https://img.shields.io/badge/Phase%202%20%C2%B7%20Wizard-shipped-9be8a0.svg)](#profile-wizard)
@@ -494,7 +494,7 @@ Current local source verification (see the [October 15 A4 studio report](docs/A4
 
 | Suite | Count |
 |---|---|
-| Full Python suite (`pytest`, two workers) | 13,478 passed; 6 skipped; 6 warnings |
+| Full Python suite (`pytest`, two workers) | 13,500 passed; 6 skipped; 6 warnings |
 | Architecture invariants (`tests/architecture/`) | 921 test items, included in the full suite |
 | V1.34 parity | 505 golden JSON files → 685 byte-identical test items |
 | Frontend (`desktop/web`, vitest) | 1,412 passed across 82 files; 100% coverage |

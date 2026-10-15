@@ -146,8 +146,11 @@ reconciles the previous 29 eligible continuous rows to **25 documented-only
 eligible rows and four newly blocked CY Ride rows**. It records keys, names,
 CC/NRPN, saved primary-byte slots, evidence class and policy, with a reproducible
 catalog/inventory check. None is newly hardware-validated. The unchanged
-initialized frame projects 328 parameters; the RIO return now projects 325,
-with all 264 common values retained in each.
+V1 projection of the initialized frame had 328 parameters and the RIO return
+325, retaining all 264 common values. Current V2 adds source-backed Sample Bit
+Reduction on all 12 pads: 340 and 337 total parameters respectively, with 276
+common values. Recorded V1 recipes retain their original projection; these
+software counts are not additional physical validation.
 
 Use [Quickstart section 6a](COCKPIT_QUICKSTART.md#6a-remaining-operator-present-studio-rehearsal),
 the [ordered physical checklist](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md),

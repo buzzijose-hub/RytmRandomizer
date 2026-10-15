@@ -28,6 +28,12 @@ finally-based port release for unmodeled faults, and test both sync and async
 render/send/sleep failures. Moving a legacy broad catch invalidates its old
 line-numbered exemption: remove obsolete exemptions instead of widening the
 allowlist. Run the complete architecture gate before expensive final coverage.
+Latch immutable action/device-bound accepted-message progress before cleanup;
+exception attributes alone can be lost when port close raises another error.
+Collect ordinary owned-task errors as outcomes without swallowing control-flow
+signals. Finalize journal, metrics and client readiness in finally paths, including
+cleanup failure. Regress unknown collaborator faults, masked send/close failures,
+internal cancellation and pre-delivery confirmation races with fake ports.
 
 Use this skill when changing mutation scope, Cockpit target/lock state, captured
 kit adoption, or a send plan that could reach an Elektron device.

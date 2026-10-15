@@ -1,25 +1,56 @@
 # A4 Studio Audition Integration
 
-Status: bounded software verification complete; PR254 is the integration/review vehicle.
+Status: bounded software verification complete after post-push repairs; PR254
+remains the integration/review vehicle. Current publication CI and protected
+review remain separate gates.
 This is an unqualified studio RAM-only experiment, not general A4/BOTH show
 readiness, persistent KIT write support or a replacement installer.
 
 ## Execution Ledger
 
-Checkpoint 2026-10-15 22:24 UTC. Frozen production source:
-`fa84d7bf4b0c0aaa7d1ecd8b03b6cf3456c7d99e`.
-Final full-test checkpoint: `5032413d` (only tests/docs changed after that production).
+Checkpoint 2026-10-15 23:07 UTC. Frozen production/test source:
+`b995d0015032cfb78195a8220c6ce7125d95db94`.
+Only reporting/docs change after this tested production checkpoint.
+
+Post-push observability review reproduced three faults: omitted shared sender
+failure families lost receipts, propagated exceptions lost readiness events,
+and cleanup errors could mask accepted-message counts. The repair latches
+immutable action/device-bound progress immediately after each accepted message,
+collects ordinary delivery failures through an owned task, preserves control-flow
+propagation, and journals/publishes terminal state in finally-based cleanup.
+The scoped diagnostic passes 680 tests with both affected modules at 100% lines
+and branches. The complete architecture gate passes 921 items in 78.89 seconds;
+strict typing on 99 modules, Ruff, Black, isort, Vulture80 and version checks pass.
+Repair source `b995d001` passes the fresh full coverage run below with two workers.
+Independent targeted follow-up review clears all three observability findings
+and both documentation findings. Historical Gate14/16 exceptions are unchanged.
+
+Historical published source `63251060` retained production `fa84d7bf` and final
+test checkpoint `5032413d`: 13,478 passed / 6 skipped / 6 warnings in 1119.94s.
+Its log/JUnit and XML are archived under ignored
+`output/local/a4-63251060-pytest.*` and `output/local/a4-63251060.coverage.xml`.
+They are not the acceptance evidence for the b995 repair.
+
+At published source 63251060, the [PR-event native updater job](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/38817231609/job/116704939417)
+failed one `backend_restart` case (31 passed), while its [push-event duplicate](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/38817224801/job/116704924197)
+passed all 32 native cases and both Windows handoffs. The tested trees were identical.
+The failure was the bootstrap/report catch; retained diagnostics do not expose
+the initiating rejection or prove that the restart action ran. The sidecar's
+FastAPI import interruption was caused by report-time shutdown, not evidence
+that cold import initiated the failure. No timeout, dependency or retry policy
+was changed. Keep the failed PR receipt distinct from the successful duplicate;
+current-source CI is still a separate publication gate.
 
 | Gate | Observed State |
 | --- | --- |
-| Full Python/coverage | 13,478 passed, 6 skipped, 6 warnings, zero failures in 1119.94 seconds; two workers. Fresh log/JUnit: ignored `output/local/a4-full-pytest.*`; coverage: `coverage.xml`. |
-| Architecture/parity | 921 architecture items and all 685 frozen V1.34 parity items pass in the full suite. Separate architecture + async regression: 1,075 passed, one known warning, 78.90 seconds. |
+| Full Python/coverage | 13,500 passed, 6 skipped, 6 warnings, zero failures in 1120.43 seconds; two workers. Fresh log/JUnit: ignored `output/local/a4-full-pytest.*`; coverage: `coverage.xml`. |
+| Architecture/parity | 921 architecture items and all 685 frozen V1.34 parity items pass in the full suite. Separate repair architecture gate: 921 passed, one known warning, 78.89 seconds. |
 | Strict production typing | All 99 PR-touched modules pass with zero diagnostics. |
 | Coverage | Canonical touched-file gate proves all 99 PR-touched modules at 100% lines/branches; whole-project pure branch 99.44%, unchanged 99% floor. Fresh final XML only; no earlier or cancelled-run data used. |
 | Frontend | 1,412 tests / 82 files pass in 104.69 seconds; statements/branches/functions/lines all 100%. |
 | Browser | Two Edge journeys pass in 4.7 seconds, including exact A4 routing/confirmation at 1440/600/390 pixels and preserved offline review. Screenshots inspected; mocked WS only. |
 | Lint/build | Ruff, Black py311, isort, ESLint, TypeScript, Vulture80 and version drift check pass. Vite build passes with existing chunk/dynamic-import warnings. |
-| Review | Eight dimensions completed; identified repairs applied and targeted fix reviews clear. Contract repair also has a clean targeted review. Protected human approval remains separate. |
+| Review | Earlier eight-dimension review identified repairs; independent focused fix reviews are clear. Current publication review is tracked on PR254. Protected human approval remains separate. |
 | Integration | Existing PR254 only; remote CI and current publication/review state are tracked on that PR. No protected merge, new package or physical I/O is claimed. Four implementation worker worktrees archived after merge. |
 
 A 21:53 UTC resource spot-check showed approximately 15.38 GB free of 31.75 GB
@@ -57,7 +88,9 @@ full run above; no production behavior changed for that repair.
   reload and exact per-action plan confirmation. Rytm plans cannot use an
   A4-armed port. A4-labelled OS route filtering refuses known Rytm/generic
   routes but cannot authenticate physical device identity or cable routing.
-- Uses one shared ArmedApply gate/render/send loop. The cooperative async
+- Uses one shared ArmedApply gate/render/send loop. Immutable accepted-message
+  progress survives teardown and masked exceptions; it is evidence, not output
+  authority. The cooperative async
   driver and owned reader task keep DISARM/watchdog/disconnect reachable
   between packets. A session reservation refuses concurrent mutation.
 - Consumes preparation and advances reload evidence before sending. Complete,
@@ -114,7 +147,7 @@ root module, hardware dependency update or parity regeneration is introduced.
 | 4. Facts | Canonical 25-binding map and unchanged 20 ms interval reused; no copied conversion or CC table. |
 | 5. Configuration | Explicit volatile routing and confirmations; no new environment read or persisted grant. |
 | 6. Tests | Shared pacing fixture moved to conftest; real canonical producer fixture and actual WS stop/disconnect/overlap regressions added. |
-| 7. Dev loop | At most two test workers; composed source checkpoint and runner results recorded, not inferred from worker reports. |
+| 7. Dev loop | Full acceptance runs use two workers; composed checkpoints and runner results are recorded, not inferred from worker reports. One short focused/architecture diagnostic overlap exceeded the intended aggregate two-worker cap; subsequent gates run serially. |
 | 8. Errors | Repaired artifact redaction and refusal RED accounting; categorical reasons and accepted-packet counts survive interruption. |
 | 9. Release | Existing PR254 only; preserved d563 delivery, no protected merge or physical acceptance claimed. |
 | 10. Extension | Async/sync delivery share one gate loop; unsupported changed fields block the whole plan. No additional sender abstraction warranted. |

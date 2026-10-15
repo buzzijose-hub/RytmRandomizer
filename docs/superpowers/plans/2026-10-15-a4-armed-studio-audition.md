@@ -1,6 +1,7 @@
 # A4 Armed Studio Audition - 2026-10-15
 
-Status: in-flight (software verified; protected integration review and physical acceptance remain separate).
+Status: in-flight (software verified after failure-accounting repairs; protected
+integration review, current publication CI and physical acceptance remain separate).
 
 ## Scope
 
@@ -28,6 +29,12 @@ invalidate stale plans. Send recomputes canonical facts and compares the entire
 immutable plan. Partial failure auto-disarms, records sent/expected counts and
 never retries or automatically restores. Rytm cannot send through an A4-armed
 port. General stage readiness and physical evidence remain separate.
+
+Accepted-message progress is immutable, action/device-bound and retained across
+teardown so a cleanup fault cannot turn a partial send into a zero-byte receipt.
+The owned delivery task collects ordinary exceptions as failure data; cancellation
+and process control propagate. Finally-based outcome publication also revokes
+client readiness if delivery or cleanup raises.
 
 ## Workstreams
 
@@ -110,7 +117,7 @@ Physical validation is a separate backed-up scratch session, not agent work.
 Rollback reverts only owned commits; no resets of other work. No protected merge
 or show-ready claim is part of software closeout.
 
-Software checkpoint `5032413d` passes 13,478 Python tests / 6 skips / 6 warnings
+Software checkpoint `b995d001` passes 13,500 Python tests / 6 skips / 6 warnings
 with fresh full coverage; all 99 PR-touched modules have 100% line/branch
 coverage. Frontend 1,412 tests / 82 files have 100% all-four coverage. Exact
 results, failed-checkpoint disposition and the post-audit are recorded in

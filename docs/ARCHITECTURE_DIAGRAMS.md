@@ -3573,7 +3573,11 @@ flowchart TD
     Consume --> Task[Owned async WS task and mutation reservation]
     Task --> Armed[Shared ArmedApply gates and cooperative paced loop]
     Disarm[DISARM or disconnect] --> Armed
-    Armed --> Receipt[Complete or interrupted counts and revoked readiness events]
+    Armed --> Progress[Immutable accepted-message progress before cleanup]
+    Progress --> Receipt[Finally-based receipt and revoked readiness events]
+    Fault[Delivery or cleanup fault] --> Receipt
+    Control[Task or process control] --> Receipt
+    Receipt -->|Only for control signals| Propagate[Re-raise original task or process control]
     Holds[General A4/BOTH and persistent writes blocked] -. unchanged .-> Plan
     Offline[Offline preparation report remains non-authorizing] -. no grant .-> Verify
 ```

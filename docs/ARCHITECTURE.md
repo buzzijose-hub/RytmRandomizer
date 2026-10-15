@@ -216,7 +216,7 @@ on one line for an existing module, you probably need a new module instead.
 | `cockpit/show_bank/a4_preparation.py` | Shared pure canonical source/candidate, current capture, scope and recovery review; the offline report wrapper retains permanent blockers and no packets. |
 | `cockpit/data/a4_studio_audition.py` | Immutable explicit routing and distinct unqualified studio plan; no inbound authority parser. Conservative A4-labelled route guard is not physical identity proof. |
 | `cockpit/show_bank/a4_studio_audition.py` | Canonical all-or-nothing projection of exact native scalar changes into reused CockpitSendPlan packets; hashes current source, capture, candidate, scope and routing into one plan identity. No I/O. |
-| `cockpit/ws/a4_studio_handlers.py` | Separate explicit studio preflight/attempt, full SEND-time reconstruction, active-operation reservation and cooperative ArmedApply delivery. Every attempt consumes preparation and reload evidence; interruption counts remain in the session journal. |
+| `cockpit/ws/a4_studio_handlers.py` | Separate explicit studio preflight/attempt, full SEND-time reconstruction, active-operation reservation and cooperative ArmedApply delivery. Every attempt consumes preparation and reload evidence. Owned-task failure collection and finally-based outcome publication retain accepted counts and revoke readiness even when delivery or cleanup raises; control-flow signals propagate. |
 | `cockpit/capture/projection.py` | Pure recorded-version Rytm snapshot view for exact historical recipe replay; preserves raw captures and strips only the V2 Sample Bit field for V1. |
 | `cockpit/show_bank/forge.py` | Pure deterministic paired candidate generation. Rytm reuses captured-anchor mutation planning; A4 resolves optional native-field rendering through Device capabilities, preserves protected bytes and cannot create output authority. |
 | `cockpit/show_bank/readiness.py` | Pure lifecycle transitions, semantic favorite-recapture comparison, exact full-capture show-time preflight, cue-order readiness, and non-destructive source return. |
@@ -763,8 +763,12 @@ generator checks the same open port before every packet; asynchronous sleeps
 permit disconnect/watchdog/disarm to stop the remainder. Preparation is consumed
 and the source cutoff advanced before delivery. Completed, partial and
 interrupted counts are recorded; revoked bank readiness and stale Rytm preview
-state are published to clients. No retries, persistent writes or automatic
-restoration are introduced.
+state are published to clients. The sender latches immutable action/device-bound
+progress immediately after acceptance, before teardown can mask an exception.
+This evidence survives disarm but never authorizes output. The awaited delivery
+task collects ordinary faults as failure data; task/process control propagates.
+Finally-based journaling and queued state events also cover raised cleanup faults.
+No retries, persistent writes or automatic restoration are introduced.
 
 Rytm capture domains are recipe-versioned. Unversioned persisted recipes parse
 as `captured-cc7-v1` and retain their exact old serialization, mapped fingerprint
