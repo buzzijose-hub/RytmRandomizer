@@ -35,10 +35,16 @@ For captured machine projection and registry evidence coverage, read the
 Keep the exact owning section, promoted identity and reverse CC check together;
 registered devices without parameter evidence must remain visible as unsupported.
 
-The current authority boundary is hardware-blocked by design: Analog Four
-Filter 1 Frequency is an offline saved-KIT artifact only, there is no A4 SEND,
-and the Rytm one-pad audition/restoration plus favorite save, recapture, and
-fresh paired preflight still require operator-present evidence.
+General A4/BOTH stage authority remains blocked. A distinct unqualified,
+operator-present A4 studio trial permits only the existing 25 exact scalar
+bindings through fresh source capture, explicit routing, arm and exact-plan
+confirmation. It does not unlock paired precision, disputed domains, persistent
+writes or automatic recovery. The Rytm one-pad and A4 single-control trials,
+manual reload/listening recovery, favorite save and fresh recapture still need
+physical evidence. Read `docs/A4_STUDIO_AUDITION_REPORT.md` for current source
+verification and `docs/hardware-validation/2026-10-15-a4-studio-audition.md` for
+the separate supervised procedures; historical offline-only receipts are not
+current authority.
 
 ## Operational guardrails — apply on every task
 

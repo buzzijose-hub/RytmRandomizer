@@ -753,7 +753,7 @@ class ArmedApplySession:
     def _disarm_after_interruption(
         self, exc: BaseException, *, action_id: str, outcome: ArmedApplyResult
     ) -> None:
-        """Retain control flow and its progress when teardown also fails."""
+        """Retain control flow and progress across recognized teardown faults."""
 
         if isinstance(exc, ARMED_APPLY_CONTROL_FLOW_TYPES):
             # Record the primary interruption before close can fail.
@@ -777,7 +777,9 @@ class ArmedApplySession:
                     f"error_type={type(cleanup_error).__name__}, "
                     f"sent_count={outcome.sent_count}, expected_count={outcome.expected_count}"
                 )
-                raise exc from cleanup_error
+                # The caller re-raises the active interruption unchanged;
+                # this helper attaches the secondary cause, never replaces it.
+                exc.__cause__ = cleanup_error
         else:
             self.disarm()
         exc.__dict__["armed_apply_outcome"] = outcome

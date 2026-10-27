@@ -221,6 +221,13 @@ verification; recall revokes output and preparation but never restores hardware.
 Disarmed Show Forge reselection follows a fresh manual-reload capture: it must
 not advance that capture's recovery cutoff, and must publish restored scope
 before the candidate even when the source identity is unchanged.
+Cancellation evidence must include frames received through the authenticated
+WebSocket, not only `pending_events`: a handler's finally block can queue
+revocations that dispatch never drains. Regress after a known accepted-packet
+count, then verify ACK-before-events, subsequent commands and disconnect races.
+Combine cancellation with a recognized port-close fault in both shared drivers;
+preserve the original control signal, redacted secondary diagnostics and exact
+progress without broadening suppression or counting one attempt twice.
 The mandatory project rule is
 `.claude/rules/targeted-mutation-safety.md`. The canonical code surfaces are
 `rytm_randomizer/snapshot/mutation_scope.py`,

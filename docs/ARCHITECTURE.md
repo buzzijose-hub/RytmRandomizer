@@ -772,6 +772,10 @@ Internally cancelled dispatch publishes a categorical failure ACK followed by
 its queued safety revocations before re-raising, without requiring another
 command. The handler owns command accounting; the completion observer does not
 count cancellation again. Reader teardown omits an ACK to a departed client.
+For the existing explicit failure families, cleanup failure is chained to the
+original control signal with redacted type/action/progress diagnostics. This
+does not broaden exception suppression: unmodeled collaborator exceptions may
+still escape cleanup, with the session already passive and progress retained.
 No retries, persistent writes or automatic restoration are introduced.
 
 Rytm capture domains are recipe-versioned. Unversioned persisted recipes parse

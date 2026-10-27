@@ -1,5 +1,9 @@
 # Companion Cancellation Repair
 
+Status: in-flight
+
+Composed repair, fresh regression/review and exact-source package pending.
+
 ## Mission And Budget
 
 Repair the two cancellation findings on PR254 at e420c30e, then verify and
@@ -81,7 +85,37 @@ changes and the untouched installed fallback. Stop only owned test processes.
 
 ## Checkpoint
 
-2026-10-27: PREFLIGHT. Published e420c30e confirmed, 33 successful checks,
-one skipped, CHANGES_REQUESTED. Primary checkout dirty and untouched. Attached
-dependency-review checkout clean at the exact PR head. Python import verified
-from that worktree, 17 GB free memory. No hardware access. Regressions pending.
+2026-10-27 01:09 UTC: published e420c30e confirmed, 33 successful checks,
+one skipped, CHANGES_REQUESTED. Primary checkout dirty and untouched. The
+dependency-review checkout was clean at the exact PR head. Python imports this
+worktree. Approximately 17 GB free memory; no hardware access.
+
+01:26 UTC: transport TDD reproduces the missing wire revocation after one
+accepted packet. Shared cleanup worker acc6697c merged at 248c6c59. An initial
+architecture pass found a missing plan-index row and variable re-raise rejected
+by the taxonomy gate; a second pass exposed the status marker's formatting.
+All repaired without changing assertions or allowlists. The composed backend
+and full architecture gate pass 1702 cases, four warnings, 91.36 seconds.
+Focused earlier gate: 854 passed, three warnings, 15.04 seconds.
+Preliminary observability/safety reviews report no new findings within the
+unchanged explicit failure contract. Strict typing: 99 modules, zero errors.
+Ruff, Black py311, isort, Vulture80 and version checks pass.
+
+The first 1412-case web run used a pre-existing dependency junction whose Vite
+was older than package-lock. Retained that junction outside the worktree without
+touching its target, then installed the unchanged lockfile into an independent
+local node_modules. Repeating web acceptance with Vite 8.0.16; earlier results
+are diagnostic only. The primary checkout and fallback hashes are unchanged.
+Worker cleanup is integrated; app-managed archival is currently refused because
+the app treats that worker as this task's primary checkout. No forced removal.
+Full Python coverage, final review/publication and package acceptance are next.
+
+01:34 UTC: independent lockfile web acceptance passes 1412 cases / 82 files,
+100% all four coverage dimensions in 111.05s. TypeScript, ESLint and Vite8.0.16
+build pass. Four Chromium journeys pass (12.8s): actual-backend scoped favorite
+restart, fake-port confirmed SEND, whole-plan paired refusal, and separately
+labeled mocked A4 routing/confirmation at desktop/mobile sizes. Canonical
+tool checks use isolated Ruff0.15.13, Black26.3.1 and Pyright1.1.411 rather than
+the shared environment's drifting dev-tool versions; no shared install or pins
+were changed. The build carries no native Controlled Mutate, FM6, ACID303 or Pi
+increment. Freeze the composed source next for the full coverage run.

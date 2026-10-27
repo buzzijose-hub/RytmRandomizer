@@ -558,7 +558,20 @@ def test_websocket_internal_cancellation_publishes_revocations_without_another_c
             )
             assert any(f.get("type") == "dual_machine_stage_changed" for f in frames)
             assert case.session.pending_events == []
+            assert (
+                metrics.ws_command_count["show_bank_send_a4_studio_audition"] == commands_before + 1
+            )
             assert send_cmd(ws, "diagnostics", request_id="after-cancel")["ok"] is True
+            stale = send_cmd(
+                ws,
+                "show_bank_send_a4_studio_audition",
+                request_id="stale-repeat",
+                send_plan_id=plan.plan_id,
+                confirm=True,
+                source_reloaded=True,
+                acknowledge_unvalidated_hardware=True,
+            )
+            assert stale["ok"] is False and "Prepare a ready A4 studio plan" in stale["message"]
             disarmed = send_cmd(ws, "disarm", request_id="disarm-again")
             assert disarmed["ok"] is False and disarmed["message"] == "session is not armed"
     outcomes = [
@@ -570,7 +583,7 @@ def test_websocket_internal_cancellation_publishes_revocations_without_another_c
     assert outcomes[0].context["status"] == "interrupted"
     assert outcomes[0].context["sent_count"] == "1"
     assert outcomes[0].context["expected_count"] == str(len(plan.send_plan.packets))
-    assert metrics.ws_command_count["show_bank_send_a4_studio_audition"] == commands_before + 1
+    assert metrics.ws_command_count["show_bank_send_a4_studio_audition"] == commands_before + 2
     assert sum(metrics.cc_sent_by_channel.values()) == sent_before + 1
     assert case.provider.port.closed == 1 and len(case.provider.port.sent) == 1
     assert case.session.armed_apply is None and not case.session.a4_studio_sending

@@ -1,13 +1,18 @@
 # A4 Studio Audition - Supervised Scratch Procedure
 
-Status: bounded software verification complete; physical observations NOT
-PERFORMED. Do not use this as a show-ready receipt. The installed d563 rehearsal
-delivery is unchanged and does not contain this new source-only studio flow.
-Use an independently packaged and verified build of this exact integration
-before testing. Preserve the old delivery and all original kit/audio files.
+Status: October 26 cancellation repair/package acceptance in progress; physical
+observations NOT PERFORMED. Do not use this as a show-ready receipt. Use only
+the exact source/binary identity in the new delivery's
+`studio-procedure/DELIVERY-RECEIPT.md`, after its automated acceptance passes.
+The installed d563 rehearsal fallback remains unchanged. Preserve it, its data,
+and every original KIT/audio file. Existing human review holds remain separate.
 
 ## Prerequisites
 
+- Record installed firmware on both instruments, the actual exact OS input and
+  output names, physical direct-USB routes, source/scratch slots and channels
+  in one preflight. Prior port names and Kit20 are historical, not defaults or
+  proof that a slot is disposable today. Resolve any difference before arming.
 - Back up disposable Rytm and A4 kits using the instrument's established tools.
 - Use a saved scratch A4 source slot, low monitoring level and direct USB.
 - Confirm the output really belongs to the A4. The software requires an
@@ -21,6 +26,36 @@ before testing. Preserve the old delivery and all original kit/audio files.
   not evidence that the instrument accepted the control.
 - Preserve existing clock, note, pitch/tuning, OXI, kit selector, sample slot,
   master level and sequencer settings. Do not test a valuable show bank.
+- Use the verified offline launcher for file practice. For operator-present
+  hardware work, use only the receipt's explicit supervised launch block.
+  Starting the program does not arm output or acknowledge any experiment.
+  Do not terminate a running app or reuse its token/data namespace.
+
+## First Rytm Attempt (Separate Lane)
+
+1. Use backed-up saved sources and a genuinely disposable Rytm KIT copy. Lock
+   every other pad and all A4 tracks. Select the existing Pad2 rehearsal preset,
+   then retain only Filter Frequency for this first isolated control trial.
+   Keep the original four-control Pad2 procedure for later expansion.
+2. Generate a 10% local candidate. Manually reload the saved source, receive a
+   fresh capture and select the retained candidate again if required. Inspect
+   the exact plan: only Pad2/Filter Frequency, correct value, configured
+   channel and exact Rytm output. Any paired-control, stale-source, routing or
+   selector refusal stops the attempt; never trim a blocked plan.
+3. Explicitly arm that Rytm route and confirm that exact plan. Audition once at
+   low monitoring level. Record actual front-panel value, sound, sent/expected
+   count, plan ID and unchanged excluded pads. Software counts are not proof
+   of instrument acceptance.
+4. DISARM, manually reload the immutable source KIT, listen and check the
+   front panel. Receive a fresh saved baseline and compare the whole payload,
+   not only the changed field. A saved dump alone cannot prove unsaved RAM
+   restoration; both listening/readback and baseline comparison are required.
+5. Stop on any mismatch or incomplete recovery. Preserve source, candidate,
+   logs and dumps. Do not automatically retry or save over the source slot.
+
+All Rytm observations in this new build are NOT PERFORMED. This first isolated
+trial does not authorize CY Ride SRC, paired precision, persistent writes or
+show use. Close/disarm this lane before beginning the independent A4 trial.
 
 ## First A4 Attempt
 
