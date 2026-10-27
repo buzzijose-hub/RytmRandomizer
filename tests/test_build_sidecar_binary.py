@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import io
+import json
 import os
 import runpy
 import subprocess
@@ -11,6 +13,7 @@ from pathlib import Path
 from types import ModuleType
 
 import pytest
+import yaml
 from test_launch_smoke import _load_build_script
 
 packaging = _load_build_script()
@@ -349,3 +352,57 @@ def test_build_script_main_guard_executes_cli_help(monkeypatch: pytest.MonkeyPat
     with pytest.raises(SystemExit) as caught:
         runpy.run_path(packaging.__file__, run_name="__main__")
     assert caught.value.code == 0
+
+
+@pytest.mark.parametrize("with_frontend", [False, True])
+def test_portable_assembly_records_embedded_frontend_and_current_studio_limits(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, with_frontend: bool
+) -> None:
+    workflow = yaml.safe_load(
+        (
+            Path(packaging.__file__).resolve().parents[1] / ".github/workflows/installers.yml"
+        ).read_text(encoding="utf-8")
+    )
+    step = next(
+        step
+        for step in workflow["jobs"]["desktop-bundle"]["steps"]
+        if step.get("name") == "Assemble identified Windows portable studio copy"
+    )
+    monkeypatch.chdir(tmp_path)
+    for name in (
+        "desktop/shell/target/release/rytm-randomizer-shell.exe",
+        "desktop/shell/binaries/rytm-sidecar.exe",
+    ):
+        artifact = tmp_path / name
+        artifact.parent.mkdir(parents=True, exist_ok=True)
+        artifact.write_bytes(name.encode("ascii"))
+    if with_frontend:
+        frontend = tmp_path / "desktop/web/dist"
+        frontend.mkdir(parents=True)
+        (frontend / "index.html").write_bytes(b"<html>embedded fixture</html>")
+    for key, value in {
+        "GITHUB_SHA": "e" * 40,
+        "TAURI_CLI_VERSION": "2.11.4",
+        "STUDIO_WINDOWS": "true",
+        "GITHUB_REPOSITORY": "example/project",
+        "GITHUB_RUN_ID": "123",
+        "GITHUB_RUN_ATTEMPT": "1",
+    }.items():
+        monkeypatch.setenv(key, value)
+    monkeypatch.setattr(subprocess, "check_output", lambda *_args, **_kwargs: "")
+    if not with_frontend:
+        with pytest.raises(RuntimeError, match="Missing built frontend"):
+            exec(compile(step["run"], "portable-assembly", "exec"), {})  # noqa: S102
+        return
+    exec(compile(step["run"], "portable-assembly", "exec"), {})  # noqa: S102
+    bundle = tmp_path / "dist" / ("show-kit-forge-studio-" + "e" * 12)
+    manifest = json.loads((bundle / "BUILD-MANIFEST.json").read_text())
+    assert manifest["embedded_frontend_sha256"] == {
+        "index.html": hashlib.sha256(b"<html>embedded fixture</html>").hexdigest()
+    }
+    for name, digest in manifest["sha256"].items():
+        assert hashlib.sha256((bundle / name).read_bytes()).hexdigest() == digest
+    assert "25-control" in manifest["hardware_validation"]
+    assert "general A4/BOTH" in manifest["hardware_validation"]
+    assert "persistent SAVE remain blocked" in manifest["hardware_validation"]
+    assert "manual KIT reload" in (bundle / "README.txt").read_text()

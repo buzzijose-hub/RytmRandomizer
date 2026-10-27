@@ -1,8 +1,16 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-10-15. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-10-26. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
+
+The [companion cancellation repair](superpowers/plans/2026-10-26-companion-cancellation.md)
+is in progress on PR254 at e420c30e. Actual authenticated WebSocket regression
+reproduces lost revocations after one accepted fake-port packet. Cancellation
+now flushes its failure ACK and safety events before propagating; composed
+cleanup, full coverage, review and exact-source Windows delivery are pending.
+The d563 fallback, user data, pins and hardware restrictions remain unchanged.
+The counts below are historical, not verification of this repair.
 
 The October 15 A4 follow-on implements a distinct, explicitly unqualified
 studio RAM-only path for 25 exact CC7 scalar bindings. It reuses ArmedApply,

@@ -1,12 +1,19 @@
 # A4 Studio Audition Integration
 
-Status: bounded software verification complete after post-push repairs; PR254
-remains the integration/review vehicle. Current publication CI and protected
-review remain separate gates.
+Status: October 26 cancellation follow-up in progress on PR254. The e420c30e
+review identified two additional combinations not established by the historical
+13,500-test receipt: internally cancelled dispatch lost wire revocations, and
+port-close KeyError could mask cancellation. The new actual-WebSocket regression
+reproduces the former after one accepted packet. Current verification, review
+and exact-source packaging are pending; do not reuse the old receipt as current
+acceptance. See the [repair plan](superpowers/plans/2026-10-26-companion-cancellation.md).
 This is an unqualified studio RAM-only experiment, not general A4/BOTH show
 readiness, persistent KIT write support or a replacement installer.
 
 ## Execution Ledger
+
+The October 15 entries below are historical source evidence, not acceptance of
+the October 26 changes. All physical observations remain NOT PERFORMED.
 
 Checkpoint 2026-10-15 23:07 UTC. Frozen production/test source:
 `b995d0015032cfb78195a8220c6ce7125d95db94`.

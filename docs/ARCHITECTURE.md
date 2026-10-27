@@ -768,6 +768,10 @@ progress immediately after acceptance, before teardown can mask an exception.
 This evidence survives disarm but never authorizes output. The awaited delivery
 task collects ordinary faults as failure data; task/process control propagates.
 Finally-based journaling and queued state events also cover raised cleanup faults.
+Internally cancelled dispatch publishes a categorical failure ACK followed by
+its queued safety revocations before re-raising, without requiring another
+command. The handler owns command accounting; the completion observer does not
+count cancellation again. Reader teardown omits an ACK to a departed client.
 No retries, persistent writes or automatic restoration are introduced.
 
 Rytm capture domains are recipe-versioned. Unversioned persisted recipes parse

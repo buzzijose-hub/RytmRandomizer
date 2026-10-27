@@ -26,7 +26,7 @@ from rytm_randomizer.cockpit.history import HistoryStore
 from rytm_randomizer.cockpit.profiles import ProfileRegistry
 from rytm_randomizer.cockpit.ws import a4_studio_handlers, handlers
 from rytm_randomizer.cockpit.ws import server as ws_server
-from rytm_randomizer.cockpit.ws.protocol import WS_SUBPROTOCOL
+from rytm_randomizer.cockpit.ws.protocol import INITIAL_EVENT_COUNT, WS_SUBPROTOCOL
 from rytm_randomizer.cockpit.ws.server import create_app
 from rytm_randomizer.cockpit.ws.session import CockpitSession
 from rytm_randomizer.devices import Device, get_device
@@ -483,13 +483,16 @@ def test_final_cleanup_fault_still_journals_and_queues_revoked_state(
     assert case.provider.port.sent == [] and case.provider.port.closed == 1
 
 
+@pytest.mark.parametrize("close_fault", [False, True])
 def test_internal_delivery_cancellation_is_not_swallowed_by_result_collection(
-    studio_case: StudioCase,
+    studio_case: StudioCase, close_fault: bool
 ) -> None:
     case = studio_case
     assert case.arm()["ok"] and case.prepare()["ok"]
     case.provider.port.fail_after = 1
     case.provider.port.send_error = asyncio.CancelledError("injected delivery cancellation")
+    if close_fault:
+        case.provider.port.close_error = KeyError("injected close failure")
     with pytest.raises(asyncio.CancelledError):
         case.send()
     assert case.session.error_journal.entries[-1].context["sent_count"] == "1"
@@ -498,6 +501,79 @@ def test_internal_delivery_cancellation_is_not_swallowed_by_result_collection(
         event["type"] == "session_status" and event["armed"] is False
         for event in case.session.pending_events
     )
+
+
+@pytest.mark.parametrize("close_fault", [False, True])
+def test_websocket_internal_cancellation_publishes_revocations_without_another_command(
+    studio_case: StudioCase, close_fault: bool
+) -> None:
+    case = studio_case
+    assert case.arm()["ok"] and case.prepare()["ok"]
+    plan = case.session.a4_studio_plan
+    assert plan is not None
+    case.provider.port.fail_after = 1
+    case.provider.port.send_error = asyncio.CancelledError("private injected cancellation")
+    if close_fault:
+        case.provider.port.close_error = KeyError("private injected close failure")
+    metrics = get_metrics()
+    commands_before = metrics.ws_command_count["show_bank_send_a4_studio_audition"]
+    sent_before = sum(metrics.cc_sent_by_channel.values())
+    with TestClient(create_app(case.session, token=TEST_WS_TOKEN)) as client:
+        with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+            complete_handshake(ws)
+            for _ in range(INITIAL_EVENT_COUNT):
+                ws.receive_json()
+            # A deadline sentinel bounds the broken case; it is never needed to
+            # trigger the revocations and must not precede them on the wire.
+            deadline = Timer(
+                2,
+                ws.send_json,
+                args=({"request_id": "deadline", "command": {"type": "diagnostics"}},),
+            )
+            deadline.start()
+            try:
+                ws.send_json(_send_envelope(case))
+                frames = []
+                for _ in range(32):
+                    frame = ws.receive_json()
+                    frames.append(frame)
+                    assert (
+                        frame.get("request_id") != "deadline"
+                    ), "revocations required another command"
+                    if frame.get("type") == "mutation_previewed" and frame["candidate"] is None:
+                        break
+                else:
+                    pytest.fail("cancellation revocations missing")
+            finally:
+                deadline.cancel()
+                deadline.join(timeout=2)
+            assert frames[0]["request_id"] == "studio-send"
+            assert frames[0]["ok"] is False
+            assert frames[0]["code"] == "validation_error"
+            assert "cancelled" in frames[0]["message"]
+            assert "private" not in str(frames)
+            assert any(f.get("type") == "session_status" and f["armed"] is False for f in frames)
+            assert any(
+                f.get("type") == "send_plan_changed" and f["send_plan"] is None for f in frames
+            )
+            assert any(f.get("type") == "dual_machine_stage_changed" for f in frames)
+            assert case.session.pending_events == []
+            assert send_cmd(ws, "diagnostics", request_id="after-cancel")["ok"] is True
+            disarmed = send_cmd(ws, "disarm", request_id="disarm-again")
+            assert disarmed["ok"] is False and disarmed["message"] == "session is not armed"
+    outcomes = [
+        e
+        for e in case.session.error_journal.entries
+        if e.fingerprint == "cockpit.a4_studio_outcome"
+    ]
+    assert len(outcomes) == 1
+    assert outcomes[0].context["status"] == "interrupted"
+    assert outcomes[0].context["sent_count"] == "1"
+    assert outcomes[0].context["expected_count"] == str(len(plan.send_plan.packets))
+    assert metrics.ws_command_count["show_bank_send_a4_studio_audition"] == commands_before + 1
+    assert sum(metrics.cc_sent_by_channel.values()) == sent_before + 1
+    assert case.provider.port.closed == 1 and len(case.provider.port.sent) == 1
+    assert case.session.armed_apply is None and not case.session.a4_studio_sending
 
 
 def test_confirmation_race_returns_zero_byte_receipt_and_revoked_state(
@@ -864,6 +940,38 @@ def test_actual_websocket_disconnect_cancels_owned_a4_delivery(
     ][-1]
     assert outcome.context["status"] == "interrupted"
     assert outcome.context["sent_count"] == "1"
+
+
+def test_internal_a4_cancellation_racing_disconnect_records_one_terminal_outcome(
+    studio_case: StudioCase, paused_delivery: DeliveryPause
+) -> None:
+    case = studio_case
+    assert case.arm()["ok"] and case.prepare()["ok"]
+    envelope = _send_envelope(case)
+    case.provider.port.fail_after = 1
+    case.provider.port.send_error = asyncio.CancelledError("cancel during disconnect")
+    with TestClient(create_app(case.session, token=TEST_WS_TOKEN)) as client:
+        with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+            complete_handshake(ws)
+            for _ in range(INITIAL_EVENT_COUNT):
+                ws.receive_json()
+            ws.send_json(envelope)
+            assert paused_delivery.entered.wait(timeout=2)
+            paused_delivery.release.set()
+        with client.websocket_connect("/ws", subprotocols=[WS_SUBPROTOCOL]) as ws:
+            complete_handshake(ws)
+            bootstrap = [ws.receive_json() for _ in range(INITIAL_EVENT_COUNT)]
+            assert next(f for f in bootstrap if f["type"] == "session_status")["armed"] is False
+            assert send_cmd(ws, "diagnostics")["ok"] is True
+    outcomes = [
+        e
+        for e in case.session.error_journal.entries
+        if e.fingerprint == "cockpit.a4_studio_outcome"
+    ]
+    assert len(outcomes) == 1 and outcomes[0].context["sent_count"] == "1"
+    assert outcomes[0].context["status"] == "interrupted"
+    assert case.provider.port.closed == 1 and len(case.provider.port.sent) == 1
+    assert case.session.armed_apply is None and not case.session.a4_studio_sending
 
 
 def test_websocket_refuses_a4_send_behind_an_existing_owned_operation(

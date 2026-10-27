@@ -286,6 +286,41 @@ def test_reader_post_ack_capture_failure_is_redacted_and_does_not_escape_disconn
     asyncio.run(exercise())
 
 
+def test_inline_cancelled_command_drains_revocations_before_reader_propagates(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    async def exercise() -> None:
+        session = session_with_input(tmp_path, DelayedInput(cooperative=True))
+        inbound, outbound = InboundFrames(), server.ConnectionQueue()
+
+        async def cancelled(
+            envelope: dict[str, object], current: CockpitSession
+        ) -> dict[str, object]:
+            current.pending_events.append({"type": "session_status", "armed": False})
+            raise asyncio.CancelledError("private cancellation")
+
+        monkeypatch.setattr(server, "handle_command", cancelled)
+        inbound.command("cancel-inline", {"type": "diagnostics"})
+        with pytest.raises(asyncio.CancelledError):
+            await server._reader_loop(
+                cast(WebSocket, inbound),
+                session=session,
+                queue=outbound,
+                emitter=server._QueueEmitter(outbound),
+                max_bytes=1024,
+            )
+        ack = (await asyncio.wait_for(outbound.get(), 1)).frame
+        assert ack["request_id"] == "cancel-inline" and ack["ok"] is False
+        assert "private" not in str(ack)
+        assert (await asyncio.wait_for(outbound.get(), 1)).frame == {
+            "type": "session_status",
+            "armed": False,
+        }
+        assert session.pending_events == [] and outbound.size == 0
+
+    asyncio.run(exercise())
+
+
 def test_disarm_on_same_reader_cancels_input_and_rejects_late_frame(tmp_path: Path) -> None:
     async def exercise() -> None:
         provider = DelayedInput(cooperative=False)

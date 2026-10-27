@@ -694,10 +694,30 @@ async def _reader_loop(
     mutations; teardown cancels and awaits only work owned by this reader.
     """
 
+    reader_stopping = False
+
     async def dispatch(
         envelope: dict[str, object], acknowledged: asyncio.Event | None = None
     ) -> None:
-        ack = await handle_command(envelope, session)
+        try:
+            ack = await handle_command(envelope, session)
+        except asyncio.CancelledError:
+            # The handler has already accounted for cancellation and may have
+            # queued safety revocations. Publish them before this owned task
+            # terminates: a later command must not overwrite that hand-off.
+            if not reader_stopping:
+                queue.put_frame(
+                    {
+                        "request_id": envelope.get("request_id"),
+                        "ok": False,
+                        "code": ERR_VALIDATION,
+                        "message": "Command cancelled; inspect current state and prepare again before sending.",
+                    }
+                )
+                if acknowledged is not None:
+                    acknowledged.set()
+            await drain_pending_events(session, emitter)
+            raise
         # ack-first, events-second per spec § "The Three Protocols" —
         # both enter the FIFO queue back-to-back, so the client sees the
         # ack it can correlate to its request before any state update.
@@ -780,6 +800,7 @@ async def _reader_loop(
             else:
                 await dispatch(envelope)
     finally:
+        reader_stopping = True
         if capture_task is not None:
             if not capture_task.done():
                 cancel_pending_capture(session)

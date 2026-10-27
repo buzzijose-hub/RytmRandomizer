@@ -509,6 +509,11 @@ directory together. The manifest records the source commit, run/attempt, tools,
 build command/config overrides, and both binary SHA256 hashes. The studio-only
 window title includes the short source commit. No local Python installation is
 needed; Windows still needs the Microsoft Edge WebView2 Runtime.
+The manifest also records SHA256 for each built frontend asset embedded in the
+shell, including `index.html`. Missing frontend output fails assembly. Its
+hardware disclaimer distinguishes the existing supervised 25-control A4 trial
+from still-blocked general A4/BOTH stage use and persistent saves; packaging is
+not evidence of physical acceptance.
 
 Before applying packaging overrides, the workflow requires
 `git diff --ignore-cr-at-eol --exit-code` to pass. This ignores only carriage

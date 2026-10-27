@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "mission": "PR254 companion cancellation repair and supervised Windows delivery",
+  "started_at_utc": "2026-10-27T01:09:00Z",
+  "budget_hours": 6,
+  "baseline_commit": "e420c30ec2b27f3bf38eedb3e29c9db5805f9965",
+  "branch": "codex/studio-evidence-handoff",
+  "worktree": "C:/Users/Jose Buzzi/.codex/worktrees/dependency-review/RytmRandomizer",
+  "phase": "repair",
+  "transport": "reproduced on authenticated WebSocket after one accepted packet; standalone fix passes; combined fault pending composition",
+  "cleanup": "independent worker companion-cancellation-cleanup implementing shared boundary and sync/async regressions",
+  "packaging": "assembly regression passes 25 tests; new exact-source binary not yet built",
+  "verification": {
+    "focused": "transport without close fault and disconnect races pass; combined close fault still fails as expected",
+    "frontend": "one-worker coverage running",
+    "architecture": "pending composed source",
+    "full_python": "pending fresh branch coverage",
+    "dimensional_review": "pending",
+    "remote_ci": "baseline 33 successful, 1 skipped; not current-change acceptance"
+  },
+  "fallback": "C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-d5634cae4ecd",
+  "fallback_integrity": "shell, sidecar and offline launcher hashes unchanged at preflight",
+  "hardware_access": false,
+  "physical_observations": "NOT PERFORMED",
+  "protected_approval": "pending; CHANGES_REQUESTED; no merge",
+  "next": "compose sender repair, focused tests and complete architecture, full fresh coverage, review and normal publication, Windows artifact and offline packaged journeys"
+}
