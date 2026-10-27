@@ -2,7 +2,8 @@
 
 Status: in-flight
 
-Composed repair, fresh regression/review and exact-source package pending.
+Source software verification complete; publication/review, exact-source binary
+acceptance and protected/hardware requirements have separate receipts.
 
 ## Mission And Budget
 
@@ -110,12 +111,17 @@ Worker cleanup is integrated; app-managed archival is currently refused because
 the app treats that worker as this task's primary checkout. No forced removal.
 Full Python coverage, final review/publication and package acceptance are next.
 
-01:34 UTC: independent lockfile web acceptance passes 1412 cases / 82 files,
+Before source freeze: independent lockfile web acceptance passes 1412 cases / 82 files,
 100% all four coverage dimensions in 111.05s. TypeScript, ESLint and Vite8.0.16
 build pass. Four Chromium journeys pass (12.8s): actual-backend scoped favorite
 restart, fake-port confirmed SEND, whole-plan paired refusal, and separately
 labeled mocked A4 routing/confirmation at desktop/mobile sizes. Canonical
 tool checks use isolated Ruff0.15.13, Black26.3.1 and Pyright1.1.411 rather than
 the shared environment's drifting dev-tool versions; no shared install or pins
-were changed. The build carries no native Controlled Mutate, FM6, ACID303 or Pi
-increment. Freeze the composed source next for the full coverage run.
+were changed. This increment adds no native Controlled Mutate, FM6, ACID303 or
+Pi work. Frozen source bee04ddbaa7ae25f9f49c49bd258b6edb384effd passes the fresh
+full branch-coverage run: 13,575 passed, six skipped, six warnings, zero failures,
+1159.86 seconds. All 99 touched production modules are 100% lines/branches;
+canonical ratchet remains 99.44% pure branch at floor99. Publication and binary
+acceptance are recorded on PR254 and the source-identified delivery receipt,
+not inferred from this implementation checkpoint.

@@ -5,12 +5,19 @@ Last updated: 2026-10-26. This file is a hand-authored snapshot and is meant to 
 ## Current Snapshot
 
 The [companion cancellation repair](superpowers/plans/2026-10-26-companion-cancellation.md)
-is in progress on PR254 at e420c30e. Actual authenticated WebSocket regression
-reproduces lost revocations after one accepted fake-port packet. Cancellation
-now flushes its failure ACK and safety events before propagating; composed
-cleanup, full coverage, review and exact-source Windows delivery are pending.
-The d563 fallback, user data, pins and hardware restrictions remain unchanged.
-The counts below are historical, not verification of this repair.
+passes fresh full verification at frozen source bee04ddb: 13,575 tests, six
+skips, six warnings, zero failures in 1159.86 seconds. All 99 PR-touched
+production modules reach 100% lines/branches; pure branch 99.44% at unchanged
+99% floor. Actual authenticated WebSocket regression covers lost revocations
+after one accepted fake-port packet, combined close failure, stale-plan refusal
+and teardown races. Original control flow survives recognized cleanup faults.
+Fresh pinned typing/lint, architecture/parity, web coverage and four browser
+journeys pass. Publication/review and binary acceptance are separately recorded
+on PR254 and the source-identified delivery receipt; software tests do not grant
+them. The d563 fallback, user data, pins and hardware restrictions are unchanged.
+Older counts below remain historical. See the [verification report](A4_STUDIO_AUDITION_REPORT.md).
+
+### Historical October 15 Source
 
 The October 15 A4 follow-on implements a distinct, explicitly unqualified
 studio RAM-only path for 25 exact CC7 scalar bindings. It reuses ArmedApply,

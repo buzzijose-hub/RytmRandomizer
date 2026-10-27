@@ -1,7 +1,7 @@
 # A4 Studio Audition - Supervised Scratch Procedure
 
-Status: October 26 cancellation repair/package acceptance in progress; physical
-observations NOT PERFORMED. Do not use this as a show-ready receipt. Use only
+Status: October 26 cancellation source is software-verified; physical
+observations NOT PERFORMED. Binary acceptance is recorded separately. Use only
 the exact source/binary identity in the new delivery's
 `studio-procedure/DELIVERY-RECEIPT.md`, after its automated acceptance passes.
 The installed d563 rehearsal fallback remains unchanged. Preserve it, its data,

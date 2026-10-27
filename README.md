@@ -34,7 +34,7 @@ What the app actually does today:
 - **Show Kit Forge.** Build ordered banks from immutable captures or codec-verified original files, compare targeted mutations, and retain local favorites in replay-verified show packs. A4 native generation is offline only, with OXI AMP, independent FIN and unknown/default-only fields protected. Imported copies and recall stay disarmed; Rytm hardware audition still requires fresh capture and exact-plan confirmation. [Offline preparation](docs/COCKPIT_QUICKSTART.md#5d-offline-preparation-from-original-files).
 - **Evidence-backed support inventory.** Run the passive `device-support-inventory-report --json` command to distinguish native kit fields, legal domains/precision, MIDI addresses, mutation/export, conditional sending, recovery and exact blockers. Catalog coverage is not hardware validation; general A4/BOTH sending stays blocked. [Inspect support](docs/DEVICE_SUPPORT_INVENTORY.md).
 - **Source-bound control mapping.** Rytm Sample Bit Reduction now reaches capture and scoped CC26 planning. A4 preparation reports compare exact native values with 25 conservative CC7 bindings; unresolved fields retain specific blockers. These previews do not enable A4 SEND, establish configured channels or certify hardware acceptance. [Remaining studio checks](docs/LIVE_CONTROL_CLOSURE_REPORT.md).
-- **Bounded A4 studio audition.** A separate operator-present RAM-only trial reconstructs an exact plan for the 25 CC7 bindings, requires configured track channels, an explicitly Analog Four-named output, manual source reload, fresh capture and per-action confirmation. Paced delivery remains interruptible by DISARM. General A4/BOTH performance output, persistent KIT writes and automatic restore remain blocked. This source change is not an installed or hardware-qualified release. [Studio procedure](docs/hardware-validation/2026-10-15-a4-studio-audition.md).
+- **Bounded A4 studio audition.** A separate operator-present RAM-only trial reconstructs an exact plan for the 25 CC7 bindings, requires configured track channels, an explicitly Analog Four-named output, manual source reload, fresh capture and per-action confirmation. Paced delivery remains interruptible by DISARM; cancellation publishes revoked authority and preserves accepted-message evidence across recognized cleanup faults. General A4/BOTH performance output, persistent KIT writes and automatic restore remain blocked. Source verification, exact-source binary acceptance and physical qualification remain separate receipts. [Studio procedure](docs/hardware-validation/2026-10-15-a4-studio-audition.md).
 - **Captured Rytm machine mapping.** Fixture-proven XT Classic on pads 6–8 survives capture projection. All 224 SRC catalog rows have descriptive bindings, and Studio pad cards show canonical names, captured values, addresses and specific blockers. Of 29 newly exposed continuous SRC rows, 25 are documented-only guarded-CC7 eligible, not physically validated. All eight CY Ride SRC rows remain blocked while saved-slot associations are unresolved; uncertain semantics, new pitch/selectors and precision stay protected. [Inspect mapping and validation boundaries](docs/RYTM_MAPPING_STATUS.md).
 - **Kit morphing + scoped randomization.** Morph between your current kit and a target per track/page with a depth macro, and scope randomization with masks + intensity anchored on the kit you are actually playing. Both are pure, deterministic, and pinned byte-identical across languages.
 - **Studio parameter scopes and local rehearsal favorites.** Select canonical pages/controls before mutation; unselected values remain exact and locks/protection win. The conservative Pad 2 preset selects only Filter Frequency, AMP Decay, Overdrive and Reverb Send. Local favorites retain source/recipe/candidate identity through restart and reopen disarmed. This requires physical validation on the new build, not show-ready certification or automatic hardware restore.
@@ -490,16 +490,16 @@ See [the closeout plan](docs/superpowers/plans/2026-09-08-release-closeout.md),
 <a id="testing"></a>
 ## Testing
 
-Current local source verification (see the [October 15 A4 studio report](docs/A4_STUDIO_AUDITION_REPORT.md)); this is not an installed-build or hardware certification:
+Current local source verification at bee04ddb (see the [companion verification report](docs/A4_STUDIO_AUDITION_REPORT.md)); exact-source binary acceptance and physical qualification have separate receipts:
 
 | Suite | Count |
 |---|---|
-| Full Python suite (`pytest`, two workers) | 13,500 passed; 6 skipped; 6 warnings |
+| Full Python suite (`pytest`, two workers) | 13,575 passed; 6 skipped; 6 warnings; 1159.86 seconds |
 | Architecture invariants (`tests/architecture/`) | 921 test items, included in the full suite |
 | V1.34 parity | 505 golden JSON files → 685 byte-identical test items |
 | Frontend (`desktop/web`, vitest) | 1,412 passed across 82 files; 100% coverage |
 | Python coverage | All 99 PR-touched modules: 100% lines/branches; project pure branch: 99.44% |
-| Browser journeys | Two Edge desktop/mobile journeys with geometry checks and screenshots; mocked WebSocket, no hardware |
+| Browser journeys | Four Chromium journeys: actual-backend scope/favorite/restart, memory-port confirmed SEND, paired refusal, and separately mocked A4 routing/confirmation at desktop/mobile sizes; no hardware |
 
 The suite uses `pytest-xdist` (`-n auto`). Don't pass `-o addopts=''` for normal runs — it disables xdist and triples the runtime.
 

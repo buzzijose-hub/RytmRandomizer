@@ -3578,7 +3578,7 @@ flowchart TD
     Fault[Delivery or cleanup fault] --> Receipt
     Control[Task or process control] --> Receipt
     Receipt -->|Only for control signals| Propagate[Re-raise original task or process control]
-    Receipt --> CancelWire[Cancelled dispatch: failure ACK then safety events]
+    Receipt -->|Internal task cancellation| CancelWire[Cancelled dispatch: failure ACK then safety events]
     CancelWire --> Connected[Still-connected client loses stale authority without another command]
     Holds[General A4/BOTH and persistent writes blocked] -. unchanged .-> Plan
     Offline[Offline preparation report remains non-authorizing] -. no grant .-> Verify

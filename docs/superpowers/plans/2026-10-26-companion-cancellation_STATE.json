@@ -6,7 +6,9 @@
   "baseline_commit": "e420c30ec2b27f3bf38eedb3e29c9db5805f9965",
   "branch": "codex/studio-evidence-handoff",
   "worktree": "C:/Users/Jose Buzzi/.codex/worktrees/dependency-review/RytmRandomizer",
-  "phase": "verification",
+  "checkpoint_kind": "frozen pre-publication source snapshot; latest local state is output/local/companion-active-run.json and delivery/PR receipts",
+  "phase": "source_verified",
+  "verification_source_commit": "bee04ddbaa7ae25f9f49c49bd258b6edb384effd",
   "transport": "actual authenticated WebSocket passes combined cancel/close after one accepted packet, ACK/events, accounting, subsequent commands and disconnect race",
   "cleanup": "acc6697c merged at 248c6c59; taxonomy-conformant cause attachment correction composed; explicit failure families unchanged",
   "packaging": "assembly regression passes 25 tests; new exact-source binary not yet built",
@@ -14,7 +16,7 @@
     "focused": "854 passed, 3 warnings in 15.04s before taxonomy correction; composed correction plus full architecture: 1702 passed, 4 warnings in 91.36s",
     "frontend": "unchanged lockfile installed independently: 1412 tests / 82 files, 100% all four coverage measures in 111.05s; typecheck/lint/Vite8.0.16 build pass; 4 Chromium journeys pass in 12.8s (real backend plus separately labeled mocked A4 UI)",
     "architecture": "all 921 architecture cases pass in composed 1702-test gate; prior plan-index, status syntax and variable-raise failures repaired without weakening checks",
-    "full_python": "pending fresh branch coverage",
+    "full_python": "13575 passed, 6 skipped, 6 warnings, 1159.86 seconds; all 99 PR-touched modules 100% lines/branches; pure branch 99.44%, no floor change",
     "dimensional_review": "preliminary safety/observability reviews no new findings within explicit failure contract; required final fan-out pending",
     "remote_ci": "baseline 33 successful, 1 skipped; not current-change acceptance"
   },
@@ -23,5 +25,5 @@
   "hardware_access": false,
   "physical_observations": "NOT PERFORMED",
   "protected_approval": "pending; CHANGES_REQUESTED; no merge",
-  "next": "finish frontend gates, freeze source, full fresh Python branch coverage and canonical checks, normal publication and final dimensional review, Windows artifact and offline packaged journeys"
+  "next": "normal publication and final dimensional review, fresh current-source CI, Windows artifact and offline packaged journeys; record actual outcomes in source-identified delivery receipt"
 }
