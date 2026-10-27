@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Iterable
 from dataclasses import FrozenInstanceError
 from inspect import signature
@@ -30,8 +31,12 @@ pytestmark = pytest.mark.fast
 
 @pytest.mark.parametrize("driver", ["sync", "async"])
 @pytest.mark.parametrize("stage", ["render", "send", "sleep"])
+@pytest.mark.parametrize("close_fails", [False, True])
 def test_unexpected_programmer_faults_still_release_the_owned_port(
-    pacing_rig: tuple[ArmedApplySession, _PacingIO, Device], driver: str, stage: str
+    pacing_rig: tuple[ArmedApplySession, _PacingIO, Device],
+    driver: str,
+    stage: str,
+    close_fails: bool,
 ) -> None:
     session, io, device = pacing_rig
 
@@ -39,6 +44,8 @@ def test_unexpected_programmer_faults_still_release_the_owned_port(
         pass
 
     failure = UnexpectedFault("unmodeled collaborator fault")
+    if close_fails:
+        io.close_error = KeyError("close failed")
     if stage == "send":
         io.send_error, io.send_fail_after = failure, 1
 
@@ -55,7 +62,7 @@ def test_unexpected_programmer_faults_still_release_the_owned_port(
     async def async_sleep(delay: float) -> None:
         sleep(delay)
 
-    with pytest.raises(UnexpectedFault) as caught:
+    with pytest.raises(KeyError if close_fails else UnexpectedFault) as caught:
         if driver == "async":
             asyncio.run(
                 session.apply_async(
@@ -78,7 +85,7 @@ def test_unexpected_programmer_faults_still_release_the_owned_port(
                 renderer=render,
                 inter_message_delay_seconds=0.02,
             )
-    assert caught.value is failure
+    assert caught.value is (io.close_error if close_fails else failure)
     assert not session.is_armed and io.closed == 1
     assert len(io.sent) == (0 if stage == "render" else 1)
 
@@ -88,6 +95,36 @@ def test_apply_async_defaults_to_cooperative_asyncio_sleep() -> None:
     assert parameters["async_sleep"].default is asyncio.sleep
     assert parameters["async_sleep"].kind is parameters["async_sleep"].KEYWORD_ONLY
     assert parameters["inter_message_delay_seconds"].default == 0.0
+
+
+@pytest.mark.parametrize("driver", ["sync", "async"])
+def test_successful_apply_does_not_reraise_a_callers_handled_exception(
+    pacing_rig: tuple[ArmedApplySession, _PacingIO, Device], driver: str
+) -> None:
+    session, io, device = pacing_rig
+
+    async def async_apply() -> ArmedApplyResult:
+        try:
+            raise LookupError("already handled by the caller")
+        except LookupError:
+            return await session.apply_async(
+                device, _PacingPlan(), action_id=_ACTION, mutates_kit=False, renderer=io.render
+            )
+
+    if driver == "async":
+        result = asyncio.run(async_apply())
+    else:
+        try:
+            raise LookupError("already handled by the caller")
+        except LookupError:
+            result = session.apply(
+                device, _PacingPlan(), action_id=_ACTION, mutates_kit=False, renderer=io.render
+            )
+    assert result == ArmedApplyResult(
+        device.device_id, True, len(_PACKETS), expected_count=len(_PACKETS)
+    )
+    assert io.sent == list(_PACKETS)
+    assert session.is_armed and io.closed == 0
 
 
 @pytest.mark.parametrize("driver", ["sync", "async"])
@@ -123,6 +160,197 @@ def test_delivery_progress_survives_cleanup_masking_the_original_fault(
     assert not session.is_armed and io.closed == 1
     session.disarm()
     assert session.delivery_progress is progress
+
+
+@pytest.mark.parametrize("driver", ["sync", "async"])
+@pytest.mark.parametrize(
+    "error_type", [asyncio.CancelledError, KeyboardInterrupt, SystemExit, GeneratorExit]
+)
+@pytest.mark.parametrize(
+    ("stage", "sent_count"),
+    [
+        ("render", 0),
+        ("lazy-render", 0),
+        ("send", 0),
+        ("send", 1),
+        ("send", 2),
+        ("sleep", 1),
+        ("sleep", 2),
+    ],
+)
+def test_apply_preserves_control_flow_and_cleanup_diagnostics_when_close_fails(
+    pacing_rig: tuple[ArmedApplySession, _PacingIO, Device],
+    caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
+    driver: str,
+    error_type: type[BaseException],
+    stage: str,
+    sent_count: int,
+) -> None:
+    session, io, device = pacing_rig
+    monkeypatch.setattr(logging.getLogger("rytm_randomizer"), "propagate", True)
+    caplog.set_level(logging.WARNING, logger="rytm_randomizer.senders.armed_apply")
+    interruption = error_type("delivery interrupted")
+    sensitive_detail = "C:/private/operator-token/close failed"
+    cleanup_error = KeyError(sensitive_detail)
+    io.close_error = cleanup_error
+    session.confirm("queued-action")
+    if stage == "send":
+        io.send_error, io.send_fail_after = interruption, sent_count
+    elif stage == "sleep":
+        io.sleep_error, io.sleep_fail_after = interruption, sent_count - 1
+
+    def fail_iterable() -> Iterable[tuple[int, int, int]]:
+        yield _PACKETS[0]
+        raise interruption
+
+    def render(plan: object) -> Iterable[tuple[int, int, int]]:
+        if stage == "render":
+            raise interruption
+        if stage == "lazy-render":
+            return fail_iterable()
+        return io.render(plan)
+
+    async def sleep(seconds: float) -> None:
+        io.sleep(seconds)
+
+    with pytest.raises(error_type) as caught:
+        if driver == "async":
+            asyncio.run(
+                session.apply_async(
+                    device,
+                    _PacingPlan(),
+                    action_id=_ACTION,
+                    mutates_kit=False,
+                    renderer=render,
+                    inter_message_delay_seconds=0.25,
+                    async_sleep=sleep,
+                )
+            )
+        else:
+            session.apply(
+                device,
+                _PacingPlan(),
+                action_id=_ACTION,
+                mutates_kit=False,
+                renderer=render,
+                inter_message_delay_seconds=0.25,
+            )
+    assert caught.value is interruption
+    assert interruption.__cause__ is cleanup_error
+    expected = 0 if stage in ("render", "lazy-render") else len(_PACKETS)
+    outcome = interruption.__dict__["armed_apply_outcome"]
+    assert outcome == ArmedApplyResult(
+        device.device_id,
+        False,
+        sent_count,
+        "armed_apply_send_interrupted_auto_disarmed",
+        expected,
+        "interrupted",
+    )
+    notes = " ".join(interruption.__notes__)
+    assert "armed_apply_cleanup_failed" in notes
+    for field in (
+        f"action_id={_ACTION}",
+        f"device_id={device.device_id}",
+        "error_type=KeyError",
+        f"sent_count={sent_count}",
+        f"expected_count={expected}",
+    ):
+        assert field in notes
+    assert sensitive_detail not in notes
+    records = [record for record in caplog.records if record.msg == "armed_apply_cleanup_failed"]
+    assert len(records) == 1
+    record = records[0]
+    assert record.name == "rytm_randomizer.senders.armed_apply"
+    assert record.levelname == "WARNING"
+    assert {
+        key: record.__dict__[key]
+        for key in ("action_id", "device_id", "error_type", "sent_count", "expected_count")
+    } == {
+        "action_id": _ACTION,
+        "device_id": device.device_id,
+        "error_type": "KeyError",
+        "sent_count": sent_count,
+        "expected_count": expected,
+    }
+    assert record.exc_info is None and record.exc_text is None
+    assert sensitive_detail not in str(record.__dict__)
+    with pytest.raises(FrozenInstanceError):
+        outcome.sent_count = 999
+    with pytest.raises(FrozenInstanceError):
+        outcome.expected_count = 999
+    progress = session.delivery_progress
+    if expected:
+        assert progress is not None
+        assert (progress.sent_count, progress.expected_count) == (sent_count, expected)
+        with pytest.raises(FrozenInstanceError):
+            progress.sent_count = 999
+        with pytest.raises(FrozenInstanceError):
+            progress.expected_count = 999
+    else:
+        assert progress is None
+    assert io.sent == list(_PACKETS[:sent_count])
+    assert io.send_attempts == sent_count + (stage == "send")
+    assert io.opened == [_PORT]
+    assert not session.is_armed and io.closed == 1
+    with pytest.raises(ArmedApplyError, match="not_armed"):
+        session.confirm("queued-action")
+    session.disarm()
+    assert io.closed == 1
+
+
+@pytest.mark.parametrize("delay", [0.0, 0.25])
+@pytest.mark.parametrize("sent_count", [1, 2])
+def test_apply_async_task_stays_cancelled_when_close_fails(
+    pacing_rig: tuple[ArmedApplySession, _PacingIO, Device], delay: float, sent_count: int
+) -> None:
+    session, io, device = pacing_rig
+    cleanup_error = KeyError("close failed during task cancellation")
+    io.close_error = cleanup_error
+
+    async def scenario() -> None:
+        entered, release = asyncio.Event(), asyncio.Event()
+
+        async def sleep(seconds: float) -> None:
+            io.sleep(seconds)
+            if len(io.sleeps) == sent_count:
+                entered.set()
+                await release.wait()
+
+        task = asyncio.create_task(
+            session.apply_async(
+                device,
+                _PacingPlan(),
+                action_id=_ACTION,
+                mutates_kit=False,
+                renderer=io.render,
+                inter_message_delay_seconds=delay,
+                async_sleep=sleep,
+            )
+        )
+        await asyncio.wait_for(entered.wait(), timeout=5)
+        task.cancel("operator cancelled delivery")
+        with pytest.raises(asyncio.CancelledError) as caught:
+            await task
+        assert caught.value.args == ("operator cancelled delivery",)
+        assert caught.value.__cause__ is cleanup_error
+        outcome = caught.value.__dict__["armed_apply_outcome"]
+        assert (outcome.sent_count, outcome.expected_count, outcome.status) == (
+            sent_count,
+            len(_PACKETS),
+            "interrupted",
+        )
+        assert task.cancelled()
+
+    asyncio.run(scenario())
+    progress = session.delivery_progress
+    assert progress is not None
+    assert (progress.sent_count, progress.expected_count) == (sent_count, len(_PACKETS))
+    assert io.sent == list(_PACKETS[:sent_count])
+    assert io.send_attempts == sent_count
+    assert io.opened == [_PORT]
+    assert not session.is_armed and io.closed == 1
 
 
 @pytest.mark.parametrize("driver", ["sync", "async"])

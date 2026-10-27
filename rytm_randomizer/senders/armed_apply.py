@@ -54,6 +54,7 @@ from __future__ import annotations
 
 import asyncio
 import hmac
+import sys
 import time
 from collections.abc import Awaitable, Callable, Generator, Iterable, Mapping
 from dataclasses import dataclass
@@ -61,6 +62,9 @@ from typing import ClassVar, Final, Literal, Protocol, cast, runtime_checkable
 
 from ..devices import Device
 from ..observability.errors import MidiError
+from ..observability.logging import get_logger
+
+_logger = get_logger(__name__)
 
 __all__ = [
     "ArmedApplyError",
@@ -506,11 +510,13 @@ class ArmedApplySession:
             renderer=renderer,
             inter_message_delay_seconds=inter_message_delay_seconds,
         )
+        completed = False
         try:
             while True:
                 try:
                     delay = next(steps)
                 except StopIteration as complete:
+                    completed = True
                     return cast(ArmedApplyResult, complete.value)
                 try:
                     if delay > 0.0:
@@ -518,6 +524,10 @@ class ArmedApplySession:
                 except ARMED_APPLY_FAILURE_TYPES as exc:
                     steps.throw(exc)
         finally:
+            # Forward an unmodeled driver fault, not close()'s synthetic GeneratorExit.
+            pending = sys.exception()
+            if pending is not None and not completed:
+                steps.throw(pending)
             steps.close()
 
     async def apply_async(
@@ -549,17 +559,22 @@ class ArmedApplySession:
             renderer=renderer,
             inter_message_delay_seconds=inter_message_delay_seconds,
         )
+        completed = False
         try:
             while True:
                 try:
                     delay = next(steps)
                 except StopIteration as complete:
+                    completed = True
                     return cast(ArmedApplyResult, complete.value)
                 try:
                     await async_sleep(delay)
                 except ARMED_APPLY_FAILURE_TYPES as exc:
                     steps.throw(exc)
         finally:
+            pending = sys.exception()
+            if pending is not None and not completed:
+                steps.throw(pending)
             steps.close()
 
     def _apply_steps(
@@ -625,16 +640,21 @@ class ArmedApplySession:
             # same failure class the send loop below guards. Nothing has
             # reached the wire yet, so this is a clean zero-byte refusal:
             # disarm (closing the port) and re-raise unchanged.
-            self.disarm()
             if not isinstance(exc, Exception):
-                exc.__dict__["armed_apply_outcome"] = ArmedApplyResult(
-                    device_id=device.device_id,
-                    ok=False,
-                    sent_count=0,
-                    reason="armed_apply_send_interrupted_auto_disarmed",
-                    expected_count=0,
-                    status="interrupted",
+                self._disarm_after_interruption(
+                    exc,
+                    action_id=action_id,
+                    outcome=ArmedApplyResult(
+                        device_id=device.device_id,
+                        ok=False,
+                        sent_count=0,
+                        reason="armed_apply_send_interrupted_auto_disarmed",
+                        expected_count=0,
+                        status="interrupted",
+                    ),
                 )
+            else:
+                self.disarm()
             raise
         finally:
             if not rendered:
@@ -686,14 +706,17 @@ class ArmedApplySession:
                 # disarm (which closes the port), attach the partial
                 # outcome for the caller's teardown log, and RE-RAISE:
                 # control-flow exceptions are never swallowed.
-                self.disarm()
-                exc.__dict__["armed_apply_outcome"] = ArmedApplyResult(
-                    device_id=device.device_id,
-                    ok=False,
-                    sent_count=sent,
-                    reason="armed_apply_send_interrupted_auto_disarmed",
-                    expected_count=expected,
-                    status="interrupted",
+                self._disarm_after_interruption(
+                    exc,
+                    action_id=action_id,
+                    outcome=ArmedApplyResult(
+                        device_id=device.device_id,
+                        ok=False,
+                        sent_count=sent,
+                        reason="armed_apply_send_interrupted_auto_disarmed",
+                        expected_count=expected,
+                        status="interrupted",
+                    ),
                 )
                 raise
             finally:
@@ -726,6 +749,38 @@ class ArmedApplySession:
             expected_count=expected,
             status="complete",
         )
+
+    def _disarm_after_interruption(
+        self, exc: BaseException, *, action_id: str, outcome: ArmedApplyResult
+    ) -> None:
+        """Retain control flow and its progress when teardown also fails."""
+
+        if isinstance(exc, ARMED_APPLY_CONTROL_FLOW_TYPES):
+            # Record the primary interruption before close can fail.
+            exc.__dict__["armed_apply_outcome"] = outcome
+            try:
+                self.disarm()
+            except ARMED_APPLY_FAILURE_TYPES as cleanup_error:
+                _logger.warning(
+                    "armed_apply_cleanup_failed",
+                    extra={
+                        "action_id": action_id,
+                        "device_id": outcome.device_id,
+                        "error_type": type(cleanup_error).__name__,
+                        "sent_count": outcome.sent_count,
+                        "expected_count": outcome.expected_count,
+                    },
+                )
+                exc.add_note(
+                    "armed_apply_cleanup_failed: "
+                    f"action_id={action_id}, device_id={outcome.device_id}, "
+                    f"error_type={type(cleanup_error).__name__}, "
+                    f"sent_count={outcome.sent_count}, expected_count={outcome.expected_count}"
+                )
+                raise exc from cleanup_error
+        else:
+            self.disarm()
+        exc.__dict__["armed_apply_outcome"] = outcome
 
     def disarm(self) -> None:
         """Drop to the passive state (idempotent) and close the port.
