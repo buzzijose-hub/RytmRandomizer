@@ -519,7 +519,8 @@ jobs:
               "Requires Microsoft Edge WebView2 Runtime. No Python installation is needed.\n"
               "BUILD-MANIFEST.json identifies the source and both binary SHA256 hashes.\n"
               "Follow the matching repository studio checklist before any hardware action:\n"
-              "docs/hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md\n"
+              "docs/hardware-validation/2026-10-15-a4-studio-audition.md\n"
+              "Use only after the matching studio-procedure/DELIVERY-RECEIPT.md records acceptance.\n"
               "The bounded 25-control A4 RAM-only studio trial requires explicit arm, exact-plan confirmation and manual KIT reload.\n"
               "General A4/BOTH stage use and persistent Cockpit SAVE remain blocked.\n",
               encoding="utf-8",

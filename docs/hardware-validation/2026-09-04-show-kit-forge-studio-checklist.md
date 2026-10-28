@@ -1,11 +1,14 @@
 # Show Kit Forge Remaining Studio Checklist
 
 Prepared: 2026-09-04
-Updated guidance: 2026-10-13 (no new physical observations recorded)
+Updated guidance: 2026-10-28 (no new physical observations recorded)
 
 Status: **pending operator-present hardware validation**
 
-This is the exact remaining physical checklist for Show Kit Forge. Every box
+This original checklist retains legacy probes and evidence forms. For the
+current companion, follow the source-identified delivery receipt and
+[current separate Rytm/A4 procedure](2026-10-15-a4-studio-audition.md).
+Older builds do not gain new capabilities from updated instructions. Every box
 is intentionally blank. Repository tests, successful file transfer, a manual
 save attestation, or a semantic match must not be rewritten as an unobserved
 hardware result.
@@ -86,16 +89,18 @@ routes only under the operator's control; do not assume a port number is stable.
 1. Start disarmed. Capture and explicitly retain the saved source KITs; verify
    their identities. Cancel an input capture once and confirm the source is
    unchanged. No output authority is needed for these steps.
-2. On the new parameter-scope build, select **Pad 2 rehearsal**. Confirm exactly
-   Filter Frequency, AMP Decay, Overdrive and Reverb Send are selected; other
-   parameters, other pads and all A4 tracks are excluded/locked. Explicitly set
+2. On the new parameter-scope build, select **Pad 2 rehearsal**, then deselect
+   AMP Decay, Overdrive and Reverb Send. Confirm only **Filter Frequency** may
+   change; the four-control preset is later expansion after isolated recovery.
+   Other parameters, other pads and all A4 tracks are excluded/locked. Explicitly set
    Show Kit Forge's **Custom depth to10%**, candidate count to **1**, and record
    the seed. The preset's session-depth setting is separate from Forge's depth;
    verify the resulting candidate actually reports10%. Start at 10%
    and inspect every row of the exact plan before arming. The previous `fa43`
    copy has only whole-pad scope and must not be mistaken for this build.
-   Rytm filter frequency (single CC74), amp decay, overdrive and reverb send have
-   earlier bounded observations; other eligible rows have not inherited them.
+   Inspect only the canonical `flt`/CC74 change. Filter frequency, amp decay,
+   overdrive and reverb send have earlier bounded observations, not physical
+   qualification of this build; other eligible rows have not inherited them.
    Rytm LFO Depth is paired and blocks the entire plan if changed. New SRC
    eligibility is documented-only, not permission to skip its own rehearsal.
    If PREPARE blocks this scoped candidate, stop and retain its reasons. Do
@@ -114,8 +119,9 @@ routes only under the operator's control; do not assume a port number is stable.
 
 Small/large local mutations and show-pack inspection can be rehearsed offline;
 large live changes, hardware favorite reload and show use remain NOT READY
-until their exact workflow/recovery has passed. A4/BOTH SEND, fractional paired
-controls and automatic hardware restore remain unavailable. Pi validation is
+until their exact workflow/recovery has passed. General A4/BOTH SEND, fractional
+paired controls and automatic hardware restore remain unavailable. The distinct
+25-control A4 companion experiment is separately unqualified. Pi validation is
 separate from this computer build.
 
 The CY Ride experiment comes later on a disposable KIT copy: collect a saved
@@ -130,11 +136,14 @@ association is positively established.
 
 - Analog Four Filter 1 Frequency candidate generation is local-file-only and
   reports `hardware_send_validated = false`.
-- There is no Show Kit Forge A4/BOTH SEND action. Do not arm an A4 output in
-  Cockpit. Section 2a is a separately approved legacy single-CC probe, not a
-  Forge plan or a bypass for a blocked plan.
-- Cockpit may send only the selected Rytm RAM-only plan through the existing
-  PREPARE, exact plan-id/port confirmation, and `ArmedApply` boundary.
+- General A4/BOTH stage SEND remains blocked. Older fallback builds have no
+  companion A4 studio action; do not arm an A4 output there. An exact-source
+  software-accepted companion may expose the separate, unqualified 25-control
+  RAM-only trial under the current procedure and receipt, with explicit arm/confirmation
+  and manual reload. Section 2a remains a legacy alternative, not a Forge plan
+  or a bypass for any blocked plan. Never combine output routes.
+- The general stage lane may send only the selected Rytm RAM-only plan through
+  the existing PREPARE, exact plan-id/port confirmation, and `ArmedApply` boundary.
 - **Reset Cockpit audition to source** changes Cockpit state only. It sends no
   restore bytes; hardware restoration is a manual source-KIT load followed by
   recapture.
