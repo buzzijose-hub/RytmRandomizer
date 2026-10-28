@@ -125,3 +125,23 @@ full branch-coverage run: 13,575 passed, six skipped, six warnings, zero failure
 canonical ratchet remains 99.44% pure branch at floor99. Publication and binary
 acceptance are recorded on PR254 and the source-identified delivery receipt,
 not inferred from this implementation checkpoint.
+
+October 28 resume, 17:18 UTC: prior review agents exhausted account usage before
+the final review/package gates. No package was dispatched or accepted. The
+published head is still 80c5b53d, with protected CHANGES_REQUESTED. Its Python3.11
+CI failed 56 combined-fault cases because the test enabled package-to-root
+logging propagation and captured one record twice; inherited closed-stream
+handlers also produced logging diagnostics. Native/browser/security lanes passed.
+The previous local Python3.12 full-suite result did not establish CI acceptance.
+
+Reproduced duplicate capture locally in four sync/async eager/lazy-render cases
+by attaching the capture handler to the ancestor logger. Capture now occurs
+directly at the emitting logger with ancestor propagation disabled, following
+existing WS test fixtures. All original exactly-once/context/privacy assertions
+remain. Both ancestor configurations pass all 286 shared-driver tests (0.73s).
+No production code changed for this test isolation repair. Fresh composed
+architecture, full coverage, renewed dimensional review and current-head CI
+remain required. The resumed budget is six productive hours; the interruption
+is not counted as work. Retained toolchain advisory disposition is in
+`docs/security/2026-10-28-companion-toolchain-audit.md`; it is not a dependency
+upgrade, alert dismissal or a general security-clearance claim.

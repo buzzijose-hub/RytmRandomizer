@@ -163,6 +163,7 @@ def test_delivery_progress_survives_cleanup_masking_the_original_fault(
 
 
 @pytest.mark.parametrize("driver", ["sync", "async"])
+@pytest.mark.parametrize("ancestor_capture", [False, True])
 @pytest.mark.parametrize(
     "error_type", [asyncio.CancelledError, KeyboardInterrupt, SystemExit, GeneratorExit]
 )
@@ -183,12 +184,19 @@ def test_apply_preserves_control_flow_and_cleanup_diagnostics_when_close_fails(
     caplog: pytest.LogCaptureFixture,
     monkeypatch: pytest.MonkeyPatch,
     driver: str,
+    ancestor_capture: bool,
     error_type: type[BaseException],
     stage: str,
     sent_count: int,
 ) -> None:
     session, io, device = pacing_rig
+    if ancestor_capture:
+        monkeypatch.setattr(logging.getLogger("rytm_randomizer"), "handlers", [caplog.handler])
     monkeypatch.setattr(logging.getLogger("rytm_randomizer"), "propagate", True)
+    # Capture at the emission site, independently of prior package/root setup.
+    logger = logging.getLogger("rytm_randomizer.senders.armed_apply")
+    monkeypatch.setattr(logger, "handlers", [caplog.handler])
+    monkeypatch.setattr(logger, "propagate", False)
     caplog.set_level(logging.WARNING, logger="rytm_randomizer.senders.armed_apply")
     interruption = error_type("delivery interrupted")
     sensitive_detail = "C:/private/operator-token/close failed"
