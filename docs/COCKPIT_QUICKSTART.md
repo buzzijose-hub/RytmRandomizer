@@ -786,8 +786,9 @@ not a hardware backup, instrument SAVE or rehearsal approval.
 
 See [field-level native evidence](A4_OFFLINE_NATIVE_FIELD_EVIDENCE.md) and
 [the reproducible support inventory](DEVICE_SUPPORT_INVENTORY.md).
-The next physical gate remains the separately supervised Pad 2 four-control
-10% audition, DISARM, manual KIT reload and exact fresh baseline comparison.
+The next physical gate is the separately supervised Pad2 Filter Frequency
+(`flt`/CC74) only, 10% audition, DISARM, manual KIT reload and exact fresh
+baseline comparison. The other three preset controls are later expansion.
 This does not unlock general A4/BOTH sending, CY Ride SRC, paired precision,
 automatic restore, hardware SAVE or Pi operation.
 
@@ -875,8 +876,10 @@ device to discard live-dial changes.
 
 ### 6a. Remaining operator-present studio rehearsal
 
-The first test is the existing four-control Rytm Pad2 rehearsal below, not
-the separate A4 working-KIT query experiment. Use the latest source-bound
+The first test is one Rytm Pad2 Filter Frequency control, not the full
+four-control preset or separate A4 working-KIT query experiment. Follow the
+[current companion procedure](hardware-validation/2026-10-15-a4-studio-audition.md)
+and use the latest source-bound
 delivery receipt's operator-present launch block. The offline launcher forces
 MIDI off and cannot capture or audition hardware; setting `auto` before calling
 it does not override that choice. Supervised launch remains disarmed, with
@@ -909,30 +912,32 @@ for the independent dimensions and known gaps.
 
 Run the isolated stages in this order, stopping after each restored baseline:
 
-The table retains the earlier delivery's legacy CLI A4 probe. On the October 15
-source follow-on, the separately linked studio procedure is the Cockpit A4
-alternative; do not combine the two send paths or infer general-stage readiness.
+The table separates the current companion trial from the earlier delivery's
+legacy CLI A4 probe. Use the matching procedure and receipt, never both output
+paths together, and do not infer general-stage readiness.
 
 | Stage | Expected result | Evidence and recovery |
 |---|---|---|
 | 1. Source capture, no output | Exact input selected once, one valid family frame, checksum and codec round trip pass; no auto-arm | Manually save spare sources; retain both exact `.syx` frames, slots, frame SHA-256 and distinct whole-payload fingerprints. Stop on duplicate/ambiguous input names or invalid/multiple frames; keep the prior source. |
-| 2. First physical output: one Rytm Show Kit Forge audition | Pad 2 only, depth 10%, Pad 1 locked, all A4 tracks locked; one ready exact plan and one confirmed RAM-only SEND | Follow the sequence below. Record plan id/port/packets, selected-pad observation and locked/untargeted comparisons, then DISARM, manually reload source and recapture an exact baseline. |
-| 3. Separate legacy A4 single-CC probe | One integer single-CC message affects the configured A4 track/parameter only; not a Forge plan | Close Cockpit first. Use the bounded probe below, record console plus front-panel/listening evidence, then manually reload the spare source and recapture. No A4/BOTH general send, recipes, paired CC, NRPN or fractional MIDI in this pass. |
+| 2. First physical output: one Rytm Show Kit Forge audition | Pad2 Filter Frequency only, depth 10%, other controls/pads and all A4 tracks locked; one ready exact plan and one confirmed RAM-only SEND | Follow the sequence below. Record plan id/port/packet, selected-pad observation and locked/untargeted comparisons, then DISARM, manually reload source and recapture an exact baseline. |
+| 3. Separate A4 companion trial | One track and one eligible scalar control in the distinct, unqualified 25-control studio lane; not general A4/BOTH stage SEND | Follow the current companion procedure and exact-build receipt. Record front-panel/listening evidence, DISARM, manually reload and compare a fresh baseline. The legacy CLI probe below is an alternative for its recorded source, never a concurrent route or blocked-plan bypass. |
 | 4. A4 offline scratch return | Only the existing four Filter 1 Frequency values return after a manual hardware save | Use the fixture/hash below and checklist slot 20 precautions. Manual librarian transfer is not Cockpit SEND. Save on A4, capture fresh, check values, byte isolation and recovery; do not repeat the August 28 mapping matrix. |
 | 5. Favorite/show acceptance, only after isolated gates pass | Favorite -> manual saves -> fresh semantic recaptures -> another fresh exact whole-payload preflight | Local selection, candidate retention or bank save never saves/reloads hardware. Protect source slots; keep both devices' save/recapture evidence. Either preflight mismatch blocks the pair. |
 
 **First physical test: one Rytm candidate, one confirmation, then stop.**
 The first present action is input-only source capture and exact-plan inspection.
-Studio now has canonical page/parameter selection. Choose **Pad 2 rehearsal**
-to include only Filter Frequency, AMP Decay, Overdrive and Reverb Send, with
-other pads and all A4 tracks locked. Its physical validation on the new build
+Studio now has canonical page/parameter selection. Choose **Pad 2 rehearsal**,
+then deselect AMP Decay, Overdrive and Reverb Send so **only Filter Frequency**
+may change. Keep other parameters, other pads and all A4 tracks locked. The
+four-control preset is for later expansion after isolated recovery passes.
+Its physical validation on the new build
 is pending. Set Forge's separate **Custom depth to10%** and candidate count to
 **1**; verify the candidate's recorded depth and seed rather than assuming the
 preset changed Forge's generation settings. Verify Rytm Pad2 receives human
 MIDI channel2 (the existing planner uses wire channel1). Inspect every prepared
-packet against the canonical `flt`/74, `amp_decay`/80, `overdrive`/81 and
-`reverb`/83 keys/CCs and the exact proposed values. No other packet belongs in
-this test. An empty parameter selection means no mutations; unselected values
+packet against the canonical `flt`/74 key/CC and exact proposed value. No other
+parameter belongs in this test. An empty parameter selection means no mutations;
+unselected values
 remain exact before generation. A full-pad candidate is still not guaranteed
 to be SEND-ready; changed paired Rytm LFO Depth blocks it as a whole.
 Rytm Filter Frequency is the single CC74 control, distinct
@@ -948,8 +953,9 @@ Recall leaves output disarmed and clears prepared plans/confirmations. Prepare
 again; a fresh source capture is required before any later hardware audition.
 Local retention is not the refused hardware SAVE command, exported show-bank
 files or a manual instrument KIT save/reload. Corrupt/newer records refuse
-without resetting the prior files. A4 selection remains offline-only and does
-not unlock general A4/BOTH output.
+without resetting the prior files. A4 selection does not unlock general
+A4/BOTH output; the separate bounded companion trial needs its own procedure,
+explicit authority and physical acceptance.
 
 Adopt retained paired sources, set the scope in Stage 2, generate a candidate
 and record its id. Manually reload the immutable Rytm source KIT, then take a
@@ -1229,11 +1235,11 @@ restoring an unmodified backup or using a compatible app. Content-addressed
 audio/KIT artifacts may be shared across sessions: do not delete individual
 artifacts to make space. Capacity refusal is not permission to remove user work.
 
-### First Physical Experiment
+### First Reference-Sound File Experiment (Later Lane)
 
 Before leaving offline mode, record firmware, exact input/output names and
 channels, a backed-up source KIT and a genuinely disposable scratch slot for
-each instrument. Do not overwrite a show KIT. A4/BOTH SEND, CY Ride SRC, paired
+each instrument. Do not overwrite a show KIT. General A4/BOTH SEND, CY Ride SRC, paired
 MIDI conversion, unsaved synchronization, hardware SAVE and automatic restore
 remain held. The workspace does not bypass those controls.
 

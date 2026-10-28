@@ -405,4 +405,8 @@ def test_portable_assembly_records_embedded_frontend_and_current_studio_limits(
     assert "25-control" in manifest["hardware_validation"]
     assert "general A4/BOTH" in manifest["hardware_validation"]
     assert "persistent SAVE remain blocked" in manifest["hardware_validation"]
-    assert "manual KIT reload" in (bundle / "README.txt").read_text()
+    readme = (bundle / "README.txt").read_text()
+    assert "manual KIT reload" in readme
+    assert "docs/hardware-validation/2026-10-15-a4-studio-audition.md" in readme
+    assert "matching studio-procedure/DELIVERY-RECEIPT.md records acceptance" in readme
+    assert "2026-09-04-show-kit-forge-studio-checklist.md" not in readme

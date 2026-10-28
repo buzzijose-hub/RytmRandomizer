@@ -1,11 +1,14 @@
 # Show Kit Forge Remaining Studio Checklist
 
 Prepared: 2026-09-04
-Updated guidance: 2026-10-13 (no new physical observations recorded)
+Updated guidance: 2026-10-28 (no new physical observations recorded)
 
 Status: **pending operator-present hardware validation**
 
-This is the exact remaining physical checklist for Show Kit Forge. Every box
+This original checklist retains legacy probes and evidence forms. For the
+current companion, follow the source-identified delivery receipt and
+[current separate Rytm/A4 procedure](2026-10-15-a4-studio-audition.md).
+Older builds do not gain new capabilities from updated instructions. Every box
 is intentionally blank. Repository tests, successful file transfer, a manual
 save attestation, or a semantic match must not be rewritten as an unobserved
 hardware result.
@@ -86,16 +89,18 @@ routes only under the operator's control; do not assume a port number is stable.
 1. Start disarmed. Capture and explicitly retain the saved source KITs; verify
    their identities. Cancel an input capture once and confirm the source is
    unchanged. No output authority is needed for these steps.
-2. On the new parameter-scope build, select **Pad 2 rehearsal**. Confirm exactly
-   Filter Frequency, AMP Decay, Overdrive and Reverb Send are selected; other
-   parameters, other pads and all A4 tracks are excluded/locked. Explicitly set
+2. On the new parameter-scope build, select **Pad 2 rehearsal**, then deselect
+   AMP Decay, Overdrive and Reverb Send. Confirm only **Filter Frequency** may
+   change; the four-control preset is later expansion after isolated recovery.
+   Other parameters, other pads and all A4 tracks are excluded/locked. Explicitly set
    Show Kit Forge's **Custom depth to10%**, candidate count to **1**, and record
    the seed. The preset's session-depth setting is separate from Forge's depth;
    verify the resulting candidate actually reports10%. Start at 10%
    and inspect every row of the exact plan before arming. The previous `fa43`
    copy has only whole-pad scope and must not be mistaken for this build.
-   Rytm filter frequency (single CC74), amp decay, overdrive and reverb send have
-   earlier bounded observations; other eligible rows have not inherited them.
+   Inspect only the canonical `flt`/CC74 change. Filter frequency, amp decay,
+   overdrive and reverb send have earlier bounded observations, not physical
+   qualification of this build; other eligible rows have not inherited them.
    Rytm LFO Depth is paired and blocks the entire plan if changed. New SRC
    eligibility is documented-only, not permission to skip its own rehearsal.
    If PREPARE blocks this scoped candidate, stop and retain its reasons. Do
@@ -114,8 +119,9 @@ routes only under the operator's control; do not assume a port number is stable.
 
 Small/large local mutations and show-pack inspection can be rehearsed offline;
 large live changes, hardware favorite reload and show use remain NOT READY
-until their exact workflow/recovery has passed. A4/BOTH SEND, fractional paired
-controls and automatic hardware restore remain unavailable. Pi validation is
+until their exact workflow/recovery has passed. General A4/BOTH SEND, fractional
+paired controls and automatic hardware restore remain unavailable. The distinct
+25-control A4 companion experiment is separately unqualified. Pi validation is
 separate from this computer build.
 
 The CY Ride experiment comes later on a disposable KIT copy: collect a saved
@@ -130,11 +136,14 @@ association is positively established.
 
 - Analog Four Filter 1 Frequency candidate generation is local-file-only and
   reports `hardware_send_validated = false`.
-- There is no Show Kit Forge A4/BOTH SEND action. Do not arm an A4 output in
-  Cockpit. Section 2a is a separately approved legacy single-CC probe, not a
-  Forge plan or a bypass for a blocked plan.
-- Cockpit may send only the selected Rytm RAM-only plan through the existing
-  PREPARE, exact plan-id/port confirmation, and `ArmedApply` boundary.
+- General A4/BOTH stage SEND remains blocked. Older fallback builds have no
+  companion A4 studio action; do not arm an A4 output there. An exact-source
+  software-accepted companion may expose the separate, unqualified 25-control
+  RAM-only trial under the current procedure and receipt, with explicit arm/confirmation
+  and manual reload. Section 2a remains a legacy alternative, not a Forge plan
+  or a bypass for any blocked plan. Never combine output routes.
+- The general stage lane may send only the selected Rytm RAM-only plan through
+  the existing PREPARE, exact plan-id/port confirmation, and `ArmedApply` boundary.
 - **Reset Cockpit audition to source** changes Cockpit state only. It sends no
   restore bytes; hardware restoration is a manual source-KIT load followed by
   recapture.
@@ -171,7 +180,7 @@ these instructions. No new tests/builds or hardware actions are recorded here.
 | Order | Gate | Expected result and limit |
 |---|---|---|
 | 1 | Input-only sources (Section 1) | Exact unambiguous inputs, valid retained source frames; no output authority. |
-| 2 | First physical output (Section 2) | One Pad 2 Rytm candidate at 10%, Pad 1 protected, all A4 tracks locked; one ready plan/SEND, then stop and restore. |
+| 2 | First physical output (Section 2) | Pad2 Filter Frequency only at10%, all other controls/pads and A4 tracks protected; one ready plan/SEND, then stop and restore. |
 | 3 | Separately approved legacy probe (Section 2a) | One integer non-paired A4 CC on one configured spare-kit track; manually restore before proceeding. |
 | 4 | Existing A4 offline scratch (Section 3) | Transfer/save/recapture the existing four values in disposable slot 20; offline field evidence only. |
 | 5 | Favorite/show gates (Sections 4-6) | Manual instrument saves, fresh semantic recaptures and another exact paired preflight. |
@@ -263,7 +272,8 @@ receipts and actual physical observations remain separate.
 - [ ] Adopt the retained Rytm source capture as the cue's immutable source.
 - [ ] Select Pad 2 only, set depth to 10%, and lock Pad 1. Confirm effective
       scope contains Pad 2 only; all other pads are untargeted or locked and
-      all A4 tracks are locked.
+      all A4 tracks are locked. Within Pad2 select only Filter Frequency
+      (`flt`/CC74); exclude the other three preset controls.
 - [ ] Generate the candidate and record its id and expected semantic
       fingerprint.
 - [ ] Manually reload the source KIT and make a fresh matching input-only
@@ -280,9 +290,10 @@ receipts and actual physical observations remain separate.
       Preview and PREPARE steps. Preview uses exact local recall and leaves
       output disarmed; do not substitute the global PREVIEW/REGEN action.
 - [ ] Verify the plan names Pad 2 only and excludes every locked/untargeted pad.
-- [ ] Verify every visible packet is channel2 (wire channel1) and a nonempty
-      subset of the following canonical seven-bit controls. Compare its value
-      with that candidate's exact proposed value; unchanged fields need no packet.
+- [ ] Verify the first trial contains exactly the Pad2 Filter Frequency change,
+      canonical `flt`/CC74 on channel2 (wire channel1), with the candidate's
+      exact proposed value. The other three controls below are later expansion,
+      not an allowed subset for this first trial. An unchanged/empty plan stops.
       Any other packet or missing inspection surface means stop, not blind SEND.
 - [ ] Require `ready=true` with no blockers before confirming SEND. If a mixed
       safe/paired candidate is blocked, retain its plan id/reasons and stop;
@@ -308,12 +319,12 @@ receipts and actual physical observations remain separate.
       source whole-payload fingerprint; separately preserve the returned frame
       SHA-256.
 
-| Allowed Pad2 control | Canonical key | CC | Human MIDI channel |
-| --- | --- | --- | --- |
-| Filter Frequency | `flt` |74|2|
-| AMP Decay | `amp_decay` |80|2|
-| Overdrive | `overdrive` |81|2|
-| Reverb Send | `reverb` |83|2|
+| Pad2 control | Canonical key | CC | Human MIDI channel | Trial scope |
+| --- | --- | --- | --- | --- |
+| Filter Frequency | `flt` |74|2| First isolated attempt |
+| AMP Decay | `amp_decay` |80|2| Later expansion after recovery |
+| Overdrive | `overdrive` |81|2| Later expansion after recovery |
+| Reverb Send | `reverb` |83|2| Later expansion after recovery |
 
 No scene, performance, routing, machine, SRC, LFO, transport or persistent SAVE
 packet belongs in this test. If SEND fails or disconnects, assume possible
