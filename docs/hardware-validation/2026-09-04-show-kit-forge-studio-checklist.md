@@ -180,7 +180,7 @@ these instructions. No new tests/builds or hardware actions are recorded here.
 | Order | Gate | Expected result and limit |
 |---|---|---|
 | 1 | Input-only sources (Section 1) | Exact unambiguous inputs, valid retained source frames; no output authority. |
-| 2 | First physical output (Section 2) | One Pad 2 Rytm candidate at 10%, Pad 1 protected, all A4 tracks locked; one ready plan/SEND, then stop and restore. |
+| 2 | First physical output (Section 2) | Pad2 Filter Frequency only at10%, all other controls/pads and A4 tracks protected; one ready plan/SEND, then stop and restore. |
 | 3 | Separately approved legacy probe (Section 2a) | One integer non-paired A4 CC on one configured spare-kit track; manually restore before proceeding. |
 | 4 | Existing A4 offline scratch (Section 3) | Transfer/save/recapture the existing four values in disposable slot 20; offline field evidence only. |
 | 5 | Favorite/show gates (Sections 4-6) | Manual instrument saves, fresh semantic recaptures and another exact paired preflight. |
@@ -272,7 +272,8 @@ receipts and actual physical observations remain separate.
 - [ ] Adopt the retained Rytm source capture as the cue's immutable source.
 - [ ] Select Pad 2 only, set depth to 10%, and lock Pad 1. Confirm effective
       scope contains Pad 2 only; all other pads are untargeted or locked and
-      all A4 tracks are locked.
+      all A4 tracks are locked. Within Pad2 select only Filter Frequency
+      (`flt`/CC74); exclude the other three preset controls.
 - [ ] Generate the candidate and record its id and expected semantic
       fingerprint.
 - [ ] Manually reload the source KIT and make a fresh matching input-only
@@ -289,9 +290,10 @@ receipts and actual physical observations remain separate.
       Preview and PREPARE steps. Preview uses exact local recall and leaves
       output disarmed; do not substitute the global PREVIEW/REGEN action.
 - [ ] Verify the plan names Pad 2 only and excludes every locked/untargeted pad.
-- [ ] Verify every visible packet is channel2 (wire channel1) and a nonempty
-      subset of the following canonical seven-bit controls. Compare its value
-      with that candidate's exact proposed value; unchanged fields need no packet.
+- [ ] Verify the first trial contains exactly the Pad2 Filter Frequency change,
+      canonical `flt`/CC74 on channel2 (wire channel1), with the candidate's
+      exact proposed value. The other three controls below are later expansion,
+      not an allowed subset for this first trial. An unchanged/empty plan stops.
       Any other packet or missing inspection surface means stop, not blind SEND.
 - [ ] Require `ready=true` with no blockers before confirming SEND. If a mixed
       safe/paired candidate is blocked, retain its plan id/reasons and stop;
@@ -317,12 +319,12 @@ receipts and actual physical observations remain separate.
       source whole-payload fingerprint; separately preserve the returned frame
       SHA-256.
 
-| Allowed Pad2 control | Canonical key | CC | Human MIDI channel |
-| --- | --- | --- | --- |
-| Filter Frequency | `flt` |74|2|
-| AMP Decay | `amp_decay` |80|2|
-| Overdrive | `overdrive` |81|2|
-| Reverb Send | `reverb` |83|2|
+| Pad2 control | Canonical key | CC | Human MIDI channel | Trial scope |
+| --- | --- | --- | --- | --- |
+| Filter Frequency | `flt` |74|2| First isolated attempt |
+| AMP Decay | `amp_decay` |80|2| Later expansion after recovery |
+| Overdrive | `overdrive` |81|2| Later expansion after recovery |
+| Reverb Send | `reverb` |83|2| Later expansion after recovery |
 
 No scene, performance, routing, machine, SRC, LFO, transport or persistent SAVE
 packet belongs in this test. If SEND fails or disconnects, assume possible

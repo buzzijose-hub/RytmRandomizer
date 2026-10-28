@@ -786,8 +786,9 @@ not a hardware backup, instrument SAVE or rehearsal approval.
 
 See [field-level native evidence](A4_OFFLINE_NATIVE_FIELD_EVIDENCE.md) and
 [the reproducible support inventory](DEVICE_SUPPORT_INVENTORY.md).
-The next physical gate remains the separately supervised Pad 2 four-control
-10% audition, DISARM, manual KIT reload and exact fresh baseline comparison.
+The next physical gate is the separately supervised Pad2 Filter Frequency
+(`flt`/CC74) only, 10% audition, DISARM, manual KIT reload and exact fresh
+baseline comparison. The other three preset controls are later expansion.
 This does not unlock general A4/BOTH sending, CY Ride SRC, paired precision,
 automatic restore, hardware SAVE or Pi operation.
 
@@ -1234,11 +1235,11 @@ restoring an unmodified backup or using a compatible app. Content-addressed
 audio/KIT artifacts may be shared across sessions: do not delete individual
 artifacts to make space. Capacity refusal is not permission to remove user work.
 
-### First Physical Experiment
+### First Reference-Sound File Experiment (Later Lane)
 
 Before leaving offline mode, record firmware, exact input/output names and
 channels, a backed-up source KIT and a genuinely disposable scratch slot for
-each instrument. Do not overwrite a show KIT. A4/BOTH SEND, CY Ride SRC, paired
+each instrument. Do not overwrite a show KIT. General A4/BOTH SEND, CY Ride SRC, paired
 MIDI conversion, unsaved synchronization, hardware SAVE and automatic restore
 remain held. The workspace does not bypass those controls.
 
