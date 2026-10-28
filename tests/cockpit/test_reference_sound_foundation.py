@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import os
 import stat
 import sys
 import wave
+from collections.abc import Generator
 from io import BytesIO
 from pathlib import Path
-from types import ModuleType, SimpleNamespace
+from types import ModuleType
 
 import pytest
 from cockpit.conftest import make_reference_pcm
@@ -191,22 +193,73 @@ def test_windows_publication_lock_contract_releases_on_success_and_failure(
     assert len(calls) == 4
 
 
-def test_posix_publication_lock_contract_and_invalid_namespace_refusal(
+@pytest.fixture
+def posix_publication_lock(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+) -> Generator[list[tuple[int, int]], None, None]:
     calls: list[tuple[int, int]] = []
     module = ModuleType("fcntl")
     module.LOCK_EX, module.LOCK_NB, module.LOCK_UN = 1, 2, 4
     module.flock = lambda descriptor, mode: calls.append((descriptor, mode))
     monkeypatch.setitem(sys.modules, "fcntl", module)
     monkeypatch.setattr(store_module, "_WINDOWS_PUBLICATION_LOCK", False)
+    with (tmp_path / "stat-contract-probe").open("w+b") as probe:
+        probe.write(b"unrelated descriptor")
+        probe.flush()
+        expected = store_module.os.fstat(probe.fileno())
+        yield calls
+        # Model a runner's fstat consumer before monkeypatch teardown.
+        actual = store_module.os.fstat(probe.fileno())
+        assert actual.st_size == expected.st_size
+        assert actual == expected
+
+
+def test_posix_publication_lock_contract_and_invalid_namespace_refusal(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    posix_publication_lock: list[tuple[int, int]],
+) -> None:
+    calls = posix_publication_lock
     with ReferenceSoundStore(tmp_path)._publication_guard():
         assert len(calls) == 1 and calls[0][1] == 3
     assert calls[1] == (calls[0][0], 4)
-    monkeypatch.setattr(store_module.os, "fstat", lambda _fd: SimpleNamespace(st_mode=stat.S_IFDIR))
-    with pytest.raises(ValueError, match="namespace"):
-        with ReferenceSoundStore(tmp_path)._publication_guard():
-            pytest.fail("An invalid namespace must not enter publication.")
+    original_fstat = os.fstat
+    refused_descriptors: list[int] = []
+
+    def invalid_namespace(descriptor: int) -> os.stat_result:
+        metadata = original_fstat(descriptor)
+        refused_descriptors.append(descriptor)
+        return os.stat_result((stat.S_IFDIR, *metadata[1:]))
+
+    with monkeypatch.context() as scoped:
+        scoped.setattr(store_module.os, "fstat", invalid_namespace)
+        with pytest.raises(ValueError, match="namespace"):
+            with ReferenceSoundStore(tmp_path)._publication_guard():
+                pytest.fail("An invalid namespace must not enter publication.")
+    assert os.fstat is original_fstat
+    assert calls == [(calls[0][0], 3), (calls[0][0], 4)]
+    assert len(refused_descriptors) == 1
+    with pytest.raises(OSError):
+        original_fstat(refused_descriptors[0])
+
+
+def test_posix_publication_lock_releases_and_closes_descriptor_on_body_failure(
+    tmp_path: Path, posix_publication_lock: list[tuple[int, int]]
+) -> None:
+    calls = posix_publication_lock
+    store = ReferenceSoundStore(tmp_path)
+    with pytest.raises(RuntimeError, match="test-owned failure"):
+        with store._publication_guard():
+            descriptor = calls[0][0]
+            assert calls == [(descriptor, 3)]
+            raise RuntimeError("test-owned failure")
+    assert calls == [(descriptor, 3), (descriptor, 4)]
+    with pytest.raises(OSError):
+        os.fstat(descriptor)
+    with store._publication_guard():
+        assert len(calls) == 3 and calls[-1][1] == 3
+    assert calls[-1] == (calls[-2][0], 4)
+    assert len(calls) == 4
 
 
 def test_future_or_malformed_schema_preserves_all_saved_bytes(tmp_path: Path) -> None:
