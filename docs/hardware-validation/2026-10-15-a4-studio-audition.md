@@ -1,6 +1,6 @@
 # A4 Studio Audition - Supervised Scratch Procedure
 
-Status: October 26 cancellation source is software-verified; physical
+Status: October 28 cancellation source is locally software-verified; physical
 observations NOT PERFORMED. Binary acceptance is recorded separately. Use only
 the exact source/binary identity in the new delivery's
 `studio-procedure/DELIVERY-RECEIPT.md`, after its automated acceptance passes.

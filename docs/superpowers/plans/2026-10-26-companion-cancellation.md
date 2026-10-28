@@ -145,3 +145,24 @@ remain required. The resumed budget is six productive hours; the interruption
 is not counted as work. Retained toolchain advisory disposition is in
 `docs/security/2026-10-28-companion-toolchain-audit.md`; it is not a dependency
 upgrade, alert dismissal or a general security-clearance claim.
+
+October28 17:51UTC: frozen61 full coverage completes with13,631 passed, six
+existing skips/six warnings and zero failures in1717.68s. Canonical99-file
+touched coverage is100% lines/branches; pure branch99.44%, floor99 unchanged.
+Strict pinned typing again reports99 modules/no diagnostics. Prior80c5 remote
+failures remain failed evidence, not retroactively accepted.
+
+Eight independent review dimensions found two Important guidance conflicts:
+older Quickstart/checklist entry points still permitted four controls first,
+and the portable README sent the operator to an obsolete blanket A4 prohibition.
+While full61 stayed frozen, disjoint clean worker branch
+`codex/companion-handoff-closure` committed1569a4ea and57c18d8b. All first-trial
+entry points now restrict Pad2 to`flt`/CC74; the preset's other three controls
+are later expansion. The generated README points to the current separate
+Rytm/A4 procedure and matching receipt, with regression assertions. Closure
+review reports no remaining finding. Merged without a new PR; production,
+frontend, pins and goldens remain identical to full61. Affected final gates,
+normal push, fresh current-source CI and actual binary acceptance are next.
+
+Integrated final architecture/driver/transport/packaging gate:1326 passed,
+four known warnings,124.28s. All updated portable README assertions pass.

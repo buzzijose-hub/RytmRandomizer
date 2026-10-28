@@ -1,6 +1,6 @@
 # A4 Studio Audition Integration
 
-Status: October 26 cancellation software repair verified on PR254. The e420c30e
+Status: October 28 cancellation software repair verified locally on PR254. The e420c30e
 review's two combinations are now reproduced and repaired: internally cancelled
 dispatch publishes its failure ACK and safety revocations, and recognized
 port-close faults no longer replace the original control signal. The actual
@@ -10,16 +10,19 @@ failure families remain unchanged; unmodeled collaborator cleanup errors remain
 outside the preservation guarantee, with passive state and progress retained.
 See the [repair plan](superpowers/plans/2026-10-26-companion-cancellation.md).
 
-## October 26 Verified Source
+## October 28 Verified Source
 
-Frozen production/test source: `bee04ddbaa7ae25f9f49c49bd258b6edb384effd`.
-Full run started 2026-10-27 01:33 UTC; 13,575 passed, six skipped, six warnings,
-zero failures in 1159.86 seconds, using two workers. Fresh log/JUnit and XML:
-ignored `output/local/companion-full-pytest.{log,xml}` and
-`output/local/companion-full.coverage.xml`. All 99 PR-touched production modules
+Frozen production/test source: `61ca4250b1386640d6328b688978a977b831d141`.
+Full run started 2026-10-28 17:22 UTC; 13,631 passed, six skipped, six warnings,
+zero failures in 1717.68 seconds, using two workers. Fresh log/JUnit and XML:
+ignored `output/local/companion-resume-full.{log,xml}` and
+`output/local/companion-resume.coverage.xml`. All 99 PR-touched production modules
 reach 100% lines/branches; pure branch 99.44%, unchanged 99% floor. All 921
 architecture cases and 685 frozen V1.34 cases pass. The prior composed gate
-passed 1702 tests in 91.36s. No frozen fixtures or hardware pins changed.
+passed 1326 tests in 94.03s; the integrated final gate passes 1326 in 124.28s,
+including the updated packaging README assertions. No fixtures or pins changed.
+Later closure/reporting changes do not alter production or frontend source;
+packaging README assertions and affected gates are verified separately.
 
 Pyright1.1.411 checks all 99 modules without diagnostics. Pinned Ruff0.15.13,
 Black26.3.1 py311, isort8.0.1, Vulture80 and version checks pass. Independent
@@ -29,6 +32,14 @@ Four Chromium journeys pass in 12.8s: actual-backend scoped favorite/restart,
 fake-port confirmed SEND, whole-plan paired refusal, and separately labeled
 mocked A4 routing/confirmation at desktop/mobile sizes. None is hardware proof.
 
+Prior80c5 Python3.11 CI failed 56 assertions because one cleanup log was captured
+through two ancestors, not because the port closed twice. The reproduced test
+setup is now isolated at the emission site, keeping exactly-once/private-field
+assertions. All 286 driver tests and the fresh full suite pass. Eight review
+dimensions completed; two Important documentation conflicts were repaired and
+closure-reviewed. Source61 is not acceptance of a later binary or remote CI.
+The preserved earlierbee04ddb result was13,575/6skip/6warnings in1159.86s.
+
 Publication/review and exact-source binary acceptance have separate receipts:
 the current PR254 review/checks and source-identified delivery's
 `studio-procedure/DELIVERY-RECEIPT.md`. Do not infer those outcomes from local
@@ -36,6 +47,9 @@ tests. The d563 fallback's shell/sidecar/launcher hashes remain unchanged.
 Historical Gate14/16 exceptions and protected human approval are not cleared.
 This is an unqualified studio RAM-only experiment, not general A4/BOTH show
 readiness, persistent KIT write support or a replacement installer.
+Unresolved development-tool advisories are documented in the
+[dated audit](security/2026-10-28-companion-toolchain-audit.md), separately from
+CodeQL, Python security checks and limited packaged-runtime reachability.
 
 ## Execution Ledger
 

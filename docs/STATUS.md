@@ -1,21 +1,32 @@
 # RytmRandomizer - Project Status
 
-Last updated: 2026-10-26. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
+Last updated: 2026-10-28. This file is a hand-authored snapshot and is meant to be updated in place, never appended.
 
 ## Current Snapshot
 
 The [companion cancellation repair](superpowers/plans/2026-10-26-companion-cancellation.md)
-passes fresh full verification at frozen source bee04ddb: 13,575 tests, six
-skips, six warnings, zero failures in 1159.86 seconds. All 99 PR-touched
+passes fresh full verification at frozen source `61ca4250`: 13,631 tests, six
+skips, six warnings, zero failures in 1717.68 seconds. All 99 PR-touched
 production modules reach 100% lines/branches; pure branch 99.44% at unchanged
 99% floor. Actual authenticated WebSocket regression covers lost revocations
 after one accepted fake-port packet, combined close failure, stale-plan refusal
 and teardown races. Original control flow survives recognized cleanup faults.
-Fresh pinned typing/lint, architecture/parity, web coverage and four browser
-journeys pass. Publication/review and binary acceptance are separately recorded
+The prior80c5 Python3.11 CI failed 56 duplicate test-log capture assertions;
+ancestor-handler reproduction and direct-emitter capture repair preserve all
+exactly-once/privacy assertions. Production is unchanged by that test repair.
+Eight dimensional reviews found two conflicting handoff entry points; those
+are corrected and closure-reviewed. Every first output instruction now selects
+only Pad2 Filter Frequency, with four-control expansion deferred. The generated
+portable README points to the current separate Rytm/A4 procedure and receipt.
+Pinned typing/lint and the full architecture/parity gates pass. Unchanged web
+source retains its 1412-case coverage and four browser journeys. Current-source
+remote CI and exact binary acceptance are separate gates, recorded
 on PR254 and the source-identified delivery receipt; software tests do not grant
 them. The d563 fallback, user data, pins and hardware restrictions are unchanged.
 Older counts below remain historical. See the [verification report](A4_STUDIO_AUDITION_REPORT.md).
+The [dated toolchain audit](security/2026-10-28-companion-toolchain-audit.md)
+records eight unresolved development-dependency package groups; the zero-result
+production-only audit is not a blanket security-clearance claim.
 
 ### Historical October 15 Source
 

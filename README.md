@@ -494,7 +494,7 @@ Current local source verification at bee04ddb (see the [companion verification r
 
 | Suite | Count |
 |---|---|
-| Full Python suite (`pytest`, two workers) | 13,575 passed; 6 skipped; 6 warnings; 1159.86 seconds |
+| Full Python suite (`pytest`, two workers) | 13,631 passed; 6 skipped; 6 warnings; 1717.68 seconds at `61ca4250` |
 | Architecture invariants (`tests/architecture/`) | 921 test items, included in the full suite |
 | V1.34 parity | 505 golden JSON files → 685 byte-identical test items |
 | Frontend (`desktop/web`, vitest) | 1,412 passed across 82 files; 100% coverage |
