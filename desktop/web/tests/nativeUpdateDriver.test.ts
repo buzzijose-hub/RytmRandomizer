@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const restartFixture = vi.hoisted(() => ({
   connectionStatus: 'connected',
+  sessionStatus: { armed: false } as { armed: boolean } | null,
+  confirmChoice: vi.fn(),
   invoke: vi.fn(),
   snapshot: {
     state: { state: 'staged', version: '1.35.1', hardware_revalidation: false },
@@ -13,13 +15,13 @@ vi.mock('@tauri-apps/api/core', () => ({ invoke: restartFixture.invoke }));
 vi.mock('../src/state', () => ({
   useCockpitStore: { getState: () => ({
     connectionStatus: restartFixture.connectionStatus,
-    sessionStatus: { armed: false },
+    sessionStatus: restartFixture.sessionStatus,
   }) },
 }));
 vi.mock('../src/updateProtocol', () => ({
   parseUpdateSnapshot: (value: unknown) => value,
   requestUpdateCheck: vi.fn().mockResolvedValue(true),
-  confirmUpdateChoiceOnShell: vi.fn(),
+  confirmUpdateChoiceOnShell: restartFixture.confirmChoice,
   subscribeUpdateState: (event: () => void, hydrate: (value: unknown) => void) => {
     hydrate(restartFixture.snapshot);
     event();
@@ -28,6 +30,96 @@ vi.mock('../src/updateProtocol', () => ({
 }));
 
 import { run, staleHandshakeOutcome, until } from '../e2e/fixtures/native_update_driver';
+
+describe('native reload waits for the passive backend', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+    window.sessionStorage.clear();
+    document.body.innerHTML = '';
+    restartFixture.connectionStatus = 'connected';
+    restartFixture.sessionStatus = { armed: false };
+    restartFixture.confirmChoice.mockReset();
+    restartFixture.invoke.mockReset();
+  });
+
+  const prepareReload = (): ReturnType<typeof vi.fn> => {
+    document.body.innerHTML = '<div data-testid="cockpit-root"></div><div data-testid="update-chip">1.35.1</div>';
+    window.sessionStorage.clear();
+    const reload = vi.fn();
+    vi.stubGlobal('window', { sessionStorage: window.sessionStorage, location: { reload } });
+    restartFixture.connectionStatus = 'disconnected';
+    restartFixture.sessionStatus = null;
+    restartFixture.invoke.mockImplementation(async (command: string) =>
+      command === 'update_snapshot' ? restartFixture.snapshot : { terminal: [] });
+    return reload;
+  };
+
+  it.each([
+    { scenario: 'hydrate_reload', phase: 'initial' },
+    { scenario: 'hydrate_reload', phase: 'reloaded' },
+    { scenario: 'skip_reload', phase: 'initial' },
+  ] as const)('waits for authentication and session projection: $scenario, $phase document', async ({ scenario, phase }) => {
+    vi.useFakeTimers();
+    const reload = prepareReload();
+    restartFixture.confirmChoice.mockResolvedValue(true);
+    const key = `native-${scenario}`;
+    if (phase === 'reloaded') window.sessionStorage.setItem(key, 'reloaded');
+    const pending = run(scenario, 'http://fixture.invalid');
+
+    await vi.advanceTimersByTimeAsync(0);
+    expect(restartFixture.invoke).toHaveBeenCalledWith('update_snapshot');
+    expect(reload).not.toHaveBeenCalled();
+    expect(window.sessionStorage.getItem(key)).toBe(phase === 'initial' ? null : 'reloaded');
+    expect(restartFixture.confirmChoice).not.toHaveBeenCalled();
+    expect(restartFixture.invoke).not.toHaveBeenCalledWith('report', expect.anything());
+
+    restartFixture.connectionStatus = 'connected';
+    await vi.advanceTimersByTimeAsync(75);
+    expect(reload).not.toHaveBeenCalled();
+
+    restartFixture.sessionStatus = { armed: false };
+    await vi.advanceTimersByTimeAsync(75);
+    await pending;
+    expect(reload).toHaveBeenCalledTimes(phase === 'initial' ? 1 : 0);
+    expect(window.sessionStorage.getItem(key)).toBe('reloaded');
+    if (scenario === 'skip_reload') {
+      expect(restartFixture.confirmChoice).toHaveBeenCalledExactlyOnceWith('1.35.1', 'skip_this_version');
+    } else {
+      expect(restartFixture.confirmChoice).not.toHaveBeenCalled();
+    }
+    if (phase === 'initial') {
+      expect(restartFixture.invoke).not.toHaveBeenCalledWith('report', expect.anything());
+    } else {
+      expect(restartFixture.invoke).toHaveBeenCalledWith('report', {
+        passed: true, detail: expect.stringContaining('native/DOM assertions'),
+      });
+    }
+    // JSDOM schedules the storage event separately from the driver's polling.
+    await vi.advanceTimersByTimeAsync(1);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it.each(['unavailable', 'armed'] as const)('still refuses an %s backend without reloading', async (backend) => {
+    vi.useFakeTimers();
+    const reload = prepareReload();
+    if (backend === 'armed') {
+      restartFixture.connectionStatus = 'connected';
+      restartFixture.sessionStatus = { armed: true };
+    }
+    const pending = run('hydrate_reload', 'http://fixture.invalid');
+    await vi.advanceTimersByTimeAsync(25_000);
+    await pending;
+
+    expect(reload).not.toHaveBeenCalled();
+    expect(window.sessionStorage.getItem('native-hydrate_reload')).toBeNull();
+    expect(restartFixture.invoke).toHaveBeenCalledWith('report', {
+      passed: false,
+      detail: backend === 'armed' ? 'passive sidecar stays disarmed' : 'Timed out: sidecar connection and session projection',
+    });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});
 
 describe('native acceptance polling deadline', () => {
   afterEach(() => vi.useRealTimers());

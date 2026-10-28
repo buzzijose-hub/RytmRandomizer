@@ -180,6 +180,9 @@ export async function run(scenario: string, origin: string): Promise<void> {
       check(original.state.hardware_revalidation === (scenario === 'hardware_warning'), 'manifest hardware warning preserved');
 
       if (scenario === 'hydrate_reload' || scenario === 'skip_reload') {
+        // Native staging can finish while Python is still importing. Navigate
+        // only after the real session authenticates, including after reload.
+        await connected();
         const key = `native-${scenario}`;
         if (window.sessionStorage.getItem(key) !== 'reloaded') {
           if (scenario === 'skip_reload') {
