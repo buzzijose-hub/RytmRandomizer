@@ -27,6 +27,7 @@ const referenceSound = args.includes('--reference-sound');
 const realInputConfigPath = argument('--real-input-config', null);
 const nativeRepresentation = args.includes('--native-representation');
 const planInspection = args.includes('--plan-inspection');
+const retainedFixtureSources = args.includes('--retained-fixtures');
 const includePad2 = args.includes('--pad2') || planInspection;
 const startupAttempts = Number(argument('--startup-attempts', '1'));
 assert(args.includes('--bundle') && args.includes('--run-root'));
@@ -65,6 +66,7 @@ if (realInputConfigPath) {
 const reportRoot = path.join(runRoot, 'report');
 const telemetry = path.join(reportRoot, 'telemetry.ndjson');
 const summary = { source_commit: manifest.source_commit, binary_sha256: manifest.sha256, driver_sha256: digest(fs.readFileSync(__filename)), mode: smoke > 0 ? 'smoke' : 'endurance', minimum_minutes: smoke > 0 ? null : minutes, started_at: new Date().toISOString(), midi_backend: 'off', physical_observation: false, a4_track: a4Track, a4_fields: a4Fields, pad2_preset: includePad2, passed: false, cycles: 0, restarts: [], setup_interruptions: [], operations: {}, pending_high_water: 0, configured_bounds: { journal: 50, native_frame_cache: 128, native_frame_cache_bytes: 67108864 }, observation_limits: ['HistoryStore is append-only, not an eviction ring; source-reuse history size is observed. Native frame-cache occupancy is not exposed; its structural bounds have separate software tests.'] };
+summary.fixture_sources_primed = false;
 const save = () => fs.writeFileSync(path.join(reportRoot, 'summary.json'), JSON.stringify(summary, null, 2) + '\n');
 const record = value => fs.appendFileSync(telemetry, JSON.stringify({ at: new Date().toISOString(), ...value }) + '\n');
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -200,7 +202,10 @@ async function main() {
   let browser;
   let observePending = () => [];
   try {
-    if (referenceSound || planInspection) require('./reference_sound_package_journey.cjs').primeReferenceSources(repo, runRoot, python);
+    if (referenceSound || planInspection || retainedFixtureSources) {
+      require('./reference_sound_package_journey.cjs').primeReferenceSources(repo, runRoot, python);
+      summary.fixture_sources_primed = true;
+    }
     if (nativeRepresentation) {
       summary.mode = 'native-representation';
       summary.native_representation = require('./native_representation_package_journey.cjs').primeNativeRepresentationSources(repo, runRoot, python);

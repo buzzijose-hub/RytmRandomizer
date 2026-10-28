@@ -490,7 +490,7 @@ See [the closeout plan](docs/superpowers/plans/2026-09-08-release-closeout.md),
 <a id="testing"></a>
 ## Testing
 
-Current local source verification at bee04ddb (see the [companion verification report](docs/A4_STUDIO_AUDITION_REPORT.md)); exact-source binary acceptance and physical qualification have separate receipts:
+Current local source verification at `61ca4250` (see the [companion verification report](docs/A4_STUDIO_AUDITION_REPORT.md)); exact-source binary acceptance and physical qualification have separate receipts:
 
 | Suite | Count |
 |---|---|

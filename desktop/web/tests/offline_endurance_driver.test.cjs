@@ -10,15 +10,15 @@ const driver = path.resolve(__dirname, '../e2e/fixtures/offline_endurance_driver
 const source = fs.readFileSync(driver, 'utf8');
 const privateDetails = String.raw`C:\Users\private-operator\secret-kit.syx token=private-token-value kit=Private Stage Name`;
 
-async function runFakeDriver({ failure, cleanupFailure, launchFailure = false, cleanupOnly = false, debugAvailable = true }) {
-  const writes = new Map(), operations = [];
+async function runFakeDriver({ failure, cleanupFailure, launchFailure = false, cleanupOnly = false, debugAvailable = true, fixtureSources = false, fixtureFailure = null }) {
+  const writes = new Map(), operations = [], fixtureCalls = [];
   let powershell;
   const root = path.parse(driver).root;
   const context = vm.createContext({
     __dirname: path.dirname(driver),
     __filename: driver,
     process: {
-      argv: ['node', driver, '--bundle', path.join(root, 'qa-delivery'), '--run-root', path.join(root, 'qa-isolated'), '--python', path.join(root, 'qa-python.exe'), '--smoke-seconds', '30'],
+      argv: ['node', driver, '--bundle', path.join(root, 'qa-delivery'), '--run-root', path.join(root, 'qa-isolated'), '--python', path.join(root, 'qa-python.exe'), '--smoke-seconds', '30', ...(fixtureSources ? ['--retained-fixtures'] : [])],
       env: { RYTM_RAND_MIDI_BACKEND: 'off' },
     },
     console: { log() {} },
@@ -58,6 +58,12 @@ async function runFakeDriver({ failure, cleanupFailure, launchFailure = false, c
         chromium: { async connectOverCDP() { throw failure; } },
         expect() { assert.fail('No browser assertions may run in helper QA'); },
       };
+      if (name === './reference_sound_package_journey.cjs') return {
+        primeReferenceSources(...values) {
+          operations.push('prime'); fixtureCalls.push(values);
+          if (fixtureFailure) throw fixtureFailure;
+        },
+      };
       assert(['node:path', 'node:crypto', 'node:assert/strict', 'node:perf_hooks'].includes(name));
       return require(name);
     },
@@ -79,7 +85,7 @@ async function runFakeDriver({ failure, cleanupFailure, launchFailure = false, c
   await new vm.Script(exercised, { filename: driver }).runInContext(context);
   const report = JSON.parse(writes.get(path.join(root, 'qa-isolated', 'report', 'summary.json')));
   assert.equal(context.process.exitCode, 1);
-  return { report, writes, operations, powershell };
+  return { report, writes, operations, powershell, fixtureCalls };
 }
 
 function assertPrivateFree(writes) {
@@ -102,6 +108,27 @@ const metadataFailure = () => {
   return error;
 };
 const privateNameFailure = () => Object.assign(new Error(privateDetails), { name: privateDetails });
+
+test('explicit retained fixtures prime canonical isolated sources before generic rehearsal launch', async () => {
+  const { report, operations, fixtureCalls } = await runFakeDriver({ failure: assertionFailure(), fixtureSources: true });
+  assert.equal(fixtureCalls.length, 1);
+  assert.equal(fixtureCalls[0][0], path.resolve(path.dirname(driver), '../../../..'));
+  assert.equal(fixtureCalls[0][1], path.join(path.parse(driver).root, 'qa-isolated'));
+  assert.equal(fixtureCalls[0][2], path.join(path.parse(driver).root, 'qa-python.exe'));
+  assert.deepEqual(operations, ['prime', 'launch', 'stop']);
+  assert.equal(report.fixture_sources_primed, true);
+  assert.equal(report.midi_backend, 'off');
+  assert.equal(report.physical_observation, false);
+});
+
+test('failed retained-fixture priming refuses launch and preserves categorical failure evidence', async () => {
+  const { report, operations, writes } = await runFakeDriver({ fixtureSources: true, fixtureFailure: assertionFailure() });
+  assert.deepEqual(operations, ['prime']);
+  assert.equal(report.fixture_sources_primed, false);
+  assert.equal(report.passed, false);
+  assert.deepEqual(report.failure, { category: 'offline_rehearsal_operation_failed', error_type: 'AssertionError' });
+  assertPrivateFree(writes);
+});
 
 test('pending failure evidence is bounded to fixed public command names', () => {
   const line = source.split('\n').find(value => value.startsWith('const pendingRehearsalCommands ='));

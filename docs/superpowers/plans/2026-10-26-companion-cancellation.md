@@ -166,3 +166,37 @@ normal push, fresh current-source CI and actual binary acceptance are next.
 
 Integrated final architecture/driver/transport/packaging gate:1326 passed,
 four known warnings,124.28s. All updated portable README assertions pass.
+
+October28 publication690f72f0 and Windows studio build40740606085 are retained
+as diagnostic evidence, not accepted delivery. The actual copied binaries pass
+disarmed/authenticated launcher startup, plan inspection/invalidation/restart,
+and both-device reference generation/comparison/refinement/favorite/reopen.
+These are bounded software smoke journeys, not endurance or physical evidence.
+The first launcher attempt exposed null environment entries becoming empty
+strings; the artifact launcher now removes absent entries explicitly and the
+second isolated launcher trial passes caller-state restoration and owned cleanup.
+The first trial's pinned test processes were stopped; no user app was touched.
+
+Current-source CI still blocks acceptance: native hydrate_reload can navigate
+before the Python sidecar authenticates, and a POSIX-only publication-lock test
+supplies incomplete simulated stat metadata. The former has five reproduced
+red/green synchronization regressions and now awaits a passive authenticated
+session before reload without retries, skips or increased time limits. The
+categorical bootstrap failure's exact trigger remains unproven until fresh
+native CI passes. The POSIX test repair and replacement exact-source delivery
+remain pending. No production, device policy, precision, pins or frozen output
+changed in these test-harness repairs. Latest local details remain in the
+ignored active-run checkpoint; final acceptance belongs to the matching receipt.
+
+The POSIX test now scopes invalid namespace metadata to its refusal assertion
+and retains the full stat result. A controlled cross-platform fixture reproduces
+the former missing-st_size teardown fault and verifies descriptor closure,
+unlock on body failure and reentry. All74 foundation cases pass on the primary
+Python3.12 runtime. The source690 packaged ShowBank smoke passes four cue cycles
+over120.006s, exact source/scope/favorite export/import and disarmed restart
+recall; missing-package refusal preserves the bank. It is explicitly not the
+older timed-endurance mission. The QA driver now accepts explicit retained
+fixture priming, with failure-before-launch/privacy regressions. Fresh web
+coverage passes1417 tests/82files with100% all four measures;45 Node QA cases
+pass. These diagnostic binary results do not replace final-source CI, package
+identity checks or the separate physical rehearsal.

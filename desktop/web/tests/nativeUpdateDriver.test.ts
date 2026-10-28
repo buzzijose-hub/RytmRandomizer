@@ -74,7 +74,13 @@ describe('native reload waits for the passive backend', () => {
     expect(restartFixture.confirmChoice).not.toHaveBeenCalled();
     expect(restartFixture.invoke).not.toHaveBeenCalledWith('report', expect.anything());
 
+    restartFixture.sessionStatus = { armed: false };
+    await vi.advanceTimersByTimeAsync(75);
+    expect(reload).not.toHaveBeenCalled();
+    expect(restartFixture.invoke).not.toHaveBeenCalledWith('report', expect.anything());
+
     restartFixture.connectionStatus = 'connected';
+    restartFixture.sessionStatus = null;
     await vi.advanceTimersByTimeAsync(75);
     expect(reload).not.toHaveBeenCalled();
 
