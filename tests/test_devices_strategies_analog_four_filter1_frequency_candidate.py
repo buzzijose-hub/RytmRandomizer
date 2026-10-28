@@ -306,11 +306,12 @@ def test_candidate_rejects_checksum_valid_source_that_cannot_round_trip_exactly(
     from rytm_randomizer.devices.strategies.analog_four_saved_kit_codec import (
         analog_four_saved_kit_checksum,
     )
+    from rytm_randomizer.snapshot.envelope import Elektron7BitMaskOrder, unpack_elektron_7bit
 
     source = _fixture_bytes(_SOURCE_NAME)
     noncanonical = bytearray(source)
     # The last packed group has two data bytes. Its low five mask bits do
-    # not decode into native bytes, but source validation must preserve them.
+    # not decode into native bytes, but semantic validation must reject them.
     trailer_start = len(noncanonical) - A4_SAVED_KIT_TRAILER_SIZE - 1
     noncanonical[trailer_start - 3] |= 1
     packed = bytes(noncanonical[1 + A4_PACKED_PAYLOAD_OFFSET : trailer_start])
@@ -318,8 +319,10 @@ def test_candidate_rejects_checksum_valid_source_that_cannot_round_trip_exactly(
     noncanonical[trailer_start : trailer_start + 2] = bytes((checksum >> 7, checksum & 0x7F))
     altered_source = bytes(noncanonical)
 
-    assert _decoded_unpacked(altered_source) == _decoded_unpacked(source)
-    with pytest.raises(ValueError, match="source must round-trip byte-identically"):
+    assert unpack_elektron_7bit(
+        packed, mask_order=Elektron7BitMaskOrder.MSB_FIRST
+    ) == _decoded_unpacked(source)
+    with pytest.raises(ValueError, match="padding is noncanonical"):
         render_analog_four_filter1_frequency_candidate(
             altered_source,
             (_mutation(screen_value="127.00"),),

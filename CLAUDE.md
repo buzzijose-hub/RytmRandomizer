@@ -30,10 +30,21 @@ Future mutation and evidence work must also follow the updated
 [`targeted-mutation-safety` rule](.claude/rules/targeted-mutation-safety.md)
 and [`targeted-live-kit-mutation` skill](.claude/skills/learned/targeted-live-kit-mutation/SKILL.md).
 
-The current authority boundary is hardware-blocked by design: Analog Four
-Filter 1 Frequency is an offline saved-KIT artifact only, there is no A4 SEND,
-and the Rytm one-pad audition/restoration plus favorite save, recapture, and
-fresh paired preflight still require operator-present evidence.
+For captured machine projection and registry evidence coverage, read the
+[October 1 mapping report](docs/superpowers/plans/2026-10-01-rytm-captured-machine-mapping_RUN_REPORT.md).
+Keep the exact owning section, promoted identity and reverse CC check together;
+registered devices without parameter evidence must remain visible as unsupported.
+
+General A4/BOTH stage authority remains blocked. A distinct unqualified,
+operator-present A4 studio trial permits only the existing 25 exact scalar
+bindings through fresh source capture, explicit routing, arm and exact-plan
+confirmation. It does not unlock paired precision, disputed domains, persistent
+writes or automatic recovery. The Rytm one-pad and A4 single-control trials,
+manual reload/listening recovery, favorite save and fresh recapture still need
+physical evidence. Read `docs/A4_STUDIO_AUDITION_REPORT.md` for current source
+verification and `docs/hardware-validation/2026-10-15-a4-studio-audition.md` for
+the separate supervised procedures; historical offline-only receipts are not
+current authority.
 
 ## Operational guardrails — apply on every task
 
@@ -76,6 +87,13 @@ fresh paired preflight still require operator-present evidence.
 
 ## What's NEW relative to typical Python projects
 
+- Native words, mathematical coordinates, device labels and wire values are
+  separate contracts. Preserve v1 replay labels/protection text; project device
+  labels only for the operator. A working A4 `0x58` response is passive evidence,
+  never an indexed source or saved-state readiness grant. Use the raw-frame
+  indexed validator at every saved-source boundary; see
+  [the integration map](docs/NATIVE_REPRESENTATION_INTEGRATION.md).
+
 This repo has unusually strict invariants because it talks to physical hardware (Elektron Analog Rytm MK2). Key surprises that bite agents who skip the read order:
 
 - **685/505 distinction.** "685 parity tests" = pytest items; "505 goldens" = JSON files (parametrized).
@@ -88,6 +106,10 @@ This repo has unusually strict invariants because it talks to physical hardware 
 ## How to know which skill applies
 
 The [`.claude/rules/skill-routing.md`](.claude/rules/skill-routing.md) table maps task types to specific skills. For example: adding a CC parameter → `add-pad-command`; adding a data table → `extend-data-layer`; reviewing code post-push → `code-review`; updating docs → `docs-update-with-pr`. See [`docs/AGENT_TASK_RECIPES.md`](docs/AGENT_TASK_RECIPES.md) for step-by-step recipes for the most common tasks.
+
+For packaged audio spawn/shutdown changes, consult the
+[frozen worker rule](.claude/rules/frozen-audio-worker-containment.md) and
+[learned containment skill](.claude/skills/learned/frozen-audio-worker-containment/SKILL.md).
 
 ## Anti-patterns to refuse
 

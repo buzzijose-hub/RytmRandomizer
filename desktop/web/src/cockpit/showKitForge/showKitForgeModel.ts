@@ -59,6 +59,14 @@ export function fingerprintMatchLabel(matches: boolean): 'Match' | 'Mismatch' {
   return matches ? 'Match' : 'Mismatch';
 }
 
+/** Display projection only; the exact stored native word remains authoritative. */
+export function analogFourCandidateLabel(parameter: string, native: number, legacyLabel: string): string {
+  if (parameter !== 'filter1_frequency') return legacyLabel;
+  if (!Number.isInteger(native) || native < 0 || native > 32766) return 'unavailable';
+  const hundredths = Math.floor(native * 100 / 256);
+  return `${Math.floor(hundredths / 100)}.${String(hundredths % 100).padStart(2, '0')}`;
+}
+
 export function findActiveBank(showBank: ShowBankState | null): ShowBank | null {
   if (showBank === null || showBank.active_bank_id === null) return null;
   return showBank.banks.find((bank) => bank.bank_id === showBank.active_bank_id) ?? null;

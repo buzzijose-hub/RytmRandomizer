@@ -1,0 +1,129 @@
+{
+  "Filter1 Frequency": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-four-mkii/",
+      "supplied_filename": "Analog Four MKII.csv",
+      "supplied_sha256": "da38d8ec8df47d4a6c39034b2f1c829475ac301c712d26c0a4b4787ae259ea69",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "53a1a26263782ce8f044b112a33642de27f547cd"
+    },
+    "source_row": 48,
+    "cc_range": [
+      0,
+      127
+    ],
+    "nrpn_range": [
+      0,
+      127
+    ],
+    "orientation": "zero_based",
+    "reference_labels": [],
+    "units": [],
+    "notes": [
+      "CSV MIDI ranges do not replace calibrated native F1 Q8.8 or its converter."
+    ],
+    "supporting_urls": [
+      "https://www.elektron.se/wp-content/uploads/2024/09/Analog-Four-MKII-User-Manual_ENG_OS1.51C_220204-1.pdf#page=88",
+      "https://www.elektron.se/wp-content/uploads/2024/09/Analog-Four-MKII-User-Manual_ENG_OS1.51C_220204-1.pdf#page=106"
+    ],
+    "missing_source_fields": []
+  },
+  "Filter2 Type": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-four-mkii/",
+      "supplied_filename": "Analog Four MKII.csv",
+      "supplied_sha256": "da38d8ec8df47d4a6c39034b2f1c829475ac301c712d26c0a4b4787ae259ea69",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "53a1a26263782ce8f044b112a33642de27f547cd"
+    },
+    "source_row": 55,
+    "cc_range": null,
+    "nrpn_range": [
+      0,
+      6
+    ],
+    "orientation": "zero_based",
+    "reference_labels": [
+      [
+        0,
+        "2-pole Lowpass"
+      ],
+      [
+        1,
+        "1-pole Lowpass"
+      ],
+      [
+        2,
+        "Bandpass"
+      ],
+      [
+        3,
+        "1-pole Highpass"
+      ],
+      [
+        4,
+        "2-pole Highpass"
+      ],
+      [
+        5,
+        "Bandstop"
+      ],
+      [
+        6,
+        "Peak"
+      ]
+    ],
+    "units": [],
+    "notes": [
+      "Reference ordinals do not replace native codes or lift enum transport holds."
+    ],
+    "supporting_urls": [
+      "https://www.elektron.se/wp-content/uploads/2024/09/Analog-Four-MKII-User-Manual_ENG_OS1.51C_220204-1.pdf#page=88"
+    ],
+    "missing_source_fields": [
+      "cc_address",
+      "cc_range"
+    ]
+  },
+  "Volume": {
+    "source": {
+      "device_page": "https://midi.guide/d/elektron/analog-four-mkii/",
+      "supplied_filename": "Analog Four MKII.csv",
+      "supplied_sha256": "da38d8ec8df47d4a6c39034b2f1c829475ac301c712d26c0a4b4787ae259ea69",
+      "attribution": "MIDI Guide / Pencil Research and contributors",
+      "repository_url": "https://github.com/pencilresearch/midi",
+      "license_id": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+      "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+      "upstream_blob_sha1": "53a1a26263782ce8f044b112a33642de27f547cd"
+    },
+    "source_row": 62,
+    "cc_range": [
+      0,
+      127
+    ],
+    "nrpn_range": [
+      0,
+      127
+    ],
+    "orientation": "zero_based",
+    "reference_labels": [],
+    "units": [],
+    "notes": [
+      "MIDI reference knowledge does not lift OXI AMP ownership/protection."
+    ],
+    "supporting_urls": [],
+    "missing_source_fields": []
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "('cy_ride', 'Cymbal Type')": "src_native_slot_semantics_unverified",
+  "('cy_ride', 'Hit Decay')": "src_native_slot_semantics_unverified",
+  "('dual_vco', 'Osc 2 Detune')": "src_requires_guarded_detune_window",
+  "('sy_chip', 'Speed')": "src_mode_encoding_unverified",
+  "('sy_chip', 'Waveform')": "src_selector_encoding_unverified",
+  "('sy_raw', 'Noise Level')": "src_snapshot_projection_omitted",
+  "('ut_impulse', 'Polarity')": "src_selector_encoding_unverified"
+}

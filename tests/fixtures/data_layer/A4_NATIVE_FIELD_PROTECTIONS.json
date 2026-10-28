@@ -1,0 +1,18 @@
+{
+  "amp_attack": "oxi_amp_protection",
+  "amp_chorus_send": "oxi_amp_protection",
+  "amp_decay": "oxi_amp_protection",
+  "amp_delay_send": "oxi_amp_protection",
+  "amp_pan": "oxi_amp_protection",
+  "amp_release": "oxi_amp_protection",
+  "amp_reverb_send": "oxi_amp_protection",
+  "amp_shape": "oxi_amp_protection",
+  "amp_sustain": "oxi_amp_protection",
+  "amp_volume": "oxi_amp_protection",
+  "lfo1_phase": "native_nondefault_evidence_missing",
+  "osc1_fine": "independently_unsafe_fine",
+  "osc1_sub": "native_nondefault_evidence_missing",
+  "osc2_fine": "independently_unsafe_fine",
+  "osc2_sub": "native_nondefault_evidence_missing",
+  "portamento": "native_domain_unestablished"
+}

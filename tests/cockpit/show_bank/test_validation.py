@@ -42,6 +42,14 @@ from ._support import (
 pytestmark = pytest.mark.fast
 
 
+def test_unknown_candidate_lookup_refuses_without_changing_entry_selection() -> None:
+    entry = source_entry()
+    before = entry.to_dict()
+    with pytest.raises(ValueError, match="unknown candidate"):
+        entry.candidate_by_id("missing-candidate")
+    assert entry.to_dict() == before
+
+
 def _bank(entry=None, *, revision: int = 0) -> ShowBank:
     entries = () if entry is None else (entry,)
     return ShowBank(
@@ -255,7 +263,7 @@ def test_recipe_and_candidate_cross_reference_validation() -> None:
     rytm_scope = base_recipe.rytm_scope
     for changes, message in (
         ({"depth_preset": "other"}, "unsupported show-kit depth preset"),
-        ({"depth": 0.09}, "depth must be in"),
+        ({"depth": -0.01}, "depth must be in"),
         ({"seed": True}, "seed must be an integer"),
         ({"seed": 7.0}, "seed must be an integer"),
         ({"rytm_scope": a4_scope}, "rytm_scope must target the Analog Rytm lane"),

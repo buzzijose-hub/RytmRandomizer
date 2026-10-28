@@ -37,6 +37,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_HISTORY_UPDATED,
     EVENT_KIT_CAPTURES_CHANGED,
     EVENT_MUTATION_LOCKS_CHANGED,
+    EVENT_MUTATION_PARAMETERS_CHANGED,
     EVENT_MUTATION_TARGETS_CHANGED,
     EVENT_PATCH_GENOME_CHANGED,
     EVENT_PERFORMANCE_CONSOLE_CHANGED,
@@ -74,13 +75,14 @@ def test_pad_locks_persist_across_reconnect(cockpit_client: TestClient) -> None:
         drain_events(ws, 1)
         send_cmd(ws, "set_depth", depth=0.64)
         prepare_send_plan(ws)
-        send_cmd(ws, "send")
+        send_ack = send_cmd(ws, "send")
+        assert send_ack["ok"] is True, send_ack
         events = drain_events(ws, 5)
 
     snapshot = next(e for e in events if e["type"] == EVENT_SNAPSHOT_CHANGED)["snapshot"]
     pad3 = next(p for p in snapshot["pads"] if p["pad_id"] == 3)
     # The lock persisted; pad 3's params remain the seed values.
-    assert pad3["params"] == {"tun": 50, "dec": 70, "lev": 95}
+    assert pad3["params"] == {"tun": 50, "dec": 70, "flt": 95}
 
 
 def test_mutation_targets_persist_and_rehydrate_as_whole_state(
@@ -119,7 +121,8 @@ def test_unsaved_sends_persists_across_reconnect(cockpit_client: TestClient) -> 
         drain_events(ws, 1)
         send_cmd(ws, "set_depth", depth=0.55)
         prepare_send_plan(ws)
-        send_cmd(ws, "send")
+        send_ack = send_cmd(ws, "send")
+        assert send_ack["ok"] is True, send_ack
         drain_events(ws, 5)
 
     # Connection #2: the bootstrap ``session_status`` carries the preserved count.
@@ -142,11 +145,13 @@ def test_history_chain_persists_across_reconnect(cockpit_client: TestClient) -> 
         drain_events(ws, 1)
         send_cmd(ws, "set_depth", request_id="req-d-1", depth=0.45)
         prepare_send_plan(ws, request_id="req-prepare-1")
-        send_cmd(ws, "send", request_id="req-s-1")
+        send_ack = send_cmd(ws, "send", request_id="req-s-1")
+        assert send_ack["ok"] is True, send_ack
         drain_events(ws, 5)
         send_cmd(ws, "set_depth", request_id="req-d-2", depth=0.6)
         prepare_send_plan(ws, request_id="req-prepare-2")
-        send_cmd(ws, "send", request_id="req-s-2")
+        send_ack = send_cmd(ws, "send", request_id="req-s-2")
+        assert send_ack["ok"] is True, send_ack
         drain_events(ws, 5)
 
     # Connection #2: the bootstrap history event reflects all 3 entries.
@@ -175,6 +180,7 @@ def test_history_growth_persists_across_reconnect(cockpit_client: TestClient) ->
         send_cmd(ws, "set_depth", depth=0.45)
         prepare_send_plan(ws)
         ack = send_cmd(ws, "send", request_id="req-send")
+        assert ack["ok"] is True, ack
         assert ack["ok"] is True
         drain_events(ws, 5)
         sent_snapshot_id = ack["new_snapshot_id"]
@@ -216,6 +222,7 @@ def test_clean_disconnect_does_not_leak_pending_events(
         EVENT_KIT_CAPTURES_CHANGED,
         EVENT_MUTATION_TARGETS_CHANGED,
         EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_MUTATION_PARAMETERS_CHANGED,
         EVENT_DUAL_MACHINE_STAGE_CHANGED,
         EVENT_PERFORMANCE_CONSOLE_CHANGED,
     }
@@ -264,6 +271,7 @@ def test_concurrent_clients_share_session_state_after_command(
         send_cmd(ws_a, "set_depth", depth=0.45)
         prepare_send_plan(ws_a)
         ack_a = send_cmd(ws_a, "send", request_id="req-send-a")
+        assert ack_a["ok"] is True, ack_a
         drain_events(ws_a, 5)
 
         # Open a brand-new connection while the first is still alive.

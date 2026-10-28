@@ -125,11 +125,15 @@ Contract details (pinned by `tests/test_launch_smoke.py`):
   shell uses the PATH-python dev fallback at runtime. An explicit
   binary can also be forced at runtime via the `RYTM_RAND_SIDECAR_BIN`
   env var.
-- **Known limitation.** The audio-analysis stack (librosa / numba) is
-  excluded from the bundle — it is PyInstaller-hostile and only backs
-  the Profile Wizard's audio-source analyzers. Wizard audio analysis
-  requires a pip-installed sidecar until a dedicated packaging
-  workstream lands; every other cockpit surface works from the bundle.
+- **Audio-enabled packaging.** New builds include the bounded measured-audio
+  surface (librosa, NumPy/SciPy, soundfile/soxr and Numba/llvmlite). Librosa
+  source and lazy-loader stubs are retained for frozen compilation. The
+  entry runs `multiprocessing.freeze_support()` before any server/watcher
+  startup, so native audio jobs stay in an isolated child. Size, duration,
+  timeout and cancellation limits remain enforced. Previous delivered
+  binaries remain audio-disabled; source tests or a packaging trial are not
+  a receipt for a new usable Windows shell. Require actual frozen-worker
+  and packaged UI acceptance with exact source and binary hashes.
 
 In CI, the `desktop-bundle` job in
 `.github/workflows/installers.yml` runs the script on each OS before
@@ -505,6 +509,11 @@ directory together. The manifest records the source commit, run/attempt, tools,
 build command/config overrides, and both binary SHA256 hashes. The studio-only
 window title includes the short source commit. No local Python installation is
 needed; Windows still needs the Microsoft Edge WebView2 Runtime.
+The manifest also records SHA256 for each built frontend asset embedded in the
+shell, including `index.html`. Missing frontend output fails assembly. Its
+hardware disclaimer distinguishes the existing supervised 25-control A4 trial
+from still-blocked general A4/BOTH stage use and persistent saves; packaging is
+not evidence of physical acceptance.
 
 Before applying packaging overrides, the workflow requires
 `git diff --ignore-cr-at-eol --exit-code` to pass. This ignores only carriage
@@ -560,7 +569,7 @@ documentation-only receipt commit does not change this artifact's source.
 This earlier package is retained as historical evidence; the current studio
 package below includes the later empty-bank export explanation.
 
-**Current identified studio handoff:** build
+**Historical September 8 studio handoff:** build
 [`34241625440`](https://github.com/buzzijose-hub/RytmRandomizer/actions/runs/34241625440)
 from `c79597b69d055c32b8175fd665c77f20c384677c` passed. Its complete Git tree is
 identical to #245 head `38397dbb2a7919d9c144f63a971a26fc66d4edfa` (tree
@@ -575,10 +584,17 @@ with MIDI off. It checked fresh-token restart/reconnect, bank persistence,
 empty-export guidance and missing-capture refusal. The handoff manifest's 14
 file hashes were verified; its SHA-256 is
 `15c70c96fe1259fbddd1daf572d036cb7fe9318fa1478f2e21be2c130623acf4`.
-Eddie approved #238 before it merged; #245 has green required checks and still
-requires its own review. See the [current run report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md).
+At that checkpoint Eddie approved #238 before it merged; #245 had green checks
+and still required review. See the [dated run report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md).
 Physical observations remain blank and A4 SEND remains blocked. This package
 contains no claimed production updater installation or OS-signing evidence.
+
+The October 5 Studio continuation is PR #254, remote
+`codex/studio-evidence-handoff`, assembled locally on `codex/studio-rytm-mapping`.
+Its portable build and actual-binary smoke must be identified in the
+[mapping run report](superpowers/plans/2026-10-01-rytm-captured-machine-mapping_RUN_REPORT.md)
+before launch; the older binary above does not include those repairs.
+Software acceptance does not grant hardware rehearsal or show readiness.
 
 ### Briefcase source/install checks
 

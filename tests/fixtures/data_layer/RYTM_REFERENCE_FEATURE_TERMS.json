@@ -1,0 +1,50 @@
+{
+  "amp_attack": [
+    [
+      "attack",
+      1.0
+    ]
+  ],
+  "amp_decay": [
+    [
+      "decay",
+      0.7
+    ],
+    [
+      "tail",
+      0.3
+    ]
+  ],
+  "amp_hold": [
+    [
+      "sustain",
+      1.0
+    ]
+  ],
+  "amp_overdrive": [
+    [
+      "noise",
+      0.2
+    ],
+    [
+      "low_end",
+      0.1
+    ]
+  ],
+  "filter_frequency": [
+    [
+      "brightness",
+      1.0
+    ]
+  ],
+  "filter_resonance": [
+    [
+      "harmonicity",
+      0.25
+    ],
+    [
+      "transient",
+      0.15
+    ]
+  ]
+}

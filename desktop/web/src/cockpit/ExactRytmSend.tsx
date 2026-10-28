@@ -141,6 +141,50 @@ export interface ExactRytmSendDialogProps {
   readonly session: SessionStatus | null;
 }
 
+/** Read-only server packets, in wire order, including retained blocked plans. */
+export function ExactRytmPlanInspection({
+  sendPlan,
+}: {
+  readonly sendPlan: CockpitSendPlan;
+}): JSX.Element {
+  return (
+    <div className="exact-rytm-plan">
+      <dl className="exact-rytm-plan-id">
+        <dt>Prepared plan</dt>
+        <dd><code>{sendPlan.plan_id}</code></dd>
+      </dl>
+      <div className="exact-rytm-plan-scroll">
+        <table className="exact-rytm-plan-table">
+          <caption>Exact prepared Rytm packets</caption>
+          <thead>
+            <tr>
+              <th scope="col">Pad</th>
+              <th scope="col">Parameter</th>
+              <th scope="col">Channel</th>
+              <th scope="col">CC</th>
+              <th scope="col">Value (7-bit)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sendPlan.packets.map((packet, index) => (
+              <tr key={`${sendPlan.plan_id}:${index}`}>
+                <td>{packet.pad_id}</td>
+                <td><code>{packet.parameter}</code></td>
+                <td>{packet.channel + 1}</td>
+                <td>{packet.control}</td>
+                <td>{packet.value}</td>
+              </tr>
+            ))}
+            {sendPlan.packets.length === 0 && (
+              <tr><td colSpan={5}>No packets in prepared plan.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 /** Accessible exact-plan confirmation shared by ActionBar and Show Kit Forge. */
 export function ExactRytmSendDialog({
   className = 'arm-dialog',
@@ -169,7 +213,7 @@ export function ExactRytmSendDialog({
       aria-modal="true"
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
-      className={className}
+      className={`${className} exact-rytm-send-dialog`}
       data-testid="send-confirm-dialog"
       onKeyDown={(event) => {
         if (event.key === 'Escape') {
@@ -187,10 +231,10 @@ export function ExactRytmSendDialog({
       </p>
       <dl className="send-confirm-details">
         <div><dt>Output</dt><dd>{session.midi_port}</dd></div>
-        <div><dt>Prepared plan</dt><dd>{sendPlan.plan_id}</dd></div>
         <div><dt>Pads</dt><dd>{preparedPadIds.join(', ') || 'None'}</dd></div>
         <div><dt>Messages</dt><dd>{sendPlan.estimated_midi_msgs}</dd></div>
       </dl>
+      <ExactRytmPlanInspection sendPlan={sendPlan} />
       {controller.sourceReload !== undefined && (
         <label className="show-kit-forge-source-confirmation">
           <input

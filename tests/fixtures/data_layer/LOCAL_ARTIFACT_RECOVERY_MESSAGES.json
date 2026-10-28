@@ -1,0 +1,11 @@
+{
+  "access": "Local artifact could not be accessed or changed during reading. Check folder access and retry.",
+  "cross-reference": "Local artifact does not match its source or manifest. Restore matching source files or re-export the package.",
+  "framing": "Local artifact failed integrity checks. Restore a verified copy or re-export it, then retry.",
+  "hash": "Local artifact failed integrity checks. Restore a verified copy or re-export it, then retry.",
+  "malformed-json": "Local artifact failed integrity checks. Restore a verified copy or re-export it, then retry.",
+  "missing": "Local artifact is missing. Restore the complete package or retained source, then retry.",
+  "path": "Local artifact location is unsafe. Use a regular local file or package directory, then retry.",
+  "schema": "Local artifact schema is incompatible or invalid. Use a compatible app or re-export a verified package.",
+  "size": "Local artifact size exceeds supported bounds or differs from its manifest. Restore a verified copy or export a smaller package."
+}

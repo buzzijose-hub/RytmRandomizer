@@ -13,24 +13,37 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Final
 
+from ...data.analog_four_native_transport import AnalogFourNativeTransportPreview
 from ...data.analog_four_sysex_calibration import (
     A4_FILTER1_FREQUENCY_PARAMETER,
     analog_four_sysex_calibration_for,
 )
 from ...devices import (
     AnalogFourFilter1FrequencyCandidateMutation,
+    AnalogFourNativeMutation,
     get_analog_four_filter1_frequency_candidate_capability,
+    get_analog_four_native_field_capability,
+    preview_analog_four_native_cc_transport,
     resolve_saved_kit_capture_capability,
+    validate_analog_four_indexed_source,
 )
-from ...guardrails.input_validation import require_boolean, require_text
+from ...guardrails.input_validation import require_boolean, require_int, require_text
 from ...snapshot.mutation_scope import MutationScope, registered_mutation_ids
 from ..capture import KitCaptureResult
 from ..data.a4_preparation import (
+    A4NativePreparationChange,
     A4PreparationBlocker,
     A4PreparationChange,
     A4PreparationReport,
 )
-from ..data.show_bank import ShowBankEntry, ShowKitCandidate, ShowKitCapture
+from ..data.parameter_scope import A4_NATIVE_PARAMETER_ALIASES, A4_NATIVE_PARAMETER_KEYS
+from ..data.show_bank import (
+    AnalogFourCandidateValue,
+    AnalogFourNativeCandidateValue,
+    ShowBankEntry,
+    ShowKitCandidate,
+    ShowKitCapture,
+)
 from ..data.stage import ANALOG_FOUR_DEVICE_ID
 
 _MAX_OUTPUT_NAME: Final[int] = 256
@@ -38,8 +51,8 @@ _ASCII_SPACE: Final[int] = 32
 _ASCII_DELETE: Final[int] = 127
 
 
-def _require_aware_time(value: datetime, label: str) -> None:
-    if value.utcoffset() is None:
+def _require_aware_time(value: object, label: str) -> None:
+    if not isinstance(value, datetime) or value.utcoffset() is None:
         raise ValueError(f"{label} must have a timezone")
 
 
@@ -84,6 +97,9 @@ class A4PreparationContext:
 def _frame_fingerprint(frame: bytes) -> str:
     """Revalidate a saved-KIT frame through the registered capture capability."""
 
+    if type(frame) is not bytes:
+        raise TypeError("A4 frame must be bytes")
+    validate_analog_four_indexed_source(frame)
     capability = resolve_saved_kit_capture_capability(ANALOG_FOUR_DEVICE_ID).capability
     decoded = capability.decode_saved_kit_capture(frame)
     if capability.encode_saved_kit_capture(decoded) != frame:
@@ -92,6 +108,7 @@ def _frame_fingerprint(frame: bytes) -> str:
 
 
 def _source_matches(source: ShowKitCapture, frame: bytes) -> bool:
+    _require_aware_time(source.captured_at, "source capture")
     return (
         source.device_id == ANALOG_FOUR_DEVICE_ID
         and source.round_trip_verified is True
@@ -106,9 +123,11 @@ def _candidate_changes(
     source: ShowKitCapture,
     source_frame: bytes,
     candidate_frame: bytes,
-) -> tuple[A4PreparationChange, ...]:
+) -> tuple[A4PreparationChange | A4NativePreparationChange, ...]:
     """Derive change rows from canonical rendering, never claimed offsets."""
 
+    if type(candidate_frame) is not bytes:
+        raise TypeError("A4 candidate frame must be bytes")
     a4 = candidate.analog_four_candidate
     if (
         candidate.source_a4_fingerprint != source.fingerprint
@@ -117,6 +136,51 @@ def _candidate_changes(
         or a4.sysex.frame_bytes != len(candidate_frame)
     ):
         raise ValueError("A4 candidate does not match its source and artifact identities")
+    if any(isinstance(value, AnalogFourNativeCandidateValue) for value in a4.values):
+        native_values = tuple(
+            value for value in a4.values if isinstance(value, AnalogFourNativeCandidateValue)
+        )
+        if len(native_values) != len(a4.values):
+            raise ValueError("A4 candidate mixes legacy and native field claims")
+        for value in native_values:
+            require_int(value.track_id, "native track")
+            require_int(value.encoded_native, "encoded native")
+        rendered_native = get_analog_four_native_field_capability().render_native_fields(
+            source_frame,
+            tuple(
+                AnalogFourNativeMutation(value.parameter, value.track_id, value.encoded_native)
+                for value in native_values
+            ),
+        )
+        if (
+            rendered_native.framed_sysex != candidate_frame
+            or not rendered_native.roundtrip_redecoded
+            or not rendered_native.native_byte_isolation_validated
+            or rendered_native.hardware_send_validated is not False
+        ):
+            raise ValueError("native artifact differs from canonical selected-field renderer")
+        native_changes: list[A4NativePreparationChange] = []
+        for claimed, applied in zip(native_values, rendered_native.applied_mutations, strict=True):
+            after = applied.rendered
+            if (
+                claimed.native_encoding != after.metadata.native_encoding.value
+                or claimed.unpacked_offsets != after.unpacked_offsets
+                or claimed.screen_value != after.screen_value
+            ):
+                raise ValueError("native field claims differ from canonical readback")
+            native_changes.append(
+                A4NativePreparationChange(
+                    after.track,
+                    after.parameter,
+                    applied.source.encoded_native,
+                    after.encoded_native,
+                    after.metadata.native_encoding.value,
+                    applied.source.screen_value or str(applied.source.encoded_native),
+                    after.screen_value or str(after.encoded_native),
+                    after.unpacked_offsets,
+                )
+            )
+        return tuple(native_changes)
     capability = get_analog_four_filter1_frequency_candidate_capability()
     rendered = capability.render_filter1_frequency_candidate(
         source_frame,
@@ -138,7 +202,8 @@ def _candidate_changes(
     calibration = analog_four_sysex_calibration_for(A4_FILTER1_FREQUENCY_PARAMETER)
     for claimed, applied in zip(a4.values, rendered.applied_mutations, strict=True):
         if (
-            claimed.parameter != A4_FILTER1_FREQUENCY_PARAMETER
+            not isinstance(claimed, AnalogFourCandidateValue)
+            or claimed.parameter != A4_FILTER1_FREQUENCY_PARAMETER
             or claimed.unpacked_offset != applied.intended_unpacked_offsets[0]
             or claimed.encoded_unsigned_8_8 != applied.redecoded_raw_q8_8
         ):
@@ -168,6 +233,7 @@ def _review_current_capture(
         blockers.append("current_capture_required")
         return False
     try:
+        _require_aware_time(source.captured_at, "source capture")
         _require_aware_time(capture.captured_at, "current capture")
         if (
             capture.device_id != ANALOG_FOUR_DEVICE_ID
@@ -200,7 +266,9 @@ def _review_candidate(
     candidate_frame: bytes | None,
     context: A4PreparationContext,
     blockers: list[A4PreparationBlocker],
-) -> tuple[ShowKitCandidate | None, tuple[A4PreparationChange, ...], bool]:
+) -> tuple[
+    ShowKitCandidate | None, tuple[A4PreparationChange | A4NativePreparationChange, ...], bool
+]:
     candidate = next(
         (item for item in entry.candidates if item.candidate_id == entry.selected_candidate_id),
         None,
@@ -233,29 +301,59 @@ def _review_candidate(
             candidate, entry.analog_four_source, source_frame, candidate_frame
         )
         changed_tracks = frozenset(change.track_id for change in changes)
-        if changed_tracks != frozenset(recipe_scope.effective_ids):
+        if not changed_tracks <= frozenset(recipe_scope.effective_ids):
             raise ValueError("A4 candidate values do not match its recipe scope")
+        selected = recipe_scope.parameters.cells
+        if selected is not None:
+            allowed = {(cell.item_id, cell.parameter_key) for cell in selected}
+            if any(
+                (
+                    change.track_id,
+                    A4_NATIVE_PARAMETER_ALIASES.get(change.parameter, change.parameter),
+                )
+                not in allowed
+                for change in changes
+            ):
+                raise ValueError("A4 candidate changes an excluded parameter")
     except (TypeError, ValueError):
         blockers.append("candidate_bytes_invalid")
         return candidate, (), False
-    if not any(change.before_raw_q8_8 != change.after_raw_q8_8 for change in changes):
+    if not any(
+        (
+            (change.before_encoded_native != change.after_encoded_native)
+            if isinstance(change, A4NativePreparationChange)
+            else (change.before_raw_q8_8 != change.after_raw_q8_8)
+        )
+        for change in changes
+    ):
         blockers.append("no_a4_changes")
     return candidate, changes, True
 
 
-def prepare_a4_audition(
+@dataclass(frozen=True)
+class A4CanonicalReview:
+    """Fresh canonical evidence shared by offline review and studio planning.
+
+    This is not an output grant and has no inbound report parser.
+    """
+
+    candidate: ShowKitCandidate | None
+    changes: tuple[A4PreparationChange | A4NativePreparationChange, ...]
+    effective_ids: frozenset[int]
+    candidate_bytes_verified: bool
+    current_source_verified: bool
+    blocked_reasons: tuple[A4PreparationBlocker, ...]
+    transport_preview: AnalogFourNativeTransportPreview | None
+
+
+def review_a4_canonical_evidence(
     *,
     entry: ShowBankEntry,
     source_frame: bytes | None,
     candidate_frame: bytes | None,
     context: A4PreparationContext,
-) -> A4PreparationReport:
-    """Review exact local bytes and current observations without making a plan sendable.
-
-    Missing or contradictory evidence appears as closed blocker codes. Scope
-    ids and context fields are validated as caller input. Neither output-port
-    discovery nor any hardware-side validation takes place.
-    """
+) -> A4CanonicalReview:
+    """Reconstruct exact retained bytes and current evidence on every call."""
 
     effective = context.scope.validated_effective_ids(
         registered_mutation_ids(ANALOG_FOUR_DEVICE_ID), item_label="A4 track"
@@ -271,8 +369,49 @@ def prepare_a4_audition(
     current_verified = _review_current_capture(entry.analog_four_source, context, blockers)
     if context.output_port_name is None or not context.output_port_name.strip():
         blockers.append("output_port_intent_required")
-    if entry.analog_four_source.hardware_slot is None:
+    slot = entry.analog_four_source.hardware_slot
+    if type(slot) is not int or not 1 <= slot <= 128:
         blockers.append("recovery_slot_required")
+    transport_preview = None
+    if verified and source_frame is not None:
+        transport_preview = preview_analog_four_native_cc_transport(
+            source_frame,
+            tuple(
+                AnalogFourNativeMutation(
+                    A4_NATIVE_PARAMETER_KEYS.get(change.parameter, change.parameter),
+                    change.track_id,
+                    (
+                        change.after_encoded_native
+                        if isinstance(change, A4NativePreparationChange)
+                        else change.after_raw_q8_8
+                    ),
+                )
+                for change in changes
+            ),
+        )
+    return A4CanonicalReview(
+        candidate,
+        changes,
+        effective,
+        verified,
+        current_verified,
+        tuple(blockers),
+        transport_preview,
+    )
+
+
+def prepare_a4_audition(
+    *,
+    entry: ShowBankEntry,
+    source_frame: bytes | None,
+    candidate_frame: bytes | None,
+    context: A4PreparationContext,
+) -> A4PreparationReport:
+    """Review fresh canonical evidence without ever making offline reports sendable."""
+    review = review_a4_canonical_evidence(
+        entry=entry, source_frame=source_frame, candidate_frame=candidate_frame, context=context
+    )
+    candidate = review.candidate
     capture = context.current_capture
     return A4PreparationReport(
         entry_id=entry.entry_id,
@@ -289,16 +428,22 @@ def prepare_a4_audition(
         checked_at=context.checked_at,
         target_ids=tuple(sorted(context.scope.target_ids)),
         locked_ids=tuple(sorted(context.scope.locked_ids)),
-        effective_ids=tuple(sorted(effective)),
+        effective_ids=tuple(sorted(review.effective_ids)),
         output_port_name=context.output_port_name,
         recovery_slot=entry.analog_four_source.hardware_slot,
         source_reloaded=context.source_reloaded,
         candidate_is_local=context.candidate_is_local,
-        candidate_bytes_verified=verified,
-        current_source_verified=current_verified,
-        changes=changes,
-        blocked_reasons=tuple(blockers),
+        candidate_bytes_verified=review.candidate_bytes_verified,
+        current_source_verified=review.current_source_verified,
+        changes=review.changes,
+        blocked_reasons=review.blocked_reasons,
+        transport_preview=review.transport_preview,
     )
 
 
-__all__ = ["A4PreparationContext", "prepare_a4_audition"]
+__all__ = [
+    "A4CanonicalReview",
+    "A4PreparationContext",
+    "prepare_a4_audition",
+    "review_a4_canonical_evidence",
+]

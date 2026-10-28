@@ -47,6 +47,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_HISTORY_UPDATED,
     EVENT_KIT_CAPTURES_CHANGED,
     EVENT_MUTATION_LOCKS_CHANGED,
+    EVENT_MUTATION_PARAMETERS_CHANGED,
     EVENT_MUTATION_PREVIEWED,
     EVENT_MUTATION_TARGETS_CHANGED,
     EVENT_PATCH_GENOME_CHANGED,
@@ -180,7 +181,7 @@ def _prepare_send_plan(ws, request_id: str = "req-prepare") -> dict:
 # ---------------------------------------------------------------------------
 
 
-def test_connect_emits_eleven_initial_events_in_order(session_factory) -> None:
+def test_connect_emits_twelve_initial_events_in_order(session_factory) -> None:
     session = session_factory()
     app = create_app(session, token=TEST_WS_TOKEN)
     client = TestClient(app)
@@ -199,6 +200,7 @@ def test_connect_emits_eleven_initial_events_in_order(session_factory) -> None:
         EVENT_KIT_CAPTURES_CHANGED,
         EVENT_MUTATION_TARGETS_CHANGED,
         EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_MUTATION_PARAMETERS_CHANGED,
         EVENT_DUAL_MACHINE_STAGE_CHANGED,
         EVENT_PERFORMANCE_CONSOLE_CHANGED,
     ]
@@ -713,6 +715,63 @@ def test_connection_queue_under_capacity_never_drops() -> None:
 
     assert size == 2
     assert dropped == 0
+
+
+def test_connection_queue_high_water_survives_drain_and_remains_bounded() -> None:
+    async def run() -> tuple[int, int, int]:
+        queue = ConnectionQueue(maxsize=3)
+        assert queue.high_water == 0
+        for value in range(7):
+            queue.put_frame({"type": "evt", "n": value})
+        for _ in range(queue.size):
+            await queue.get()
+        return queue.size, queue.high_water, queue.dropped_count
+
+    assert asyncio.run(run()) == (0, 3, 4)
+
+
+def test_connection_registry_queue_diagnostics_are_aggregate_and_reset_on_teardown() -> None:
+    async def run() -> None:
+        registry = ConnectionRegistry(queue_maxsize=3)
+        assert registry.queue_diagnostics() == {
+            "connection_count": 0,
+            "capacity_per_connection": 3,
+            "queued_frames": 0,
+            "high_water_per_connection": 0,
+            "dropped_frames": 0,
+        }
+        first_id, first = registry.register()
+        second_id, second = registry.register()
+        for value in range(5):
+            first.put_frame({"type": "private-event", "secret": "must-not-leak", "n": value})
+        second.put_frame({"type": "other-private-event"})
+        result = registry.queue_diagnostics()
+        assert result == {
+            "connection_count": 2,
+            "capacity_per_connection": 3,
+            "queued_frames": 4,
+            "high_water_per_connection": 3,
+            "dropped_frames": 2,
+        }
+        assert "private" not in json.dumps(result) and "secret" not in json.dumps(result)
+        registry.unregister(first_id)
+        assert registry.queue_diagnostics()["queued_frames"] == 1
+        registry.unregister(second_id)
+        assert registry.queue_diagnostics()["high_water_per_connection"] == 0
+
+    asyncio.run(run())
+
+
+def test_health_queue_diagnostics_are_read_only_and_need_no_token(session_factory) -> None:
+    session = session_factory()
+    before = session.device.capture_snapshot()
+    with TestClient(create_app(session, token=TEST_WS_TOKEN)) as client:
+        result = client.get("/health")
+    assert result.status_code == 200
+    assert result.json()["outbound_queue"]["connection_count"] == 0
+    assert result.json()["outbound_queue"]["queued_frames"] == 0
+    assert session.device.capture_snapshot() == before
+    assert session.armed_apply is None and not session.hardware_intent
 
 
 def test_connection_queue_refuses_frames_after_close_tagged_item() -> None:

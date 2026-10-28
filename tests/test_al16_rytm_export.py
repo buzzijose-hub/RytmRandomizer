@@ -71,7 +71,7 @@ _BANK_SPEC = _REPO_ROOT / "specs" / "al16" / "AL16_BANK.yaml"
 _AL02_RECIPE = _REPO_ROOT / "specs" / "al16" / "AL02_LOCK_RYTM.yaml"
 _COMMITTED_EVIDENCE_HASHES = {
     "output/al16/AL02_LOCK_RYTM_manifest.json": (
-        "ebeea8c70bba2c3e03ad3e8d1f8a300e7f8af1e74a85400e133cd41d375fa290"
+        "c7d531363788d70d70158ffa3a277f9e358bc73febee0f3279ae1f36a8e63f06"
     ),
     "output/al16/AL02_LOCK_RYTM_validation.md": (
         "bcf04d1a77c412d93efa1ec558a817df6656ea000d0fb8b337efc992eabbe6e5"
@@ -163,11 +163,91 @@ def test_al16_generator_dependencies_match_the_complete_behavior_contract() -> N
     )
 
 
-def test_committed_al02_blocked_evidence_hashes_are_frozen() -> None:
+def test_historical_al02_blocked_evidence_hashes_are_preserved() -> None:
     assert {
-        relative_path: hashlib.sha256((_REPO_ROOT / relative_path).read_bytes()).hexdigest()
+        relative_path: hashlib.sha256(
+            (_REPO_ROOT / "output/al16/archive/2026-08-02" / Path(relative_path).name).read_bytes()
+        ).hexdigest()
         for relative_path in _COMMITTED_EVIDENCE_HASHES
     } == _COMMITTED_EVIDENCE_HASHES
+
+
+def test_pre_control_al02_provenance_refresh_is_explicit_and_stays_blocked() -> None:
+    path = _REPO_ROOT / "output/al16/archive/2026-10-15-869ab55f/AL02_LOCK_RYTM_manifest.json"
+    assert (
+        hashlib.sha256(path.read_bytes()).hexdigest()
+        == "869ab55f9522fbde9a257c7f7d0cf63bbb2914622def5417d6d1192942dd19be"
+    )
+    current = json.loads(path.read_text(encoding="utf-8"))
+    historical = json.loads(
+        (_REPO_ROOT / "output/al16/archive/2026-08-02/AL02_LOCK_RYTM_manifest.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert current["build_status"] == historical["build_status"] == "blocked"
+    assert current["output_emitted"] is False and current["intentionally_changed_raw_bytes"] == 0
+    current.pop("build_timestamp")
+    historical.pop("build_timestamp")
+    changed_dependencies = {
+        path
+        for path in current["generator_dependency_sha256"]
+        if current["generator_dependency_sha256"][path]
+        != historical["generator_dependency_sha256"][path]
+    }
+    assert changed_dependencies == {
+        "rytm_randomizer/devices/__init__.py",
+        "rytm_randomizer/observability/errors.py",
+        "rytm_randomizer/data/rytm_machine_catalog.py",
+    }
+    for path in changed_dependencies:
+        current["generator_dependency_sha256"].pop(path)
+        historical["generator_dependency_sha256"].pop(path)
+    assert current == historical
+
+
+def test_pre_catalog_al02_provenance_is_archived_without_native_output_changes() -> None:
+    path = _REPO_ROOT / "output/al16/archive/2026-10-14-c7915ef2/AL02_LOCK_RYTM_manifest.json"
+    assert hashlib.sha256(path.read_bytes()).hexdigest() == (
+        "c7915ef20c3fe00a89a03829c4959b1a4e551bde9d1f108fe9b1f1a076f72730"
+    )
+    current = json.loads(
+        (
+            _REPO_ROOT / "output/al16/archive/2026-10-15-869ab55f/AL02_LOCK_RYTM_manifest.json"
+        ).read_bytes()
+    )
+    previous = json.loads(path.read_bytes())
+    changed = [
+        name
+        for name in current["generator_dependency_sha256"]
+        if current["generator_dependency_sha256"][name]
+        != previous["generator_dependency_sha256"][name]
+    ]
+    assert changed == ["rytm_randomizer/data/rytm_machine_catalog.py"]
+    current["generator_dependency_sha256"].pop(changed[0])
+    previous["generator_dependency_sha256"].pop(changed[0])
+    assert current == previous and current["output_emitted"] is False
+
+
+def test_live_control_al02_receipt_refresh_changes_only_the_device_facade_dependency() -> None:
+    current = json.loads((_REPO_ROOT / "output/al16/AL02_LOCK_RYTM_manifest.json").read_bytes())
+    previous = json.loads(
+        (
+            _REPO_ROOT / "output/al16/archive/2026-10-15-869ab55f/AL02_LOCK_RYTM_manifest.json"
+        ).read_bytes()
+    )
+    changed = [
+        name
+        for name in current["generator_dependency_sha256"]
+        if current["generator_dependency_sha256"][name]
+        != previous["generator_dependency_sha256"][name]
+    ]
+    assert changed == ["rytm_randomizer/devices/__init__.py"]
+    current["generator_dependency_sha256"].pop(changed[0])
+    previous["generator_dependency_sha256"].pop(changed[0])
+    assert current == previous
+    assert current["build_status"] == "blocked" and current["output_emitted"] is False
+    assert current["intentionally_changed_raw_bytes"] == 0
+    assert not (_REPO_ROOT / "output/al16/AL02_LOCK_RYTM.syx").exists()
 
 
 def test_committed_al02_evidence_is_bound_to_current_inputs_and_generator() -> None:

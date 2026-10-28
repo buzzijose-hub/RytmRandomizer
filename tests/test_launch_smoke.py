@@ -8,7 +8,7 @@ same environment contract the shell uses (``RYTM_RAND_WS_PORT`` +
 1. Poll ``GET /health`` until the sidecar answers (liveness).
 2. Read the freshly-minted handshake token from the token file.
 3. Open the WebSocket with the pinned subprotocol, send the ``hello``
-   frame, and assert the ack + the 11-frame bootstrap event set (plus
+   frame, and assert the ack + the 12-frame bootstrap event set (plus
    the wired-launch ``connection_changed`` extra) arrive in order.
 4. Shut the process down cleanly (SIGTERM on POSIX — the same signal
    the shell sends — and assert a zero exit).
@@ -67,10 +67,11 @@ EXPECTED_BOOTSTRAP_EVENT_TYPES = (
     "kit_captures_changed",
     "mutation_targets_changed",
     "mutation_locks_changed",
+    "mutation_parameters_changed",
     "dual_machine_stage_changed",
     "performance_console_changed",
 )
-"""The 11 bootstrap events every fresh connection receives, in spec order."""
+"""The 12 bootstrap events every fresh connection receives, in spec order."""
 
 HEALTH_TIMEOUT_SECS = 90.0
 """Generous ceiling for the subprocess to import + bind + serve on CI."""
@@ -314,7 +315,7 @@ def test_build_script_entry_stub_is_deterministic_module_equivalent() -> None:
 
 
 def test_build_script_pyinstaller_command_shape(tmp_path: Path) -> None:
-    """One-file build, canonical name, app collected, audio stack excluded."""
+    """One-file build, canonical name, app collected, bounded audio stack included."""
 
     build_script = _load_build_script()
     entry = tmp_path / "rytm_sidecar_entry.py"
@@ -329,7 +330,13 @@ def test_build_script_pyinstaller_command_shape(tmp_path: Path) -> None:
     assert "rytm_randomizer" in collected
     assert "uvicorn" in collected and "websockets" in collected
     excluded = [command[i + 1] for i, arg in enumerate(command) if arg == "--exclude-module"]
-    assert "librosa" in excluded
+    assert "librosa" not in excluded
+    assert "numba" not in excluded
+    assert "llvmlite" not in excluded
+    hidden = [command[i + 1] for i, arg in enumerate(command) if arg == "--hidden-import"]
+    assert "librosa.core.audio" in hidden and "librosa.onset" in hidden
+    assert "soundfile" in hidden and "soxr" in hidden
+    assert "--collect-data" in command
     assert command[-1] == str(entry)
 
 

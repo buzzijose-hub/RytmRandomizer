@@ -45,6 +45,8 @@ Memories about the human's hardware setup, personal preferences across multiple 
 
 ### Project facts (load-bearing context about this codebase)
 
+- [Reference audio boundaries](project_reference_audio_boundaries.md) - display/native units, qualified pitch/quality, exact segments and retained inference replay remain distinct from hardware evidence.
+
 - [Analog Rytm SysEx project](project_rytm_sysex.md) — kit-first generator, offline-only, file-drop loading workflow.
 - [Python tooling pitfalls](python_tooling_pitfalls.md) — black target-version must match CI py3.11; don't suppress xdist with `-o addopts=''` for normal runs (3× slowdown); only suppress for `PARITY_CAPTURE_MODE=1`.
 - [Armed entry-point seam](project_armed_entry_point_seam.md) — Live-but-Passive MIDI boundary: inputs open freely, all transmit routes through the `senders` ArmedApply seam; enforced by `test_armed_entry_points.py` + `test_repo_root_perimeter.py`.
@@ -52,6 +54,8 @@ Memories about the human's hardware setup, personal preferences across multiple 
 - [Security-cap mirroring](project_security_cap_mirroring.md) — every pyproject security upper-cap needs a dependabot ignore twin + a tie-test, or dependabot opens PRs that defeat the cap (PR #211 / MAL-2026-4750).
 
 ### Reference (where to look up things)
+
+- [Native representation and provenance](project_native_representation_provenance.md) - parameter-specific labels/native/wire values, replay compatibility, and working versus indexed saved-state boundaries.
 
 - [Pre-push hook Windows shim](reference_pre_push_hook_windows_shim.md) — `.githooks/pre-push` Windows Store python detection was fixed in PR #110; pre-PR-110 worktrees need `--no-verify` for non-code pushes.
 - [Shared agent memory pattern](reference_shared_agent_memory_pattern.md) — how to make memory shareable across Claude Code + Codex + any agent (the very pattern this directory implements). Read this when extending the system.

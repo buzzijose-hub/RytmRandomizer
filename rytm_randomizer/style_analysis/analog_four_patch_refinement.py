@@ -88,6 +88,14 @@ class AnalogFourPatchRefinementPlanPayload(TypedDict):
     next_candidate: AnalogFourAudioPatchGenomePayload | None
 
 
+@dataclass(frozen=True)
+class AudioFeatureRefinement:
+    """Device-neutral, bounded residual target from an actual measured recording."""
+
+    corrected_features: AudioSynthesisFeatures
+    residuals: tuple[AnalogFourPatchRefinementResidual, ...]
+
+
 def _require_refinement_gain(value: object) -> float:
     if not isinstance(value, (int, float)) or isinstance(value, bool):
         raise TypeError("correction_gain must be a float")
@@ -214,11 +222,11 @@ def plan_analog_four_patch_refinement(
     correction_gain = _require_refinement_gain(correction_gain)
     accept_similarity = _require_accept_similarity(accept_similarity)
     track = _require_track(track)
-    residuals = _build_residuals(render_score, correction_gain=correction_gain)
-    corrected_features = _corrected_features(
-        reference_analysis.synthesis_features,
-        residuals,
+    feedback = plan_audio_feature_refinement(
+        reference_analysis, render_score, render_features, correction_gain=correction_gain
     )
+    residuals = feedback.residuals
+    corrected_features = feedback.corrected_features
     action: AnalogFourPatchRefinementAction = (
         "accept" if render_score.similarity >= accept_similarity else "refine"
     )
@@ -244,6 +252,24 @@ def plan_analog_four_patch_refinement(
         residuals=residuals,
         corrected_features=corrected_features,
         next_candidate=next_candidate,
+    )
+
+
+def plan_audio_feature_refinement(
+    reference_analysis: AudioFeatureAnalysis,
+    render_score: AnalogFourPatchRenderScore,
+    render_features: AudioSynthesisFeatures,
+    *,
+    correction_gain: float = ANALOG_FOUR_PATCH_REFINEMENT_GAIN_DEFAULT,
+) -> AudioFeatureRefinement:
+    """Reuse the established residual equation without inferring another device."""
+    reference_analysis, render_score, render_features = _require_refinement_inputs(
+        reference_analysis, render_score, render_features
+    )
+    gain = _require_refinement_gain(correction_gain)
+    residuals = _build_residuals(render_score, correction_gain=gain)
+    return AudioFeatureRefinement(
+        _corrected_features(reference_analysis.synthesis_features, residuals), residuals
     )
 
 
@@ -284,6 +310,7 @@ def analog_four_patch_refinement_plan_to_dict(
 
 
 __all__ = [
+    "AudioFeatureRefinement",
     "AnalogFourPatchRefinementAction",
     "AnalogFourPatchRefinementPlan",
     "AnalogFourPatchRefinementPlanPayload",
@@ -291,4 +318,5 @@ __all__ = [
     "AnalogFourPatchRefinementResidualPayload",
     "analog_four_patch_refinement_plan_to_dict",
     "plan_analog_four_patch_refinement",
+    "plan_audio_feature_refinement",
 ]

@@ -79,6 +79,9 @@ _WRITE_SET_DIR_PREFIX: Final[str] = ".write-set-"
 _WRITE_SET_CONTEXT_LIMIT: Final[int] = 120
 """Maximum artifact-name length exposed in bounded failure diagnostics."""
 
+_REDACTED_ARTIFACT_NAME: Final[str] = "artifact"
+_REDACTED_TRANSACTION_NAME: Final[str] = "transaction"
+
 
 # ---------------------------------------------------------------------------
 # Result + error types
@@ -151,7 +154,8 @@ class WriteSetError(WriteError):
     """A transactional artifact-set publication failed.
 
     The exception message and :attr:`failure_context` intentionally expose only
-    bounded basenames. The parent directory remains private to the caller.
+    bounded basenames, or neutral artifact labels when diagnostics are redacted.
+    The parent directory remains private to the caller.
     """
 
     fingerprint: ClassVar[str] = "export.write_set.failed"
@@ -434,6 +438,7 @@ def atomic_write_set(
     artifacts: Mapping[Path, object],
     *,
     overwrite: bool = False,
+    redact_diagnostics: bool = False,
 ) -> tuple[WriteResult, ...]:
     """Publish a same-directory set of byte artifacts transactionally.
 
@@ -446,12 +451,18 @@ def atomic_write_set(
 
     Failure diagnostics expose the actual destination basename and phase via
     :class:`WriteSetFailureContext`. Parent paths and raw filesystem messages
-    are intentionally excluded from the public exception text.
+    are intentionally excluded from the public exception text. Opt-in redaction
+    replaces artifact names in diagnostics and logged transaction names with
+    neutral labels. The primary exception chain, returned paths, on-disk recovery
+    data, and neutral ``.write-set-*`` recovery directory basename are preserved.
 
     Args:
         artifacts: Ordered mapping of destination paths to exact byte payloads.
             All destinations must share one parent directory.
         overwrite: Permit replacement of existing destinations when true.
+        redact_diagnostics: Use neutral labels in failure messages, context,
+            notes, and rollback/cleanup logs instead of destination basenames.
+            Defaults to false, preserving existing diagnostics.
 
     Returns:
         One :class:`WriteResult` per mapping entry, in insertion order.
@@ -493,7 +504,9 @@ def atomic_write_set(
         raise WriteSetError(
             WriteSetFailureContext(
                 phase="staging",
-                artifact_name=_bounded_artifact_name(first_destination),
+                artifact_name=_bounded_artifact_name(
+                    first_destination, redact_diagnostics=redact_diagnostics
+                ),
             )
         ) from exc
 
@@ -501,12 +514,13 @@ def atomic_write_set(
     if overwrite:
         for path in destinations:
             if existed[path]:
-                _require_regular_overwrite_destination(path)
+                _require_regular_overwrite_destination(path, redact_diagnostics=redact_diagnostics)
     if not overwrite:
         for path in destinations:
             if existed[path]:
                 raise FileExistsError(
-                    "refusing to overwrite existing artifact: " f"{_bounded_artifact_name(path)}"
+                    "refusing to overwrite existing artifact: "
+                    f"{_bounded_artifact_name(path, redact_diagnostics=redact_diagnostics)}"
                 )
 
     try:
@@ -515,7 +529,9 @@ def atomic_write_set(
         raise WriteSetError(
             WriteSetFailureContext(
                 phase="staging",
-                artifact_name=_bounded_artifact_name(first_destination),
+                artifact_name=_bounded_artifact_name(
+                    first_destination, redact_diagnostics=redact_diagnostics
+                ),
             )
         ) from exc
 
@@ -537,7 +553,9 @@ def atomic_write_set(
             active_destination = destination
             _validate_guarded_atomic_write_destination(destination)
             if existed[destination]:
-                _require_regular_overwrite_destination(destination)
+                _require_regular_overwrite_destination(
+                    destination, redact_diagnostics=redact_diagnostics
+                )
                 backup_path = transaction_dir / f"{index:04d}.backup"
                 backups[destination] = backup_path
                 os.replace(destination, backup_path)
@@ -561,6 +579,7 @@ def atomic_write_set(
             backups=backups,
             published=published,
             staged=staged,
+            redact_diagnostics=redact_diagnostics,
         )
         recovery_name = transaction_dir.name if rollback_failures else None
         if rollback_failures:
@@ -568,13 +587,20 @@ def atomic_write_set(
                 transaction_dir,
                 rollback_failures,
                 active_exception=exc,
+                redact_diagnostics=redact_diagnostics,
             )
         else:
-            _cleanup_write_set_directory(transaction_dir, active_exception=exc)
+            _cleanup_write_set_directory(
+                transaction_dir,
+                active_exception=exc,
+                redact_diagnostics=redact_diagnostics,
+            )
 
         context = WriteSetFailureContext(
             phase=phase,
-            artifact_name=_bounded_artifact_name(active_destination),
+            artifact_name=_bounded_artifact_name(
+                active_destination, redact_diagnostics=redact_diagnostics
+            ),
             rollback_failures=rollback_failures,
             recovery_directory_name=recovery_name,
         )
@@ -597,7 +623,11 @@ def atomic_write_set(
         )
         for destination, payload in items
     )
-    _cleanup_write_set_directory(transaction_dir, active_exception=None)
+    _cleanup_write_set_directory(
+        transaction_dir,
+        active_exception=None,
+        redact_diagnostics=redact_diagnostics,
+    )
     return results
 
 
@@ -607,6 +637,7 @@ def _rollback_write_set(
     backups: Mapping[Path, Path],
     published: set[Path],
     staged: Mapping[Path, Path],
+    redact_diagnostics: bool = False,
 ) -> tuple[WriteSetRollbackFailure, ...]:
     """Best-effort rollback that retains every failed backup operation."""
 
@@ -619,7 +650,9 @@ def _rollback_write_set(
             except OSError as exc:  # rollback must not mask the first failure
                 failures.append(
                     WriteSetRollbackFailure(
-                        artifact_name=_bounded_artifact_name(destination),
+                        artifact_name=_bounded_artifact_name(
+                            destination, redact_diagnostics=redact_diagnostics
+                        ),
                         operation="restore_backup",
                         error_type=type(exc).__name__,
                     )
@@ -636,7 +669,9 @@ def _rollback_write_set(
         except OSError as exc:  # rollback must not mask the first failure
             failures.append(
                 WriteSetRollbackFailure(
-                    artifact_name=_bounded_artifact_name(destination),
+                    artifact_name=_bounded_artifact_name(
+                        destination, redact_diagnostics=redact_diagnostics
+                    ),
                     operation="remove_new_file",
                     error_type=type(exc).__name__,
                 )
@@ -644,7 +679,7 @@ def _rollback_write_set(
     return tuple(failures)
 
 
-def _require_regular_overwrite_destination(path: Path) -> None:
+def _require_regular_overwrite_destination(path: Path, *, redact_diagnostics: bool = False) -> None:
     """Reject directories, symlinks, and other non-regular artifacts."""
 
     try:
@@ -655,7 +690,7 @@ def _require_regular_overwrite_destination(path: Path) -> None:
         raise WriteSetError(
             WriteSetFailureContext(
                 phase="backup",
-                artifact_name=_bounded_artifact_name(path),
+                artifact_name=_bounded_artifact_name(path, redact_diagnostics=redact_diagnostics),
             )
         )
 
@@ -680,9 +715,11 @@ def _stage_reached_destination(
         return False
 
 
-def _bounded_artifact_name(path: Path) -> str:
-    """Return a deterministic basename without exposing its parent path."""
+def _bounded_artifact_name(path: Path, *, redact_diagnostics: bool = False) -> str:
+    """Return a neutral label or bounded basename without exposing its parent."""
 
+    if redact_diagnostics:
+        return _REDACTED_ARTIFACT_NAME
     return safe_local_file_export_artifact_name(
         path,
         fallback="unnamed-artifact",
@@ -694,6 +731,7 @@ def _cleanup_write_set_directory(
     transaction_dir: Path,
     *,
     active_exception: BaseException | None,
+    redact_diagnostics: bool = False,
 ) -> None:
     """Remove transaction residue without changing an active outcome."""
 
@@ -711,7 +749,9 @@ def _cleanup_write_set_directory(
                 "outcome": "residue_retained",
                 "error_code": "transaction_cleanup_failed",
                 "fingerprint": "export.write_set.cleanup_failed",
-                "transaction_name": transaction_dir.name,
+                "transaction_name": (
+                    _REDACTED_TRANSACTION_NAME if redact_diagnostics else transaction_dir.name
+                ),
                 "error_type": type(exc).__name__,
                 "metrics_summary": metrics.format_summary(),
             },
@@ -727,6 +767,7 @@ def _record_write_set_rollback_failures(
     failures: tuple[WriteSetRollbackFailure, ...],
     *,
     active_exception: BaseException,
+    redact_diagnostics: bool = False,
 ) -> None:
     """Record incomplete rollback while preserving the original exception."""
 
@@ -739,8 +780,13 @@ def _record_write_set_rollback_failures(
             "outcome": "recovery_data_retained",
             "error_code": "rollback_incomplete",
             "fingerprint": "export.write_set.rollback_incomplete",
-            "transaction_name": transaction_dir.name,
-            "artifacts": tuple(failure.artifact_name for failure in failures),
+            "transaction_name": (
+                _REDACTED_TRANSACTION_NAME if redact_diagnostics else transaction_dir.name
+            ),
+            "artifacts": tuple(
+                _REDACTED_ARTIFACT_NAME if redact_diagnostics else failure.artifact_name
+                for failure in failures
+            ),
             "operations": tuple(failure.operation for failure in failures),
             "error_types": tuple(failure.error_type for failure in failures),
             "metrics_summary": metrics.format_summary(),

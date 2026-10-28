@@ -80,7 +80,26 @@ def test_bootstrap_emits_exact_whole_stage_and_lock_wrappers(tmp_path: Path) -> 
 
     asyncio.run(handlers.emit_initial_events(recorder, session))
 
-    assert len(recorder.events) == INITIAL_EVENT_COUNT == 11
+    assert len(recorder.events) == INITIAL_EVENT_COUNT == 12
+    assert [event["type"] for event in recorder.events] == [
+        "session_status",
+        "snapshot_changed",
+        "profile_changed",
+        "profile_catalog_changed",
+        "history_updated",
+        "patch_genome_changed",
+        "kit_captures_changed",
+        "mutation_targets_changed",
+        "mutation_locks_changed",
+        "mutation_parameters_changed",
+        "dual_machine_stage_changed",
+        "performance_console_changed",
+    ]
+    parameters = recorder.events[9]
+    assert set(parameters) == {"type", "rytm_parameters", "a4_parameters", "controls"}
+    assert parameters["rytm_parameters"] is None
+    assert parameters["a4_parameters"] is None
+    assert isinstance(parameters["controls"], list)
     locks = next(event for event in recorder.events if event["type"] == "mutation_locks_changed")
     stage_event = next(
         event for event in recorder.events if event["type"] == "dual_machine_stage_changed"

@@ -359,6 +359,24 @@ Safety:
 {_safety_block(SAFETY_LINES)}"""
 
 
+def _device_support_inventory_report_help():
+    return """RytmRandomizer passive CLI: device-support-inventory-report
+
+Usage:
+  python -m rytm_randomizer.cli device-support-inventory-report
+  python -m rytm_randomizer.cli device-support-inventory-report --json
+  python -m rytm_randomizer.cli device-support-inventory-report --help
+
+Behavior:
+  Reports canonical native fields, MIDI catalogs, precision, legal domains,
+  mutation/export support, recovery, evidence sources and exact blockers.
+  Storage bounds are not undocumented display-domain or hardware-validation claims.
+
+Safety:
+  Passive and deterministic: no MIDI/USB access or port enumeration.
+  Does not grant hardware validation or unlock A4/BOTH sending."""
+
+
 def _scoped_randomization_preview_help():
     from .reports.scoped_randomization_preview import SAFETY_LINES
 
@@ -2912,6 +2930,20 @@ def _require_help_text(value: object, *, key: str) -> str:
 
 
 HELP_TEXT = {
+    "a4-working-kit-compare": """A4 working-KIT comparison: passive supplied-file inspection
+
+Usage:
+  python -m rytm_randomizer.cli a4-working-kit-compare --manual-baseline FILE --indexed-baseline FILE --working-first FILE --working-repeat FILE --post-save FILE --recovered FILE --track {1,2,3,4} --evidence-origin {synthetic,operator_supplied_files} [--baseline-label LABEL] [--changed-label LABEL]
+
+The manual baseline is pre-edit indexed B. The indexed baseline is retained
+after the unsaved panel edit and before SAVE, expected to remain B while the
+working response contains U. Files do not attest operator chronology, pending
+freshness, atomicity, installed firmware or recovery on an instrument.
+
+With no options, prints usage only. With inputs, prints exact hashes, F1
+words/labels, every raw/body difference and separate repeat/save/recovery checks
+as JSON. All six files, track and evidence origin are mandatory for comparison.
+No MIDI/USB enumeration, port opening, query, sending or device write occurs.""",
     "--help": """RytmRandomizer passive CLI
 
 Usage:
@@ -3496,6 +3528,7 @@ Safety:
   no hardware required""",
     "rytm-snapshot-pad-compatibility-report": _rytm_snapshot_pad_compatibility_report_help,
     "analog-rytm-midi-catalog-report": _analog_rytm_midi_catalog_report_help,
+    "device-support-inventory-report": _device_support_inventory_report_help,
     "scoped-randomization-preview": _scoped_randomization_preview_help,
     "kit-morph-preview": _kit_morph_preview_help,
     "rytm-outbound-cc-repeatability-report": """RytmRandomizer passive CLI: rytm-outbound-cc-repeatability-report

@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "phase": "hardware_validation_pending",
+  "source_commit": "64d5c6193ce227a033f61cd09d497b13ac1fa992",
+  "reference_pr": 254,
+  "midi_disabled": true,
+  "started_at": "2026-10-12T03:42:18Z",
+  "updated_at": "2026-10-12T11:31:17Z",
+  "completed": [
+    "both-device native source-preserving alternatives",
+    "exact original and segment retention",
+    "scope locks and native precision",
+    "supplied-recording comparison and bounded refinement",
+    "favorites and exact disarmed restart recall",
+    "worker interruption cancellation and publication repairs",
+    "actual browser both-device journey",
+    "intermediate frozen-runtime proof",
+    "targeted review repairs and architecture closure",
+    "final 11457-test source suite and 63 touched files at 100 percent coverage",
+    "1292 frontend tests and four coverage measures at 100 percent",
+    "exact-source audio-enabled Windows delivery and verified binary hashes",
+    "final frozen worker RPC proof without developer paths",
+    "strict single-start native both-device journey and exact restart recall",
+    "unchanged normal offline launcher connection proof",
+    "fresh successful PR CI at 63c5ccf2",
+    "delivery receipt and focused first studio test",
+    "90 minute new-package bank rehearsal 180 cycles and two owned recoveries",
+    "maximum legal segment frozen both-device proof and owned cleanup"
+  ],
+  "pending": [
+    "protected human review of final head",
+    "actual instrument recordings and recovery rehearsal"
+  ]
+}

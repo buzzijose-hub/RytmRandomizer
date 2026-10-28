@@ -27,9 +27,9 @@ import time
 from abc import abstractmethod
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
-from typing import Any, Callable, Final, Protocol, runtime_checkable
+from typing import Any, Callable, Protocol, runtime_checkable
 
-from .data import MACHINE_CC
+from .data import MACHINE_CC, MIDI_MESSAGE_SETTLE_SECONDS
 from .observability.logging import get_logger
 
 __all__ = [
@@ -44,10 +44,6 @@ __all__ = [
     "send_nrpn",
     "send_param",
 ]
-
-
-MIDI_MESSAGE_SETTLE_SECONDS: Final[float] = 0.02
-"""Delay after each accepted MIDI message so hardware can settle."""
 
 
 # Module logger for MIDI I/O diagnostic output. Records sit alongside the

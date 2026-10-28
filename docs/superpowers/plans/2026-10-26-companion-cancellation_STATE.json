@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "mission": "PR254 companion cancellation repair and supervised Windows delivery",
+  "started_at_utc": "2026-10-27T01:09:00Z",
+  "budget_hours": 6,
+  "baseline_commit": "e420c30ec2b27f3bf38eedb3e29c9db5805f9965",
+  "branch": "codex/studio-evidence-handoff",
+  "worktree": "C:/Users/Jose Buzzi/.codex/worktrees/dependency-review/RytmRandomizer",
+  "checkpoint_kind": "frozen pre-publication source snapshot; latest local state is output/local/companion-active-run.json and delivery/PR receipts",
+  "phase": "resume_source_verified_before_publication_and_binary_acceptance",
+  "verification_source_commit": "61ca4250b1386640d6328b688978a977b831d141",
+  "resume_start_utc": "2026-10-28T17:18:29Z",
+  "resume_budget_deadline_utc": "2026-10-28T23:18:29Z",
+  "interruption": "Account usage interrupted prior final review before package dispatch. Resume does not count the intervening wall-clock gap as productive work.",
+  "transport": "actual authenticated WebSocket passes combined cancel/close after one accepted packet, ACK/events, accounting, subsequent commands and disconnect race",
+  "cleanup": "acc6697c merged at 248c6c59; taxonomy-conformant cause attachment correction composed; explicit failure families unchanged",
+  "packaging": "assembly regression passes 25 tests; new exact-source binary not yet built",
+  "verification": {
+    "final_integrated_composed": "1326 passed,4known warnings,124.28s; includes all921architecture,286driver,actualWS and updatedportableREADME assertions",
+    "focused": "854 passed, 3 warnings in 15.04s before taxonomy correction; composed correction plus full architecture: 1702 passed, 4 warnings in 91.36s",
+    "frontend": "unchanged lockfile installed independently: 1412 tests / 82 files, 100% all four coverage measures in 111.05s; typecheck/lint/Vite8.0.16 build pass; 4 Chromium journeys pass in 12.8s (real backend plus separately labeled mocked A4 UI)",
+    "architecture": "all 921 architecture cases pass in composed 1702-test gate; prior plan-index, status syntax and variable-raise failures repaired without weakening checks",
+    "full_python": "Frozen61: 13631 passed, 6 existing skips, 6 warnings, 1717.68 seconds; all99PR-touched modules100%lines/branches; pure99.44/floor99unchanged; output/local/companion-resume-full.log and companion-resume.coverage.xml",
+    "dimensional_review": "All eight dimensions completed; two Important docs entry-point conflicts repaired on disjoint1569a4ea/57c18d8b and closure-reviewed; protected approval and historical14/16 remain held",
+    "remote_ci": "Priorpublished80c5failed56duplicate-caplog assertions on Python3.11. Direct-emitter isolation reproduces then repairs without production changes; fresh published-source CI still separate"
+  },
+  "fallback": "C:/Users/Jose Buzzi/Documents/ShowKitForgeStudio/show-kit-forge-studio-d5634cae4ecd",
+  "fallback_integrity": "shell, sidecar and offline launcher hashes unchanged at preflight",
+  "hardware_access": false,
+  "physical_observations": "NOT PERFORMED",
+  "protected_approval": "pending; CHANGES_REQUESTED; no merge",
+  "next": "normal publication and final dimensional review, fresh current-source CI, Windows artifact and offline packaged journeys; record actual outcomes in source-identified delivery receipt"
+}

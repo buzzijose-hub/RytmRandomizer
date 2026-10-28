@@ -36,6 +36,11 @@ lives under `docs/archive/` and is historical — safe to skip on first pass.
 - **[LOCAL_DEV_TOOLING_NOTES.md](LOCAL_DEV_TOOLING_NOTES.md)** — env-var documentation home per `PLAN_REQUIREMENTS.md` Gate 13.
 
 ### Orchestrator state and current live-KIT evidence (runtime/reference; exempt)
+- **[DEVICE_SUPPORT_INVENTORY.md](DEVICE_SUPPORT_INVENTORY.md)** — reproducible native/MIDI/precision/evidence inventory; protection, missing implementation and hardware blockers kept separate.
+- **[RYTM_MAPPING_STATUS.md](RYTM_MAPPING_STATUS.md)** — source-bound audit of all 33 Rytm machines, completed descriptive bindings and remaining semantic, display and precision/recovery gaps.
+- **[Captured Rytm mapping plan](superpowers/plans/2026-10-01-rytm-captured-machine-mapping.md)** — XT Classic and machine SRC projection correction, tests and delivery records.
+- **[October 14 delivery](hardware-validation/2026-10-14-reference-sound-delivery.md)** - exactd563Windows binary/launcher hashes, source gates, actual packaged journeys and separate human/physical requirements.
+- **[Captured Rytm software report](superpowers/plans/2026-10-01-rytm-captured-machine-mapping_RUN_REPORT.md)** — source-specific checks, historical failures, remaining mapping and physical boundaries.
 - **[Release closeout plan](superpowers/plans/2026-09-08-release-closeout.md)** — current Forge/updater/Digitakt coordination, bounded verification and protected review.
 - **[Release closeout report](superpowers/plans/2026-09-08-release-closeout_RUN_REPORT.md)** — exact software receipts, studio artifact and remaining physical/platform limits.
 - **[Release closeout state](superpowers/plans/2026-09-08-release-closeout_STATE.json)** — resumable checkpoint with [schema](superpowers/plans/2026-09-08-release-closeout_STATE.schema.json) and [run log](superpowers/plans/2026-09-08-release-closeout_RUN_LOG.md).
@@ -53,6 +58,10 @@ lives under `docs/archive/` and is historical — safe to skip on first pass.
 - **[superpowers/plans/2026-09-04-show-kit-forge.md](superpowers/plans/2026-09-04-show-kit-forge.md)** — comprehensive plan and direct index of Gate 14/15 durable artifacts.
 - **[hardware-validation/2026-08-28-a4-filter1-frequency-saved-kit-evidence.md](hardware-validation/2026-08-28-a4-filter1-frequency-saved-kit-evidence.md)** — durable hash-pinned interpretation of the saved-kit Filter 1 Frequency evidence.
 - **[hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md](hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md)** — exact blank-observation checklist for the next Rytm/A4 operator-present session.
+
+Native integration: [implemented/missing/unverified map](NATIVE_REPRESENTATION_INTEGRATION.md),
+[saved-versus-working studio experiment](NATIVE_WORKING_KIT_STUDIO_EXPERIMENT.md),
+and [active plan](superpowers/plans/2026-10-12-native-representation-integration.md).
 
 ## Historical material
 

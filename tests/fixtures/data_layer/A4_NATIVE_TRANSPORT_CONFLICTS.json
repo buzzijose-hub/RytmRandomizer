@@ -1,0 +1,38 @@
+{
+  "noise_fade": {
+    "manual_name": "Noise Fade",
+    "native_scale": "BIPOLAR",
+    "display_scale": "unipolar",
+    "blocking_reason": "native_transport_scale_conflict"
+  },
+  "osc1_pwm_depth": {
+    "manual_name": "OSC1 PWM Depth",
+    "native_scale": "U7",
+    "display_scale": "bipolar",
+    "blocking_reason": "native_transport_scale_conflict"
+  },
+  "osc1_pwm_speed": {
+    "manual_name": "OSC1 PWM Speed",
+    "native_scale": "U7",
+    "display_scale": "bipolar",
+    "blocking_reason": "native_transport_scale_conflict"
+  },
+  "osc2_pwm_depth": {
+    "manual_name": "OSC2 PWM Depth",
+    "native_scale": "U7",
+    "display_scale": "bipolar",
+    "blocking_reason": "native_transport_scale_conflict"
+  },
+  "osc2_pwm_speed": {
+    "manual_name": "OSC2 PWM Speed",
+    "native_scale": "U7",
+    "display_scale": "bipolar",
+    "blocking_reason": "native_transport_scale_conflict"
+  },
+  "vibrato_depth": {
+    "manual_name": "Vibrato Depth",
+    "native_scale": "U7",
+    "display_scale": "bipolar",
+    "blocking_reason": "native_transport_scale_conflict"
+  }
+}

@@ -109,6 +109,21 @@ export const blockedSendPlan: CockpitSendPlan = {
   blocked_reasons: ['candidate_high_risk'],
 };
 
+export const pad2RehearsalPlan: CockpitSendPlan = {
+  ...sendPlan,
+  plan_id: 'sendplan-pad2-rehearsal',
+  estimated_midi_msgs: 4,
+  pad_count: 1,
+  locked_pad_ids: [],
+  target_pad_ids: [2],
+  packets: [
+    { pad_id: 2, parameter: 'flt', channel: 1, control: 74, value: 72 },
+    { pad_id: 2, parameter: 'amp_decay', channel: 1, control: 80, value: 0 },
+    { pad_id: 2, parameter: 'overdrive', channel: 1, control: 81, value: 127 },
+    { pad_id: 2, parameter: 'reverb', channel: 1, control: 83, value: 84 },
+  ],
+};
+
 export const profile: ProfileModel = {
   profile_id: 'user-buzzi',
   name: 'buzzi',
@@ -446,6 +461,10 @@ export class FakeCockpitClient {
     const ack: CommandAck =
       this.ackQueue.shift() ?? { request_id: `req-${this.sent.length}`, ok: true };
     return Promise.resolve(ack);
+  }
+
+  emitEvent(event: ProtocolEvent): void {
+    for (const handler of this.listeners.get(event.type) ?? []) handler(event);
   }
 
   on<T extends EventType>(

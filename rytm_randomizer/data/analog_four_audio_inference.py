@@ -143,7 +143,14 @@ _ANALOG_FOUR_AUDIO_INFERENCE_SPECS: Final[tuple[AnalogFourAudioInferenceSpec, ..
         ("Noise Level",), A4_AUDIO_INFERENCE_UNIPOLAR, 8.0, (_term(106.0, "noise"),)
     ),
     AnalogFourAudioInferenceSpec(
-        ("Noise Fade",), A4_AUDIO_INFERENCE_UNIPOLAR, 10.0, (_term(96.0, "tail"),)
+        # FAD is signed: 0 is steady noise, positive is fade-out (A4 manual,
+        # Appendix A, NOISE). Preserve the positive baseline; interpolate the
+        # normalized tail over the remaining 63 - 10 display steps. These are
+        # heuristic screen units, not native u7 values or calibrated seconds.
+        ("Noise Fade",),
+        A4_AUDIO_INFERENCE_BIPOLAR,
+        10.0,
+        (_term(53.0, "tail"),),
     ),
     AnalogFourAudioInferenceSpec(
         ("OSC1 Pulsewidth", "OSC2 Pulsewidth"),

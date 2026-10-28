@@ -184,9 +184,11 @@ def test_capture_service_decodes_a4_filter1_ready_without_overclaiming_other_fie
     assert [item.label for item in result.layout_items] == ["T1", "T2", "T3", "T4"]
     assert {item.status for item in result.layout_items} == {"mutation_ready"}
     assert all(
-        "every other parameter remains mapping-blocked" in item.detail
+        "native field eligibility is source-dependent" in item.detail
         for item in result.layout_items
     )
+    assert all("no live output authority" in item.detail for item in result.layout_items)
+    assert all("do not identify installed firmware" in item.detail for item in result.layout_items)
 
 
 @pytest.mark.parametrize(

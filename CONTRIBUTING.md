@@ -31,7 +31,7 @@
 
 Every PR must satisfy ALL of these. If you cannot satisfy one, do not open the PR; coordinate with @buzzijose-hub.
 
-1. **V1.34 parity** — 685/685 byte-identical JSON goldens under `tests/fixtures/v134_parity/`. Do not regenerate without explicit approval.
+1. **V1.34 parity** — 505 byte-frozen golden files / 685 test items under `tests/fixtures/v134_parity/`. Do not regenerate without explicit approval.
 2. **Coverage ratchet** — ≥95% pure-branch coverage project-wide (enforced by `scripts/coverage_ratchet.py`).
 3. **Architecture tests** — all tests under `tests/architecture/` pass. Do not add to allowlists without justification in the PR body.
 4. **Lint clean** — `ruff check`, `black --check --target-version=py311`, `isort --profile black --check-only` all clean. No exceptions; auto-fix locally before pushing.
@@ -146,6 +146,7 @@ cargo clippy --all-targets -- -D warnings  # required for CI
 - **The sidecar port is configurable.** `RYTM_RAND_WS_PORT=4318 python -m rytm_randomizer.cockpit` overrides the default `4317`. The web frontend reads the port from the same env var (mirrored by the Tauri shell when it spawns the sidecar). Default is safe on every OS this project supports.
 - **Mock-first; armed on purpose.** The cockpit defaults to `MockDeviceAdapter` (no MIDI port opened). The real-MIDI path constructs `RealMidiDeviceAdapter`, which wraps the existing `mido_provider` and only opens a port behind an explicit arm step. This matches the rest of the project's passive-default discipline (Strict rule 8) — running the cockpit never touches your Rytm until you ask it to.
 - **Wrapped passive report JSON is an allowed read-only input pattern.** A passive report that composes another passive report may accept the wrapped upstream JSON object and peel out its inner payload, but it must cover both raw-input and wrapped-report paths in focused tests.
+- **Support inventories are evidence, not authority.** `device-support-inventory-report --json` separates canonical catalogs, native codec domains, recipe bindings, guarded live support and physical blockers. New mappings must retain those distinctions; a storage accessor or software fixture cannot grant mutation, MIDI conversion or hardware readiness. See [`docs/DEVICE_SUPPORT_INVENTORY.md`](docs/DEVICE_SUPPORT_INVENTORY.md).
 - **Run the conformance fixtures when touching the engine.** Changes to `cockpit/engine/mutate.py` or `cockpit/engine/prng.py` must keep `tests/cockpit/fixtures/engine_conformance/*.json` byte-identical. Those fixtures lock the algorithm so the future C-portable implementation produces matching output.
 - **Web frontend tests are fast.** `cd desktop/web && npm test -- --run` runs the full Vitest suite in under 2s on a modern laptop. The Vitest watch mode (`npm test`) is good for tight iteration.
 - **Rust build is the slowest piece; cache it.** First `cargo build` is multi-minute on a cold cache; subsequent rebuilds are seconds. Keep `desktop/shell/target/` between runs (it's already in `.gitignore`).
@@ -161,6 +162,29 @@ cargo clippy --all-targets -- -D warnings  # required for CI
 - **Wrapped-readiness-JSON pattern for passive reports.** Passive reports that consume cockpit data may accept EITHER the inner data JSON (a bare `CockpitSendPlan` / `ProfileModel` mapping) OR the wrapped report JSON (a top-level document with the inner data nested under a known key), peeling out the inner key automatically. PR #104's `cockpit_send_plan_rehearsal_surface.py::_readiness_from_mapping` introduced the pattern; Phase 3's `reports/cockpit_export_rehearsal.py::_profile_from_mapping` follows the same shape for `--profile-id` resolution. New rehearsal-surface-style reports should reuse this peeling helper rather than reinventing it — operators end up passing whichever JSON they already had on hand (the inner data or the previous report's output) and both paths work without a separate flag.
 
 ## Patterns introduced by the CODE_REVIEW.md sweep (2026-05-25)
+
+Studio field scopes compose `cockpit/data/parameter_scope.py`, the pure engine
+cell validator, canonical parameter catalogs and the existing session/plan
+boundary. Keep scope validation server-side and before proposals; never trim
+a blocked send plan. Local rehearsal favorites reuse the versioned library's
+atomic storage and deterministic verification. Recall revokes output grants
+and clears preparation, while physical saved-KIT reload remains manual. Test
+the scoped favorite across a real app restart, with MIDI disabled, before
+calling the portable copy usable for offline rehearsal.
+
+Native offline scopes resolve the optional Device capability, not MIDI ordinal
+ranges. Retain original framed sources separately from semantic favorites;
+portable native recipes retain their profile and algorithm for exact replay.
+Canonical field facts/protection live in `data/`; shared file readers and atomic
+writers sit below both stores. Sensitive original-source publication opts into
+redacted writer diagnostics. Prevalidate recall before a revision is published.
+
+Reference-sound diagnostics use the same isolated audio worker and optional typed
+metadata, not another analysis runtime. Keep the eleven-feature metric unchanged
+when adding qualified pitch/quality evidence. Preserve legacy missing keys and
+candidate identities; reject new refinement without supported diagnostics.
+Audition ranges retain original and selected sample bytes. Archived inference
+versions are replay contracts, not current generation or MIDI eligibility grants.
 
 The 12-PR sweep against the staff-engineer review introduced four reusable patterns that future cockpit / wire-boundary code is expected to follow. Each pattern is mechanically enforced by an architecture test under `tests/architecture/` so the smell cannot reappear silently. The complete table of prevention tests is in [`docs/PLAN_REQUIREMENTS.md`](docs/PLAN_REQUIREMENTS.md#code_reviewmd-prevention-test-family-strengthens-existing-gates-no-new-gate-count) and [`docs/CODE_REVIEW_HOOK_SETUP.md`](docs/CODE_REVIEW_HOOK_SETUP.md).
 
@@ -415,8 +439,24 @@ native BLAS/Numba libraries cannot multiply worker threads under pytest-xdist:
 | `OPENBLAS_NUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
 | `VECLIB_MAXIMUM_THREADS` | Forced to `1` inside the native-audio proof subprocess. |
 
-These are test-process controls only. The application does not read or change
-them, and contributors do not need to set them for normal runs.
+The native audio worker forces `OPENBLAS_NUM_THREADS`, `OMP_NUM_THREADS`,
+`MKL_NUM_THREADS` and `NUMBA_NUM_THREADS` to `1` inside the spawned child only.
+The additional diagnostic controls above are not all production settings.
+In a frozen worker it enables required Numba compiled
+signatures with `NUMBA_DISABLE_JIT=0` and sets `NUMBA_CACHE_DIR` to a parent-owned
+temporary cache that is removed after cleanup. These are internal resource
+controls, not operator configuration or a mode that enables hardware. The
+server and unrelated applications retain their environment, and contributors
+do not need to set these variables for normal runs.
+
+The opt-in native-audio cache diagnostic also sets `NUMBA_CACHE_DIR` to an owned
+shared or isolated cache, reads it only in its bounded child, and enables
+`NUMBA_DEBUG_CACHE=1`. It isolates `TMPDIR`/`TEMP`/`TMP`, clears inherited
+`LIBROSA_CACHE_DIR`, prepends checkout `PYTHONPATH`, disables MIDI and controls
+child buffering/bytecode writes. These overrides are not shipped application
+configuration. See [the diagnostic subprocess controls](docs/LOCAL_DEV_TOOLING_NOTES.md#native-audio-test-subprocess-controls)
+for ownership, native-thread limits, report privacy and the observation-only
+acceptance boundary. Required CI failure status is never cleared by diagnostics.
 
 **On macOS / Linux**, the bare command is the same. CI runs the same
 invocation on a 4-core GitHub runner in ~30-90s depending on the OS.
@@ -556,6 +596,11 @@ initialized Analog Rytm saved-kit SysEx dump for the opt-in codec integration
 test. When unset, that integration test skips with a precise reason. Never
 commit the referenced dump; the variable is test-only and does not enumerate,
 open, or write a MIDI port.
+
+`RYTM_TEST_BEACON_CLIENT_STARTUP` is owned by the Rust beacon regression's
+child-process harness. Unset runs the parent test; the harness selects `unset`
+or `installed` for fresh-provider and preinstalled-provider child cases. It is
+test-only, is not a runtime setting, and constructs requests without sending.
 
 ## Plan requirements — the 18 gates every PR must satisfy
 
@@ -817,6 +862,7 @@ Skills under `.claude/skills/` package repeatable knowledge so an agent (or a hu
 | [`codex-hook-additionalcontext-reprompt`](.claude/skills/learned/codex-hook-additionalcontext-reprompt/SKILL.md) | Codex hooks run only `type:command` handlers — re-prompt the model via `additionalContext`. |
 | [`playwright-strict-mode-selectors`](.claude/skills/learned/playwright-strict-mode-selectors/SKILL.md) | Keep browser locators unique and stable under Playwright strict mode. |
 | [`targeted-live-kit-mutation`](.claude/skills/learned/targeted-live-kit-mutation/SKILL.md) | Carry target-minus-lock scope, fresh capture authority, package-import isolation, exact-plan SEND, narrow A4 evidence, and atomic paired retention through live-kit work. |
+| [`frozen-audio-worker-containment`](.claude/skills/learned/frozen-audio-worker-containment/SKILL.md) | Diagnose frozen Windows spawn/stdin deadlocks and retain worker ownership under repeated cancellation. |
 
 **Codex discovers these too.** Codex scans `$REPO_ROOT/.agents/skills/`, not `.claude/skills/`. The repo ships a committed symlink **`.agents/skills` → `.claude/skills/learned`** so codex auto-discovers every learned skill (identical `SKILL.md` format). Edit a skill once in `.claude/skills/learned/` and both agents see it. On a Windows clone where the symlink checked out as a plain file, run `git config core.symlinks true && git checkout -- .agents/skills` to re-materialize it. See [`AGENTS.md` § Skills](AGENTS.md#skills--codex-auto-discovers-them-from-agentsskills).
 
@@ -1022,6 +1068,16 @@ This is also a required CI check (see `.github/workflows/test.yml`) and is
 listed in `scripts/apply-branch-protection.sh`.
 
 ## Hardware safety boundaries
+
+Native representation contracts are parameter-specific: use the A4 F1 and
+ordinary Rytm LFO Depth data/strategy owners, not a generic screen-to-wire
+conversion. Operator labels must not rewrite persisted candidate replay DTOs.
+Working A4 `0x58` frames may be retained and inspected, but cannot become indexed
+sources, saved favorite recaptures or show-time preflight evidence, even when
+their body hashes match. The existing indexed-source validator enforces this
+from raw frames independently of caller metadata. See the
+[integration map](docs/NATIVE_REPRESENTATION_INTEGRATION.md) and
+[bounded studio experiment](docs/NATIVE_WORKING_KIT_STUDIO_EXPERIMENT.md).
 
 The package has explicit hardware-safety boundaries that **must not regress**:
 

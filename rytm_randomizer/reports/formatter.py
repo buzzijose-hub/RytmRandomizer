@@ -150,6 +150,11 @@ _FINGERPRINT_ENCODING: Final[str] = "utf-8"
 _NONBLANK_MESSAGE_SUFFIX: Final[str] = "must not be " "blank"
 
 
+def sha256_bytes(payload: bytes) -> str:
+    """Full raw-byte identity; unlike a display fingerprint, never truncate or frame."""
+    return sha256(payload).hexdigest()
+
+
 def fingerprint_id(*parts: str) -> str:
     """Return the house 16-hex sha256 fingerprint for ``parts``.
 
@@ -218,4 +223,5 @@ __all__ = [
     "render_passive_report",
     "require_nonblank",
     "safety_section_lines",
+    "sha256_bytes",
 ]

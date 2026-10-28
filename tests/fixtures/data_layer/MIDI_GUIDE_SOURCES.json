@@ -1,0 +1,26 @@
+{
+  "a4": {
+    "device_page": "https://midi.guide/d/elektron/analog-four-mkii/",
+    "supplied_filename": "Analog Four MKII.csv",
+    "supplied_sha256": "da38d8ec8df47d4a6c39034b2f1c829475ac301c712d26c0a4b4787ae259ea69",
+    "attribution": "MIDI Guide / Pencil Research and contributors",
+    "repository_url": "https://github.com/pencilresearch/midi",
+    "license_id": "CC-BY-SA-4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+    "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+    "upstream_blob_sha1": "53a1a26263782ce8f044b112a33642de27f547cd"
+  },
+  "rytm": {
+    "device_page": "https://midi.guide/d/elektron/analog-rytm-mkii/",
+    "supplied_filename": "Analog Rytm MKII.csv",
+    "supplied_sha256": "c370aa520117322ef559147b94b9cee9c392f6482a5147f0ea2485a07ace0cc5",
+    "attribution": "MIDI Guide / Pencil Research and contributors",
+    "repository_url": "https://github.com/pencilresearch/midi",
+    "license_id": "CC-BY-SA-4.0",
+    "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "upstream_license_url": "https://github.com/pencilresearch/midi/blob/main/LICENSE",
+    "upstream_revision": "a52a7c9e1a81a4e95f31ec8b6a660071d11ecd6b",
+    "upstream_blob_sha1": "46cc786dc106f35a00a9412057f8ee63192aa308"
+  }
+}

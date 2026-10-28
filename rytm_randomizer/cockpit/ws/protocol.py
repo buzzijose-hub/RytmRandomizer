@@ -36,8 +36,11 @@ from __future__ import annotations
 
 from typing import Final, Literal, NotRequired, TypedDict
 
+from ...senders.armed_apply import ArmedApplyStatus
 from ..capture import KitCaptureDeviceId, KitCaptureResultDict
 from ..data.a4_preparation import A4PreparationReportDict
+from ..data.a4_studio_audition import A4StudioAuditionPlanDict
+from ..data.parameter_scope import ParameterCellDict, PerformanceParameterControl
 from ..data.show_bank import ShowBankWorkspaceStateDict
 from ..data.stage import DualMachineStageStateDict
 from ..mutation_targets import MutationTargetsDict
@@ -75,7 +78,7 @@ other first-frame type is treated as a malformed handshake and the
 socket is closed with policy-violation code 1008.
 """
 
-INITIAL_EVENT_COUNT: Final[int] = 11
+INITIAL_EVENT_COUNT: Final[int] = 12
 """Number of whole-state event frames emitted after a successful handshake."""
 
 # Failure codes carried on the handshake / size-cap rejection acks. These
@@ -182,6 +185,9 @@ EVENT_MUTATION_TARGETS_CHANGED: Final[Literal["mutation_targets_changed"]] = (
 """Emitted when either device's explicit mutation include-list changes."""
 
 EVENT_MUTATION_LOCKS_CHANGED: Final[Literal["mutation_locks_changed"]] = "mutation_locks_changed"
+EVENT_MUTATION_PARAMETERS_CHANGED: Final[Literal["mutation_parameters_changed"]] = (
+    "mutation_parameters_changed"
+)
 """Emitted with both machines' complete lock deny-lists."""
 
 EVENT_DUAL_MACHINE_STAGE_CHANGED: Final[Literal["dual_machine_stage_changed"]] = (
@@ -248,6 +254,7 @@ EVENT_TYPES: Final[frozenset[str]] = (
             EVENT_KIT_CAPTURES_CHANGED,
             EVENT_MUTATION_TARGETS_CHANGED,
             EVENT_MUTATION_LOCKS_CHANGED,
+            EVENT_MUTATION_PARAMETERS_CHANGED,
             EVENT_DUAL_MACHINE_STAGE_CHANGED,
             EVENT_PERFORMANCE_CONSOLE_CHANGED,
             EVENT_SESSION_STATUS,
@@ -278,6 +285,19 @@ COMMAND_SET_DEPTH: Final[Literal["set_depth"]] = "set_depth"
 COMMAND_SET_PAD_LOCK: Final[Literal["set_pad_lock"]] = "set_pad_lock"
 COMMAND_SET_A4_TRACK_LOCK: Final[Literal["set_a4_track_lock"]] = "set_a4_track_lock"
 COMMAND_SET_MUTATION_TARGETS: Final[Literal["set_mutation_targets"]] = "set_mutation_targets"
+COMMAND_SET_MUTATION_PARAMETERS: Final[Literal["set_mutation_parameters"]] = (
+    "set_mutation_parameters"
+)
+COMMAND_GET_MUTATION_PARAMETERS: Final[Literal["get_mutation_parameters"]] = (
+    "get_mutation_parameters"
+)
+COMMAND_SET_REHEARSAL_PRESET: Final[Literal["set_rehearsal_preset"]] = "set_rehearsal_preset"
+COMMAND_RETAIN_REHEARSAL_FAVORITE: Final[Literal["retain_rehearsal_favorite"]] = (
+    "retain_rehearsal_favorite"
+)
+COMMAND_RECALL_REHEARSAL_FAVORITE: Final[Literal["recall_rehearsal_favorite"]] = (
+    "recall_rehearsal_favorite"
+)
 COMMAND_CLEAR_MUTATION_TARGETS: Final[Literal["clear_mutation_targets"]] = "clear_mutation_targets"
 COMMAND_TOGGLE_PREVIEW: Final[Literal["toggle_preview"]] = "toggle_preview"
 COMMAND_REGEN: Final[Literal["regen"]] = "regen"
@@ -307,6 +327,12 @@ COMMAND_LIST_CAPTURE_INPUTS: Final[Literal["list_capture_inputs"]] = "list_captu
 COMMAND_CAPTURE_CURRENT_KIT: Final[Literal["capture_current_kit"]] = "capture_current_kit"
 
 COMMAND_ARM: Final[Literal["arm"]] = "arm"
+COMMAND_SHOW_BANK_PREPARE_A4_STUDIO_AUDITION: Final[
+    Literal["show_bank_prepare_a4_studio_audition"]
+] = "show_bank_prepare_a4_studio_audition"
+COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION: Final[Literal["show_bank_send_a4_studio_audition"]] = (
+    "show_bank_send_a4_studio_audition"
+)
 """Explicit in-UI arm: swap the session onto the real-MIDI adapter.
 
 The only path that ever constructs the real device adapter — and it does
@@ -329,6 +355,7 @@ COMMAND_LIBRARY_DELETE: Final[Literal["library_delete"]] = "library_delete"
 COMMAND_LIBRARY_IMPORT_CAPTURES: Final[Literal["library_import_captures"]] = (
     "library_import_captures"
 )
+COMMAND_REFERENCE_SOUND: Final[Literal["reference_sound"]] = "reference_sound"
 
 COMMAND_SHOW_BANK_LIST: Final[Literal["show_bank_list"]] = "show_bank_list"
 COMMAND_SHOW_BANK_CREATE: Final[Literal["show_bank_create"]] = "show_bank_create"
@@ -336,6 +363,9 @@ COMMAND_SHOW_BANK_SELECT: Final[Literal["show_bank_select"]] = "show_bank_select
 COMMAND_SHOW_BANK_UPDATE: Final[Literal["show_bank_update"]] = "show_bank_update"
 COMMAND_SHOW_BANK_ADOPT_SOURCES: Final[Literal["show_bank_adopt_sources"]] = (
     "show_bank_adopt_sources"
+)
+COMMAND_SHOW_BANK_ADOPT_LIBRARY_SOURCES: Final[Literal["show_bank_adopt_library_sources"]] = (
+    "show_bank_adopt_library_sources"
 )
 COMMAND_SHOW_BANK_GENERATE_CANDIDATES: Final[Literal["show_bank_generate_candidates"]] = (
     "show_bank_generate_candidates"
@@ -380,6 +410,11 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_SET_PAD_LOCK,
             COMMAND_SET_A4_TRACK_LOCK,
             COMMAND_SET_MUTATION_TARGETS,
+            COMMAND_SET_MUTATION_PARAMETERS,
+            COMMAND_GET_MUTATION_PARAMETERS,
+            COMMAND_SET_REHEARSAL_PRESET,
+            COMMAND_RETAIN_REHEARSAL_FAVORITE,
+            COMMAND_RECALL_REHEARSAL_FAVORITE,
             COMMAND_CLEAR_MUTATION_TARGETS,
             COMMAND_TOGGLE_PREVIEW,
             COMMAND_REGEN,
@@ -395,6 +430,8 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_MOCK_APPLY_OPERATOR_PACKAGE,
             COMMAND_BUILD_OPERATOR_PACKAGE_RECEIPT,
             COMMAND_ARM,
+            COMMAND_SHOW_BANK_PREPARE_A4_STUDIO_AUDITION,
+            COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION,
             COMMAND_DISARM,
             COMMAND_DIAGNOSTICS,
             COMMAND_LIBRARY_LIST,
@@ -402,6 +439,7 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_LIBRARY_TAG,
             COMMAND_LIBRARY_DELETE,
             COMMAND_LIBRARY_IMPORT_CAPTURES,
+            COMMAND_REFERENCE_SOUND,
             COMMAND_ANALYZE_PATCH_GENOME,
             COMMAND_LIST_CAPTURE_INPUTS,
             COMMAND_CAPTURE_CURRENT_KIT,
@@ -410,6 +448,7 @@ COMMAND_TYPES: Final[frozenset[str]] = (
             COMMAND_SHOW_BANK_SELECT,
             COMMAND_SHOW_BANK_UPDATE,
             COMMAND_SHOW_BANK_ADOPT_SOURCES,
+            COMMAND_SHOW_BANK_ADOPT_LIBRARY_SOURCES,
             COMMAND_SHOW_BANK_GENERATE_CANDIDATES,
             COMMAND_SHOW_BANK_SELECT_CANDIDATE,
             COMMAND_SHOW_BANK_MARK_FAVORITE,
@@ -590,6 +629,7 @@ class SessionStatusEvent(TypedDict):
     unsaved_sends: int
     capture_enabled: bool
     app_version: str
+    armed_device_id: NotRequired[KitCaptureDeviceId]
 
 
 class ConnectionStateDict(TypedDict):
@@ -709,6 +749,15 @@ class ShowBankSourceSlotsAck(TypedDict):
     analog_four: int
 
 
+class A4StudioAuditionOutcome(TypedDict):
+    """Bounded delivery receipt; accepted packets do not prove device acceptance."""
+
+    status: ArmedApplyStatus
+    sent_count: int
+    expected_count: int
+    reason: str
+
+
 class CommandAck(TypedDict, total=False):
     """Server's reply to a :class:`CommandEnvelope`.
 
@@ -798,6 +847,8 @@ class CommandAck(TypedDict, total=False):
     show_bank: ShowBankWorkspaceStateDict
     show_bank_id: str
     a4_preparation: A4PreparationReportDict
+    a4_studio_plan: A4StudioAuditionPlanDict
+    a4_studio_outcome: A4StudioAuditionOutcome
     show_bank_entry_id: str
     candidate_ids: list[str]
     candidate_id: str
@@ -829,6 +880,34 @@ class SelectProfileCommand(TypedDict):
 
     type: Literal["select_profile"]
     profile_id: str
+
+
+class MutationParametersChangedEvent(TypedDict):
+    type: Literal["mutation_parameters_changed"]
+    rytm_parameters: list[ParameterCellDict] | None
+    a4_parameters: list[ParameterCellDict] | None
+    controls: list[PerformanceParameterControl]
+
+
+class SetMutationParametersCommand(TypedDict):
+    type: Literal["set_mutation_parameters"]
+    device_id: str
+    parameter_cells: list[ParameterCellDict] | None
+
+
+class SetRehearsalPresetCommand(TypedDict):
+    type: Literal["set_rehearsal_preset"]
+    preset_id: str
+
+
+class RetainRehearsalFavoriteCommand(TypedDict):
+    type: Literal["retain_rehearsal_favorite"]
+    name: str
+
+
+class RecallRehearsalFavoriteCommand(TypedDict):
+    type: Literal["recall_rehearsal_favorite"]
+    record_id: str
 
 
 class SetDepthCommand(TypedDict):
@@ -999,6 +1078,31 @@ class ArmCommand(TypedDict, total=False):
     arm_token: str
     confirm: bool
     port_name: str | None
+    device_id: KitCaptureDeviceId
+    acknowledge_unvalidated_hardware: bool
+
+
+class PrepareA4StudioAuditionCommand(TypedDict):
+    """Canonical unqualified RAM-only preparation, never an imported report."""
+
+    type: Literal["show_bank_prepare_a4_studio_audition"]
+    bank_id: str
+    entry_id: str
+    expected_revision: int
+    output_port_name: str
+    track_channels: list[int]
+    source_reloaded: bool
+    acknowledge_unvalidated_hardware: bool
+
+
+class SendA4StudioAuditionCommand(TypedDict):
+    """One explicitly confirmed, previously prepared studio attempt."""
+
+    type: Literal["show_bank_send_a4_studio_audition"]
+    send_plan_id: str
+    confirm: bool
+    source_reloaded: bool
+    acknowledge_unvalidated_hardware: bool
 
 
 class DisarmCommand(TypedDict):
@@ -1050,6 +1154,34 @@ class LibraryImportCapturesCommand(TypedDict):
     """
 
     type: Literal["library_import_captures"]
+
+
+class ReferenceSoundCommand(TypedDict, total=False):
+    """Bounded passive reference-sound operations; no paths or output authority."""
+
+    type: Literal["reference_sound"]
+    action: str
+    session_id: str
+    candidate_id: str
+    candidate_sha256: str
+    source_record_id: str
+    device_id: str
+    target: int
+    parameters: list[str]
+    locks: list[str]
+    strength: float
+    correction_gain: float
+    favorite: bool
+    title: str
+    size: int
+    upload_id: str
+    chunk: str
+    offset: int
+    start_frame: int
+    frame_count: int
+    destination_slot: int
+    audio_kind: Literal["segment", "original", "recording"]
+    recording_sha256: str
 
 
 class AnalyzePatchGenomeCommand(TypedDict):
@@ -1137,6 +1269,17 @@ class ShowBankGenerateCandidatesCommand(TypedDict):
     rytm_locks: list[int]
     a4_targets: list[int]
     a4_locks: list[int]
+
+
+class ShowBankAdoptLibrarySourcesCommand(TypedDict):
+    type: Literal["show_bank_adopt_library_sources"]
+    bank_id: str
+    expected_revision: int
+    rytm_record_id: str
+    a4_record_id: str
+    rytm_slot: int
+    a4_slot: int
+    allow_legacy_reconstruction: NotRequired[bool]
 
 
 class ShowBankSelectCandidateCommand(TypedDict):
@@ -1234,6 +1377,7 @@ class ShowBankRetainCaptureCommand(TypedDict):
 class ShowBankImportCommand(TypedDict):
     type: Literal["show_bank_import"]
     pack_name: str
+    destination_bank_id: NotRequired[str]
 
 
 class ShowBankExportCommand(TypedDict):
@@ -1250,6 +1394,10 @@ __all__ = [
     "CaptureCurrentKitCommand",
     "ClearMutationTargetsCommand",
     "COMMAND_ARM",
+    "COMMAND_SHOW_BANK_PREPARE_A4_STUDIO_AUDITION",
+    "COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION",
+    "PrepareA4StudioAuditionCommand",
+    "SendA4StudioAuditionCommand",
     "COMMAND_ANALYZE_PATCH_GENOME",
     "COMMAND_CAPTURE_CURRENT_KIT",
     "COMMAND_CLEAR_MUTATION_TARGETS",
@@ -1278,8 +1426,14 @@ __all__ = [
     "COMMAND_SET_DEPTH",
     "COMMAND_SET_A4_TRACK_LOCK",
     "COMMAND_SET_MUTATION_TARGETS",
+    "COMMAND_SET_MUTATION_PARAMETERS",
+    "COMMAND_GET_MUTATION_PARAMETERS",
+    "COMMAND_SET_REHEARSAL_PRESET",
+    "COMMAND_RETAIN_REHEARSAL_FAVORITE",
+    "COMMAND_RECALL_REHEARSAL_FAVORITE",
     "COMMAND_SET_PAD_LOCK",
     "COMMAND_SHOW_BANK_ADOPT_SOURCES",
+    "COMMAND_SHOW_BANK_ADOPT_LIBRARY_SOURCES",
     "COMMAND_SHOW_BANK_ATTEST_HARDWARE_SAVED",
     "COMMAND_SHOW_BANK_CREATE",
     "COMMAND_SHOW_BANK_DUPLICATE_ENTRY",
@@ -1300,8 +1454,10 @@ __all__ = [
     "COMMAND_SHOW_BANK_VERIFY_RECAPTURE",
     "COMMAND_TOGGLE_PREVIEW",
     "COMMAND_TYPES",
+    "COMMAND_REFERENCE_SOUND",
     "COMMAND_UNDO",
     "CommandAck",
+    "A4StudioAuditionOutcome",
     "CommandEnvelope",
     "ConnectionChangedEvent",
     "ConnectionStateDict",
@@ -1320,6 +1476,7 @@ __all__ = [
     "EVENT_KIT_CAPTURES_CHANGED",
     "EVENT_MUTATION_TARGETS_CHANGED",
     "EVENT_MUTATION_LOCKS_CHANGED",
+    "EVENT_MUTATION_PARAMETERS_CHANGED",
     "EVENT_MUTATION_PREVIEWED",
     "EVENT_PATCH_GENOME_CHANGED",
     "EVENT_PERFORMANCE_CONSOLE_CHANGED",
@@ -1340,6 +1497,7 @@ __all__ = [
     "LibraryChangedEvent",
     "LibraryDeleteCommand",
     "LibraryImportCapturesCommand",
+    "ReferenceSoundCommand",
     "LibraryListCommand",
     "LibrarySearchCommand",
     "LibraryTagCommand",
@@ -1351,6 +1509,7 @@ __all__ = [
     "MockApplyOperatorPackageCommand",
     "MutationPreviewedEvent",
     "MutationLocksChangedEvent",
+    "MutationParametersChangedEvent",
     "MutationTargetsChangedEvent",
     "PatchGenomeChangedEvent",
     "PerformanceConsoleChangedEvent",
@@ -1368,11 +1527,16 @@ __all__ = [
     "SendPlanChangedEvent",
     "SessionStatusEvent",
     "SetDepthCommand",
+    "SetMutationParametersCommand",
+    "SetRehearsalPresetCommand",
+    "RetainRehearsalFavoriteCommand",
+    "RecallRehearsalFavoriteCommand",
     "SetA4TrackLockCommand",
     "SetMutationTargetsCommand",
     "SetPadLockCommand",
     "SnapshotChangedEvent",
     "ShowBankAdoptSourcesCommand",
+    "ShowBankAdoptLibrarySourcesCommand",
     "ShowBankAttestHardwareSavedCommand",
     "ShowBankChangedEvent",
     "ShowBankCreateCommand",

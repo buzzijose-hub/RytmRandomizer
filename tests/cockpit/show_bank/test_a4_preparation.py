@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
+import re
 from collections.abc import Sequence
 from dataclasses import FrozenInstanceError, dataclass, replace
 from datetime import timedelta
@@ -19,6 +21,7 @@ from cockpit.show_bank.conftest import (
 
 from rytm_randomizer.cockpit.data.a4_preparation import (
     A4_PREPARATION_PERMANENT_BLOCKERS,
+    A4NativePreparationChange,
     A4PreparationReport,
 )
 from rytm_randomizer.cockpit.data.show_bank import ShowBankEntry, ShowKitCandidate, ShowKitScope
@@ -27,9 +30,17 @@ from rytm_randomizer.cockpit.show_bank.a4_preparation import (
     A4PreparationContext,
     prepare_a4_audition,
 )
+from rytm_randomizer.data.analog_four_native_transport import (
+    A4_NATIVE_TRANSPORT_SCHEMA_VERSION,
+    AnalogFourNativeTransportChangeDict,
+    AnalogFourNativeTransportPreviewDict,
+)
 from rytm_randomizer.devices import (
     AnalogFourFilter1FrequencyCandidateMutation,
+    AnalogFourNativeMutation,
     get_analog_four_filter1_frequency_candidate_capability,
+    get_analog_four_native_field_capability,
+    preview_analog_four_native_cc_transport,
     resolve_saved_kit_capture_capability,
 )
 from rytm_randomizer.devices.strategies.analog_four_filter1_frequency_candidate import (
@@ -151,6 +162,10 @@ def test_complete_local_evidence_is_deterministic_and_still_permanently_blocked(
     assert wire["changes"][0]["unpacked_offsets"] == [128, 129]
     assert "packets" not in wire
     assert "framed_sysex" not in wire
+    assert report.transport_preview is not None
+    assert report.transport_preview.mapping_complete is False
+    assert report.transport_preview.ready is False
+    assert wire["transport_preview"] == report.transport_preview.to_dict()
     wire["blocked_reasons"].clear()
     wire["changes"].clear()
     assert report.blocked_reasons == A4_PREPARATION_PERMANENT_BLOCKERS
@@ -217,6 +232,7 @@ def test_missing_retained_bytes_are_explicit_blockers(
     assert member.replace("frame", "bytes_unavailable") in report.blocked_reasons
     assert not report.candidate_bytes_verified
     assert report.changes == ()
+    assert report.transport_preview is None
 
 
 def test_missing_selection_and_recovery_slot_have_no_implicit_fallback(
@@ -529,3 +545,58 @@ def test_scope_ids_are_checked_against_the_registered_device(
     context = replace(preparation_case.context, scope=MutationScope(target_ids=frozenset({5})))
     with pytest.raises(ValueError, match="target A4 track ids are unavailable"):
         replace(preparation_case, context=context).review()
+
+
+def test_native_transport_wire_members_match_the_frontend_evidence_contract() -> None:
+    protocol = (
+        Path(__file__).resolve().parents[3] / "desktop" / "web" / "src" / "ws" / "protocol.ts"
+    ).read_text(encoding="utf-8")
+    body = protocol.split("export interface A4NativeTransportPreview {\n", 1)[1].split("\n}", 1)[0]
+    assert set(re.findall(r"^  (\w+):", body, re.MULTILINE)) == set(
+        AnalogFourNativeTransportPreviewDict.__annotations__
+    )
+    assert set(re.findall(r"^    (\w+):", body, re.MULTILINE)) == set(
+        AnalogFourNativeTransportChangeDict.__annotations__
+    )
+    assert f"schema_version: '{A4_NATIVE_TRANSPORT_SCHEMA_VERSION}'" in body
+    assert "ready: false" in body and "channel_routing_verified: false" in body
+    assert "output_authority: 'offline-review-only'" in body
+
+
+def test_frontend_native_transport_examples_equal_real_canonical_serialization() -> None:
+    root = Path(__file__).resolve().parents[3]
+    examples = json.loads(
+        (root / "desktop/web/tests/cockpit/a4NativeTransportContract.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    capability = get_analog_four_native_field_capability()
+    source = capability.render_native_fields(
+        (root / "tests/fixtures/rio145/A4_Test1_Init_Kit.syx").read_bytes(),
+        (
+            AnalogFourNativeMutation("osc1_level", 1, 64),
+            AnalogFourNativeMutation("noise_fade", 1, 64),
+        ),
+    ).framed_sysex
+    for name, fields in (("complete", ("osc1_level",)), ("mixed", ("osc1_level", "noise_fade"))):
+        mutations = tuple(AnalogFourNativeMutation(parameter, 1, 65) for parameter in fields)
+        rendered = capability.render_native_fields(source, mutations)
+        changes = tuple(
+            A4NativePreparationChange(
+                change.source.track,
+                change.source.parameter,
+                change.source.encoded_native,
+                change.rendered.encoded_native,
+                change.source.metadata.native_encoding.value,
+                change.source.screen_value,
+                change.rendered.screen_value,
+                change.source.unpacked_offsets,
+            ).to_dict()
+            for change in rendered.applied_mutations
+        )
+        assert examples[name] == {
+            "transport_preview": preview_analog_four_native_cc_transport(
+                source, mutations
+            ).to_dict(),
+            "changes": list(changes),
+        }

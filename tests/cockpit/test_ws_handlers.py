@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -50,6 +51,7 @@ from rytm_randomizer.cockpit.ws.protocol import (
     EVENT_HISTORY_UPDATED,
     EVENT_KIT_CAPTURES_CHANGED,
     EVENT_MUTATION_LOCKS_CHANGED,
+    EVENT_MUTATION_PARAMETERS_CHANGED,
     EVENT_MUTATION_PREVIEWED,
     EVENT_MUTATION_TARGETS_CHANGED,
     EVENT_PATCH_GENOME_CHANGED,
@@ -118,6 +120,63 @@ def test_recompute_candidate_uses_lru_cache_hit(tmp_path: Path) -> None:
     assert second is first
     assert session.current_candidate is first
     handlers._recompute_cache.clear()
+
+
+@pytest.mark.parametrize(
+    ("depth", "targets", "locks", "expected_count"),
+    [(0.2, {11}, set(), 1), (0.2, {2}, set(), 0), (0.2, {11}, {11}, 0)],
+)
+@pytest.mark.parametrize("package_propagates", [False, True])
+def test_recompute_candidate_logs_bounded_guard_outcome_only_for_effective_pads(
+    tmp_path: Path,
+    ws_handler_caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
+    package_propagates: bool,
+    depth: float,
+    targets: set[int],
+    locks: set[int],
+    expected_count: int,
+) -> None:
+    caplog = ws_handler_caplog
+    monkeypatch.setattr(logging.getLogger("rytm_randomizer"), "propagate", package_propagates)
+    source = Snapshot(
+        snapshot_id="guarded-source",
+        device="analog_rytm_mk2",
+        captured_at=_FIXED_TS,
+        pads=(
+            PadState(pad_id=2, machine="SD Acoustic", params={"dec": 60}),
+            PadState(
+                pad_id=11, machine="CY Ride", params={"src_cy_ride_2": 30, "src_cy_ride_5": 40}
+            ),
+        ),
+        scene_slot="A01",
+        bpm=138.0,
+    )
+    session = _make_session(tmp_path)
+    session.device = MockDeviceAdapter(initial=source)
+    session.active_profile = _profile()
+    session.depth = depth
+    session.rytm_pad_targets = frozenset(targets)
+    session.pad_locks = frozenset(locks)
+    handlers._recompute_cache.clear()
+    logger = logging.getLogger("rytm_randomizer.cockpit.ws.handlers")
+    try:
+        with caplog.at_level(logging.INFO, logger=logger.name):
+            candidate = handlers._recompute_candidate(session)
+            assert handlers._recompute_candidate(session) is candidate
+        records = [
+            record for record in caplog.records if record.message == "mutation_guard_outcome"
+        ]
+        assert len(records) == expected_count
+        if expected_count:
+            assert records[0].pad_id == 11
+            assert records[0].blocker_codes == ["src_cy_ride_slot_unverified"]
+            assert records[0].outcome == "protected_preserved"
+            assert records[0].protected_field_count == 2
+            assert candidate is not None and candidate.pad_deltas[0].changed_keys == frozenset()
+        assert "guarded-source" not in caplog.text
+    finally:
+        handlers._recompute_cache.clear()
 
 
 def test_recompute_candidate_evicts_oldest_when_over_capacity(tmp_path: Path) -> None:
@@ -2658,7 +2717,7 @@ def test_analyze_patch_genome_requires_both_fields(tmp_path: Path) -> None:
     assert recorder.events == []
 
 
-def test_emit_initial_events_sends_eleven_events_in_order(tmp_path: Path) -> None:
+def test_emit_initial_events_sends_twelve_events_in_order(tmp_path: Path) -> None:
     session = _make_session(tmp_path)
     recorder = _Recorder()
 
@@ -2675,6 +2734,7 @@ def test_emit_initial_events_sends_eleven_events_in_order(tmp_path: Path) -> Non
         EVENT_KIT_CAPTURES_CHANGED,
         EVENT_MUTATION_TARGETS_CHANGED,
         EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_MUTATION_PARAMETERS_CHANGED,
         EVENT_DUAL_MACHINE_STAGE_CHANGED,
         _PERFORMANCE_CONSOLE_CHANGED,
     ]
@@ -2930,7 +2990,7 @@ def test_build_connection_changed_carries_whole_state_dict() -> None:
 def test_emit_initial_events_appends_connection_changed_when_manager_active(
     tmp_path: Path,
 ) -> None:
-    """Wired boot path: the 11-event bootstrap gains a final connection frame."""
+    """Wired boot path: the 12-event bootstrap gains a final connection frame."""
 
     session = _make_session(tmp_path)
     recorder = _Recorder()
@@ -2950,6 +3010,7 @@ def test_emit_initial_events_appends_connection_changed_when_manager_active(
         EVENT_KIT_CAPTURES_CHANGED,
         EVENT_MUTATION_TARGETS_CHANGED,
         EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_MUTATION_PARAMETERS_CHANGED,
         EVENT_DUAL_MACHINE_STAGE_CHANGED,
         _PERFORMANCE_CONSOLE_CHANGED,
         "connection_changed",
@@ -2959,8 +3020,8 @@ def test_emit_initial_events_appends_connection_changed_when_manager_active(
     assert recorder.events[0]["connection_phase"] == "listening"
 
 
-def test_emit_initial_events_stays_eleven_events_when_unwired(tmp_path: Path) -> None:
-    """Unwired sessions emit the authoritative 11-event bootstrap exactly."""
+def test_emit_initial_events_stays_twelve_events_when_unwired(tmp_path: Path) -> None:
+    """Unwired sessions emit the authoritative 12-event bootstrap exactly."""
 
     connection.set_active_connection_manager(None)
     session = _make_session(tmp_path)
@@ -2978,6 +3039,7 @@ def test_emit_initial_events_stays_eleven_events_when_unwired(tmp_path: Path) ->
         EVENT_KIT_CAPTURES_CHANGED,
         EVENT_MUTATION_TARGETS_CHANGED,
         EVENT_MUTATION_LOCKS_CHANGED,
+        EVENT_MUTATION_PARAMETERS_CHANGED,
         EVENT_DUAL_MACHINE_STAGE_CHANGED,
         _PERFORMANCE_CONSOLE_CHANGED,
     ]

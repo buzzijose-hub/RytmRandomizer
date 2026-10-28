@@ -1,0 +1,26 @@
+{
+  "complete": {
+    "transport_preview": {
+      "schema_version": "a4-native-transport-preview-v1", "mapping_complete": true,
+      "changes": [{"track_id": 1, "parameter": "osc1_level", "before_native": 64, "after_native": 65, "cc_number": 69, "before_cc7": 64, "after_cc7": 65, "roundtrip_exact": true, "blockers": []}],
+      "blocked_reasons": ["a4_hardware_audition_validation_pending", "a4_live_transport_mapping_unverified", "persistent_kit_write_prohibited", "channel_routing_unverified"],
+      "ready": false, "output_authority": "offline-review-only", "hardware_send_validated": false, "channel_routing_verified": false
+    },
+    "changes": [{"track_id": 1, "parameter": "osc1_level", "before_encoded_native": 64, "after_encoded_native": 65, "native_encoding": "unsigned-native-u7", "before_screen_value": "64", "after_screen_value": "65", "unpacked_offsets": [72]}]
+  },
+  "mixed": {
+    "transport_preview": {
+      "schema_version": "a4-native-transport-preview-v1", "mapping_complete": false,
+      "changes": [
+        {"track_id": 1, "parameter": "osc1_level", "before_native": 64, "after_native": 65, "cc_number": 69, "before_cc7": 64, "after_cc7": 65, "roundtrip_exact": true, "blockers": []},
+        {"track_id": 1, "parameter": "noise_fade", "before_native": 64, "after_native": 65, "cc_number": null, "before_cc7": null, "after_cc7": null, "roundtrip_exact": false, "blockers": ["native_transport_scale_conflict"]}
+      ],
+      "blocked_reasons": ["a4_hardware_audition_validation_pending", "a4_live_transport_mapping_unverified", "persistent_kit_write_prohibited", "channel_routing_unverified", "native_transport_scale_conflict"],
+      "ready": false, "output_authority": "offline-review-only", "hardware_send_validated": false, "channel_routing_verified": false
+    },
+    "changes": [
+      {"track_id": 1, "parameter": "osc1_level", "before_encoded_native": 64, "after_encoded_native": 65, "native_encoding": "unsigned-native-u7", "before_screen_value": "64", "after_screen_value": "65", "unpacked_offsets": [72]},
+      {"track_id": 1, "parameter": "noise_fade", "before_encoded_native": 64, "after_encoded_native": 65, "native_encoding": "centered-64-native-u7", "before_screen_value": "0", "after_screen_value": "1", "unpacked_offsets": [104]}
+    ]
+  }
+}

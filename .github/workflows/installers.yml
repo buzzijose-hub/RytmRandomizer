@@ -473,6 +473,14 @@ jobs:
           for name, source in artifacts.items():
               shutil.copy2(source, target / name)
               hashes[name] = hashlib.sha256((target / name).read_bytes()).hexdigest()
+          frontend = Path("desktop/web/dist")
+          frontend_hashes = {
+              path.relative_to(frontend).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+              for path in sorted(frontend.rglob("*"))
+              if path.is_file()
+          }
+          if "index.html" not in frontend_hashes:
+              raise RuntimeError("Missing built frontend index.html")
           tracked_build_changes = []
           numstat = subprocess.check_output(
               ["git", "diff", "--ignore-cr-at-eol", "--numstat", "--no-renames", "-z"],
@@ -500,7 +508,8 @@ jobs:
               "tracked_build_changes": tracked_build_changes,
               "resources": ["binaries/rytm-sidecar.exe"],
               "sha256": hashes,
-              "hardware_validation": "pending; A4 SEND and persistent SAVE remain blocked",
+              "embedded_frontend_sha256": frontend_hashes,
+              "hardware_validation": "pending; bounded 25-control A4 studio trials require supervision; general A4/BOTH stage use and persistent SAVE remain blocked",
               "signing": "unsigned studio build",
           }
           (target / "BUILD-MANIFEST.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
@@ -510,8 +519,10 @@ jobs:
               "Requires Microsoft Edge WebView2 Runtime. No Python installation is needed.\n"
               "BUILD-MANIFEST.json identifies the source and both binary SHA256 hashes.\n"
               "Follow the matching repository studio checklist before any hardware action:\n"
-              "docs/hardware-validation/2026-09-04-show-kit-forge-studio-checklist.md\n"
-              "A4 SEND and persistent Cockpit SAVE remain blocked.\n",
+              "docs/hardware-validation/2026-10-15-a4-studio-audition.md\n"
+              "Use only after the matching studio-procedure/DELIVERY-RECEIPT.md records acceptance.\n"
+              "The bounded 25-control A4 RAM-only studio trial requires explicit arm, exact-plan confirmation and manual KIT reload.\n"
+              "General A4/BOTH stage use and persistent Cockpit SAVE remain blocked.\n",
               encoding="utf-8",
           )
 

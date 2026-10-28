@@ -8,6 +8,17 @@ import Snapshot`` without reaching into each submodule. See
 
 from __future__ import annotations
 
+from ...data.local_artifact_recovery import (
+    LOCAL_ARTIFACT_RECOVERY_MESSAGES,
+    LOCAL_EXPORT_RECOVERY_MESSAGES,
+    LOCAL_SOURCE_RECOVERY_MESSAGES,
+)
+from ...guardrails.input_validation import (
+    canonical_json_bytes,
+    require_exact_keys,
+    require_object,
+    require_sequence,
+)
 from .history import History, HistoryEntry
 from .mutation_candidate import MutationCandidate, PadDelta
 from .profile_model import ProfileModel, StyleTrait, TraitPadWeight
@@ -50,6 +61,13 @@ from .types import (
 from .ulid import new_ulid
 
 __all__ = [
+    "require_exact_keys",
+    "require_object",
+    "require_sequence",
+    "canonical_json_bytes",
+    "LOCAL_ARTIFACT_RECOVERY_MESSAGES",
+    "LOCAL_EXPORT_RECOVERY_MESSAGES",
+    "LOCAL_SOURCE_RECOVERY_MESSAGES",
     "HISTORY_KIND_VALUES",
     "History",
     "HistoryEntry",

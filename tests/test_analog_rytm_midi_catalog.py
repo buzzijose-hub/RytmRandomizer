@@ -100,6 +100,11 @@ def test_machine_src_tables_cover_machine_specific_parameter_names() -> None:
     assert cb_classic[-1].parameter == "Detune"
 
 
+def test_get_machine_src_mappings_refuses_unknown_machine_without_fallback() -> None:
+    with pytest.raises(KeyError, match="Unknown Analog Rytm machine key: unknown_machine"):
+        get_machine_src_mappings("unknown_machine")
+
+
 def test_catalog_pins_value_metadata_for_selectors_and_centered_rows() -> None:
     filter_mode = ANALOG_RYTM_ALL_CC_BY_SECTION_AND_PARAMETER[("FILTER", "Filter Mode")]
     assert filter_mode.value_min == 0

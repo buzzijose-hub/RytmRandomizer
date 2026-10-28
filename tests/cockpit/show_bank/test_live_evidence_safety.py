@@ -36,7 +36,7 @@ from rytm_randomizer.cockpit.show_bank.export import ShowPackService
 from rytm_randomizer.cockpit.show_bank.readiness import normalize_catalog_import
 from rytm_randomizer.cockpit.show_bank.workspace import ShowKitForgeWorkspace
 from rytm_randomizer.cockpit.ws import handlers
-from rytm_randomizer.cockpit.ws.protocol import ERR_INTERNAL, ERR_VALIDATION
+from rytm_randomizer.cockpit.ws.protocol import ERR_VALIDATION
 from rytm_randomizer.cockpit.ws.session import CockpitSession
 from rytm_randomizer.senders.armed_apply import ArmedApplySession
 
@@ -498,6 +498,22 @@ def test_armed_show_send_rejects_stale_source_before_any_output(tmp_path: Path) 
         analog_four_locks=(),
     )
     source = workspace.source_snapshot(harness.bank_id, harness.entry_id)
+    source_pad = source.pads[0]
+    before_frequency = source_pad.params["flt"]
+    supported_candidate = replace(
+        candidate.rytm_candidate,
+        pad_deltas=(
+            replace(
+                candidate.rytm_candidate.pad_deltas[0],
+                proposed_params={
+                    **source_pad.params,
+                    "flt": before_frequency - 1 if before_frequency > 0 else 1,
+                },
+                changed_keys=frozenset({"flt"}),
+            ),
+        ),
+        estimated_midi_msgs=1,
+    )
     session = CockpitSession(
         profile_registry=ProfileRegistry(tmp_path / "profiles"),
         history_store=HistoryStore(),
@@ -505,7 +521,7 @@ def test_armed_show_send_rejects_stale_source_before_any_output(tmp_path: Path) 
         show_kit_forge=workspace,
         kit_captures=harness.captures,
         active_profile=harness.profile,
-        current_candidate=candidate.rytm_candidate,
+        current_candidate=supported_candidate,
         rytm_pad_targets={1},
     )
     session.history_store.initial(source)
@@ -532,7 +548,7 @@ def test_armed_show_send_rejects_stale_source_before_any_output(tmp_path: Path) 
     sent_count = len(recorder.sent)
     assert sent_count > 0
     session.device.adopt_snapshot(source)
-    session.current_candidate = candidate.rytm_candidate
+    session.current_candidate = supported_candidate
     assert dispatch({"type": "prepare_send_plan"})["ok"] is True
     send["send_plan_id"] = session.current_send_plan.plan_id
     assert dispatch(send)["ok"] is False
@@ -577,7 +593,9 @@ def test_duplicate_pack_and_io_failure_are_safe_acks_and_session_continues(
     duplicate = dispatch(export)
     assert duplicate["ok"] is False
     assert duplicate["code"] == ERR_VALIDATION
-    assert duplicate["message"] == "command rejected by handler validation"
+    assert duplicate["message"] == (
+        "Local destination already exists. Choose a new bank or package ID; existing files were not replaced."
+    )
 
     def denied(_bank):
         raise PermissionError("private-path-secret")
@@ -594,7 +612,8 @@ def test_duplicate_pack_and_io_failure_are_safe_acks_and_session_continues(
         }
     )
     assert failed["ok"] is False
-    assert failed["code"] == ERR_INTERNAL
+    assert failed["code"] == ERR_VALIDATION
+    assert "Check folder access" in failed["message"]
     assert "private-path-secret" not in repr(failed)
     assert dispatch({"type": "show_bank_list"})["ok"] is True
 
@@ -645,34 +664,38 @@ def test_new_ws_capture_revokes_old_live_audition_label(
     )
 
 
-def test_candidate_bytes_survive_explicit_keep_and_fail_closed_after_eviction(
+def test_candidate_bytes_survive_restart_and_cache_eviction(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     harness = _harness(tmp_path)
     workspace = harness.workspace
     first, second = _generate(harness)
-    workspace._volatile_frames.clear()
-    bank = workspace.bank(harness.bank_id)
-    with pytest.raises(ValueError, match="no longer in memory"):
-        workspace.retain_capture(
-            harness.bank_id,
-            harness.entry_id,
-            bank.revision,
-            capture_kind="candidate",
-            device_id=A4_SHOW_KIT_DEVICE_ID,
-            current_captures={},
-        )
-    # Regeneration repairs only the bounded byte cache, preserving deterministic
-    # candidate identities and the prior revision even when no new candidate exists.
-    with pytest.raises(ValueError, match="already exists"):
-        _generate(harness)
     workspace.mark_favorite(
         harness.bank_id,
         harness.entry_id,
         first.candidate_id,
-        bank.revision,
+        workspace.bank(harness.bank_id).revision,
     )
+    workspace._volatile_frames.clear()
+    bank = workspace.bank(harness.bank_id)
+    retained = bank.entry(harness.entry_id).selected_candidate.analog_four_candidate.sysex.retained
+    assert retained is not None
+    restarted = ShowKitForgeWorkspace(harness.store, clock=harness.clock)
+    assert restarted.favorite_context(harness.bank_id, harness.entry_id)[2] == (
+        harness.store.read_retained(retained)
+    )
+    workspace.retain_capture(
+        harness.bank_id,
+        harness.entry_id,
+        bank.revision,
+        capture_kind="candidate",
+        device_id=A4_SHOW_KIT_DEVICE_ID,
+        current_captures={},
+    )
+    # Duplicate generation cannot republish an existing deterministic candidate.
+    with pytest.raises(ValueError, match="already exists"):
+        _generate(harness)
     revision = workspace.bank(harness.bank_id).revision
     workspace.retain_capture(
         harness.bank_id,

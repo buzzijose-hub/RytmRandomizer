@@ -1,0 +1,103 @@
+import type { MutationCandidate, MutationParametersChangedEvent } from '../src/ws/protocol';
+import { trackConsoleErrors, WS_DIAL_FAILURE } from './fixtures/console_guard';
+import { expect, injectTokenLive, primeToken, test } from './fixtures/wizard_fixture';
+
+/** Production handlers and durable LibraryStore; MIDI stays off for the whole journey. */
+test('Pad 2 parameter scope, exact local favorite recall and restart remain disarmed', async ({ page, sidecarControl }) => {
+  test.setTimeout(120_000);
+  const consoleGuard = trackConsoleErrors(page, [WS_DIAL_FAILURE]);
+  const scopes: MutationParametersChangedEvent[] = [];
+  const candidates: MutationCandidate[] = [];
+  const commands: Array<{ type: string }> = [];
+  page.on('websocket', (socket) => {
+    socket.on('framesent', ({ payload }) => {
+      const frame = JSON.parse(String(payload));
+      if (frame.command) commands.push(frame.command);
+    });
+    socket.on('framereceived', ({ payload }) => {
+      const frame = JSON.parse(String(payload));
+      if (frame.type === 'mutation_parameters_changed') scopes.push(frame);
+      if (frame.type === 'mutation_previewed' && frame.candidate) candidates.push(frame.candidate);
+    });
+  });
+  const env = { RYTM_RAND_MIDI_BACKEND: 'off', HOME: sidecarControl.tmpRoot };
+  const first = await sidecarControl.start({ env, onToken: (token) => primeToken(page, token) });
+  await page.goto('/');
+  await expect(page.getByTestId('cockpit-root')).toBeVisible();
+  const scope = page.getByTestId('mutation-parameters-panel');
+  await expect(scope.getByRole('button', { name: 'Pad 2 rehearsal' })).toBeEnabled();
+  await page.getByTestId('profile-chips').getByRole('button').first().click();
+  await scope.getByRole('button', { name: 'Pad 2 rehearsal' }).click();
+  await expect(scope.getByLabel('Parameter scope item')).toHaveValue('2');
+  await expect.poll(() => scopes.at(-1)?.rytm_parameters?.map((cell) => cell.parameter_key).sort()).toEqual(['amp_decay', 'flt', 'overdrive', 'reverb']);
+  expect(scopes.at(-1)?.a4_parameters).toEqual([]);
+  await expect(scope.getByText('Physical validation pending')).toBeVisible();
+  if ((await page.getByTestId('action-preview').getAttribute('aria-pressed')) !== 'true') await page.getByTestId('action-preview').click();
+  const depth = page.getByRole('slider', { name: 'Mutation amount' });
+  await depth.focus();
+  await depth.press('Home');
+  await expect(page.getByTestId('depth-slider-value')).toHaveText('0%');
+  await page.getByTestId('action-regen').click();
+  await expect.poll(() => candidates.at(-1)?.depth).toBe(0);
+  expect(candidates.at(-1)?.pad_deltas.every((delta) => delta.changed_keys.length === 0)).toBe(true);
+  for (let step = 0; step < 10; step += 1) await depth.press('ArrowRight');
+  await expect(page.getByTestId('depth-slider-value')).toHaveText('10%');
+  const beforeLockId = candidates.at(-1)?.candidate_id;
+  await scope.getByLabel('Lock pad').check();
+  await page.getByTestId('action-regen').click();
+  await expect.poll(() => candidates.at(-1)?.candidate_id).not.toBe(beforeLockId);
+  await expect.poll(() => candidates.at(-1)?.depth).toBe(0.10);
+  await expect.poll(() => candidates.at(-1)?.pad_deltas.every((delta) => delta.changed_keys.length === 0)).toBe(true);
+  await scope.getByLabel('Lock pad').uncheck();
+  await page.getByTestId('action-regen').click();
+  await expect(page.getByTestId('action-prepare-send-plan')).toBeEnabled();
+  await expect(page.getByTestId('depth-slider-value')).toHaveText('10%');
+  await page.getByTestId('action-prepare-send-plan').click();
+  await expect(page.getByTestId('action-send')).toBeEnabled();
+  const retained = candidates.at(-1)!;
+  expect(retained.pad_deltas.every((delta) => delta.pad_id === 2 && delta.changed_keys.every((key) => ['amp_decay', 'flt', 'overdrive', 'reverb'].includes(key)))).toBe(true);
+
+  const library = page.getByTestId('library-panel');
+  await library.getByTestId('favorite-name').fill('Scope journey favorite');
+  await library.getByTestId('favorite-retain').click();
+  await expect(library.getByText('Favorite retained locally. Hardware KIT unchanged.')).toBeVisible();
+  await library.getByTestId('library-load').click();
+  const favoriteOption = library.getByTestId('favorite-record').locator('option').filter({ hasText: 'Scope journey favorite' });
+  await expect(favoriteOption).toHaveCount(1);
+  const recordId = await favoriteOption.getAttribute('value');
+  expect(recordId).toBeTruthy();
+
+  await scope.getByRole('button', { name: 'Select none' }).click();
+  await expect.poll(() => scopes.at(-1)?.rytm_parameters).toEqual([]);
+  await expect(page.getByTestId('action-send')).toBeDisabled();
+  await library.getByTestId('favorite-record').selectOption(recordId!);
+  const beforeRecall = candidates.length;
+  await library.getByTestId('favorite-reopen').click();
+  await expect(library.getByText('Local favorite reopened. Fresh preparation required.')).toBeVisible();
+  await expect.poll(() => candidates.length).toBeGreaterThan(beforeRecall);
+  await expect.poll(() => candidates.at(-1)).toEqual(retained);
+  await expect(page.getByTestId('action-send')).toBeDisabled();
+  await expect(page.getByTestId('safety-rail').getByText('Hardware Off')).toBeVisible();
+
+  await sidecarControl.stop();
+  await sidecarControl.start({ env, previousToken: first.token, onToken: (token) => injectTokenLive(page, token) });
+  await expect(page.getByTestId('safety-rail').getByText('Connected', { exact: true })).toBeVisible({ timeout: 30_000 });
+  await library.getByTestId('library-load').click();
+  await library.getByTestId('favorite-record').selectOption(recordId!);
+  const beforeRestartRecall = candidates.length;
+  await library.getByTestId('favorite-reopen').click();
+  await expect(library.getByText('Local favorite reopened. Fresh preparation required.')).toBeVisible();
+  await expect.poll(() => candidates.length).toBeGreaterThan(beforeRestartRecall);
+  await expect.poll(() => candidates.at(-1)).toEqual(retained);
+  await expect.poll(() => scopes.at(-1)?.rytm_parameters?.map((cell) => cell.parameter_key).sort()).toEqual(['amp_decay', 'flt', 'overdrive', 'reverb']);
+  await expect(page.getByTestId('action-send')).toBeDisabled();
+  await page.getByTestId('action-prepare-send-plan').click();
+  await expect(page.getByTestId('action-send')).toBeEnabled();
+  await page.setViewportSize({ width: 600, height: 900 });
+  await scope.scrollIntoViewIfNeeded();
+  const overflow = await page.evaluate(() => [...document.querySelectorAll('body *')].filter((element) => element.getBoundingClientRect().right > window.innerWidth + 1).slice(0, 12).map((element) => ({ tag: element.tagName, className: element.className, testId: element.getAttribute('data-testid'), width: element.getBoundingClientRect().width })));
+  expect(overflow).toEqual([]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  expect(commands.some((command) => ['arm', 'send', 'save', 'capture_current_kit', 'list_capture_inputs'].includes(command.type))).toBe(false);
+  consoleGuard.assertClean();
+});

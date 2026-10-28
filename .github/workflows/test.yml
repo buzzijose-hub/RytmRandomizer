@@ -401,7 +401,26 @@ jobs:
       # lower it. Any new production code without a covering test will
       # fail this step.
       - name: Run pytest with coverage
+        id: pytest-coverage
+        env:
+          PYTEST_XDIST_AUTO_NUM_WORKERS: "2"
         run: pytest --cov=rytm_randomizer --cov-branch --cov-report=term-missing --cov-report=xml
+
+      - name: Collect bounded native audio observations after a macOS test failure
+        if: runner.os == 'macOS' && steps.pytest-coverage.outcome == 'failure' && !cancelled()
+        env:
+          RYTM_RAND_MIDI_BACKEND: "off"
+          DIAGNOSTIC_OUTPUT: ${{ runner.temp }}/native-audio-diagnostic
+        run: python scripts/diagnose_native_audio_cache.py --output "$DIAGNOSTIC_OUTPUT"
+
+      - name: Upload native audio diagnostic observations
+        if: runner.os == 'macOS' && steps.pytest-coverage.outcome == 'failure' && !cancelled()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-audio-diagnostic-${{ github.run_id }}
+          path: ${{ runner.temp }}/native-audio-diagnostic/public-report
+          if-no-files-found: warn
+          retention-days: 14
 
       # Gate 1, mechanically enforced: every production file touched vs the
       # base branch must sit at 100% line+branch coverage. Until this step
@@ -790,6 +809,10 @@ jobs:
       - name: Type-check native acceptance driver
         working-directory: desktop/web
         run: npx tsc --noEmit -p tsconfig.native.json
+
+      - name: Verify offline rehearsal process ownership and evidence helpers
+        working-directory: desktop/web
+        run: node --test tests/offline_endurance_driver.test.cjs
 
       - name: Exercise signed updater through real WebView and IPC
         working-directory: desktop/web

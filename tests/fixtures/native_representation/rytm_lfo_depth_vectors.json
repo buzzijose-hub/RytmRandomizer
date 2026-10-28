@@ -1,0 +1,52 @@
+{
+  "device": "Analog Rytm MKII",
+  "os": "1.72",
+  "main_sha256": "5d0b41eed77bb08b08be13ac63c6e8f0bb6a7334195436eb0ec6b5a5f26d6772",
+  "source": "rytm_lfo/boundary_vectors.json",
+  "evidence_kind": "static-only; no physical validation",
+  "vectors": [
+    {"native": 0, "stored_be": [0, 0], "screen": "-128.00", "nrpn14": 0, "nrpn_replay": 0, "coarse_cc109": 0},
+    {"native": 1, "stored_be": [0, 1], "screen": "-127.99", "nrpn14": 0, "nrpn_replay": 0, "coarse_cc109": 0},
+    {"native": 128, "stored_be": [0, 128], "screen": "-127.00", "nrpn14": 64, "nrpn_replay": 128, "coarse_cc109": 0},
+    {"native": 256, "stored_be": [1, 0], "screen": "-126.00", "nrpn14": 128, "nrpn_replay": 256, "coarse_cc109": 1},
+    {"native": 16256, "stored_be": [63, 128], "screen": "-1.00", "nrpn14": 8128, "nrpn_replay": 16256, "coarse_cc109": 63},
+    {"native": 16382, "stored_be": [63, 254], "screen": "-0.01", "nrpn14": 8191, "nrpn_replay": 16382, "coarse_cc109": 63},
+    {"native": 16383, "stored_be": [63, 255], "screen": "-0.00", "nrpn14": 8191, "nrpn_replay": 16382, "coarse_cc109": 63},
+    {"native": 16384, "stored_be": [64, 0], "screen": "(0)", "nrpn14": 8192, "nrpn_replay": 16384, "coarse_cc109": 64},
+    {"native": 16385, "stored_be": [64, 1], "screen": "+0.00", "nrpn14": 8192, "nrpn_replay": 16384, "coarse_cc109": 64},
+    {"native": 16386, "stored_be": [64, 2], "screen": "+0.01", "nrpn14": 8193, "nrpn_replay": 16386, "coarse_cc109": 64},
+    {"native": 16512, "stored_be": [64, 128], "screen": "+1.00", "nrpn14": 8256, "nrpn_replay": 16512, "coarse_cc109": 64},
+    {"native": 32512, "stored_be": [127, 0], "screen": "+126.00", "nrpn14": 16256, "nrpn_replay": 32512, "coarse_cc109": 127},
+    {"native": 32640, "stored_be": [127, 128], "screen": "+127.00", "nrpn14": 16320, "nrpn_replay": 32640, "coarse_cc109": 127},
+    {"native": 32766, "stored_be": [127, 254], "screen": "+127.98", "nrpn14": 16383, "nrpn_replay": 32766, "coarse_cc109": 127},
+    {"native": 32767, "stored_be": [127, 255], "screen": "+127.99", "nrpn14": 16383, "nrpn_replay": 32766, "coarse_cc109": 127}
+  ],
+  "display_collisions": [
+    {"natives": [16388, 16389], "screen": "+0.03"},
+    {"natives": [16379, 16380], "screen": "-0.03"}
+  ],
+  "cc_order": [
+    {"baseline": 16257, "coarse": 64, "fine": 64, "coarse_then_fine": 16512, "fine_then_coarse": 16384},
+    {"baseline": 1, "coarse": 127, "fine": 127, "coarse_then_fine": 32766, "fine_then_coarse": 32512}
+  ],
+  "cc_proposals": [
+    {"control": 109, "value": 0, "baseline": null, "native": 0},
+    {"control": 109, "value": 64, "baseline": 16257, "native": 16384},
+    {"control": 109, "value": 127, "baseline": 32767, "native": 32512},
+    {"control": 118, "value": 0, "baseline": 16385, "native": 16384},
+    {"control": 118, "value": 127, "baseline": 16257, "native": 16382},
+    {"control": 118, "value": 64, "baseline": 16257, "native": 16256},
+    {"control": 118, "value": 127, "baseline": 32767, "native": 32766}
+  ],
+  "coarse_observations": [
+    {"value": 0, "native_min": 0, "native_max": 255},
+    {"value": 64, "native_min": 16384, "native_max": 16639},
+    {"value": 127, "native_min": 32512, "native_max": 32767}
+  ],
+  "nrpn_observations": [
+    {"value": 0, "native_min": 0, "native_max": 1},
+    {"value": 8191, "native_min": 16382, "native_max": 16383},
+    {"value": 8192, "native_min": 16384, "native_max": 16385},
+    {"value": 16383, "native_min": 32766, "native_max": 32767}
+  ]
+}

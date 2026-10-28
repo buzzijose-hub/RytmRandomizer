@@ -9,8 +9,38 @@ import pytest
 
 from rytm_randomizer.style_analysis import extractor
 from rytm_randomizer.style_analysis.extractor import AudioMeasurements
+from rytm_randomizer.style_analysis.runtime_types import LibrosaApi
 
 pytestmark = pytest.mark.fast
+
+
+def test_shared_audio_protocol_matches_default_and_explicit_decode_precision() -> None:
+    from io import BytesIO
+
+    import numpy as np
+
+    sf = pytest.importorskip("soundfile")
+    pytest.importorskip("librosa")
+    librosa, _ = extractor._require_librosa()
+    encoded = BytesIO()
+    samples = 0.25 * np.sin(2 * np.pi * 440 * np.arange(22050) / 22050)
+    sf.write(encoded, samples, 22050, format="WAV", subtype="PCM_16")
+    raw = encoded.getvalue()
+
+    default, rate = librosa.load(BytesIO(raw))
+    precise, precise_rate = librosa.load(BytesIO(raw), dtype=np.float64)
+    assert rate == precise_rate == 22050
+    assert default.dtype == np.float32
+    assert precise.dtype == np.float64
+    assert librosa.stft(default).dtype == np.complex64
+    assert librosa.stft(precise).dtype == np.complex128
+    orig_sr, target_sr = rate, 16000
+    resampled_default = librosa.resample(default, orig_sr=orig_sr, target_sr=target_sr)
+    resampled_precise = librosa.resample(precise, orig_sr=orig_sr, target_sr=target_sr)
+    assert resampled_default.dtype == np.float32
+    assert resampled_precise.dtype == np.float64
+    assert len(resampled_default) == len(resampled_precise) == target_sr
+    np.testing.assert_array_equal(default, precise.astype(np.float32))
 
 
 def _measurements() -> AudioMeasurements:
@@ -81,7 +111,7 @@ def test_measurement_core_passes_bounded_decode_options_and_handles_empty_audio(
     monkeypatch.setattr(
         extractor,
         "_require_librosa",
-        lambda: (cast(extractor._LibrosaApi, FakeLibrosa()), object()),
+        lambda: (cast(LibrosaApi, FakeLibrosa()), object()),
     )
     monkeypatch.setattr(extractor, "_flat_float_values", lambda *_args: [])
 
@@ -115,7 +145,7 @@ def test_get_audio_duration_uses_metadata_path_and_validates_result(
     monkeypatch.setattr(
         extractor,
         "_require_librosa",
-        lambda: (cast(extractor._LibrosaApi, FakeLibrosa()), object()),
+        lambda: (cast(LibrosaApi, FakeLibrosa()), object()),
     )
 
     assert extractor.get_audio_duration(Path("mix.wav")) == 7_200.5
@@ -136,7 +166,7 @@ def test_get_audio_duration_rejects_invalid_metadata(
     monkeypatch.setattr(
         extractor,
         "_require_librosa",
-        lambda: (cast(extractor._LibrosaApi, FakeLibrosa()), object()),
+        lambda: (cast(LibrosaApi, FakeLibrosa()), object()),
     )
 
     with pytest.raises(ValueError, match="finite and positive"):

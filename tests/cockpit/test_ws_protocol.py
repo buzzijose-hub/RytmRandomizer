@@ -45,6 +45,7 @@ def test_event_types_frozenset_lists_every_event_constant() -> None:
         protocol.EVENT_KIT_CAPTURES_CHANGED,
         protocol.EVENT_MUTATION_TARGETS_CHANGED,
         protocol.EVENT_MUTATION_LOCKS_CHANGED,
+        protocol.EVENT_MUTATION_PARAMETERS_CHANGED,
         protocol.EVENT_DUAL_MACHINE_STAGE_CHANGED,
         protocol.EVENT_PROFILE_CHANGED,
         protocol.EVENT_PATCH_GENOME_CHANGED,
@@ -59,7 +60,7 @@ def test_event_types_frozenset_lists_every_event_constant() -> None:
     assert individual <= protocol.EVENT_TYPES
     assert isinstance(protocol.EVENT_TYPES, frozenset)
     # 17 cockpit events + 3 wizard events (folded in from wizard_protocol)
-    assert len(protocol.EVENT_TYPES) == 20
+    assert len(protocol.EVENT_TYPES) == 21
 
 
 def test_command_types_frozenset_lists_every_command_constant() -> None:
@@ -68,7 +69,7 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
     ``COMMAND_TYPES`` is the union of the cockpit + wizard command
     surfaces; the wizard subset is folded in from :mod:`wizard_protocol`
     and asserted in the wizard test file. This test verifies the
-    16 cockpit-native commands remain present.
+    complete cockpit-native command set remains present.
     """
 
     individual = {
@@ -80,6 +81,11 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
         protocol.COMMAND_SET_PAD_LOCK,
         protocol.COMMAND_SET_A4_TRACK_LOCK,
         protocol.COMMAND_SET_MUTATION_TARGETS,
+        protocol.COMMAND_GET_MUTATION_PARAMETERS,
+        protocol.COMMAND_SET_MUTATION_PARAMETERS,
+        protocol.COMMAND_SET_REHEARSAL_PRESET,
+        protocol.COMMAND_RETAIN_REHEARSAL_FAVORITE,
+        protocol.COMMAND_RECALL_REHEARSAL_FAVORITE,
         protocol.COMMAND_CLEAR_MUTATION_TARGETS,
         protocol.COMMAND_TOGGLE_PREVIEW,
         protocol.COMMAND_PREPARE_SEND_PLAN,
@@ -102,11 +108,13 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
         protocol.COMMAND_LIBRARY_TAG,
         protocol.COMMAND_LIBRARY_DELETE,
         protocol.COMMAND_LIBRARY_IMPORT_CAPTURES,
+        protocol.COMMAND_REFERENCE_SOUND,
         protocol.COMMAND_SHOW_BANK_LIST,
         protocol.COMMAND_SHOW_BANK_CREATE,
         protocol.COMMAND_SHOW_BANK_SELECT,
         protocol.COMMAND_SHOW_BANK_UPDATE,
         protocol.COMMAND_SHOW_BANK_ADOPT_SOURCES,
+        protocol.COMMAND_SHOW_BANK_ADOPT_LIBRARY_SOURCES,
         protocol.COMMAND_SHOW_BANK_GENERATE_CANDIDATES,
         protocol.COMMAND_SHOW_BANK_SELECT_CANDIDATE,
         protocol.COMMAND_SHOW_BANK_MARK_FAVORITE,
@@ -121,15 +129,26 @@ def test_command_types_frozenset_lists_every_command_constant() -> None:
         protocol.COMMAND_SHOW_BANK_RETAIN_CAPTURE,
         protocol.COMMAND_SHOW_BANK_IMPORT,
         protocol.COMMAND_SHOW_BANK_EXPORT,
+        protocol.COMMAND_SHOW_BANK_PREPARE_A4_STUDIO_AUDITION,
+        protocol.COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION,
     }
-    assert individual <= protocol.COMMAND_TYPES
+    assert individual == protocol.COMMAND_TYPES - protocol.WIZARD_COMMAND_TYPES
     assert isinstance(protocol.COMMAND_TYPES, frozenset)
-    # 49 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
-    assert len(protocol.COMMAND_TYPES) == 57
+    # 58 cockpit commands + 8 wizard commands (folded in from wizard_protocol)
+    assert len(individual) == 58
+    assert len(protocol.COMMAND_TYPES) == 66
+    assert protocol.COMMAND_REFERENCE_SOUND in protocol.COMMAND_TYPES
 
 
 def test_event_and_command_constants_match_spec_strings() -> None:
     """The discriminator strings on the wire match the spec verbatim."""
+
+    assert protocol.COMMAND_SHOW_BANK_PREPARE_A4_STUDIO_AUDITION == (
+        "show_bank_prepare_a4_studio_audition"
+    )
+    assert protocol.COMMAND_SHOW_BANK_SEND_A4_STUDIO_AUDITION == (
+        "show_bank_send_a4_studio_audition"
+    )
 
     assert protocol.EVENT_SNAPSHOT_CHANGED == "snapshot_changed"
     assert protocol.EVENT_MUTATION_PREVIEWED == "mutation_previewed"

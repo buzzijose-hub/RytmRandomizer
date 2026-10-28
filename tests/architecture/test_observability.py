@@ -183,8 +183,8 @@ def test_print_allowlist_files_actually_exist() -> None:
 # entire package where it would be defensible is best-effort cleanup paths
 # (e.g. closing a MIDI port during shutdown); even those have been narrowed
 # in WS-U to the realistic OSError/RuntimeError/AttributeError family. The
-# allow-list below is empty; we keep the constant so a future principled
-# exception can be added with a clear comment.
+# only remaining broad catch is the tracing context manager below. ArmedApply
+# uses typed failure families plus unconditional failure cleanup instead.
 ALLOW_LIST_BROAD_EXCEPT: frozenset[tuple[str, int]] = frozenset(
     {
         # observability/tracing.py:167 — the operation() context manager intentionally
@@ -193,26 +193,6 @@ ALLOW_LIST_BROAD_EXCEPT: frozenset[tuple[str, int]] = frozenset(
         # exception propagates. The handler re-raises; nothing is silently swallowed.
         # This is the one place in the package where catching everything is correct.
         ("rytm_randomizer/observability/tracing.py", 167),
-        # senders/armed_apply.py:510 — ArmedApplySession.apply()'s send loop
-        # intentionally catches BaseException (including KeyboardInterrupt /
-        # SystemExit / CancelledError) so the armed session DISARMS — which
-        # closes the exclusive hardware output port — before the exception
-        # propagates. Catching only the port-error families left a Ctrl+C
-        # mid-burst with the session ARMED and the port OPEN until process
-        # exit. The handler tags the exception with the partial-delivery
-        # outcome and re-raises the ORIGINAL exception; nothing is swallowed
-        # and no control-flow exception is converted. Same shape, and same
-        # justification, as the tracing entry above.
-        ("rytm_randomizer/senders/armed_apply.py", 521),
-        # senders/armed_apply.py:483 — the RENDER step of the same apply()
-        # runs while the port is already open but before any byte reaches
-        # the wire. A renderer that raises (malformed plan, device-strategy
-        # bug, Ctrl+C between confirm and first send) previously left the
-        # session ARMED holding the exclusive handle, because only the send
-        # loop below was guarded. Same justification as the entry above:
-        # disarm (closing the port), then re-raise the ORIGINAL exception
-        # unchanged — a clean zero-byte refusal, nothing swallowed.
-        ("rytm_randomizer/senders/armed_apply.py", 483),
     }
 )
 
@@ -321,6 +301,8 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         "StateError",
         "DataError",
         "BoundaryError",
+        # Closed indexed-source policy refusal is defined in the central taxonomy.
+        "WorkingKitSourceRefusalError",
         "ConfigError",
         # AL16 offline exporter: one typed BoundaryError carrying a bounded
         # failure reason instead of classifying human-readable prose.
@@ -430,6 +412,9 @@ _TAXONOMY_NAMES: frozenset[str] = frozenset(
         # pattern.
         "ProfileAlreadyExistsError",
         "ProfileRegistryAccessError",
+        # Library original-frame refusals preserve ValueError compatibility
+        # while carrying bounded DataError context and no operator-owned path.
+        "_LibrarySourceError",
         # Auto-update spec §11 Contract A (the persisted-state downgrade
         # refusal). Multi-inherits :class:`DataError` + :class:`ValueError`
         # and is raised by every config-dir store whose on-disk payload
@@ -488,6 +473,17 @@ def _raised_class_names(path: Path) -> list[tuple[int, str]]:
         else:  # pragma: no cover - ``raise <complex expression>``
             out.append((node.lineno, ast.unparse(exc)))
     return out
+
+
+def test_working_source_refusal_registration_is_a_real_closed_taxonomy_member() -> None:
+    from rytm_randomizer.observability.errors import BoundaryError, WorkingKitSourceRefusalError
+
+    assert "WorkingKitSourceRefusalError" in _TAXONOMY_NAMES
+    assert issubclass(WorkingKitSourceRefusalError, BoundaryError)
+    assert issubclass(WorkingKitSourceRefusalError, ValueError)
+    refusal = WorkingKitSourceRefusalError()
+    assert refusal.context == {"reason": "working_kit_read_only"}
+    assert refusal.fingerprint == "boundary.kit.working_source_refused"
 
 
 def test_raises_use_taxonomy_or_validation_stdlib() -> None:

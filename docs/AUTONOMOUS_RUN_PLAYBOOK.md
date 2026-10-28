@@ -6,6 +6,17 @@ This playbook assumes the executor (Claude Code orchestrator) has `acceptEdits` 
 
 ---
 
+## Reference Sound Replay
+
+For this feature, resume from the [current plan](superpowers/plans/2026-10-11-reference-sound-workflow.md),
+its state/run log and exact delivery receipt. Preserve old deliveries and user
+edits. Keep MIDI off, at most two independent workers, two pytest workers and one
+heavy local job. Reconcile source/reviews before work; do not infer approval.
+Run the actual frozen worker and packaged UI with developer paths removed.
+Use the existing native lifecycle driver with `--reference-sound`, not a second
+process owner. Failed attempts remain failed; physical recording/recovery and
+protected human approval are separate from software acceptance.
+
 ## 1. Write the plan
 
 Author `docs/<PLAN_NAME>.md`. The plan MUST conform to all 16 gates in `docs/PLAN_REQUIREMENTS.md`, including:

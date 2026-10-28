@@ -90,6 +90,11 @@ def test_ws_review_revalidates_candidate_but_never_grants_send(
     assert report["candidate_bytes_verified"] is True
     assert report["ready"] is report["hardware_send_validated"] is False
     assert report["source_reloaded"] is False
+    assert report["transport_preview"]["changes"] == []
+    assert report["transport_preview"]["mapping_complete"] is True
+    assert "no_a4_changes" in report["blocked_reasons"]
+    assert report["transport_preview"]["ready"] is False
+    assert report["transport_preview"]["channel_routing_verified"] is False
     assert "current_capture_stale" in report["blocked_reasons"]
     assert report["output_port_name"] == "Exact A4 intent"
     assert harness.workspace.bank(harness.bank_id) == before
@@ -231,9 +236,14 @@ def test_rejected_request_logs_are_bounded_without_losing_internal_error_details
             },
         }
     command_type = str(command["type"])
-    with pytest.raises(ValueError, match="unknown") as internal_error:
+    with pytest.raises(
+        ValueError, match="filename-safe" if kind == "candidate_id" else "unknown"
+    ) as internal_error:
         asyncio.run(SHOW_BANK_HANDLERS[command_type](command, session))
-    assert value in str(internal_error.value)
+    if kind == "candidate_id":
+        assert value not in str(internal_error.value)
+    else:
+        assert value in str(internal_error.value)
     ack = asyncio.run(handle_command({"request_id": "bounded-error", "command": command}, session))
     assert ack == {
         "request_id": "bounded-error",
@@ -248,13 +258,8 @@ def test_rejected_request_logs_are_bounded_without_losing_internal_error_details
     assert len(detail) <= limit
     assert record.__dict__["exception_type"] == "ValueError"
     assert record.__dict__["code"] == "validation_error"
-    if kind == "short_key":
-        assert detail == repr(internal_error.value)
-    else:
-        assert len(detail) == limit
-        assert detail.startswith("ValueError(")
-        assert detail.endswith("...")
-        assert "unlogged-tail" not in repr(record.__dict__)
+    assert detail == "ValueError('<redacted-local-artifact>')"
+    assert value not in detail and "unlogged-tail" not in repr(record.__dict__)
     assert session.armed_apply is None
     assert session.current_send_plan is None
     assert session.unsaved_sends == 0

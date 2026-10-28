@@ -1,0 +1,61 @@
+{
+  "provenance": {
+    "original_filename": "untitled.wav",
+    "original_sha256": "98311dccc2396bc440061186d316a9aa0d71e71b068c76639cf8d69a853faffd",
+    "original_frame_count": 364543,
+    "sample_rate": 44100,
+    "channels": 1,
+    "sample_width_bytes": 2,
+    "segment_start_frame": 0,
+    "segment_frame_count": 352800,
+    "segment_sha256": "dd28567ceb9427aed4399ebebb1ac77ae4eb14876af4a2b4a10df81668462add",
+    "source_kit_sha256": "d95293e5784ed604e8f460420afe19152e6262b408ba0c88ca336a1ce0364f64",
+    "handoff_revision": "b62ad3e702edc83e33b9d8bdcf0831ab71254187",
+    "reproduced_revision": "b9f89c3ef780823a5e21d52aedfa65397c29bdaa",
+    "baseline_gate_head": "b9f89c3ef780823a5e21d52aedfa65397c29bdaa",
+    "baseline_review_approval": "pending; software verification does not infer approval",
+    "reproduced_at": "2026-10-14T15:49:51Z",
+    "measurement_evidence": "Exact first 352800 PCM frames reselected from original, serialized WAV equals retained segment; fresh analyze_audio_snapshot features equal October 12 retained measurements.",
+    "baseline_failure": "All 18 mutable A4 T1 controls: ElektronKitFieldError: bipolar value must be in -64..63, got 69",
+    "audio_retained_in_repository": false,
+    "physical_sound_match_verified": false
+  },
+  "analysis": {
+    "report": {
+      "source_type": "SINGLE_TRACK",
+      "confidence": "HIGH",
+      "bpm": 65.41732594936708,
+      "tempo_stability": 0.0,
+      "kick_density": 0.02255116672732264,
+      "percussion_density": 0.03125,
+      "low_end_weight": 0.36081866763716225,
+      "spectral_brightness": 0.09427004932682732,
+      "texture_noise": 0.018935276271614662,
+      "energy_arc": [0.0, 0.402627012007965, 0.3501880352812966, 0.6219651298481454, 0.6894799729355077, 0.5465048380571836, 0.7281196624146177, 0.255951802666756],
+      "content_hash": "472dd86d4cbbed4c2e4ef82036a8c7840e96851f178b853e2b3e6461444c05f6",
+      "derived_at": "2026-10-13T01:37:32Z"
+    },
+    "features": {
+      "audio_sha256": "dd28567ceb9427aed4399ebebb1ac77ae4eb14876af4a2b4a10df81668462add",
+      "duration": 1.0,
+      "attack": 0.09287981859410431,
+      "decay": 0.2438095238095238,
+      "sustain": 0.5925316869100474,
+      "tail": 0.6164712438003044,
+      "brightness": 0.09427004932682732,
+      "spectral_flatness": 0.018935276271614662,
+      "noise": 0.02505050045552259,
+      "low_end": 0.36081866763716225,
+      "harmonicity": 0.9810647237283854,
+      "transient": 0.02811517442267728,
+      "modulation": 0.1640275522735878
+    },
+    "evidence": {
+      "dominant_frequency_hz": 86.1328125,
+      "dominant_note": "F2",
+      "pitch_confidence": 0.7567094513189043,
+      "tonal_stability": 0.929537461711637,
+      "spectral_movement": 0.05252177636244721
+    }
+  }
+}

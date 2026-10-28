@@ -1,0 +1,9 @@
+{
+  "input_not_found": "Local artifact is missing. Restore the complete package or retained source, then retry.",
+  "interrupted": "Local file operation was interrupted. Review the destination before retrying.",
+  "overwrite_refused": "Local destination already exists. Choose a new bank or package ID; existing files were not replaced.",
+  "permission_denied": "Local artifact could not be accessed or changed during reading. Check folder access and retry.",
+  "source_read_failed": "Local artifact could not be accessed or changed during reading. Check folder access and retry.",
+  "validation": "Local file request is invalid. Review the selected source and destination, then retry.",
+  "write_failed": "Local files could not be saved. Check available space and folder access, then retry."
+}

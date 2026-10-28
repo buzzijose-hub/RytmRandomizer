@@ -39,13 +39,15 @@ from __future__ import annotations
 
 import secrets
 from dataclasses import dataclass, field
+from threading import Event
 from typing import TYPE_CHECKING, Final
 
 from ...observability.logging import get_logger
 from ...senders.armed_apply import ArmedApplySession
 from ...senders.hardware import OutputOpeningProvider
-from ..capture import KitCaptureDeviceId, KitCaptureResult, KitCaptureService
+from ..capture import ANALOG_RYTM_DEVICE_ID, KitCaptureDeviceId, KitCaptureResult, KitCaptureService
 from ..data import CockpitSendPlan, MutationCandidate, ProfileModel
+from ..data.parameter_scope import ParameterSelection
 from ..device import DeviceAdapter
 from ..diagnostics import ErrorJournal
 from ..history import HistoryStore
@@ -55,6 +57,8 @@ from ..stage import DualMachineStageCoordinator
 from .wizard_session import WizardSession
 
 if TYPE_CHECKING:
+    from ..data.a4_studio_audition import A4StudioAuditionPlan
+    from ..export.reference_sound_session import ReferenceSoundWorkspace
     from ..show_bank.export import ShowPackService
     from ..show_bank.workspace import ShowKitForgeWorkspace
 
@@ -106,6 +110,18 @@ class CockpitSession:
     kit_captures: dict[KitCaptureDeviceId, KitCaptureResult] = field(
         default_factory=dict[KitCaptureDeviceId, KitCaptureResult]
     )
+    offline_a4_capture: KitCaptureResult | None = None
+    reference_sounds: ReferenceSoundWorkspace | None = None
+    """Passive retained audio workspace, initialized only when requested."""
+    sound_cancel: Event | None = None
+    sound_upload_id: str | None = None
+    sound_upload_size: int = 0
+    sound_upload: bytes = field(default=b"", repr=False)
+    """Retained-file metadata source, never a live/fresh input capture."""
+    capture_cancel: Event | None = None
+    """Cancellation signal for the one owned input capture, never output authority."""
+    capture_generation: int = 0
+    """Incremented on context loss so a late input result cannot restore revoked state."""
     active_profile: ProfileModel | None = None
     depth: float = DEFAULT_DEPTH
     seed: int = field(default_factory=fresh_seed)
@@ -113,6 +129,10 @@ class CockpitSession:
     rytm_pad_targets: set[int] = field(default_factory=set[int])
     a4_track_targets: set[int] = field(default_factory=set[int])
     a4_track_locks: set[int] = field(default_factory=set[int])
+    rytm_parameters: ParameterSelection = field(default_factory=ParameterSelection)
+    a4_parameters: ParameterSelection = field(default_factory=ParameterSelection)
+    recalled_offline_favorite: bool = False
+    """Retained local state never substitutes for a fresh hardware source capture."""
     stage_coordinator: DualMachineStageCoordinator = field(
         default_factory=DualMachineStageCoordinator
     )
@@ -139,6 +159,11 @@ class CockpitSession:
     explicit arm; cleared by ``disarm`` and by the armed watchdog when
     the device disappears (auto-disarm — never auto-re-arm).
     """
+
+    armed_device_id: KitCaptureDeviceId = ANALOG_RYTM_DEVICE_ID
+    a4_studio_plan: A4StudioAuditionPlan | None = None
+    a4_studio_generation: int = 0
+    a4_studio_sending: bool = False
 
     hardware_intent: bool = False
     """True from a successful ``arm`` until an EXPLICIT ``disarm``.

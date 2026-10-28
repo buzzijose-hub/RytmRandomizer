@@ -39,6 +39,22 @@ pytestmark = pytest.mark.fast
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
+
+def test_native_representation_exports_keep_distinct_parameter_contracts():
+    assert data.A4_F1_NATIVE_MAX == 32766
+    assert data.A4_F1_NATIVE_SCALE == 256
+    assert data.A4_F1_KIT_BODY_OFFSETS == (128, 478, 828, 1178)
+    assert data.A4_KIT_PROTOCOL_VERSION == (1, 1)
+    assert data.A4_KIT_STORAGE_MARKER == b"\x00\x00\x00\x0b"
+    assert data.A4_WORKING_KIT_OBJECT_BYTE == 0x58
+    assert data.RYTM_LFO_DEPTH_CONTRACT.native_max == 32767
+    assert data.RYTM_LFO_DEPTH_CONTRACT.native_center == 16384
+    assert data.RYTM_LFO_DEPTH_CONTRACT.units_per_whole == 128
+    assert data.RYTM_LFO_DEPTH_CONTRACT.coupled_word_offset == 108
+    assert data.RYTM_LFO_DEPTH_PROVENANCE.evidence_kind == "static-only"
+    assert data.RYTM_LFO_DEPTH_PROVENANCE.os_version == "1.72"
+
+
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -70,6 +86,44 @@ def test_data_layer_exports_are_non_empty():
 def test_machine_cc_is_15_everywhere():
     assert data.MACHINE_CC == 15
     assert pkg_constants.MACHINE_CC == 15
+
+
+def test_midi_transport_timing_has_one_neutral_owner() -> None:
+    from rytm_randomizer.midi_io import MIDI_MESSAGE_SETTLE_SECONDS
+
+    assert data.MIDI_MESSAGE_SETTLE_SECONDS == MIDI_MESSAGE_SETTLE_SECONDS == 0.02
+
+
+def test_conservative_cockpit_src_policy_does_not_claim_calibration() -> None:
+    assert len(data.RYTM_COCKPIT_PENDING_SRC_PARAMETERS) == 7
+    assert data.RYTM_COCKPIT_PENDING_SRC_PARAMETERS[("cy_ride", "Hit Decay")] == (
+        "src_native_slot_semantics_unverified"
+    )
+    assert {"Offset 2", "Offset 3", "Offset 4", "Tune 6", "Bend"}.issubset(
+        data.RYTM_COCKPIT_ADDITIONAL_SRC_PITCH_PARAMETERS
+    )
+
+
+def test_device_support_facts_keep_evidence_and_omissions_separate() -> None:
+    assert dict(data.DEVICE_SUPPORT_EVIDENCE_FAMILIES) == {
+        "analog_four_mk2": "a4",
+        "analog_rytm_mk2": "rytm",
+    }
+    assert set(data.DEVICE_SUPPORT_EVIDENCE) == {
+        "a4_native",
+        "rytm_native",
+        "a4_midi",
+        "rytm_midi",
+    }
+    assert all(
+        isinstance(paths, tuple) and paths for paths in data.DEVICE_SUPPORT_EVIDENCE.values()
+    )
+    assert any(
+        device == "both"
+        and category == "general_dual_machine_send"
+        and kind == "hardware_evidence_missing"
+        for device, category, kind, _reason in data.DEVICE_SUPPORT_OMISSIONS
+    )
 
 
 def test_a4_sysex_calibration_tracks_filter2_resonance_capture():
@@ -860,6 +914,87 @@ def test_audio_patch_dna_directions_are_canonical_immutable_data():
         "AUDIO_PATCH_DNA_DIRECTION_SPECS",
     }.issubset(data.__all__)
     assert "AudioPatchDnaDirectionSpec" in audio_patch_dna_data.__all__
+
+
+def test_reference_audio_pcm_bits_are_canonical_immutable_facts() -> None:
+    from rytm_randomizer import data
+    from rytm_randomizer.data import reference_sound_candidates
+
+    assert (
+        data.REFERENCE_AUDIO_PCM_BITS_BY_SUBTYPE
+        is reference_sound_candidates.REFERENCE_AUDIO_PCM_BITS_BY_SUBTYPE
+    )
+    assert dict(data.REFERENCE_AUDIO_PCM_BITS_BY_SUBTYPE) == {
+        "PCM_U8": 8,
+        "PCM_16": 16,
+        "PCM_24": 24,
+        "PCM_32": 32,
+    }
+    assert "REFERENCE_AUDIO_PCM_BITS_BY_SUBTYPE" in data.__all__
+    with pytest.raises(TypeError):
+        data.REFERENCE_AUDIO_PCM_BITS_BY_SUBTYPE["PCM_16"] = 17
+
+
+def test_midi_guide_descriptions_are_canonical_immutable_reference_knowledge():
+    from rytm_randomizer.data import elektron_midi_descriptions as descriptions
+
+    for name in (
+        "A4_MIDI_DESCRIPTIONS",
+        "MIDI_GUIDE_DATA_NOTICE",
+        "MIDI_GUIDE_SOURCES",
+        "RYTM_MACHINE_REFERENCE_NOTES",
+        "RYTM_MIDI_DESCRIPTIONS",
+    ):
+        assert name in data.__all__
+        assert getattr(data, name) is getattr(descriptions, name)
+    polarity = data.RYTM_MIDI_DESCRIPTIONS[("ut_impulse", "Polarity")]
+    assert polarity.reference_labels == ((0, "Positive"), (1, "Negative"))
+    assert len(data.RYTM_MIDI_DESCRIPTIONS[("sy_chip", "Waveform")].reference_labels) == 128
+    assert "CC-BY-SA-4.0" in data.MIDI_GUIDE_DATA_NOTICE
+    assert data.MIDI_GUIDE_SOURCES["a4"].upstream_blob_sha1 == (
+        "53a1a26263782ce8f044b112a33642de27f547cd"
+    )
+    assert data.MIDI_GUIDE_SOURCES["rytm"].upstream_blob_sha1 == (
+        "46cc786dc106f35a00a9412057f8ee63192aa308"
+    )
+    with pytest.raises(TypeError):
+        data.RYTM_MIDI_DESCRIPTIONS[("ut_impulse", "Polarity")] = polarity
+
+
+def test_csv_reconciliation_owns_context_schema_but_reuses_source_provenance():
+    from rytm_randomizer.data import midi_csv_reconciliation as reconciliation
+
+    for name in vars(reconciliation):
+        if name.startswith("MIDI_CSV_"):
+            assert name in data.__all__
+            assert getattr(data, name) is getattr(reconciliation, name)
+    for spec in data.MIDI_CSV_SOURCES:
+        source = data.MIDI_GUIDE_SOURCES[spec.family]
+        assert spec.sha256 == source.supplied_sha256
+        assert source.upstream_revision == data.MIDI_CSV_UPSTREAM_COMMIT
+        assert data.MIDI_CSV_UPSTREAM_BLOBS[spec.family] == source.upstream_blob_sha1
+    with pytest.raises(TypeError):
+        data.MIDI_CSV_MANUAL_CHECKS["rytm"]["version"] = "unverified"
+
+
+def test_native_transport_and_capture_eligibility_share_the_canonical_data_exports():
+    from rytm_randomizer.data import analog_four_native_transport as transport
+    from rytm_randomizer.data import analog_rytm_midi as rytm
+
+    assert data.A4_NATIVE_CC7_BINDINGS is transport.A4_NATIVE_CC7_BINDINGS
+    assert len(data.A4_NATIVE_CC7_BINDINGS) == 25
+    assert len(data.A4_NATIVE_TRANSPORT_CONFLICTS) == 6
+    assert data.RYTM_CAPTURE_PROJECTIONS == (
+        data.RYTM_CAPTURE_PROJECTION_V1,
+        data.RYTM_CAPTURE_PROJECTION_V2,
+    )
+    assert data.A4_NATIVE_TRANSPORT_OUTPUT_HOLDS is transport.A4_NATIVE_TRANSPORT_OUTPUT_HOLDS
+    assert rytm.analog_rytm_snapshot_general_mapping_supported(
+        rytm.ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER[("SAMPLE", "Sample Bit Reduction")]
+    )
+    assert not rytm.analog_rytm_snapshot_general_mapping_supported(
+        rytm.ANALOG_RYTM_CC_BY_SECTION_AND_PARAMETER[("SAMPLE", "Sample Tune")]
+    )
 
 
 if __name__ == "__main__":

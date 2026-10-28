@@ -300,6 +300,23 @@ operator port names remain console-only and are excluded from structured logs.
 
 ## Adding logging to a new module
 
+### Original Library Source Decisions
+
+Original framed source retention and reads have `library.retain_source` and
+`library.read_source_frame` spans. The `library_original_source` event carries
+only bounded decision/outcome/reason labels, correlation ID and explicit passive
+flags, never record IDs, KIT names or operator paths. Reused originals are
+distinct from newly retained ones. Strict source reads retain categorical
+integrity/access/codec refusals; ordinary browsing still warns and skips corrupt
+records, and newer-schema rollback refuses without rewriting the record.
+
+`Metrics.local_artifact_decisions` counts these bounded outcome events,
+including successes. Refusal reasons additionally enter `errors_by_kind` as
+`library_source_<reason>`; persisted-schema counters retain their existing
+meaning. `reset_metrics()` clears the new counter in place. This additive
+counter is appended deterministically to populated operator summaries. Empty
+legacy summaries remain byte-identical; the counter never claims MIDI activity.
+
 ```python
 # at the top of the module
 from rytm_randomizer.observability.logging import get_logger

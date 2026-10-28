@@ -1,0 +1,25 @@
+{
+  "os_version": "1.72",
+  "main_sha256": "5d0b41eed77bb08b08be13ac63c6e8f0bb6a7334195436eb0ec6b5a5f26d6772",
+  "evidence_kind": "static-only",
+  "contract_path": "rytm_lfo/contract.json",
+  "converter_path": "rytm_lfo/reference_converter.py",
+  "vectors_path": "rytm_lfo/boundary_vectors.json",
+  "review_path": "working_state/REVIEW_RYTM_LFO.md",
+  "formatter_invoker_address": 1074757614,
+  "numeric_helper_address": 1073913646,
+  "nrpn_value_core_address": 1074420378,
+  "cc_value_core_address": 1074420950,
+  "notifier_address": 1074421932,
+  "coupled_copy_address": 1074502690,
+  "serialized_index_address": 1073771706,
+  "limitations": [
+    "Other notification producers were not exhaustively searched.",
+    "Descriptor initialization target remains conditional.",
+    "No physical validation or installed-firmware identity.",
+    "No queue lifetime, coherence, commit, routing or current-source availability proof.",
+    "No raw NRPN row parser, full-frame packing, persistence or output authority.",
+    "Getter fallback zero does not establish an available current baseline."
+  ],
+  "isa_caveat": "ColdFire REMU at 0x40029f78 supplies the remainder; the generic DIVUL label is not authoritative."
+}
